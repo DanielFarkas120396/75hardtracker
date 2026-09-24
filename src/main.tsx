@@ -5,7 +5,11 @@ import App from './App.tsx'
 import { AppErrorBoundary } from './components/AppErrorBoundary'
 import { StorageErrorScreen } from './components/StorageErrorScreen'
 import { openDatabase } from './db/openDatabase'
+import { listenForInstallPrompt } from './lib/installPrompt'
 import { requestPersistenceOnce } from './lib/storage'
+
+// Early: the browser can offer installation before the database is open.
+listenForInstallPrompt()
 
 const root = createRoot(document.getElementById('root')!)
 let opened = false

@@ -11,7 +11,7 @@ import { challengeRepo } from '../repositories/challengeRepo'
 import { dayEntryRepo } from '../repositories/dayEntryRepo'
 import { photoRepo } from '../repositories/photoRepo'
 import { workoutRepo } from '../repositories/workoutRepo'
-import { addChallenge, addPerfectDay, freshDatabase, jpegBytes } from './fixtures'
+import { addChallenge, addPerfectDays, freshDatabase, jpegBytes } from './fixtures'
 
 const today = todayISO()
 const photoBlob = (seed = 1) => new Blob([jpegBytes(seed)], { type: 'image/jpeg' })
@@ -91,7 +91,7 @@ describe('the completion flow', () => {
   it('completes Day 75 from real task logging, then starts attempt #2 without a stray attempt', async () => {
     const startDate = addDaysISO(today, -(CHALLENGE_LENGTH - 1))
     const challengeId = await addChallenge({ startDate, attemptNumber: 1, status: 'active' })
-    for (let day = 1; day < CHALLENGE_LENGTH; day++) await addPerfectDay(challengeId, startDate, day)
+    await addPerfectDays(challengeId, startDate, 1, CHALLENGE_LENGTH - 1)
 
     const entry = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: CHALLENGE_LENGTH, date: today })
     const isCompleted = async () => (await db.dayEntries.get(entry.id))!.completed

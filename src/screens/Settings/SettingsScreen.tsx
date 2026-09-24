@@ -9,6 +9,7 @@ import { AttemptHistorySection } from './AttemptHistorySection'
 import { BadgesSection } from './BadgesSection'
 import { BooksSection } from './BooksSection'
 import { ExportImportSection } from './ExportImportSection'
+import { InstallSection } from './InstallSection'
 import { StartDateSection } from './StartDateSection'
 
 interface SettingsScreenProps {
@@ -44,6 +45,8 @@ export function SettingsScreen({ challenge, today, todayDayNumber }: SettingsScr
             todayDayNumber={todayDayNumber}
           />
         )}
+
+        <InstallSection />
 
         <BooksSection />
 

@@ -11,22 +11,33 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      // Icons are generated from public/mascot.svg by `npm run generate-pwa-assets` (pwa-assets.config.ts).
+      includeAssets: ['favicon.ico', 'mascot.svg', 'apple-touch-icon-180x180.png'],
       manifest: {
+        id: '/',
         name: '75 Hard Companion',
         short_name: '75 Hard',
         description: 'Track your 75 Hard challenge — workouts, diet, water, reading and progress photos.',
+        lang: 'en',
+        start_url: '/',
+        scope: '/',
+        display: 'standalone',
+        orientation: 'portrait',
         theme_color: '#3dd16f',
         background_color: '#fbfbf8',
-        display: 'standalone',
+        categories: ['health', 'fitness', 'lifestyle'],
         icons: [
-          { src: '/manifest-icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/manifest-icons/icon-512.png', sizes: '512x512', type: 'image/png' },
-          { src: '/manifest-icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
+          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'maskable-icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,woff2,png}'],
+        // Icons are precached via includeAssets and the manifest. Only the latin font subsets in
+        // woff2 are precached: the others are for scripts the app doesn't use, and every browser
+        // that can install a PWA reads woff2.
+        globPatterns: ['**/*.{js,css,html}', '**/nunito-latin-*.woff2', '**/nunito-latin-ext-*.woff2'],
         navigateFallback: '/index.html',
       },
     }),
@@ -35,5 +46,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./tests/setup.ts'],
+    // The IndexedDB tests do real (in-memory) IO; leave headroom for a busy machine.
+    testTimeout: 15_000,
   },
 })

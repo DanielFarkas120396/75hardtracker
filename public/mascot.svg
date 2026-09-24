@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="10 7 100 100" width="512" height="512">
+  <!-- The idle mascot from src/components/mascot/Mascot.tsx, cropped square for icons. Source for `npm run generate-pwa-assets`. -->
+  <ellipse cx="60" cy="68" rx="38" ry="34" fill="#3dd16f"/>
+  <ellipse cx="60" cy="40" rx="30" ry="28" fill="#3dd16f"/>
+  <rect x="14" y="55" width="12" height="26" rx="6" fill="#2ba857" transform="rotate(-8 20 68)"/>
+  <rect x="94" y="55" width="12" height="26" rx="6" fill="#2ba857" transform="rotate(8 100 68)"/>
+  <circle cx="48" cy="38" r="5" fill="#14181a"/>
+  <circle cx="72" cy="38" r="5" fill="#14181a"/>
+  <path d="M48 52 Q60 58 72 52" stroke="#14181a" stroke-width="4" fill="none" stroke-linecap="round"/>
+</svg>

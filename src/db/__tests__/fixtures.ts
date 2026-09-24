@@ -19,6 +19,13 @@ export function jpegBytes(seed: number): Uint8Array<ArrayBuffer> {
   return Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, ...Array.from({ length: 64 }, (_, i) => (i * 7 + seed) % 256)])
 }
 
+/** Inserts completed days `fromDay`..`toDay` in one transaction (fast enough to seed 74 days). */
+export async function addPerfectDays(challengeId: number, startDate: string, fromDay: number, toDay: number): Promise<void> {
+  await db.transaction('rw', db.photos, db.dayEntries, db.workouts, async () => {
+    for (let day = fromDay; day <= toDay; day++) await addPerfectDay(challengeId, startDate, day)
+  })
+}
+
 /** Inserts a fully completed day (with a photo and two qualifying workouts) directly, bypassing the repositories. */
 export async function addPerfectDay(challengeId: number, startDate: string, dayNumber: number): Promise<number> {
   const date = addDaysISO(startDate, dayNumber - 1)
