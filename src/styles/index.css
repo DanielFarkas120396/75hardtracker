@@ -1,0 +1,64 @@
+@import "tailwindcss";
+@import "@fontsource/nunito/600.css";
+@import "@fontsource/nunito/700.css";
+@import "@fontsource/nunito/800.css";
+
+/* Enable class-based dark mode: toggling `.dark` on <html> flips all dark: variants */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Brand palette */
+  --color-green: #3dd16f;
+  --color-green-dark: #2ba857;
+  --color-green-light: #e6faee;
+
+  --color-orange: #ff8a3d;
+  --color-orange-dark: #e06d1f;
+  --color-orange-light: #ffede0;
+
+  --color-blue: #38b6ff;
+  --color-blue-dark: #1d93d6;
+  --color-blue-light: #e3f6ff;
+
+  --color-yellow: #ffc93d;
+  --color-yellow-dark: #e6ac1b;
+  --color-yellow-light: #fff6dd;
+
+  --color-danger: #ff5a5f;
+  --color-danger-dark: #d6383d;
+
+  /* Semantic surface tokens, redefined under .dark below for runtime theme switching */
+  --color-canvas: #fbfbf8;
+  --color-surface: #ffffff;
+  --color-ink: #1f2426;
+  --color-ink-muted: #6b7280;
+
+  --font-rounded:
+    "Nunito", ui-rounded, system-ui, -apple-system, sans-serif;
+
+  --radius-xl2: 1.25rem;
+  --radius-card: 1.5rem;
+
+  --spacing-touch: 3rem;
+}
+
+.dark {
+  --color-canvas: #14181a;
+  --color-surface: #1f2426;
+  --color-ink: #f2f4f5;
+  --color-ink-muted: #9aa4a9;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-rounded);
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+  }
+}
