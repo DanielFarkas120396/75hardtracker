@@ -71,6 +71,15 @@ export interface BadgeContext {
   booksFinished: number
 }
 
+/**
+ * Whether a finished book counts toward this attempt's Bookworm badge: only
+ * if it was finished (local date `finishedOn`) on or after the attempt's
+ * first day. A book with no known finish date never counts.
+ */
+export function bookCountsForAttempt(finishedOn: string | undefined, attemptStartDate: string): boolean {
+  return finishedOn !== undefined && finishedOn >= attemptStartDate
+}
+
 export interface BadgeDayInput {
   dayNumber: number
   data: DayTaskData

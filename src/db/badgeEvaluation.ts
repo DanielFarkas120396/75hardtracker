@@ -1,10 +1,18 @@
-import { buildBadgeContext, type BadgeContext } from '../logic/badges'
+import { todayISO } from '../lib/dates'
+import { bookCountsForAttempt, buildBadgeContext, type BadgeContext } from '../logic/badges'
 import { groupWorkoutsByEntry, toDayTaskData } from './mappers'
 import { badgeRepo } from './repositories/badgeRepo'
 import { bookRepo } from './repositories/bookRepo'
 import { dayEntryRepo } from './repositories/dayEntryRepo'
 import { workoutRepo } from './repositories/workoutRepo'
-import type { Challenge } from './types'
+import type { Book, Challenge } from './types'
+
+/** The local date a book was finished, if known (books finished before this was tracked have none). */
+function finishedOn(book: Book): string | undefined {
+  if (!book.finished || !book.finishedAt) return undefined
+  const finishedAt = new Date(book.finishedAt)
+  return Number.isNaN(finishedAt.getTime()) ? undefined : todayISO(finishedAt)
+}
 
 export interface BadgeEvaluationInput {
   context: BadgeContext
@@ -28,7 +36,7 @@ export async function loadBadgeEvaluation(challenge: Challenge, todayDayNumber: 
       data: toDayTaskData(entry, workoutsByEntry.get(entry.id) ?? []),
     })),
     todayDayNumber,
-    booksFinished: books.filter((b) => b.finished).length,
+    booksFinished: books.filter((b) => bookCountsForAttempt(finishedOn(b), challenge.startDate)).length,
   })
 
   return { context, unlockedBadgeIds: new Set(unlocked.map((b) => b.badgeId)) }

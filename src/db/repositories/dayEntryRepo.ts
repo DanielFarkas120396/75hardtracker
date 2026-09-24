@@ -32,30 +32,41 @@ export const dayEntryRepo = {
    * The entry for a challenge day, created if missing. The lookup and the
    * insert share one read-write transaction — IndexedDB runs those one at a
    * time — so concurrent calls (StrictMode's double effects, quick
-   * re-renders) can never create two entries for the same day.
+   * re-renders) can never create two entries for the same day; the unique
+   * [challengeId+dayNumber] index backs that up.
    */
   async getOrCreate(params: { challengeId: number; dayNumber: number; date: string }): Promise<DayEntry> {
     if (!isChallengeDay(params.dayNumber)) {
       throw new RangeError(`Day ${params.dayNumber} is outside the challenge`)
     }
 
-    return db.transaction('rw', db.dayEntries, async () => {
-      const existing = await dayEntryRepo.getByChallengeAndDayNumber(params.challengeId, params.dayNumber)
-      if (existing) return existing
+    try {
+      return await db.transaction('rw', db.dayEntries, async () => {
+        const existing = await dayEntryRepo.getByChallengeAndDayNumber(params.challengeId, params.dayNumber)
+        if (existing) return existing
 
-      const fresh: Omit<DayEntry, 'id'> = {
-        challengeId: params.challengeId,
-        date: params.date,
-        dayNumber: params.dayNumber,
-        water_ml: 0,
-        pages_read: 0,
-        dietFollowed: false,
-        noAlcohol: false,
-        completed: false,
-      }
-      const id = await db.dayEntries.add(fresh as DayEntry)
-      return { ...fresh, id }
-    })
+        const fresh: Omit<DayEntry, 'id'> = {
+          challengeId: params.challengeId,
+          date: params.date,
+          dayNumber: params.dayNumber,
+          water_ml: 0,
+          pages_read: 0,
+          dietFollowed: false,
+          noAlcohol: false,
+          completed: false,
+        }
+        const id = await db.dayEntries.add(fresh as DayEntry)
+        return { ...fresh, id }
+      })
+    } catch (error) {
+      // Another connection (a second tab) won the race: use its entry.
+      const existing =
+        error instanceof Error && error.name === 'ConstraintError'
+          ? await dayEntryRepo.getByChallengeAndDayNumber(params.challengeId, params.dayNumber)
+          : undefined
+      if (existing) return existing
+      throw error
+    }
   },
 
   /** Whether anything at all has been logged in this attempt (tasks, mood or notes). */

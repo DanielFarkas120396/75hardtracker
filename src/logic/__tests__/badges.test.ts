@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildBadgeContext, evaluateNewBadges, type BadgeContext } from '../badges'
+import { bookCountsForAttempt, buildBadgeContext, evaluateNewBadges, type BadgeContext } from '../badges'
 import type { DayTaskData } from '../types'
 
 function emptyContext(overrides: Partial<BadgeContext> = {}): BadgeContext {
@@ -73,6 +73,21 @@ describe('evaluateNewBadges', () => {
   it('can unlock several badges at once', () => {
     const result = evaluateNewBadges(emptyContext({ streakLength: 7, perfectDays: 7, photosTaken: 7 }), new Set())
     expect(result).toEqual(expect.arrayContaining(['streak-7', 'first-perfect-day', 'first-photo']))
+  })
+})
+
+describe('bookCountsForAttempt', () => {
+  it('counts a book finished on or after the attempt started', () => {
+    expect(bookCountsForAttempt('2026-09-24', '2026-09-24')).toBe(true)
+    expect(bookCountsForAttempt('2026-10-02', '2026-09-24')).toBe(true)
+  })
+
+  it('does not count a book finished before the attempt (e.g. during an earlier attempt)', () => {
+    expect(bookCountsForAttempt('2026-09-23', '2026-09-24')).toBe(false)
+  })
+
+  it('does not count a book with no known finish date', () => {
+    expect(bookCountsForAttempt(undefined, '2026-09-24')).toBe(false)
   })
 })
 

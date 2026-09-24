@@ -57,7 +57,7 @@ export function SettingsScreen({ challenge, today, todayDayNumber }: SettingsScr
           </div>
         </section>
 
-        <ExportImportSection />
+        <ExportImportSection today={today} />
 
         <AttemptHistorySection />
 

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { useObjectUrl } from '../../hooks/useObjectUrl'
+import { BlobImage } from '../../components/BlobImage'
 import type { GalleryEntry } from '../../hooks/useGalleryPhotos'
 
 interface PhotoLightboxProps {
@@ -11,7 +11,6 @@ interface PhotoLightboxProps {
 
 export function PhotoLightbox({ entries, index, onClose, onNavigate }: PhotoLightboxProps) {
   const entry = index !== null ? entries[index] : undefined
-  const url = useObjectUrl(entry?.photo.blob)
 
   return (
     <AnimatePresence>
@@ -23,14 +22,12 @@ export function PhotoLightbox({ entries, index, onClose, onNavigate }: PhotoLigh
           className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-ink/95 p-4"
           onClick={onClose}
         >
-          {url && (
-            <img
-              src={url}
-              alt={`Day ${entry.dayNumber} progress`}
-              className="max-h-[70dvh] max-w-full rounded-2xl object-contain"
-              onClick={(e) => e.stopPropagation()}
-            />
-          )}
+          <BlobImage
+            blob={entry.photo.blob}
+            alt={`Day ${entry.dayNumber} progress`}
+            className="max-h-[70dvh] max-w-full rounded-2xl object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
           <p className="font-rounded font-bold text-white">
             Attempt #{entry.attemptNumber} — Day {entry.dayNumber} · {entry.date}
           </p>

@@ -5,11 +5,9 @@ import { Card } from '../../components/ui/Card'
 import { Stepper } from '../../components/ui/Stepper'
 import { bookRepo } from '../../db/repositories/bookRepo'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
-import { settingsRepo } from '../../db/repositories/settingsRepo'
+import { SETTING_KEYS, settingsRepo } from '../../db/repositories/settingsRepo'
 import type { DayEntry } from '../../db/types'
 import { PAGES_TARGET } from '../../logic/constants'
-
-const CURRENT_BOOK_SETTING_KEY = 'currentBookId'
 
 interface ReadingCardProps {
   entry: DayEntry
@@ -18,7 +16,7 @@ interface ReadingCardProps {
 
 export function ReadingCard({ entry, complete }: ReadingCardProps) {
   const books = useLiveQuery(() => bookRepo.getAll(), []) ?? []
-  const currentBookId = useLiveQuery(() => settingsRepo.get<number | null>(CURRENT_BOOK_SETTING_KEY, null), [])
+  const currentBookId = useLiveQuery(() => settingsRepo.get<number | null>(SETTING_KEYS.currentBookId, null), [])
   const currentBook = books.find((b) => b.id === currentBookId)
 
   const [showAddBook, setShowAddBook] = useState(false)
@@ -37,7 +35,7 @@ export function ReadingCard({ entry, complete }: ReadingCardProps) {
         {books.length > 0 ? (
           <select
             value={currentBookId ?? ''}
-            onChange={(e) => void settingsRepo.set(CURRENT_BOOK_SETTING_KEY, Number(e.target.value))}
+            onChange={(e) => void settingsRepo.set(SETTING_KEYS.currentBookId, Number(e.target.value))}
             className="min-h-touch w-full rounded-xl bg-canvas px-3 font-rounded font-bold text-ink"
           >
             <option value="" disabled>
@@ -76,7 +74,7 @@ function AddBookForm({ onDone }: { onDone: () => void }) {
   const submit = async () => {
     if (!title.trim()) return
     const id = await bookRepo.add({ title: title.trim(), totalPages, currentPage: 0, finished: false })
-    await settingsRepo.set(CURRENT_BOOK_SETTING_KEY, id)
+    await settingsRepo.set(SETTING_KEYS.currentBookId, id)
     onDone()
   }
 

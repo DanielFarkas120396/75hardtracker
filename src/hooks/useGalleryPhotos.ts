@@ -16,18 +16,19 @@ export function useGalleryPhotos(): GalleryEntry[] | undefined {
   return useLiveQuery(async () => {
     const [entries, challenges] = await Promise.all([dayEntryRepo.getAllWithPhoto(), challengeRepo.getAll()])
     const attemptByChallengeId = new Map(challenges.map((c) => [c.id, c.attemptNumber]))
+    const photos = await photoRepo.getByIds(entries.map((e) => e.photoId!))
 
     const results: GalleryEntry[] = []
-    for (const entry of entries) {
-      const photo = await photoRepo.getById(entry.photoId!)
-      if (!photo) continue
+    entries.forEach((entry, i) => {
+      const photo = photos[i]
+      if (!photo) return
       results.push({
         photo,
         dayNumber: entry.dayNumber,
         attemptNumber: attemptByChallengeId.get(entry.challengeId) ?? 0,
         date: entry.date,
       })
-    }
+    })
 
     results.sort((a, b) => b.attemptNumber - a.attemptNumber || b.dayNumber - a.dayNumber)
     return results

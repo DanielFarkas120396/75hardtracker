@@ -45,6 +45,8 @@ export interface Book {
   totalPages: number
   currentPage: number
   finished: boolean
+  /** ISO datetime the book was finished; unset while unfinished (and for books finished before this was tracked). */
+  finishedAt?: string
 }
 
 export interface Measurement {
