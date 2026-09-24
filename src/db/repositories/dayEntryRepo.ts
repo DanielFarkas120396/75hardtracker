@@ -10,6 +10,11 @@ export const dayEntryRepo = {
     return db.dayEntries.where('challengeId').equals(challengeId).sortBy('dayNumber')
   },
 
+  /** Every DayEntry with a photo attached, across all challenges/attempts — for the Gallery. */
+  async getAllWithPhoto(): Promise<DayEntry[]> {
+    return db.dayEntries.filter((e) => e.photoId != null).toArray()
+  },
+
   async getOrCreate(params: { challengeId: number; dayNumber: number; date: string }): Promise<DayEntry> {
     const existing = await dayEntryRepo.getByChallengeAndDayNumber(params.challengeId, params.dayNumber)
     if (existing) return existing

@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { BottomNav, type ScreenId } from './components/ui/BottomNav'
 import { useActiveChallenge } from './hooks/useActiveChallenge'
 import { useChallengeGate } from './hooks/useChallengeGate'
+import { GalleryScreen } from './screens/Gallery/GalleryScreen'
 import { DayFailedScreen } from './screens/RestartFlow/DayFailedScreen'
 import { JourneyScreen } from './screens/Journey/JourneyScreen'
+import { StatsScreen } from './screens/Stats/StatsScreen'
 import { TodayScreen } from './screens/Today/TodayScreen'
 
 function ComingSoon({ title }: { title: string }) {
@@ -41,8 +43,8 @@ function App() {
       {screen === 'journey' && (
         <JourneyScreen challenge={gate.challenge} dayEntries={gate.dayEntries} todayDayNumber={gate.todayDayNumber} />
       )}
-      {screen === 'stats' && <ComingSoon title="Stats" />}
-      {screen === 'gallery' && <ComingSoon title="Gallery" />}
+      {screen === 'stats' && <StatsScreen challenge={gate.challenge} />}
+      {screen === 'gallery' && <GalleryScreen />}
       {screen === 'settings' && <ComingSoon title="Settings" />}
 
       <BottomNav active={screen} onChange={setScreen} />
