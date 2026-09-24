@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calculateDayXp } from '../xp'
+import { calculateDayXp, completedDayXp, streakMilestoneBonus } from '../xp'
 import type { DayTaskData } from '../types'
 
 const perfectDay: DayTaskData = {
@@ -64,5 +64,43 @@ describe('calculateDayXp', () => {
 
   it('does not award a streak milestone bonus for a non-milestone streak length', () => {
     expect(calculateDayXp(perfectDay, 8).streakMilestoneBonus).toBe(0)
+  })
+
+  it('never awards a milestone bonus to an incomplete day, even if a milestone streak is passed', () => {
+    const partial: DayTaskData = { ...perfectDay, hasPhoto: false }
+    expect(calculateDayXp(partial, 7)).toEqual({
+      taskXp: 40,
+      perfectDayBonus: 0,
+      streakMilestoneBonus: 0,
+      total: 40,
+    })
+  })
+})
+
+describe('streakMilestoneBonus', () => {
+  it('pays out exactly at each milestone length', () => {
+    for (const milestone of [7, 14, 21, 30, 50, 75]) {
+      expect(streakMilestoneBonus(milestone)).toBe(100)
+    }
+  })
+
+  it('is 0 between milestones', () => {
+    expect(streakMilestoneBonus(0)).toBe(0)
+    expect(streakMilestoneBonus(6)).toBe(0)
+    expect(streakMilestoneBonus(8)).toBe(0)
+  })
+})
+
+describe('completedDayXp', () => {
+  it('is 50 task XP plus the 25 perfect-day bonus on an ordinary day', () => {
+    expect(completedDayXp(3)).toBe(75)
+  })
+
+  it('adds the milestone bonus when the streak reaches a milestone', () => {
+    expect(completedDayXp(75)).toBe(175)
+  })
+
+  it('matches calculateDayXp for a perfect day', () => {
+    expect(completedDayXp(14)).toBe(calculateDayXp(perfectDay, 14).total)
   })
 })

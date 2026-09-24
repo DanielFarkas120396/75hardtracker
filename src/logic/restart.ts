@@ -48,17 +48,52 @@ export function evaluateChallengeStatus(params: {
   return 'active'
 }
 
-export interface RestartedChallenge {
+export type GateKind = 'active' | 'needsRestart' | 'completed'
+
+export interface GateResolution {
+  kind: GateKind
+  /** The first missed day, when `kind` is 'needsRestart'. */
+  failedDayNumber?: number
+}
+
+/**
+ * What the app should show for the current challenge: the normal screens
+ * ('active', which includes the days before Day 1), the restart flow
+ * ('needsRestart' — a day was missed or the attempt is already archived as
+ * failed), or the victory screen ('completed').
+ */
+export function resolveChallengeGate(params: {
+  currentStatus: ChallengeStatus
+  dayEntries: DayCompletionSummary[]
+  todayDayNumber: number
+}): GateResolution {
+  const status = evaluateChallengeStatus(params)
+  if (status === 'completed') return { kind: 'completed' }
+  if (status === 'active') return { kind: 'active' }
+
+  const today = Number.isFinite(params.todayDayNumber) ? params.todayDayNumber : CHALLENGE_LENGTH + 1
+  const failedDayNumber =
+    findFirstIncompleteDayNumber(params.dayEntries, Math.min(today, CHALLENGE_LENGTH + 1)) ??
+    Math.min(Math.max(today, 1), CHALLENGE_LENGTH)
+  return { kind: 'needsRestart', failedDayNumber }
+}
+
+/** The attempt number for a new challenge: one more than the highest so far (1 for the first). */
+export function nextAttemptNumber(existingAttemptNumbers: readonly number[]): number {
+  return existingAttemptNumbers.reduce((max, n) => Math.max(max, n), 0) + 1
+}
+
+export interface NewChallenge {
   startDate: string
   attemptNumber: number
   status: 'active'
 }
 
-/** Builds the new Challenge to persist when the user confirms a restart. */
-export function buildRestartedChallenge(previous: { attemptNumber: number }, startDate: string): RestartedChallenge {
+/** Builds the next Challenge to persist — after a failed attempt, a completed one, or on first launch. */
+export function buildNextChallenge(existingAttemptNumbers: readonly number[], startDate: string): NewChallenge {
   return {
     startDate,
-    attemptNumber: previous.attemptNumber + 1,
+    attemptNumber: nextAttemptNumber(existingAttemptNumbers),
     status: 'active',
   }
 }

@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
 import { Toggle } from '../../components/ui/Toggle'
-import { challengeRepo } from '../../db/repositories/challengeRepo'
 import type { Challenge } from '../../db/types'
 import { resetAll } from '../../db/exportImport'
 import { useSettings } from '../../hooks/useSettings'
@@ -10,12 +9,15 @@ import { AttemptHistorySection } from './AttemptHistorySection'
 import { BadgesSection } from './BadgesSection'
 import { BooksSection } from './BooksSection'
 import { ExportImportSection } from './ExportImportSection'
+import { StartDateSection } from './StartDateSection'
 
 interface SettingsScreenProps {
   challenge: Challenge
+  today: string
+  todayDayNumber: number
 }
 
-export function SettingsScreen({ challenge }: SettingsScreenProps) {
+export function SettingsScreen({ challenge, today, todayDayNumber }: SettingsScreenProps) {
   const { soundEnabled, hapticsEnabled, setSoundEnabled, setHapticsEnabled } = useSettings()
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [resetting, setResetting] = useState(false)
@@ -33,16 +35,15 @@ export function SettingsScreen({ challenge }: SettingsScreenProps) {
       </header>
 
       <main className="flex flex-col gap-4 px-4">
-        <section className="rounded-card bg-surface p-4 shadow-sm">
-          <h2 className="font-rounded text-lg font-extrabold text-ink">Challenge start date</h2>
-          <p className="mt-1 text-sm text-ink-muted">Changing this shifts which day number "today" is.</p>
-          <input
-            type="date"
-            value={challenge.startDate}
-            onChange={(e) => void challengeRepo.update(challenge.id, { startDate: e.target.value })}
-            className="mt-3 min-h-touch w-full rounded-xl bg-canvas px-3 font-rounded font-bold text-ink"
+        {challenge.status === 'active' && (
+          // Keyed by the saved date so the draft resets whenever it changes.
+          <StartDateSection
+            key={`${challenge.id}:${challenge.startDate}`}
+            challenge={challenge}
+            today={today}
+            todayDayNumber={todayDayNumber}
           />
-        </section>
+        )}
 
         <BooksSection />
 

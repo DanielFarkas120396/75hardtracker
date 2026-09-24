@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isDayComplete, missingTasks, taskCompletionMap } from '../dayCompletion'
+import { hasAnyProgress, isDayComplete, missingTasks, taskCompletionMap } from '../dayCompletion'
 import type { DayTaskData } from '../types'
 
 function perfectDay(): DayTaskData {
@@ -114,5 +114,29 @@ describe('taskCompletionMap', () => {
       reading: true,
       photo: true,
     })
+  })
+})
+
+describe('hasAnyProgress', () => {
+  const nothing: DayTaskData = {
+    water_ml: 0,
+    pages_read: 0,
+    dietFollowed: false,
+    noAlcohol: false,
+    hasPhoto: false,
+    workouts: [],
+  }
+
+  it('is false for an untouched day', () => {
+    expect(hasAnyProgress(nothing)).toBe(false)
+  })
+
+  it('is true as soon as any single thing is logged', () => {
+    expect(hasAnyProgress({ ...nothing, water_ml: 250 })).toBe(true)
+    expect(hasAnyProgress({ ...nothing, pages_read: 1 })).toBe(true)
+    expect(hasAnyProgress({ ...nothing, dietFollowed: true })).toBe(true)
+    expect(hasAnyProgress({ ...nothing, noAlcohol: true })).toBe(true)
+    expect(hasAnyProgress({ ...nothing, hasPhoto: true })).toBe(true)
+    expect(hasAnyProgress({ ...nothing, workouts: [{ durationMin: 0, isOutdoor: false }] })).toBe(true)
   })
 })

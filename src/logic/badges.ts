@@ -1,4 +1,7 @@
-import { MILESTONES } from './constants'
+import { MILESTONES, WATER_TARGET_ML } from './constants'
+import { isDayComplete, isQualifyingWorkout } from './dayCompletion'
+import { calculateStreak } from './streak'
+import type { DayTaskData } from './types'
 
 export type BadgeCategory = 'milestone' | 'first'
 
@@ -52,28 +55,56 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
 ]
 
 /**
- * Everything the badge-unlock evaluation needs to know about "today" and
- * the history leading up to it. Assembled by the caller (a hook, in
- * practice) from Dexie data — this module stays free of any persistence
- * dependency.
+ * What has happened so far in one attempt — everything the badge rules need.
+ * Badges are scoped per attempt, so a "first" badge means "first time in
+ * this attempt".
  */
 export interface BadgeContext {
-  /** Streak length once today's entry is factored in. */
+  /** The attempt's current streak (see calculateStreak). */
   streakLength: number
-  isPerfectDay: boolean
-  todayHasAnyWorkout: boolean
-  todayHasOutdoorQualifyingWorkout: boolean
-  workoutsLoggedBeforeToday: number
-  outdoorQualifyingWorkoutsLoggedBeforeToday: number
-  todayHitWaterGoal: boolean
-  waterGoalHitOnAnyPriorDay: boolean
-  todayHasPhoto: boolean
-  photosLoggedBeforeToday: number
-  bookFinishedToday: boolean
-  booksFinishedBeforeToday: number
+  perfectDays: number
+  workoutsLogged: number
+  outdoorQualifyingWorkouts: number
+  waterGoalDays: number
+  photosTaken: number
+  /** Books finished since this attempt started. */
+  booksFinished: number
 }
 
-/** Returns the ids of badges newly unlocked by today's data, excluding any already unlocked. */
+export interface BadgeDayInput {
+  dayNumber: number
+  data: DayTaskData
+}
+
+/** Tallies an attempt's days (plus its finished books) into a BadgeContext. */
+export function buildBadgeContext(params: {
+  days: BadgeDayInput[]
+  todayDayNumber: number
+  booksFinished: number
+}): BadgeContext {
+  const { days } = params
+  const allWorkouts = days.flatMap((d) => d.data.workouts)
+
+  return {
+    streakLength: calculateStreak(
+      days.map((d) => ({ dayNumber: d.dayNumber, completed: isDayComplete(d.data) })),
+      params.todayDayNumber,
+    ),
+    perfectDays: days.filter((d) => isDayComplete(d.data)).length,
+    workoutsLogged: allWorkouts.length,
+    outdoorQualifyingWorkouts: allWorkouts.filter((w) => isQualifyingWorkout(w) && w.isOutdoor).length,
+    waterGoalDays: days.filter((d) => d.data.water_ml >= WATER_TARGET_ML).length,
+    photosTaken: days.filter((d) => d.data.hasPhoto).length,
+    booksFinished: params.booksFinished,
+  }
+}
+
+/**
+ * Ids of every badge the attempt has earned that isn't unlocked yet.
+ * Conditions are "has it ever happened in this attempt", not "did it happen
+ * today", so a badge whose unlock was missed (app closed mid-write, etc.)
+ * is picked up on the next evaluation instead of being lost for good.
+ */
 export function evaluateNewBadges(context: BadgeContext, alreadyUnlockedBadgeIds: ReadonlySet<string>): string[] {
   const newlyUnlocked: string[] = []
 
@@ -84,18 +115,15 @@ export function evaluateNewBadges(context: BadgeContext, alreadyUnlockedBadgeIds
   }
 
   for (const milestone of MILESTONES) {
-    unlock(`streak-${milestone}`, context.streakLength === milestone)
+    unlock(`streak-${milestone}`, context.streakLength >= milestone)
   }
 
-  unlock('first-workout', context.workoutsLoggedBeforeToday === 0 && context.todayHasAnyWorkout)
-  unlock(
-    'first-outdoor-workout',
-    context.outdoorQualifyingWorkoutsLoggedBeforeToday === 0 && context.todayHasOutdoorQualifyingWorkout,
-  )
-  unlock('first-perfect-day', context.isPerfectDay)
-  unlock('first-book-finished', context.booksFinishedBeforeToday === 0 && context.bookFinishedToday)
-  unlock('first-water-goal', !context.waterGoalHitOnAnyPriorDay && context.todayHitWaterGoal)
-  unlock('first-photo', context.photosLoggedBeforeToday === 0 && context.todayHasPhoto)
+  unlock('first-workout', context.workoutsLogged > 0)
+  unlock('first-outdoor-workout', context.outdoorQualifyingWorkouts > 0)
+  unlock('first-perfect-day', context.perfectDays > 0)
+  unlock('first-book-finished', context.booksFinished > 0)
+  unlock('first-water-goal', context.waterGoalDays > 0)
+  unlock('first-photo', context.photosTaken > 0)
 
   return newlyUnlocked
 }

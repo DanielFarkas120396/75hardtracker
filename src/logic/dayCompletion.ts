@@ -1,13 +1,16 @@
 import { MIN_WORKOUT_MIN, PAGES_TARGET, REQUIRED_QUALIFYING_WORKOUTS, WATER_TARGET_ML } from './constants'
-import type { DayTaskData, TaskId } from './types'
+import type { DayTaskData, TaskId, WorkoutTaskData } from './types'
 
-/** Workouts that count toward the "two workouts" requirement (>= MIN_WORKOUT_MIN minutes). */
-function qualifyingWorkouts(data: DayTaskData) {
-  return data.workouts.filter((w) => w.durationMin >= MIN_WORKOUT_MIN)
+/** The five daily tasks, in display order. */
+export const TASK_IDS: readonly TaskId[] = ['workouts', 'diet', 'water', 'reading', 'photo']
+
+/** Whether a single workout counts toward the "two workouts" requirement (>= MIN_WORKOUT_MIN minutes). */
+export function isQualifyingWorkout(workout: WorkoutTaskData): boolean {
+  return workout.durationMin >= MIN_WORKOUT_MIN
 }
 
 export function isWorkoutsTaskComplete(data: DayTaskData): boolean {
-  const qualifying = qualifyingWorkouts(data)
+  const qualifying = data.workouts.filter(isQualifyingWorkout)
   return qualifying.length >= REQUIRED_QUALIFYING_WORKOUTS && qualifying.some((w) => w.isOutdoor)
 }
 
@@ -47,6 +50,17 @@ export function isDayComplete(data: DayTaskData): boolean {
 /** Task ids that are not yet complete, in the fixed display order. */
 export function missingTasks(data: DayTaskData): TaskId[] {
   const map = taskCompletionMap(data)
-  const order: TaskId[] = ['workouts', 'diet', 'water', 'reading', 'photo']
-  return order.filter((task) => !map[task])
+  return TASK_IDS.filter((task) => !map[task])
+}
+
+/** Whether anything at all has been logged for the day (even if no task is complete yet). */
+export function hasAnyProgress(data: DayTaskData): boolean {
+  return (
+    data.water_ml > 0 ||
+    data.pages_read > 0 ||
+    data.dietFollowed ||
+    data.noAlcohol ||
+    data.hasPhoto ||
+    data.workouts.length > 0
+  )
 }

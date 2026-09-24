@@ -1,25 +1,26 @@
-import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect } from 'react'
 import { dayEntryRepo } from '../db/repositories/dayEntryRepo'
-import type { Challenge } from '../db/types'
-import { dayNumberForDate, todayISO } from '../lib/dates'
+import type { DayEntry } from '../db/types'
+import { isChallengeDay } from '../logic/days'
 
 /**
- * Today's DayEntry for the given challenge, creating it on first load if it
- * doesn't exist yet. Returns `undefined` while loading/creating.
+ * Today's DayEntry, taken from the gate's live entries and created the first
+ * time the day is opened. `undefined` while it's being created — and always
+ * outside Day 1–75 (before the start), where no entry may exist.
  */
-export function useTodayEntry(challenge: Challenge | undefined) {
-  const dayNumber = challenge ? dayNumberForDate(challenge.startDate, todayISO()) : undefined
+export function useTodayEntry(params: {
+  challengeId: number
+  dayNumber: number
+  today: string
+  dayEntries: DayEntry[]
+}): DayEntry | undefined {
+  const { challengeId, dayNumber, today, dayEntries } = params
+  const entry = isChallengeDay(dayNumber) ? dayEntries.find((e) => e.dayNumber === dayNumber) : undefined
+  const missing = entry === undefined && isChallengeDay(dayNumber)
 
   useEffect(() => {
-    if (!challenge || dayNumber === undefined) return
-    void dayEntryRepo.getOrCreate({ challengeId: challenge.id, dayNumber, date: todayISO() })
-  }, [challenge, dayNumber])
+    if (missing) void dayEntryRepo.getOrCreate({ challengeId, dayNumber, date: today })
+  }, [missing, challengeId, dayNumber, today])
 
-  const entry = useLiveQuery(async () => {
-    if (!challenge || dayNumber === undefined) return undefined
-    return dayEntryRepo.getByChallengeAndDayNumber(challenge.id, dayNumber)
-  }, [challenge?.id, dayNumber])
-
-  return { entry, dayNumber }
+  return entry
 }

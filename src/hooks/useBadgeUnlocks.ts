@@ -1,95 +1,47 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { useCallback, useEffect, useState } from 'react'
+import { loadBadgeEvaluation } from '../db/badgeEvaluation'
 import { badgeRepo } from '../db/repositories/badgeRepo'
-import { bookRepo } from '../db/repositories/bookRepo'
-import { dayEntryRepo } from '../db/repositories/dayEntryRepo'
-import { workoutRepo } from '../db/repositories/workoutRepo'
-import type { Badge, Challenge, DayEntry, Workout } from '../db/types'
-import { BADGE_DEFINITIONS, evaluateNewBadges, type BadgeContext, type BadgeDefinition } from '../logic/badges'
-import { MIN_WORKOUT_MIN, WATER_TARGET_ML } from '../logic/constants'
+import { BADGE_DEFINITIONS, evaluateNewBadges, type BadgeDefinition } from '../logic/badges'
+import type { ChallengeGate } from './useChallengeGate'
 
 /**
- * Detects and persists newly-unlocked badges whenever today's data changes,
- * comparing against the challenge's full history. Returns the badge
- * definitions unlocked by the most recent check (for a celebration toast) —
- * this is transient, not the full unlocked set (see useBadges for that).
+ * Watches the current attempt's data and unlocks every badge it has earned
+ * but doesn't have yet, returning a queue of toasts for the newly unlocked
+ * ones. It runs at the App level, so badges earned by the last action of an
+ * attempt (Day 75, when Today unmounts) still unlock.
  */
-export function useBadgeUnlocks(params: {
-  challenge: Challenge | undefined
-  entry: DayEntry | undefined
-  workouts: Workout[] | undefined
-  isPerfectDay: boolean | undefined
-  streak: number
-  unlockedBadges: Badge[]
-}): BadgeDefinition[] {
-  const [justUnlocked, setJustUnlocked] = useState<BadgeDefinition[]>([])
-  const unlockedIds = useMemo(() => new Set(params.unlockedBadges.map((b) => b.badgeId)), [params.unlockedBadges])
+export function useBadgeUnlocks(gate: ChallengeGate | undefined) {
+  const challenge = gate && gate.kind !== 'needsRestart' ? gate.challenge : undefined
+  const todayDayNumber = gate?.todayDayNumber
 
-  const { challenge, entry, workouts, isPerfectDay, streak } = params
+  // The challenge row only matters by id and start date, so those are the deps
+  // (the gate hands us a new object on every emission).
+  const evaluation = useLiveQuery(async () => {
+    if (!challenge || todayDayNumber === undefined) return undefined
+    return loadBadgeEvaluation(challenge, todayDayNumber)
+  }, [challenge?.id, challenge?.startDate, todayDayNumber])
 
+  const [toasts, setToasts] = useState<BadgeDefinition[]>([])
+
+  const challengeId = challenge?.id
   useEffect(() => {
-    if (!challenge || !entry || !workouts || isPerfectDay === undefined) return
-    let cancelled = false
+    if (!evaluation || challengeId === undefined) return
+    const earned = evaluateNewBadges(evaluation.context, evaluation.unlockedBadgeIds)
+    if (earned.length === 0) return
 
-    async function run() {
-      const challengeId = challenge!.id
-      const allEntries = await dayEntryRepo.getAllForChallenge(challengeId)
-      const priorEntries = allEntries.filter((e) => e.id !== entry!.id)
+    void badgeRepo.unlockMissing(challengeId, earned).then((added) => {
+      if (added.length === 0) return
+      setToasts((queue) => [
+        ...queue,
+        ...BADGE_DEFINITIONS.filter((def) => added.includes(def.id) && !queue.some((q) => q.id === def.id)),
+      ])
+    })
+  }, [evaluation, challengeId])
 
-      let workoutsLoggedBeforeToday = 0
-      let outdoorQualifyingWorkoutsLoggedBeforeToday = 0
-      let waterGoalHitOnAnyPriorDay = false
-      let photosLoggedBeforeToday = 0
+  const dismiss = useCallback((badgeId: string) => {
+    setToasts((queue) => queue.filter((b) => b.id !== badgeId))
+  }, [])
 
-      for (const priorEntry of priorEntries) {
-        const priorWorkouts = await workoutRepo.getForDayEntry(priorEntry.id)
-        workoutsLoggedBeforeToday += priorWorkouts.length
-        outdoorQualifyingWorkoutsLoggedBeforeToday += priorWorkouts.filter(
-          (w) => w.durationMin >= MIN_WORKOUT_MIN && w.isOutdoor,
-        ).length
-        if (priorEntry.water_ml >= WATER_TARGET_ML) waterGoalHitOnAnyPriorDay = true
-        if (priorEntry.photoId != null) photosLoggedBeforeToday += 1
-      }
-
-      const books = await bookRepo.getAll()
-      // Book.finished has no timestamp, so we can't tell "before" from
-      // "during" today precisely — treat any finished book as the trigger;
-      // evaluateNewBadges's own alreadyUnlocked check keeps this a one-shot.
-      const anyBookFinished = books.some((b) => b.finished)
-
-      const todayQualifyingOutdoor = workouts!.some((w) => w.durationMin >= MIN_WORKOUT_MIN && w.isOutdoor)
-
-      const context: BadgeContext = {
-        streakLength: streak,
-        isPerfectDay: isPerfectDay!,
-        todayHasAnyWorkout: workouts!.length > 0,
-        todayHasOutdoorQualifyingWorkout: todayQualifyingOutdoor,
-        workoutsLoggedBeforeToday,
-        outdoorQualifyingWorkoutsLoggedBeforeToday,
-        todayHitWaterGoal: entry!.water_ml >= WATER_TARGET_ML,
-        waterGoalHitOnAnyPriorDay,
-        todayHasPhoto: entry!.photoId != null,
-        photosLoggedBeforeToday,
-        bookFinishedToday: anyBookFinished,
-        booksFinishedBeforeToday: 0,
-      }
-
-      const newIds = evaluateNewBadges(context, unlockedIds)
-      if (newIds.length === 0 || cancelled) return
-
-      await Promise.all(
-        newIds.map((id) => badgeRepo.unlock({ challengeId, badgeId: id, unlockedAt: new Date().toISOString() })),
-      )
-
-      if (!cancelled) {
-        setJustUnlocked(BADGE_DEFINITIONS.filter((def) => newIds.includes(def.id)))
-      }
-    }
-
-    void run()
-    return () => {
-      cancelled = true
-    }
-  }, [challenge, entry, workouts, isPerfectDay, streak, unlockedIds])
-
-  return justUnlocked
+  return { toasts, dismiss }
 }
