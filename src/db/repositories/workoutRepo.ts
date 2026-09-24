@@ -14,6 +14,13 @@ export const workoutRepo = {
     await db.workouts.update(id, changes)
   },
 
+  /** Atomically adjusts durationMin by a signed delta, clamped to [min, max] — safe under rapid stepper taps. */
+  async adjustDuration(id: number, deltaMin: number, min: number, max: number): Promise<void> {
+    await db.workouts.where('id').equals(id).modify((workout) => {
+      workout.durationMin = Math.min(max, Math.max(min, workout.durationMin + deltaMin))
+    })
+  },
+
   async remove(id: number): Promise<void> {
     await db.workouts.delete(id)
   },

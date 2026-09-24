@@ -31,4 +31,18 @@ export const dayEntryRepo = {
   async update(id: number, changes: Partial<DayEntry>): Promise<void> {
     await db.dayEntries.update(id, changes)
   },
+
+  /** Atomically adjusts water_ml by a signed delta, clamped at 0 — safe under rapid quick-add taps. */
+  async adjustWater(id: number, deltaMl: number): Promise<void> {
+    await db.dayEntries.where('id').equals(id).modify((entry) => {
+      entry.water_ml = Math.max(0, entry.water_ml + deltaMl)
+    })
+  },
+
+  /** Atomically adjusts pages_read by a signed delta, clamped at 0 — safe under rapid stepper taps. */
+  async adjustPages(id: number, deltaPages: number): Promise<void> {
+    await db.dayEntries.where('id').equals(id).modify((entry) => {
+      entry.pages_read = Math.max(0, entry.pages_read + deltaPages)
+    })
+  },
 }
