@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { BlobImage } from '../../components/BlobImage'
 import type { GalleryEntry } from '../../hooks/useGalleryPhotos'
+import { formatDisplayDate } from '../../lib/dates'
 
 interface PhotoLightboxProps {
   entries: GalleryEntry[]
@@ -19,7 +20,7 @@ export function PhotoLightbox({ entries, index, onClose, onNavigate }: PhotoLigh
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-ink/95 p-4"
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/90 p-4"
           onClick={onClose}
         >
           <BlobImage
@@ -29,7 +30,7 @@ export function PhotoLightbox({ entries, index, onClose, onNavigate }: PhotoLigh
             onClick={(e) => e.stopPropagation()}
           />
           <p className="font-rounded font-bold text-white">
-            Attempt #{entry.attemptNumber} — Day {entry.dayNumber} · {entry.date}
+            Attempt #{entry.attemptNumber} — Day {entry.dayNumber} · {formatDisplayDate(entry.date)}
           </p>
 
           <div className="flex gap-4" onClick={(e) => e.stopPropagation()}>

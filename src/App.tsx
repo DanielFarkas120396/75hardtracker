@@ -4,6 +4,7 @@ import { BottomNav, type ScreenId } from './components/ui/BottomNav'
 import { useBadgeUnlocks } from './hooks/useBadgeUnlocks'
 import { useChallengeGate } from './hooks/useChallengeGate'
 import { useDayCompleteCelebration } from './hooks/useDayCompleteCelebration'
+import { useApplyTheme } from './hooks/useThemePreference'
 import { useToday } from './hooks/useToday'
 import { DayCompleteCelebration } from './screens/Today/DayCompleteCelebration'
 import { TodayScreen } from './screens/Today/TodayScreen'
@@ -30,6 +31,7 @@ function LoadingScreen() {
 }
 
 function App() {
+  useApplyTheme()
   const [screen, setScreen] = useState<ScreenId>('today')
   const today = useToday()
   const gate = useChallengeGate(today)

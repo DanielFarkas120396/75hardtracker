@@ -39,7 +39,7 @@ export function JourneyNode({ x, y, dayNumber, state, isMilestone }: JourneyNode
           dominantBaseline="central"
           fontSize={14}
           fontWeight={800}
-          fill={state === 'locked' ? 'white' : isMilestone ? 'var(--color-ink)' : 'white'}
+          fill={state === 'locked' ? 'white' : isMilestone ? 'var(--color-on-accent)' : 'white'}
         >
           {dayNumber}
         </text>

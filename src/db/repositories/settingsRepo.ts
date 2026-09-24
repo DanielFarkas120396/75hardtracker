@@ -9,6 +9,8 @@ export const SETTING_KEYS = {
   lastExportAt: 'lastExportAt',
   /** Whether persistent storage has been requested once already (first launch). */
   persistRequested: 'persistRequested',
+  /** 'system' | 'light' | 'dark' — mirrored to localStorage for the no-flash script in index.html. */
+  theme: 'theme',
 } as const
 
 export const settingsRepo = {

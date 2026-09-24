@@ -33,6 +33,10 @@
   --color-ink: #1f2426;
   --color-ink-muted: #6b7280;
 
+  /* Text on the bright brand fills (yellow toasts, XP button, milestone nodes).
+     Deliberately the same in both themes: those fills don't change. */
+  --color-on-accent: #1f2426;
+
   --font-rounded:
     "Nunito", ui-rounded, system-ui, -apple-system, sans-serif;
 
@@ -47,6 +51,12 @@
   --color-surface: #1f2426;
   --color-ink: #f2f4f5;
   --color-ink-muted: #9aa4a9;
+
+  /* Pastel tints become deep tints: a light wash would glare on a dark surface. */
+  --color-green-light: #183b27;
+  --color-orange-light: #42271a;
+  --color-blue-light: #123247;
+  --color-yellow-light: #3d3217;
 }
 
 @layer base {

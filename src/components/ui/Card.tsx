@@ -10,7 +10,7 @@ interface CardProps {
 export function Card({ children, complete = false, className = '' }: CardProps) {
   return (
     <div
-      className={`relative rounded-card border-2 bg-surface p-4 shadow-sm motion-safe:transition-colors ${complete ? 'border-green' : 'border-transparent'} ${className}`}
+      className={`relative rounded-card border-2 bg-surface p-4 shadow-sm motion-safe:transition-colors ${complete ? 'border-green' : 'border-transparent dark:border-white/5'} ${className}`}
     >
       {complete && (
         <span className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-green text-sm text-white shadow-sm">

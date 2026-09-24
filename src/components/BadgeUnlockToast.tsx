@@ -49,8 +49,8 @@ function ToastItem({ badge, onDismiss }: { badge: BadgeDefinition; onDismiss: (b
         🏅
       </span>
       <div>
-        <p className="font-rounded text-sm font-extrabold text-ink">Badge unlocked: {badge.name}</p>
-        <p className="font-rounded text-xs font-semibold text-ink/70">{badge.description}</p>
+        <p className="font-rounded text-sm font-extrabold text-on-accent">Badge unlocked: {badge.name}</p>
+        <p className="font-rounded text-xs font-semibold text-on-accent/75">{badge.description}</p>
       </div>
     </motion.div>
   )

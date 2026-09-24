@@ -5,6 +5,7 @@ import { Toggle } from '../../components/ui/Toggle'
 import type { Challenge } from '../../db/types'
 import { resetAll } from '../../db/exportImport'
 import { useSettings } from '../../hooks/useSettings'
+import { AppearanceSection } from './AppearanceSection'
 import { AttemptHistorySection } from './AttemptHistorySection'
 import { BadgesSection } from './BadgesSection'
 import { BooksSection } from './BooksSection'
@@ -47,6 +48,8 @@ export function SettingsScreen({ challenge, today, todayDayNumber }: SettingsScr
         )}
 
         <InstallSection />
+
+        <AppearanceSection />
 
         <BooksSection />
 

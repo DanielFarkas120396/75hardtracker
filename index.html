@@ -13,6 +13,26 @@
     <meta name="theme-color" content="#fbfbf8" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#14181a" media="(prefers-color-scheme: dark)" />
 
+    <!-- Applies the saved theme before first paint (no light flash in dark mode). Mirrors
+         applyTheme() in src/lib/theme.ts — keep the storage key and colours in sync. -->
+    <script>
+      ;(function () {
+        try {
+          var preference = localStorage.getItem('75hard-theme') || 'system'
+          var dark =
+            preference === 'dark' ||
+            (preference === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          var root = document.documentElement
+          if (dark) root.classList.add('dark')
+          root.style.colorScheme = dark ? 'dark' : 'light'
+          if (preference !== 'system') {
+            var metas = document.querySelectorAll('meta[name="theme-color"]')
+            for (var i = 0; i < metas.length; i++) metas[i].content = dark ? '#14181a' : '#fbfbf8'
+          }
+        } catch (e) {}
+      })()
+    </script>
+
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/mascot.svg" sizes="any" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />

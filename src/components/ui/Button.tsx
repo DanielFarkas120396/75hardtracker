@@ -6,7 +6,7 @@ const VARIANT_CLASSES: Record<Variant, string> = {
   primary: 'bg-green border-green-dark text-white',
   streak: 'bg-orange border-orange-dark text-white',
   water: 'bg-blue border-blue-dark text-white',
-  xp: 'bg-yellow border-yellow-dark text-ink',
+  xp: 'bg-yellow border-yellow-dark text-on-accent',
   danger: 'bg-danger border-danger-dark text-white',
   secondary: 'bg-surface border-ink/15 text-ink',
 }
