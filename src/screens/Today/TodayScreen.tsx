@@ -1,13 +1,19 @@
 import { useEffect, useState } from 'react'
 import { ProgressRing } from '../../components/ui/ProgressRing'
+import { BadgeUnlockToast } from '../../components/BadgeUnlockToast'
 import { FlameStreak } from '../../components/FlameStreak'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import { useActiveChallenge } from '../../hooks/useActiveChallenge'
+import { useBadgeUnlocks } from '../../hooks/useBadgeUnlocks'
+import { useBadges } from '../../hooks/useBadges'
 import { useDayCompletion } from '../../hooks/useDayCompletion'
 import { useStreak } from '../../hooks/useStreak'
 import { useTodayEntry } from '../../hooks/useTodayEntry'
 import { useWorkoutsForEntry } from '../../hooks/useWorkoutsForEntry'
+import { useXpTotal } from '../../hooks/useXpTotal'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
+import { calculateDayXp } from '../../logic/xp'
+import type { BadgeDefinition } from '../../logic/badges'
 import { DayCompleteCelebration } from './DayCompleteCelebration'
 import { DietCard } from './DietCard'
 import { PhotoCard } from './PhotoCard'
@@ -21,8 +27,29 @@ export function TodayScreen() {
   const workouts = useWorkoutsForEntry(entry?.id)
   const completion = useDayCompletion(entry, workouts)
   const streak = useStreak(challenge?.id)
+  const xpTotal = useXpTotal(challenge?.id)
+  const unlockedBadges = useBadges(challenge?.id)
 
   const [showCelebration, setShowCelebration] = useState(false)
+  const [toastQueue, setToastQueue] = useState<BadgeDefinition[]>([])
+
+  const newlyUnlocked = useBadgeUnlocks({
+    challenge,
+    entry,
+    workouts,
+    isPerfectDay: completion?.isComplete,
+    streak,
+    unlockedBadges,
+  })
+
+  useEffect(() => {
+    if (newlyUnlocked.length === 0) return
+    setToastQueue((prev) => {
+      const existingIds = new Set(prev.map((b) => b.id))
+      const additions = newlyUnlocked.filter((b) => !existingIds.has(b.id))
+      return additions.length > 0 ? [...prev, ...additions] : prev
+    })
+  }, [newlyUnlocked])
 
   useEffect(() => {
     if (!entry || !completion) return
@@ -46,6 +73,7 @@ export function TodayScreen() {
   }
 
   const completedCount = Object.values(completion.completion).filter(Boolean).length
+  const todayXp = calculateDayXp(completion.data, streak).total
 
   return (
     <div className="min-h-dvh bg-canvas pb-24">
@@ -55,6 +83,7 @@ export function TodayScreen() {
           <h1 className="font-rounded text-2xl font-extrabold text-ink">
             Day {dayNumber} / {CHALLENGE_LENGTH}
           </h1>
+          <p className="mt-1 font-rounded text-sm font-extrabold text-yellow-dark">⭐ {xpTotal} XP</p>
         </div>
         <div className="flex items-center gap-3">
           <FlameStreak streak={streak} />
@@ -75,7 +104,13 @@ export function TodayScreen() {
       <DayCompleteCelebration
         visible={showCelebration}
         dayNumber={dayNumber}
+        xpEarned={todayXp}
         onDismiss={() => setShowCelebration(false)}
+      />
+
+      <BadgeUnlockToast
+        badges={toastQueue}
+        onDismiss={(id) => setToastQueue((prev) => prev.filter((b) => b.id !== id))}
       />
     </div>
   )
