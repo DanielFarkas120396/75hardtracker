@@ -22,6 +22,10 @@ export const challengeRepo = {
     await db.challenges.update(id, { status })
   },
 
+  async update(id: number, changes: Partial<Challenge>): Promise<void> {
+    await db.challenges.update(id, changes)
+  },
+
   /**
    * Archives the current challenge as `failed` and creates the restarted
    * one in a single transaction, so no other query can ever observe a
