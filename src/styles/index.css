@@ -37,6 +37,11 @@
      Deliberately the same in both themes: those fills don't change. */
   --color-on-accent: #1f2426;
 
+  /* Charts: the data line (validated >= 3:1 on the card surface in both themes)
+     and a hairline grid one step off the surface. */
+  --color-chart-line: #2ba857;
+  --color-chart-grid: #e7eae7;
+
   --font-rounded:
     "Nunito", ui-rounded, system-ui, -apple-system, sans-serif;
 
@@ -57,6 +62,8 @@
   --color-orange-light: #42271a;
   --color-blue-light: #123247;
   --color-yellow-light: #3d3217;
+
+  --color-chart-grid: #30383b;
 }
 
 @layer base {

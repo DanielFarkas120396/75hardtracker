@@ -9,6 +9,7 @@ import { badgeRepo } from '../repositories/badgeRepo'
 import { bookRepo } from '../repositories/bookRepo'
 import { challengeRepo } from '../repositories/challengeRepo'
 import { dayEntryRepo } from '../repositories/dayEntryRepo'
+import { measurementRepo } from '../repositories/measurementRepo'
 import { photoRepo } from '../repositories/photoRepo'
 import { workoutRepo } from '../repositories/workoutRepo'
 import { addChallenge, addPerfectDays, freshDatabase, jpegBytes } from './fixtures'
@@ -208,6 +209,37 @@ describe('badgeRepo.unlockMissing', () => {
     const second = await addChallenge({ startDate: today, attemptNumber: 2, status: 'active' })
     await badgeRepo.unlockMissing(first, ['first-photo'])
     expect(await badgeRepo.unlockMissing(second, ['first-photo'])).toEqual(['first-photo'])
+  })
+})
+
+describe('measurementRepo.save', () => {
+  it('keeps one weigh-in per date: logging a date again replaces its values', async () => {
+    const first = await measurementRepo.save({ date: today, weight_kg: 82 })
+    const again = await measurementRepo.save({ date: today, weight_kg: 81.6, bodyMeasurements_cm: { waist: 88 } })
+
+    expect(first.ok && again.ok && first.id === again.id).toBe(true)
+    expect(await measurementRepo.getAll()).toEqual([
+      expect.objectContaining({ date: today, weight_kg: 81.6, bodyMeasurements_cm: { waist: 88 } }),
+    ])
+  })
+
+  it("refuses to move an entry onto another entry's date", async () => {
+    await measurementRepo.save({ date: '2026-09-01', weight_kg: 84 })
+    const second = await measurementRepo.save({ date: '2026-09-08', weight_kg: 83 })
+    if (!second.ok) throw new Error('expected the second weigh-in to save')
+
+    expect(await measurementRepo.save({ date: '2026-09-01', weight_kg: 83 }, second.id)).toEqual({
+      ok: false,
+      reason: 'dateTaken',
+    })
+    expect((await measurementRepo.getAll()).map((m) => m.weight_kg)).toEqual([84, 83])
+  })
+
+  it('edits an entry in place, including its date', async () => {
+    const saved = await measurementRepo.save({ date: '2026-09-01', weight_kg: 84 })
+    if (!saved.ok) throw new Error('expected the weigh-in to save')
+    await measurementRepo.save({ date: '2026-09-02', weight_kg: 83.8 }, saved.id)
+    expect(await measurementRepo.getAll()).toEqual([expect.objectContaining({ id: saved.id, date: '2026-09-02', weight_kg: 83.8 })])
   })
 })
 

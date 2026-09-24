@@ -72,7 +72,7 @@ function App() {
             completed={gate.kind === 'completed'}
           />
         )}
-        {screen === 'stats' && <StatsScreen challenge={gate.challenge} streak={gate.streak} />}
+        {screen === 'stats' && <StatsScreen challenge={gate.challenge} streak={gate.streak} today={today} />}
         {screen === 'gallery' && <GalleryScreen />}
         {screen === 'settings' && (
           <SettingsScreen challenge={gate.challenge} today={today} todayDayNumber={gate.todayDayNumber} />

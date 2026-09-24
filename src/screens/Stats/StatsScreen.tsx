@@ -2,10 +2,12 @@ import { FlameStreak } from '../../components/FlameStreak'
 import type { Challenge } from '../../db/types'
 import { useChallengeTotals } from '../../hooks/useChallengeTotals'
 import { useXpTotal } from '../../hooks/useXpTotal'
+import { BodySection } from './BodySection'
 
 interface StatsScreenProps {
   challenge: Challenge
   streak: number
+  today: string
 }
 
 function StatCard({ label, value, color }: { label: string; value: string; color: string }) {
@@ -17,7 +19,7 @@ function StatCard({ label, value, color }: { label: string; value: string; color
   )
 }
 
-export function StatsScreen({ challenge, streak }: StatsScreenProps) {
+export function StatsScreen({ challenge, streak, today }: StatsScreenProps) {
   const xpTotal = useXpTotal(challenge.id)
   const totals = useChallengeTotals(challenge.id)
 
@@ -31,13 +33,21 @@ export function StatsScreen({ challenge, streak }: StatsScreenProps) {
         <FlameStreak streak={streak} />
       </header>
 
-      <main className="grid grid-cols-2 gap-3 px-4">
-        <StatCard label="Total XP" value={`⭐ ${xpTotal}`} color="text-yellow-dark" />
-        <StatCard label="Current streak" value={`🔥 ${streak} ${streak === 1 ? 'day' : 'days'}`} color="text-orange" />
-        <StatCard label="Perfect days" value={`${totals.perfectDays}`} color="text-green" />
-        <StatCard label="Water logged" value={`${(totals.water_ml / 1000).toFixed(1)} L`} color="text-blue" />
-        <StatCard label="Pages read" value={`${totals.pages}`} color="text-green" />
-        <StatCard label="Workout minutes" value={`${totals.workoutMinutes} min`} color="text-green" />
+      <main className="flex flex-col gap-4 px-4">
+        <div className="grid grid-cols-2 gap-3">
+          <StatCard label="Total XP" value={`⭐ ${xpTotal}`} color="text-yellow-dark" />
+          <StatCard
+            label="Current streak"
+            value={`🔥 ${streak} ${streak === 1 ? 'day' : 'days'}`}
+            color="text-orange"
+          />
+          <StatCard label="Perfect days" value={`${totals.perfectDays}`} color="text-green" />
+          <StatCard label="Water logged" value={`${(totals.water_ml / 1000).toFixed(1)} L`} color="text-blue" />
+          <StatCard label="Pages read" value={`${totals.pages}`} color="text-green" />
+          <StatCard label="Workout minutes" value={`${totals.workoutMinutes} min`} color="text-green" />
+        </div>
+
+        <BodySection today={today} />
       </main>
     </div>
   )
