@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildRestartedChallenge, evaluateChallengeStatus } from '../restart'
+import { buildRestartedChallenge, evaluateChallengeStatus, findFirstIncompleteDayNumber } from '../restart'
 
 describe('evaluateChallengeStatus', () => {
   it('passes through a non-active status unchanged', () => {
@@ -61,6 +61,26 @@ describe('evaluateChallengeStatus', () => {
   it('completes the challenge once day 75 is complete and today is day 75 or later', () => {
     const dayEntries = Array.from({ length: 75 }, (_, i) => ({ dayNumber: i + 1, completed: true }))
     expect(evaluateChallengeStatus({ currentStatus: 'active', dayEntries, todayDayNumber: 75 })).toBe('completed')
+  })
+})
+
+describe('findFirstIncompleteDayNumber', () => {
+  it('returns undefined when every prior day is complete', () => {
+    expect(
+      findFirstIncompleteDayNumber([{ dayNumber: 1, completed: true }, { dayNumber: 2, completed: true }], 3),
+    ).toBeUndefined()
+  })
+
+  it('returns the earliest incomplete or missing day', () => {
+    expect(
+      findFirstIncompleteDayNumber(
+        [
+          { dayNumber: 1, completed: true },
+          { dayNumber: 3, completed: false },
+        ],
+        4,
+      ),
+    ).toBe(2)
   })
 })
 

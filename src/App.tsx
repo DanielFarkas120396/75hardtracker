@@ -1,5 +1,9 @@
 import { useState } from 'react'
 import { BottomNav, type ScreenId } from './components/ui/BottomNav'
+import { useActiveChallenge } from './hooks/useActiveChallenge'
+import { useChallengeGate } from './hooks/useChallengeGate'
+import { DayFailedScreen } from './screens/RestartFlow/DayFailedScreen'
+import { JourneyScreen } from './screens/Journey/JourneyScreen'
 import { TodayScreen } from './screens/Today/TodayScreen'
 
 function ComingSoon({ title }: { title: string }) {
@@ -14,11 +18,29 @@ function ComingSoon({ title }: { title: string }) {
 
 function App() {
   const [screen, setScreen] = useState<ScreenId>('today')
+  const challenge = useActiveChallenge()
+  const gate = useChallengeGate(challenge)
+
+  if (!gate) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-canvas">
+        <p className="font-rounded text-ink-muted">Loading…</p>
+      </div>
+    )
+  }
+
+  if (gate.needsRestartConfirmation) {
+    return (
+      <DayFailedScreen challenge={gate.challenge} dayEntries={gate.dayEntries} todayDayNumber={gate.todayDayNumber} />
+    )
+  }
 
   return (
     <>
       {screen === 'today' && <TodayScreen />}
-      {screen === 'journey' && <ComingSoon title="Journey" />}
+      {screen === 'journey' && (
+        <JourneyScreen challenge={gate.challenge} dayEntries={gate.dayEntries} todayDayNumber={gate.todayDayNumber} />
+      )}
       {screen === 'stats' && <ComingSoon title="Stats" />}
       {screen === 'gallery' && <ComingSoon title="Gallery" />}
       {screen === 'settings' && <ComingSoon title="Settings" />}

@@ -4,9 +4,9 @@ import type { DayTaskData } from '../logic/types'
 import type { DayEntry, Workout } from '../db/types'
 
 /** Derives per-task and overall completion for a DayEntry + its Workouts. */
-export function useDayCompletion(entry: DayEntry | undefined, workouts: Workout[]) {
+export function useDayCompletion(entry: DayEntry | undefined, workouts: Workout[] | undefined) {
   return useMemo(() => {
-    if (!entry) return undefined
+    if (!entry || !workouts) return undefined
 
     const data: DayTaskData = {
       water_ml: entry.water_ml,

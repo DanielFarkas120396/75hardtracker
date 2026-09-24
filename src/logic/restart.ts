@@ -2,6 +2,26 @@ import { CHALLENGE_LENGTH } from './constants'
 import type { ChallengeStatus, DayCompletionSummary } from './types'
 
 /**
+ * The earliest day strictly before `todayDayNumber` that has no entry at
+ * all, or an entry that isn't complete. `undefined` if every prior day is
+ * complete.
+ */
+export function findFirstIncompleteDayNumber(
+  dayEntries: DayCompletionSummary[],
+  todayDayNumber: number,
+): number | undefined {
+  const entryByDayNumber = new Map(dayEntries.map((e) => [e.dayNumber, e]))
+
+  for (let day = 1; day < todayDayNumber; day++) {
+    const entry = entryByDayNumber.get(day)
+    if (!entry || !entry.completed) {
+      return day
+    }
+  }
+  return undefined
+}
+
+/**
  * Determines whether an active challenge should transition to `failed` or
  * `completed`, based on every day strictly before `todayDayNumber`. A day
  * counts as missed if it has no entry at all, or an entry that isn't
@@ -15,15 +35,11 @@ export function evaluateChallengeStatus(params: {
 }): ChallengeStatus {
   if (params.currentStatus !== 'active') return params.currentStatus
 
-  const entryByDayNumber = new Map(params.dayEntries.map((e) => [e.dayNumber, e]))
-
-  for (let day = 1; day < params.todayDayNumber; day++) {
-    const entry = entryByDayNumber.get(day)
-    if (!entry || !entry.completed) {
-      return 'failed'
-    }
+  if (findFirstIncompleteDayNumber(params.dayEntries, params.todayDayNumber) !== undefined) {
+    return 'failed'
   }
 
+  const entryByDayNumber = new Map(params.dayEntries.map((e) => [e.dayNumber, e]))
   const finalDay = entryByDayNumber.get(CHALLENGE_LENGTH)
   if (finalDay?.completed && params.todayDayNumber >= CHALLENGE_LENGTH) {
     return 'completed'

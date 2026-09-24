@@ -21,4 +21,17 @@ export const challengeRepo = {
   async updateStatus(id: number, status: ChallengeStatus): Promise<void> {
     await db.challenges.update(id, { status })
   },
+
+  /**
+   * Archives the current challenge as `failed` and creates the restarted
+   * one in a single transaction, so no other query can ever observe a
+   * moment with zero active challenges (which would otherwise race with
+   * useActiveChallenge's "bootstrap a new one" effect).
+   */
+  async restart(oldChallengeId: number, restarted: Omit<Challenge, 'id'>): Promise<number> {
+    return db.transaction('rw', db.challenges, async () => {
+      await db.challenges.update(oldChallengeId, { status: 'failed' })
+      return db.challenges.add(restarted as Challenge)
+    })
+  },
 }

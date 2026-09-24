@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ProgressRing } from '../../components/ui/ProgressRing'
 import { FlameStreak } from '../../components/FlameStreak'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
@@ -23,20 +23,21 @@ export function TodayScreen() {
   const streak = useStreak(challenge?.id)
 
   const [showCelebration, setShowCelebration] = useState(false)
-  const wasComplete = useRef(false)
 
   useEffect(() => {
     if (!entry || !completion) return
+    // Compare against the persisted `completed` flag (not local component
+    // state) so remounting the screen — e.g. switching tabs — never
+    // re-triggers the celebration for a day that was already finished.
+    if (completion.isComplete && !entry.completed) {
+      setShowCelebration(true)
+    }
     if (completion.isComplete !== entry.completed) {
       void dayEntryRepo.update(entry.id, { completed: completion.isComplete })
     }
-    if (completion.isComplete && !wasComplete.current) {
-      setShowCelebration(true)
-    }
-    wasComplete.current = completion.isComplete
   }, [entry, completion])
 
-  if (!challenge || !entry || !completion || dayNumber === undefined) {
+  if (!challenge || !entry || !workouts || !completion || dayNumber === undefined) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-canvas">
         <p className="font-rounded text-ink-muted">Loading…</p>
