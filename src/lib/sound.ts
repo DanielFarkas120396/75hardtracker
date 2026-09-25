@@ -63,3 +63,54 @@ export function playChime(): void {
     oscillator.stop(end)
   })
 }
+
+const RING_PARTIALS_HZ = [3100, 4700, 6200]
+
+/**
+ * A short synthesized blade "shing" with no audio file. It's band-passed
+ * noise sweeping up (the blade sliding), then a quick metallic ring of three
+ * inharmonic partials.
+ */
+export function playKnifeShing(): void {
+  const ctx = getContext()
+  if (!ctx) return
+  void resume(ctx)
+  const now = ctx.currentTime
+
+  const length = Math.floor(ctx.sampleRate * 0.25)
+  const buffer = ctx.createBuffer(1, length, ctx.sampleRate)
+  const samples = buffer.getChannelData(0)
+  for (let i = 0; i < length; i++) samples[i] = Math.random() * 2 - 1
+
+  const noise = ctx.createBufferSource()
+  noise.buffer = buffer
+  const band = ctx.createBiquadFilter()
+  band.type = 'bandpass'
+  band.Q.value = 6
+  band.frequency.setValueAtTime(2000, now)
+  band.frequency.exponentialRampToValueAtTime(8000, now + 0.25)
+  const noiseGain = ctx.createGain()
+  noiseGain.gain.setValueAtTime(0.0001, now)
+  noiseGain.gain.exponentialRampToValueAtTime(0.25, now + 0.03)
+  noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25)
+  noise.connect(band)
+  band.connect(noiseGain)
+  noiseGain.connect(ctx.destination)
+  noise.start(now)
+  noise.stop(now + 0.25)
+
+  RING_PARTIALS_HZ.forEach((frequency, i) => {
+    const oscillator = ctx.createOscillator()
+    const gain = ctx.createGain()
+    oscillator.type = 'sine'
+    oscillator.frequency.value = frequency
+    const start = now + 0.18
+    gain.gain.setValueAtTime(0.0001, start)
+    gain.gain.exponentialRampToValueAtTime(0.08 / (i + 1), start + 0.01)
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.5)
+    oscillator.connect(gain)
+    gain.connect(ctx.destination)
+    oscillator.start(start)
+    oscillator.stop(start + 0.5)
+  })
+}

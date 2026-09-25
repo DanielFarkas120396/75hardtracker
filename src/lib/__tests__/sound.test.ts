@@ -46,3 +46,68 @@ describe('unlockAudioOnUserGesture', () => {
     expect(FakeAudioContext.instances).toHaveLength(1)
   })
 })
+
+const param = () => ({ value: 0, setValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn() })
+const node = () => ({ connect: vi.fn(), start: vi.fn(), stop: vi.fn(), buffer: null as unknown })
+
+/** Records which Web Audio nodes a sound builds. */
+class RecordingAudioContext {
+  static last: RecordingAudioContext | null = null
+  state: AudioContextState = 'running'
+  currentTime = 0
+  sampleRate = 48_000
+  destination = {}
+  created: string[] = []
+  resume = vi.fn(async () => {})
+
+  constructor() {
+    RecordingAudioContext.last = this
+  }
+
+  createBuffer(_channels: number, length: number) {
+    this.created.push('buffer')
+    return { getChannelData: () => new Float32Array(length) }
+  }
+  createBufferSource() {
+    this.created.push('noise')
+    return node()
+  }
+  createBiquadFilter() {
+    this.created.push('filter')
+    return { ...node(), type: '', Q: param(), frequency: param() }
+  }
+  createGain() {
+    this.created.push('gain')
+    return { ...node(), gain: param() }
+  }
+  createOscillator() {
+    this.created.push('oscillator')
+    return { ...node(), type: '', frequency: param() }
+  }
+}
+
+describe('playKnifeShing', () => {
+  beforeEach(() => {
+    vi.resetModules()
+    RecordingAudioContext.last = null
+  })
+
+  afterEach(() => {
+    Reflect.deleteProperty(window, 'AudioContext')
+  })
+
+  it('plays a rising noise sweep and a three-partial metallic ring', async () => {
+    Object.defineProperty(window, 'AudioContext', { value: RecordingAudioContext, configurable: true, writable: true })
+    const { playKnifeShing } = await import('../sound')
+    playKnifeShing()
+    const created = RecordingAudioContext.last?.created ?? []
+    expect(created).toContain('noise')
+    expect(created).toContain('filter')
+    expect(created.filter((kind) => kind === 'oscillator')).toHaveLength(3)
+  })
+
+  it('does nothing without Web Audio', async () => {
+    const { playKnifeShing } = await import('../sound')
+    expect(() => playKnifeShing()).not.toThrow()
+  })
+})
