@@ -8,6 +8,7 @@ import { useXpTotal } from '../../hooks/useXpTotal'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { TASK_IDS } from '../../logic/dayCompletion'
 import { isChallengeDay } from '../../logic/days'
+import { DayNotesCard } from './DayNotesCard'
 import { DietCard } from './DietCard'
 import { PhotoCard } from './PhotoCard'
 import { PreStartView } from './PreStartView'
@@ -70,6 +71,7 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak }: To
         <WaterCard entry={entry} complete={completion.completion.water} />
         <ReadingCard entry={entry} complete={completion.completion.reading} />
         <PhotoCard entry={entry} complete={completion.completion.photo} />
+        <DayNotesCard entry={entry} />
       </main>
     </div>
   )

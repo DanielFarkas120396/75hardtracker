@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import type { DayEntry } from '../../db/types'
 
@@ -30,16 +30,14 @@ export function DayNotesCard({ entry }: DayNotesCardProps) {
       <h2 className="font-rounded text-lg font-extrabold text-ink">📝 How was today?</h2>
       <p className="mt-1 text-sm text-ink-muted">Optional — just for you. It doesn't affect completing the day.</p>
 
-      <div role="radiogroup" aria-label="Mood" className="mt-3 grid grid-cols-5 gap-1">
+      <div role="group" aria-label="Mood" className="mt-3 grid grid-cols-5 gap-1">
         {MOODS.map((mood) => {
           const selected = entry.mood === mood.value
           return (
             <button
               key={mood.value}
               type="button"
-              role="radio"
-              aria-checked={selected}
-              aria-label={mood.label}
+              aria-pressed={selected}
               onClick={() => setMood(mood.value)}
               className={`flex min-h-touch flex-col items-center justify-center rounded-2xl py-1 motion-safe:transition-transform ${
                 selected ? 'scale-105 bg-yellow-light ring-2 ring-yellow-dark' : 'bg-canvas'
@@ -65,6 +63,7 @@ const toNotes = (value: string) => (value.trim() === '' ? undefined : value)
 
 /** Notes are saved once typing pauses, on blur, and — if still pending — when the card unmounts. */
 function NotesField({ entry }: { entry: DayEntry }) {
+  const fieldId = useId()
   const [text, setText] = useState(entry.notes ?? '')
   const [saved, setSaved] = useState(true)
   const pendingText = useRef<string | null>(null)
@@ -98,15 +97,17 @@ function NotesField({ entry }: { entry: DayEntry }) {
     timer.current = setTimeout(flush, NOTES_SAVE_DELAY_MS)
   }
 
+  // The save status sits outside the label so it doesn't become part of the field's name.
   return (
-    <label className="mt-3 block">
-      <span className="flex items-baseline justify-between text-sm font-semibold text-ink-muted">
-        Notes
+    <div className="mt-3">
+      <div className="flex items-baseline justify-between text-sm font-semibold text-ink-muted">
+        <label htmlFor={fieldId}>Notes</label>
         <span className="text-xs font-normal" aria-live="polite">
           {saved ? (text ? 'Saved' : '') : 'Saving…'}
         </span>
-      </span>
+      </div>
       <textarea
+        id={fieldId}
         value={text}
         onChange={(e) => onChange(e.target.value)}
         onBlur={flush}
@@ -114,6 +115,6 @@ function NotesField({ entry }: { entry: DayEntry }) {
         placeholder="What went well? What was hard?"
         className="mt-1 w-full resize-y rounded-xl bg-canvas px-3 py-2 font-rounded text-ink placeholder:text-ink-muted/70"
       />
-    </label>
+    </div>
   )
 }
