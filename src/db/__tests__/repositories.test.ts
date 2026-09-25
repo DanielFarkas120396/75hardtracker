@@ -267,3 +267,23 @@ describe('bookRepo finish tracking', () => {
     expect(await bookRepo.getById(id)).toMatchObject({ totalPages: 250, currentPage: 250, finished: true })
   })
 })
+
+describe('dayEntryRepo.getAllForChallenges', () => {
+  it('returns the entries of exactly the given attempts', async () => {
+    const first = await addChallenge({ startDate: '2026-01-01', attemptNumber: 1, status: 'failed' })
+    const second = await addChallenge({ startDate: '2026-02-01', attemptNumber: 2, status: 'failed' })
+    const third = await addChallenge({ startDate: '2026-03-01', attemptNumber: 3, status: 'active' })
+    await addPerfectDays(first, '2026-01-01', 1, 2)
+    await addPerfectDays(second, '2026-02-01', 1, 3)
+    await addPerfectDays(third, '2026-03-01', 1, 1)
+
+    const entries = await dayEntryRepo.getAllForChallenges([first, third])
+    const days = entries.map((e) => [e.challengeId, e.dayNumber]).sort((a, b) => a[0] - b[0] || a[1] - b[1])
+    expect(days).toEqual([
+      [first, 1],
+      [first, 2],
+      [third, 1],
+    ])
+    expect(await dayEntryRepo.getAllForChallenges([])).toEqual([])
+  })
+})

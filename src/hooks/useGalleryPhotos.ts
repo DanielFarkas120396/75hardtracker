@@ -11,10 +11,15 @@ export interface GalleryEntry {
   date: string
 }
 
-/** Every progress photo ever taken, across all attempts, newest first. */
-export function useGalleryPhotos(): GalleryEntry[] | undefined {
+/** Progress photos, newest first: every one ever taken, or only one attempt's when `challengeId` is given. */
+export function useGalleryPhotos(challengeId?: number): GalleryEntry[] | undefined {
   return useLiveQuery(async () => {
-    const [entries, challenges] = await Promise.all([dayEntryRepo.getAllWithPhoto(), challengeRepo.getAll()])
+    const [entries, challenges] = await Promise.all([
+      challengeId === undefined
+        ? dayEntryRepo.getAllWithPhoto()
+        : dayEntryRepo.getAllForChallenge(challengeId).then((all) => all.filter((e) => e.photoId != null)),
+      challengeRepo.getAll(),
+    ])
     const attemptByChallengeId = new Map(challenges.map((c) => [c.id, c.attemptNumber]))
     const photos = await photoRepo.getByIds(entries.map((e) => e.photoId!))
 
@@ -32,5 +37,5 @@ export function useGalleryPhotos(): GalleryEntry[] | undefined {
 
     results.sort((a, b) => b.attemptNumber - a.attemptNumber || b.dayNumber - a.dayNumber)
     return results
-  }, [])
+  }, [challengeId])
 }

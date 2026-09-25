@@ -23,6 +23,12 @@ export const dayEntryRepo = {
     return db.dayEntries.where('challengeId').equals(challengeId).sortBy('dayNumber')
   },
 
+  /** Every DayEntry of the given challenges, in one query. */
+  async getAllForChallenges(challengeIds: number[]): Promise<DayEntry[]> {
+    if (challengeIds.length === 0) return []
+    return db.dayEntries.where('challengeId').anyOf(challengeIds).toArray()
+  },
+
   /** Every DayEntry with a photo attached, across all challenges/attempts — for the Gallery. */
   async getAllWithPhoto(): Promise<DayEntry[]> {
     return db.dayEntries.filter((e) => e.photoId != null).toArray()

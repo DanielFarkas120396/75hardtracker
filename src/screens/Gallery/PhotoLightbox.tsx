@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
+import { useEffect, useEffectEvent } from 'react'
 import { BlobImage } from '../../components/BlobImage'
 import type { GalleryEntry } from '../../hooks/useGalleryPhotos'
 import { formatDisplayDate } from '../../lib/dates'
@@ -12,6 +13,21 @@ interface PhotoLightboxProps {
 
 export function PhotoLightbox({ entries, index, onClose, onNavigate }: PhotoLightboxProps) {
   const entry = index !== null ? entries[index] : undefined
+  const open = entry !== undefined
+  const close = useEffectEvent(() => onClose())
+
+  // Escape closes the lightbox. It listens in the capture phase and stops the
+  // event there, so a Modal underneath (attempt history) doesn't close too.
+  useEffect(() => {
+    if (!open) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      event.stopPropagation()
+      close()
+    }
+    document.addEventListener('keydown', onKeyDown, true)
+    return () => document.removeEventListener('keydown', onKeyDown, true)
+  }, [open])
 
   return (
     <AnimatePresence>

@@ -2,6 +2,15 @@ import { PAGES_TARGET, WATER_TARGET_ML } from '../logic/constants'
 import { TASK_IDS } from '../logic/dayCompletion'
 import type { TaskId } from '../logic/types'
 
+/** Short task names for lists, e.g. "missed Water, Photo". */
+export const TASK_NAMES: Record<TaskId, string> = {
+  workouts: 'Workouts',
+  diet: 'Diet',
+  water: 'Water',
+  reading: 'Reading',
+  photo: 'Photo',
+}
+
 /**
  * Cheers flashed on a task card the moment it's completed. Each task has a
  * few, rotated by day number so the same line doesn't show up every day.

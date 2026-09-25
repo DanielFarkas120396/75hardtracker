@@ -65,7 +65,7 @@ export function SettingsScreen({ challenge, today, todayDayNumber }: SettingsScr
 
         <ExportImportSection today={today} />
 
-        <AttemptHistorySection />
+        <AttemptHistorySection today={today} />
 
         <section className="rounded-card bg-surface p-4 shadow-sm">
           <h2 className="font-rounded text-lg font-extrabold text-ink">Danger zone</h2>

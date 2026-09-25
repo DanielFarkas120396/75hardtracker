@@ -19,6 +19,12 @@ export interface DayTaskData {
   workouts: WorkoutTaskData[]
 }
 
+/** One logged day of an attempt, for whole-attempt calculations (XP, attempt summaries). */
+export interface ChallengeDayData {
+  dayNumber: number
+  data: DayTaskData
+}
+
 export type ChallengeStatus = 'active' | 'failed' | 'completed'
 
 export interface DayCompletionSummary {
