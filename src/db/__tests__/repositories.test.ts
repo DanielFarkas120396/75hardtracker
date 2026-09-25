@@ -11,6 +11,7 @@ import { challengeRepo } from '../repositories/challengeRepo'
 import { dayEntryRepo } from '../repositories/dayEntryRepo'
 import { measurementRepo } from '../repositories/measurementRepo'
 import { photoRepo } from '../repositories/photoRepo'
+import { SETTING_KEYS, settingsRepo } from '../repositories/settingsRepo'
 import { workoutRepo } from '../repositories/workoutRepo'
 import { addChallenge, addPerfectDays, freshDatabase, jpegBytes } from './fixtures'
 
@@ -245,7 +246,7 @@ describe('measurementRepo.save', () => {
 
 describe('bookRepo finish tracking', () => {
   it('stamps finishedAt when the last page is reached and clears it when stepping back', async () => {
-    const id = await bookRepo.add({ title: 'Deep Work', totalPages: 20, currentPage: 15, finished: false })
+    const id = await bookRepo.add({ title: 'Deep Work', totalPages: 20, currentPage: 15 })
 
     await bookRepo.adjustCurrentPage(id, 10)
     const finished = await bookRepo.getById(id)
@@ -262,9 +263,31 @@ describe('bookRepo finish tracking', () => {
   })
 
   it('recomputes finished state when page counts are edited', async () => {
-    const id = await bookRepo.add({ title: 'Atomic Habits', totalPages: 300, currentPage: 280, finished: false })
+    const id = await bookRepo.add({ title: 'Atomic Habits', totalPages: 300, currentPage: 280 })
     await bookRepo.update(id, { totalPages: 250 })
     expect(await bookRepo.getById(id)).toMatchObject({ totalPages: 250, currentPage: 250, finished: true })
+  })
+
+  it('marks a book finished when it is added on its last page', async () => {
+    const id = await bookRepo.add({ title: 'Mindset', totalPages: 280, currentPage: 280 })
+    const book = await bookRepo.getById(id)
+    expect(book).toMatchObject({ finished: true })
+    expect(book!.finishedAt).toEqual(expect.any(String))
+  })
+})
+
+describe('bookRepo.remove', () => {
+  it('clears the current book when that book is deleted, and only then', async () => {
+    const reading = await bookRepo.add({ title: 'Deep Work', totalPages: 296, currentPage: 40 })
+    const other = await bookRepo.add({ title: 'Mindset', totalPages: 280, currentPage: 0 })
+    await settingsRepo.set(SETTING_KEYS.currentBookId, reading)
+
+    await bookRepo.remove(other)
+    expect(await settingsRepo.get(SETTING_KEYS.currentBookId, null)).toBe(reading)
+
+    await bookRepo.remove(reading)
+    expect(await bookRepo.getAll()).toEqual([])
+    expect(await settingsRepo.get(SETTING_KEYS.currentBookId, null)).toBeNull()
   })
 })
 

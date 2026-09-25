@@ -34,20 +34,29 @@ export function ReadingCard({ entry, complete, cheer }: ReadingCardProps) {
 
       <div className="mt-4">
         {books.length > 0 ? (
-          <select
-            value={currentBookId ?? ''}
-            onChange={(e) => void settingsRepo.set(SETTING_KEYS.currentBookId, Number(e.target.value))}
-            className="min-h-touch w-full rounded-xl bg-canvas px-3 font-rounded font-bold text-ink"
-          >
-            <option value="" disabled>
-              Pick a book…
-            </option>
-            {books.map((book) => (
-              <option key={book.id} value={book.id}>
-                {book.title} {book.finished ? '✓' : ''}
+          <>
+            {/* A current book that no longer exists falls back to "Pick a book…". */}
+            <select
+              value={currentBook?.id ?? ''}
+              onChange={(e) => void settingsRepo.set(SETTING_KEYS.currentBookId, Number(e.target.value))}
+              aria-label="Current book"
+              className="min-h-touch w-full rounded-xl bg-canvas px-3 font-rounded font-bold text-ink"
+            >
+              <option value="" disabled>
+                Pick a book…
               </option>
-            ))}
-          </select>
+              {books.map((book) => (
+                <option key={book.id} value={book.id}>
+                  {book.title} {book.finished ? '✓' : ''}
+                </option>
+              ))}
+            </select>
+            {!currentBook && (
+              <p className="mt-1 text-xs text-ink-muted">
+                Pick the book you're reading, and the pages you log move its bookmark.
+              </p>
+            )}
+          </>
         ) : (
           <p className="text-sm text-ink-muted">No books yet — add one below.</p>
         )}
@@ -74,7 +83,7 @@ function AddBookForm({ onDone }: { onDone: () => void }) {
 
   const submit = async () => {
     if (!title.trim()) return
-    const id = await bookRepo.add({ title: title.trim(), totalPages, currentPage: 0, finished: false })
+    const id = await bookRepo.add({ title: title.trim(), totalPages, currentPage: 0 })
     await settingsRepo.set(SETTING_KEYS.currentBookId, id)
     onDone()
   }

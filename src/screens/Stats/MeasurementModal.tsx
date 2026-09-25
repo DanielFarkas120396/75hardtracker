@@ -1,5 +1,6 @@
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 import { Button } from '../../components/ui/Button'
+import { Field } from '../../components/ui/Field'
 import { Modal } from '../../components/ui/Modal'
 import { measurementRepo } from '../../db/repositories/measurementRepo'
 import type { Measurement } from '../../db/types'
@@ -133,28 +134,5 @@ function MeasurementForm({
         </Button>
       </div>
     </form>
-  )
-}
-
-function Field({
-  label,
-  unit,
-  error,
-  children,
-}: {
-  label: string
-  unit?: string
-  error?: string
-  children: ReactNode
-}) {
-  return (
-    <label className="mt-3 block">
-      <span className="text-sm font-semibold text-ink-muted">
-        {label}
-        {unit && <span className="font-normal"> ({unit})</span>}
-      </span>
-      <span className="mt-1 block">{children}</span>
-      {error && <span className="mt-1 block text-sm font-semibold text-danger-dark">{error}</span>}
-    </label>
   )
 }

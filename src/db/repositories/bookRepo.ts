@@ -1,5 +1,6 @@
 import { db } from '../db'
 import type { Book } from '../types'
+import { SETTING_KEYS, settingsRepo } from './settingsRepo'
 
 /** Keeps `finished`/`finishedAt` in step with the page count: stamped when a book is first finished, cleared if it drops back. */
 function applyFinishedState(book: Book, now: string): void {
@@ -18,8 +19,12 @@ export const bookRepo = {
     return db.books.get(id)
   },
 
-  async add(book: Omit<Book, 'id'>): Promise<number> {
-    return db.books.add(book as Book)
+  /** Adds a book; `finished` (and `finishedAt`) follow from its page counts. */
+  async add(book: Omit<Book, 'id' | 'finished' | 'finishedAt'>): Promise<number> {
+    const row = { ...book, finished: false } as Book
+    row.currentPage = Math.min(row.totalPages, Math.max(0, row.currentPage))
+    applyFinishedState(row, new Date().toISOString())
+    return db.books.add(row)
   },
 
   /** Updates a book; if the title or page counts change, `finished` and `finishedAt` are recomputed. */
@@ -47,7 +52,13 @@ export const bookRepo = {
       })
   },
 
+  /** Deletes a book. If it was the current book, that setting is cleared in the same transaction. */
   async remove(id: number): Promise<void> {
-    await db.books.delete(id)
+    await db.transaction('rw', db.books, db.settings, async () => {
+      await db.books.delete(id)
+      if ((await settingsRepo.get<number | null>(SETTING_KEYS.currentBookId, null)) === id) {
+        await settingsRepo.set(SETTING_KEYS.currentBookId, null)
+      }
+    })
   },
 }
