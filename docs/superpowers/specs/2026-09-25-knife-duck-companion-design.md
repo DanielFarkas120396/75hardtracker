@@ -124,7 +124,7 @@ A pure function in `src/logic/menace.ts`:
 
 ```ts
 menace({ data: DayTaskData, nowMin: number, bedtimeMin: number, plans: Partial<Record<TaskId, number>> })
-  → { level: 'content' | 'watching' | 'tapping' | 'hunting', reason: MenaceReason, next?: { task: TaskId; at: number } }
+  → { level: 'content' | 'watching' | 'tapping' | 'hunting', reason: MenaceReason, next?: { task: TaskId; at: number }, broken?: { task: TaskId; at: number } }
 type MenaceReason = 'done' | 'plenty' | 'plan-pending' | 'plan-due' | 'close' | 'plan-broken' | 'wont-fit' | 'past-bedtime'
 ```
 
@@ -175,7 +175,7 @@ type MenaceReason = 'done' | 'plenty' | 'plan-pending' | 'plan-due' | 'close' | 
 | 15 | anytime, all done | `content` / `done` |
 | 16 | 23:30, bedtime 23:59, only the photo left | `tapping` / `close` (29 min left ≤ 30; 29 − 2 > 0) |
 
-`next` is the covered plan with the earliest time among the missing tasks. It feeds the `plan-pending` and `plan-due` lines.
+`next` is the covered plan with the earliest time among the missing tasks. It feeds the `plan-pending` and `plan-due` lines. `broken` is the earliest plan whose window passed with its task still missing; it feeds the `plan-broken` line.
 
 ### The clock
 
@@ -246,11 +246,12 @@ type MenaceReason = 'done' | 'plenty' | 'plan-pending' | 'plan-due' | 'close' | 
 | Screen | Change |
 | --- | --- |
 | Today | Duck 88 px (was 64). He's a `<button aria-label="Poke the duck">` with the SVG inside set to `aria-hidden`; the bubble is the message. Adds the plan button, the atmosphere, the reactions and `duckLine`. |
-| Day-complete overlay | `celebrating` duck (140 px). Confetti colours add the duck's yellow `#ffc605` and orange `#ffb624`. |
+| Day-complete overlay | `celebrating` duck (140 px). Confetti unchanged: its palette already has yellow and orange. |
 | Victory | `triumphant` duck (160 px). |
 | Pre-start | `waiting` duck (120 px). Copy unchanged. |
 | Missed day | The cinematic (section 6) plays once, then the `judging` duck. The closing line becomes "Again. From Day 1. I'm watching." The facts, the missed-task list and the reassurance that data is saved are unchanged. |
-| Storage error, app error boundary | `sad` duck (110 px), no menace. Copy unchanged. |
+| Storage error | `sad` duck (110 px) when storage failed; `waiting` while an update is blocked or opening is slow. No menace, copy unchanged. |
+| App error boundary | `sad` duck (110 px), no menace. Copy unchanged. |
 | Settings | Companion section (section 4). |
 | App icon | `public/mascot.svg` becomes the duck in the `watching` pose, cropped square. `ICON_BACKGROUND` becomes `#e2ddca`, the reference image's backdrop. Icons are regenerated with `npm run generate-pwa-assets`. |
 
@@ -309,7 +310,7 @@ It plays on pokes and the lunge, gated by the sound setting through a `useSound`
 | `src/content/microcopy.ts` | `duckLine` and the poke, lunge, glare and plan-saved lines; `mascotLine` is removed. |
 | `src/db/types.ts`, `dayEntryRepo.ts`, `settingsRepo.ts`, `exportImport.ts` | `DayEntry.plans`, `setPlans`, the `bedtime` key, and import validation of `plans` (optional; keys must be task ids, values "HH:mm"). |
 | `src/hooks/useSettings.ts` | Exposes `bedtime` and `setBedtime`. |
-| `src/lib/sound.ts`, `src/lib/confetti.ts` | The knife sound, and a colours option for the celebration confetti. |
+| `src/lib/sound.ts`, `src/hooks/useSound.ts` | The knife sound, and `useKnifeSound`, which is gated by the sound setting. |
 | `public/mascot.svg`, `pwa-assets.config.ts`, generated icons | The new icon. |
 | `vite.config.ts` | Precache the clip and poster. |
 | `src/dev/scenarios.ts` | Seeds for the menace and plan states, used with `?now=`. |
