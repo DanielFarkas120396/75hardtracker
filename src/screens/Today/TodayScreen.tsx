@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { FlameStreak } from '../../components/FlameStreak'
 import { ProgressRing } from '../../components/ui/ProgressRing'
-import { taskCheer } from '../../content/microcopy'
+import { planSavedLine, taskCheer } from '../../content/microcopy'
 import type { Challenge, DayEntry } from '../../db/types'
 import { useChallengeStats } from '../../hooks/useChallengeStats'
 import { useDayCompletion } from '../../hooks/useDayCompletion'
@@ -14,9 +14,10 @@ import { TASK_IDS } from '../../logic/dayCompletion'
 import { isChallengeDay } from '../../logic/days'
 import { DayNotesCard } from './DayNotesCard'
 import { DietCard } from './DietCard'
-import { DuckHeader } from './DuckHeader'
+import { DuckHeader, type DuckAnnouncement } from './DuckHeader'
 import { MenaceAtmosphere } from './MenaceAtmosphere'
 import { PhotoCard } from './PhotoCard'
+import { PlanSheet } from './PlanSheet'
 import { PreStartView } from './PreStartView'
 import { ReadingCard } from './ReadingCard'
 import { WaterCard } from './WaterCard'
@@ -45,6 +46,8 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak }: To
   const menace = useMenace(completion?.data, entry, nowMin)
   const { xp } = useChallengeStats(challenge.id)
   const [lunges, setLunges] = useState(0)
+  const [planOpen, setPlanOpen] = useState(false)
+  const [announcement, setAnnouncement] = useState<DuckAnnouncement>()
 
   if (!entry || !workouts || !completion || !menace) {
     return (
@@ -83,8 +86,19 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak }: To
           missing={completion.missing}
           completion={completion.completion}
           dayNumber={todayDayNumber}
+          announcement={announcement}
           onLunge={() => setLunges((count) => count + 1)}
-        />
+        >
+          {completion.missing.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setPlanOpen(true)}
+              className="min-h-touch rounded-2xl bg-surface px-4 font-rounded text-sm font-bold text-ink shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            >
+              🗓 {Object.keys(entry.plans ?? {}).length > 0 ? 'Edit plan' : "I've got a plan"}
+            </button>
+          )}
+        </DuckHeader>
 
         <main className="flex flex-col gap-4 px-4">
           <WorkoutCard
@@ -104,6 +118,21 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak }: To
           <DayNotesCard entry={entry} />
         </main>
       </div>
+
+      <PlanSheet
+        open={planOpen}
+        entry={entry}
+        data={completion.data}
+        missing={completion.missing}
+        nowMin={nowMin}
+        onClose={() => setPlanOpen(false)}
+        onSaved={(earliest) => {
+          setPlanOpen(false)
+          if (earliest !== null) {
+            setAnnouncement((previous) => ({ text: planSavedLine(earliest), reaction: 'relax', id: (previous?.id ?? 0) + 1 }))
+          }
+        }}
+      />
     </div>
   )
 }
