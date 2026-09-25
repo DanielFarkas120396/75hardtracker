@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../../db/db'
 import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
 import { dayEntryRepo } from '../../../db/repositories/dayEntryRepo'
@@ -41,6 +41,10 @@ describe('PlanSheet', () => {
 
   beforeEach(freshDatabase)
 
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('saves a time for a task and reports the earliest plan', async () => {
     const { entry, onSaved } = await setup()
     fireEvent.change(screen.getByLabelText('Reading'), { target: { value: '22:30' } })
@@ -77,5 +81,16 @@ describe('PlanSheet', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Clear Reading' }))
     fireEvent.click(screen.getByRole('button', { name: 'Save plan' }))
     await waitFor(async () => expect(await db.dayEntries.get(entry.id)).not.toHaveProperty('plans'))
+  })
+
+  it('shows an error and recovers when the save fails', async () => {
+    vi.spyOn(dayEntryRepo, 'setPlans').mockRejectedValueOnce(new Error('quota'))
+    const { onSaved } = await setup()
+    fireEvent.change(screen.getByLabelText('Reading'), { target: { value: '22:30' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save plan' }))
+
+    expect(await screen.findByText("Couldn't save your plan — try again.")).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save plan' })).toBeEnabled()
+    expect(onSaved).not.toHaveBeenCalled()
   })
 })

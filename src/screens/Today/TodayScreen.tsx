@@ -95,7 +95,7 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak }: To
               onClick={() => setPlanOpen(true)}
               className="min-h-touch rounded-2xl bg-surface px-4 font-rounded text-sm font-bold text-ink shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
-              🗓 {Object.keys(entry.plans ?? {}).length > 0 ? 'Edit plan' : "I've got a plan"}
+              🗓 {completion.missing.some((task) => entry.plans?.[task]) ? 'Edit plan' : "I've got a plan"}
             </button>
           )}
         </DuckHeader>

@@ -38,6 +38,7 @@ function PlanForm({ entry, data, missing, nowMin, onClose, onSaved }: PlanSheetP
   const saved = entry.plans ?? {}
   const [draft, setDraft] = useState<Partial<Record<TaskId, string>>>(() => ({ ...saved }))
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   // Only rows changed since the sheet opened are checked, so an earlier plan
   // whose time has passed never blocks saving the others.
@@ -51,14 +52,21 @@ function PlanForm({ entry, data, missing, nowMin, onClose, onSaved }: PlanSheetP
   const save = async () => {
     if (hasErrors) return
     setSaving(true)
-    const plans: Partial<Record<TaskId, string>> = {}
-    for (const task of missing) {
-      const value = draft[task]
-      if (value && parseHHmm(value) !== null) plans[task] = value
+    setSaveError(null)
+    try {
+      const plans: Partial<Record<TaskId, string>> = {}
+      for (const task of missing) {
+        const value = draft[task]
+        if (value && parseHHmm(value) !== null) plans[task] = value
+      }
+      await dayEntryRepo.setPlans(entry.id, plans)
+      const times = Object.values(plans).map((value) => parseHHmm(value!)!)
+      onSaved(times.length > 0 ? Math.min(...times) : null)
+    } catch {
+      setSaveError("Couldn't save your plan — try again.")
+    } finally {
+      setSaving(false)
     }
-    await dayEntryRepo.setPlans(entry.id, plans)
-    const times = Object.values(plans).map((value) => parseHHmm(value!)!)
-    onSaved(times.length > 0 ? Math.min(...times) : null)
   }
 
   return (
@@ -97,6 +105,11 @@ function PlanForm({ entry, data, missing, nowMin, onClose, onSaved }: PlanSheetP
           </Field>
         )
       })}
+      {saveError && (
+        <p role="alert" className="mt-2 text-sm font-semibold text-danger-ink">
+          {saveError}
+        </p>
+      )}
       <div className="mt-4 flex gap-2">
         <Button className="flex-1" onClick={() => void save()} disabled={saving || hasErrors}>
           {saving ? 'Saving…' : 'Save plan'}
