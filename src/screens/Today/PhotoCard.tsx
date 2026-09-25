@@ -84,7 +84,7 @@ export function PhotoCard({ entry, complete, cheer }: PhotoCardProps) {
         </div>
 
         {error && (
-          <p role="alert" className="mt-2 text-sm font-semibold text-danger-dark">
+          <p role="alert" className="mt-2 text-sm font-semibold text-danger-ink">
             {error}
           </p>
         )}

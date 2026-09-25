@@ -25,15 +25,28 @@
   --color-yellow-light: #fff6dd;
 
   --color-danger: #ff5a5f;
+  /* The danger button's fill (white text on it), and its pressed edge. */
   --color-danger-dark: #d6383d;
+  --color-danger-deep: #a8272c;
+
+  /* Behind the day-complete overlay: deep enough for white and yellow text, and the green mascot. */
+  --color-green-deep: #136536;
+
+  /* Text-safe brand colours: at least 4.5:1 on surface, canvas and the colour's
+     own -light tint. Redefined under .dark, where the bright brand colours pass. */
+  --color-green-ink: #1a7f45;
+  --color-orange-ink: #b4480f;
+  --color-blue-ink: #0b6aa6;
+  --color-yellow-ink: #8a6100;
+  --color-danger-ink: #c0282e;
 
   /* Semantic surface tokens, redefined under .dark below for runtime theme switching */
   --color-canvas: #fbfbf8;
   --color-surface: #ffffff;
   --color-ink: #1f2426;
-  --color-ink-muted: #6b7280;
+  --color-ink-muted: #626a76;
 
-  /* Text on the bright brand fills (yellow toasts, XP button, milestone nodes).
+  /* Text on the bright brand fills (buttons, toasts, the check badge, Journey nodes).
      Deliberately the same in both themes: those fills don't change. */
   --color-on-accent: #1f2426;
 
@@ -63,6 +76,12 @@
   --color-blue-light: #123247;
   --color-yellow-light: #3d3217;
 
+  --color-green-ink: #3dd16f;
+  --color-orange-ink: #ff8a3d;
+  --color-blue-ink: #38b6ff;
+  --color-yellow-ink: #ffc93d;
+  --color-danger-ink: #ff6b70;
+
   --color-chart-grid: #30383b;
 }
 
@@ -77,5 +96,9 @@
   body {
     background-color: var(--color-canvas);
     color: var(--color-ink);
+  }
+  /* Tailwind's default placeholder is half the text colour — under 4.5:1. Muted text passes. */
+  ::placeholder {
+    color: var(--color-ink-muted);
   }
 }

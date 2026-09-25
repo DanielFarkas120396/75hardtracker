@@ -39,7 +39,7 @@ export function DayCompleteCelebration({ celebration, onDismiss }: DayCompleteCe
           role="dialog"
           aria-modal="true"
           aria-labelledby="day-complete-title"
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-green p-6 text-center text-white"
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-green-deep p-6 text-center text-white"
         >
           <Mascot state="cheering" size={140} />
           <h1 id="day-complete-title" className="font-rounded text-3xl font-extrabold">

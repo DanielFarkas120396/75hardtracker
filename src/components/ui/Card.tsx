@@ -57,7 +57,7 @@ export function Card({ children, complete = false, cheer, className = '' }: Card
           initial={completions > 0 && !reduceMotion ? { scale: 0 } : false}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', stiffness: 500, damping: 14 }}
-          className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-green text-sm text-white shadow-sm"
+          className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-green text-sm text-on-accent shadow-sm"
         >
           ✓
         </motion.span>

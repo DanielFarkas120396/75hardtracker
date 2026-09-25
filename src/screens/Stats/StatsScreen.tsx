@@ -33,16 +33,16 @@ export function StatsScreen({ challenge, streak, today }: StatsScreenProps) {
 
       <main className="flex flex-col gap-4 px-4">
         <div className="grid grid-cols-2 gap-3">
-          <StatCard label="Total XP" value={`⭐ ${stats.xp}`} color="text-yellow-dark" />
+          <StatCard label="Total XP" value={`⭐ ${stats.xp}`} color="text-yellow-ink" />
           <StatCard
             label="Current streak"
             value={`🔥 ${streak} ${streak === 1 ? 'day' : 'days'}`}
-            color="text-orange"
+            color="text-orange-ink"
           />
-          <StatCard label="Perfect days" value={`${stats.perfectDays}`} color="text-green" />
-          <StatCard label="Water logged" value={`${(stats.water_ml / 1000).toFixed(1)} L`} color="text-blue" />
-          <StatCard label="Pages read" value={`${stats.pages}`} color="text-green" />
-          <StatCard label="Workout minutes" value={`${stats.workoutMinutes} min`} color="text-green" />
+          <StatCard label="Perfect days" value={`${stats.perfectDays}`} color="text-green-ink" />
+          <StatCard label="Water logged" value={`${(stats.water_ml / 1000).toFixed(1)} L`} color="text-blue-ink" />
+          <StatCard label="Pages read" value={`${stats.pages}`} color="text-green-ink" />
+          <StatCard label="Workout minutes" value={`${stats.workoutMinutes} min`} color="text-green-ink" />
         </div>
 
         <BodySection today={today} />

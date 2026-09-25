@@ -23,7 +23,7 @@ export function BottomNav({ active, onChange }: BottomNavProps) {
             key={tab.id}
             type="button"
             onClick={() => onChange(tab.id)}
-            className={`flex min-h-touch flex-1 flex-col items-center justify-center gap-0.5 py-2 font-rounded text-xs font-bold motion-safe:transition-colors ${isActive ? 'text-green' : 'text-ink-muted'}`}
+            className={`flex min-h-touch flex-1 flex-col items-center justify-center gap-0.5 py-2 font-rounded text-xs font-bold motion-safe:transition-colors ${isActive ? 'text-green-ink' : 'text-ink-muted'}`}
             aria-current={isActive ? 'page' : undefined}
           >
             <span className="text-xl" aria-hidden="true">

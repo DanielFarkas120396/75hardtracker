@@ -18,13 +18,13 @@ export function BadgesSection({ challengeId }: BadgesSectionProps) {
       <div className="mt-3 grid grid-cols-2 gap-2">
         {BADGE_DEFINITIONS.map((badge) => {
           const isUnlocked = unlockedIds.has(badge.id)
+          // Locked badges are quieter (lock icon, muted name) rather than faded, so their text stays readable.
           return (
-            <div
-              key={badge.id}
-              className={`rounded-2xl p-3 ${isUnlocked ? 'bg-yellow-light' : 'bg-canvas opacity-50'}`}
-            >
+            <div key={badge.id} className={`rounded-2xl p-3 ${isUnlocked ? 'bg-yellow-light' : 'bg-canvas'}`}>
               <p className="text-xl">{isUnlocked ? '🏅' : '🔒'}</p>
-              <p className="mt-1 font-rounded text-sm font-bold text-ink">{badge.name}</p>
+              <p className={`mt-1 font-rounded text-sm font-bold ${isUnlocked ? 'text-ink' : 'text-ink-muted'}`}>
+                {badge.name}
+              </p>
               <p className="text-xs text-ink-muted">{badge.description}</p>
             </div>
           )

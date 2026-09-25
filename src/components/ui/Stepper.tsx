@@ -36,7 +36,7 @@ export function Stepper({ value, onStep, step = 1, min = 0, max = Infinity, unit
         type="button"
         onClick={increment}
         disabled={value >= max}
-        className="flex h-11 w-11 items-center justify-center rounded-xl border-b-4 border-green-dark bg-green text-xl font-bold text-white active:translate-y-1 active:border-b-0 disabled:opacity-40"
+        className="flex h-11 w-11 items-center justify-center rounded-xl border-b-4 border-green-dark bg-green text-xl font-bold text-on-accent active:translate-y-1 active:border-b-0 disabled:opacity-40"
         aria-label="Increase"
       >
         +

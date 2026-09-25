@@ -7,7 +7,7 @@ interface ToggleProps {
 
 /** An accessible pill switch used for boolean tasks (diet followed, indoor/outdoor, etc.). */
 export function Toggle({ checked, onChange, label, activeColor = 'green' }: ToggleProps) {
-  const activeClasses = activeColor === 'blue' ? 'bg-blue' : 'bg-green'
+  const activeClasses = activeColor === 'blue' ? 'bg-blue-ink' : 'bg-green-ink'
 
   return (
     <button
@@ -19,10 +19,10 @@ export function Toggle({ checked, onChange, label, activeColor = 'green' }: Togg
     >
       <span>{label}</span>
       <span
-        className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full motion-safe:transition-colors ${checked ? activeClasses : 'bg-ink/15'}`}
+        className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full motion-safe:transition-colors ${checked ? activeClasses : 'bg-ink-muted'}`}
       >
         <span
-          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow motion-safe:transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`}
+          className={`inline-block h-5 w-5 transform rounded-full bg-surface shadow motion-safe:transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`}
         />
       </span>
     </button>

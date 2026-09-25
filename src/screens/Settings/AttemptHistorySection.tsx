@@ -11,9 +11,9 @@ import { PhotoLightbox } from '../Gallery/PhotoLightbox'
 import { PhotoThumbnail } from '../Gallery/PhotoThumbnail'
 
 const STATUS_STYLES: Record<ChallengeStatus, string> = {
-  active: 'bg-green-light text-green',
-  completed: 'bg-yellow-light text-yellow-dark',
-  failed: 'bg-danger/10 text-danger-dark',
+  active: 'bg-green-light text-green-ink',
+  completed: 'bg-yellow-light text-yellow-ink',
+  failed: 'bg-danger/10 text-danger-ink',
 }
 
 interface AttemptHistorySectionProps {
@@ -165,7 +165,7 @@ function DayRow({ row, startDate, inProgress }: { row: AttemptDayRow; startDate:
     const single = row.fromDay === row.toDay
     return (
       <li className="flex gap-2 text-sm">
-        <span aria-hidden="true" className="font-extrabold text-green-dark">
+        <span aria-hidden="true" className="font-extrabold text-green-ink">
           ✓
         </span>
         <span>
@@ -182,7 +182,7 @@ function DayRow({ row, startDate, inProgress }: { row: AttemptDayRow; startDate:
   const missed = row.missing.map((task) => TASK_NAMES[task]).join(', ')
   return (
     <li className="flex gap-2 text-sm">
-      <span aria-hidden="true" className={inProgress ? 'font-extrabold text-ink-muted' : 'font-extrabold text-danger-dark'}>
+      <span aria-hidden="true" className={inProgress ? 'font-extrabold text-ink-muted' : 'font-extrabold text-danger-ink'}>
         {inProgress ? '…' : '✗'}
       </span>
       <span>

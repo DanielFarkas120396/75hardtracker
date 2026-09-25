@@ -60,7 +60,7 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="min-h-touch rounded-2xl border-b-4 border-green-dark bg-green px-6 py-3 font-rounded font-bold text-white active:translate-y-1 active:border-b-0"
+            className="min-h-touch rounded-2xl border-b-4 border-green-dark bg-green px-6 py-3 font-rounded font-bold text-on-accent active:translate-y-1 active:border-b-0"
           >
             Reload
           </button>
@@ -74,7 +74,7 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
           </button>
         </div>
         {backupState === 'done' && <p className="text-sm text-ink-muted">Backup downloaded.</p>}
-        {backupState === 'failed' && <p className="text-sm text-danger-dark">Couldn’t create a backup.</p>}
+        {backupState === 'failed' && <p className="text-sm text-danger-ink">Couldn’t create a backup.</p>}
       </div>
     )
   }

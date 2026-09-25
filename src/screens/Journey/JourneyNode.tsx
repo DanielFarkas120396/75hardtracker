@@ -40,7 +40,7 @@ export function JourneyNode({ x, y, dayNumber, state, isMilestone }: JourneyNode
           strokeWidth={3}
         />
         {state === 'completed' ? (
-          <text textAnchor="middle" dominantBaseline="central" fontSize={20} fill="white">
+          <text textAnchor="middle" dominantBaseline="central" fontSize={20} fill="var(--color-on-accent)">
             ✓
           </text>
         ) : (
@@ -49,7 +49,7 @@ export function JourneyNode({ x, y, dayNumber, state, isMilestone }: JourneyNode
             dominantBaseline="central"
             fontSize={14}
             fontWeight={800}
-            fill={state === 'locked' ? 'white' : isMilestone ? 'var(--color-on-accent)' : 'white'}
+            fill={state === 'locked' ? 'white' : 'var(--color-on-accent)'}
           >
             {dayNumber}
           </text>

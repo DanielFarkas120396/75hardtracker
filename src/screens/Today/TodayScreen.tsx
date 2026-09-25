@@ -57,7 +57,7 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak }: To
           <h1 className="font-rounded text-2xl font-extrabold text-ink">
             Day {todayDayNumber} / {CHALLENGE_LENGTH}
           </h1>
-          <p className="mt-1 font-rounded text-sm font-extrabold text-yellow-dark">⭐ {xp} XP</p>
+          <p className="mt-1 font-rounded text-sm font-extrabold text-yellow-ink">⭐ {xp} XP</p>
         </div>
         <div className="flex items-center gap-3">
           <FlameStreak streak={streak} />

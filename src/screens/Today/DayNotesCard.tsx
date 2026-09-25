@@ -40,7 +40,7 @@ export function DayNotesCard({ entry }: DayNotesCardProps) {
               aria-pressed={selected}
               onClick={() => setMood(mood.value)}
               className={`flex min-h-touch flex-col items-center justify-center rounded-2xl py-1 motion-safe:transition-transform ${
-                selected ? 'scale-105 bg-yellow-light ring-2 ring-yellow-dark' : 'bg-canvas'
+                selected ? 'scale-105 bg-yellow-light ring-2 ring-yellow-ink' : 'bg-canvas'
               }`}
             >
               <span className="text-2xl" aria-hidden="true">
@@ -113,7 +113,7 @@ function NotesField({ entry }: { entry: DayEntry }) {
         onBlur={flush}
         rows={3}
         placeholder="What went well? What was hard?"
-        className="mt-1 w-full resize-y rounded-xl bg-canvas px-3 py-2 font-rounded text-ink placeholder:text-ink-muted/70"
+        className="mt-1 w-full resize-y rounded-xl bg-canvas px-3 py-2 font-rounded text-ink"
       />
     </div>
   )

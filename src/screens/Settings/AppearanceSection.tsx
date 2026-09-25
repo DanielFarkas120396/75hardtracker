@@ -27,7 +27,7 @@ export function AppearanceSection() {
               aria-checked={selected}
               onClick={() => void setPreference(option)}
               className={`min-h-touch rounded-xl px-2 font-rounded text-sm font-bold motion-safe:transition-colors ${
-                selected ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted'
+                selected ? 'bg-surface text-ink shadow-sm ring-1 ring-ink-muted' : 'text-ink-muted'
               }`}
             >
               {LABELS[option]}

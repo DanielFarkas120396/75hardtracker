@@ -16,7 +16,7 @@ export function Field({ label, unit, error, children }: FieldProps) {
         {unit && <span className="font-normal"> ({unit})</span>}
       </span>
       <span className="mt-1 block">{children}</span>
-      {error && <span className="mt-1 block text-sm font-semibold text-danger-dark">{error}</span>}
+      {error && <span className="mt-1 block text-sm font-semibold text-danger-ink">{error}</span>}
     </label>
   )
 }

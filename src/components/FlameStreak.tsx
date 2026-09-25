@@ -19,7 +19,7 @@ export function FlameStreak({ streak }: FlameStreakProps) {
       <span className="text-2xl" role="img" aria-label="streak">
         🔥
       </span>
-      <span className="font-rounded text-lg font-extrabold text-orange">{streak}</span>
+      <span className="font-rounded text-lg font-extrabold text-orange-ink">{streak}</span>
     </motion.div>
   )
 }

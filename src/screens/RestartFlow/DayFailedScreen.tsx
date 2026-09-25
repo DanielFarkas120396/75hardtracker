@@ -50,7 +50,7 @@ export function DayFailedScreen({ challenge, failedDayNumber, today }: DayFailed
           {missing.map((task) => (
             <li
               key={task}
-              className="rounded-xl bg-danger/10 px-4 py-2 font-rounded text-sm font-bold text-danger-dark"
+              className="rounded-xl bg-danger/10 px-4 py-2 font-rounded text-sm font-bold text-danger-ink"
             >
               ✕ {TASK_RULES[task]}
             </li>
