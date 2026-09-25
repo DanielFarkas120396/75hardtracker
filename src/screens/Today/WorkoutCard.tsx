@@ -13,15 +13,16 @@ interface WorkoutCardProps {
   dayEntryId: number
   workouts: Workout[]
   complete: boolean
+  cheer: string
 }
 
-export function WorkoutCard({ dayEntryId, workouts, complete }: WorkoutCardProps) {
+export function WorkoutCard({ dayEntryId, workouts, complete, cheer }: WorkoutCardProps) {
   const addWorkout = () => {
     void workoutRepo.add({ dayEntryId, type: 'Running', durationMin: MIN_WORKOUT_MIN, isOutdoor: false })
   }
 
   return (
-    <Card complete={complete}>
+    <Card complete={complete} cheer={cheer}>
       <h2 className="font-rounded text-lg font-extrabold text-ink">🏋️ Workouts</h2>
       <p className="mt-1 text-sm text-ink-muted">
         Two sessions of at least {MIN_WORKOUT_MIN} minutes, one of them outdoors.

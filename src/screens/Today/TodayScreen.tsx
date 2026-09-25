@@ -1,5 +1,7 @@
 import { FlameStreak } from '../../components/FlameStreak'
+import { Mascot } from '../../components/mascot/Mascot'
 import { ProgressRing } from '../../components/ui/ProgressRing'
+import { mascotLine, taskCheer } from '../../content/microcopy'
 import type { Challenge, DayEntry } from '../../db/types'
 import { useDayCompletion } from '../../hooks/useDayCompletion'
 import { useTodayEntry } from '../../hooks/useTodayEntry'
@@ -65,12 +67,32 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak }: To
         </div>
       </header>
 
+      <div className="flex items-center gap-3 px-4 pb-4">
+        {/* Decorative: the speech bubble carries the message. */}
+        <div aria-hidden="true" className="shrink-0">
+          <Mascot state={completion.isComplete ? 'cheering' : 'idle'} size={64} />
+        </div>
+        <p className="relative rounded-2xl bg-surface px-4 py-2 font-rounded text-sm font-bold text-ink shadow-sm">
+          <span aria-hidden="true" className="absolute top-1/2 -left-1.5 h-3 w-3 -translate-y-1/2 rotate-45 bg-surface" />
+          {mascotLine(completion.missing)}
+        </p>
+      </div>
+
       <main className="flex flex-col gap-4 px-4">
-        <WorkoutCard dayEntryId={entry.id} workouts={workouts} complete={completion.completion.workouts} />
-        <DietCard entry={entry} complete={completion.completion.diet} />
-        <WaterCard entry={entry} complete={completion.completion.water} />
-        <ReadingCard entry={entry} complete={completion.completion.reading} />
-        <PhotoCard entry={entry} complete={completion.completion.photo} />
+        <WorkoutCard
+          dayEntryId={entry.id}
+          workouts={workouts}
+          complete={completion.completion.workouts}
+          cheer={taskCheer('workouts', todayDayNumber)}
+        />
+        <DietCard entry={entry} complete={completion.completion.diet} cheer={taskCheer('diet', todayDayNumber)} />
+        <WaterCard entry={entry} complete={completion.completion.water} cheer={taskCheer('water', todayDayNumber)} />
+        <ReadingCard
+          entry={entry}
+          complete={completion.completion.reading}
+          cheer={taskCheer('reading', todayDayNumber)}
+        />
+        <PhotoCard entry={entry} complete={completion.completion.photo} cheer={taskCheer('photo', todayDayNumber)} />
         <DayNotesCard entry={entry} />
       </main>
     </div>

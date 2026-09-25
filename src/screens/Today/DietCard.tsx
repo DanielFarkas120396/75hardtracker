@@ -6,11 +6,12 @@ import type { DayEntry } from '../../db/types'
 interface DietCardProps {
   entry: DayEntry
   complete: boolean
+  cheer: string
 }
 
-export function DietCard({ entry, complete }: DietCardProps) {
+export function DietCard({ entry, complete, cheer }: DietCardProps) {
   return (
-    <Card complete={complete}>
+    <Card complete={complete} cheer={cheer}>
       <h2 className="font-rounded text-lg font-extrabold text-ink">🥗 Diet</h2>
       <p className="mt-1 text-sm text-ink-muted">No cheat meals, no alcohol.</p>
 

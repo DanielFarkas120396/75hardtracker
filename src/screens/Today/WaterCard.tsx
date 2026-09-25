@@ -8,9 +8,10 @@ import { WATER_TARGET_ML } from '../../logic/constants'
 interface WaterCardProps {
   entry: DayEntry
   complete: boolean
+  cheer: string
 }
 
-export function WaterCard({ entry, complete }: WaterCardProps) {
+export function WaterCard({ entry, complete, cheer }: WaterCardProps) {
   const [lastDelta, setLastDelta] = useState<number | null>(null)
 
   const addWater = (deltaMl: number) => {
@@ -29,7 +30,7 @@ export function WaterCard({ entry, complete }: WaterCardProps) {
   const targetLiters = (WATER_TARGET_ML / 1000).toFixed(1)
 
   return (
-    <Card complete={complete}>
+    <Card complete={complete} cheer={cheer}>
       <h2 className="font-rounded text-lg font-extrabold text-ink">💧 Water</h2>
       <p className="mt-1 text-sm text-ink-muted">Goal: {targetLiters} L a day.</p>
 

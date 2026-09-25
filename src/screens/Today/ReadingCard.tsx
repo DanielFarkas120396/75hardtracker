@@ -12,9 +12,10 @@ import { PAGES_TARGET } from '../../logic/constants'
 interface ReadingCardProps {
   entry: DayEntry
   complete: boolean
+  cheer: string
 }
 
-export function ReadingCard({ entry, complete }: ReadingCardProps) {
+export function ReadingCard({ entry, complete, cheer }: ReadingCardProps) {
   const books = useLiveQuery(() => bookRepo.getAll(), []) ?? []
   const currentBookId = useLiveQuery(() => settingsRepo.get<number | null>(SETTING_KEYS.currentBookId, null), [])
   const currentBook = books.find((b) => b.id === currentBookId)
@@ -27,7 +28,7 @@ export function ReadingCard({ entry, complete }: ReadingCardProps) {
   }
 
   return (
-    <Card complete={complete}>
+    <Card complete={complete} cheer={cheer}>
       <h2 className="font-rounded text-lg font-extrabold text-ink">📖 Reading</h2>
       <p className="mt-1 text-sm text-ink-muted">{PAGES_TARGET} pages of non-fiction a day.</p>
 

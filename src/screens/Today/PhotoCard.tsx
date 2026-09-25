@@ -10,9 +10,10 @@ import { compressImage } from '../../lib/imageCompression'
 interface PhotoCardProps {
   entry: DayEntry
   complete: boolean
+  cheer: string
 }
 
-export function PhotoCard({ entry, complete }: PhotoCardProps) {
+export function PhotoCard({ entry, complete, cheer }: PhotoCardProps) {
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const libraryInputRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
@@ -43,7 +44,7 @@ export function PhotoCard({ entry, complete }: PhotoCardProps) {
   }
 
   return (
-    <Card complete={complete}>
+    <Card complete={complete} cheer={cheer}>
       <h2 className="font-rounded text-lg font-extrabold text-ink">📸 Photo</h2>
       <p className="mt-1 text-sm text-ink-muted">One progress photo a day.</p>
 
