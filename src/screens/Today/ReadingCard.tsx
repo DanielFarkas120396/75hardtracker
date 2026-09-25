@@ -26,6 +26,7 @@ export function ReadingCard({ entry, complete, cheer }: ReadingCardProps) {
     void dayEntryRepo.adjustPages(entry.id, delta)
     if (currentBook) void bookRepo.adjustCurrentPage(currentBook.id, delta)
   }
+  const pagesLeft = Math.max(0, PAGES_TARGET - entry.pages_read)
 
   return (
     <Card complete={complete} cheer={cheer}>
@@ -70,8 +71,14 @@ export function ReadingCard({ entry, complete, cheer }: ReadingCardProps) {
         )}
       </div>
 
-      <div className="mt-4 flex justify-center">
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
         <Stepper value={entry.pages_read} onStep={stepPages} step={1} min={0} max={999} unit="pages" />
+        {/* One tap logs the rest of today's pages; the stepper fine-tunes. */}
+        {pagesLeft > 0 && (
+          <Button variant="secondary" className="px-4 py-2" onClick={() => stepPages(pagesLeft)}>
+            + {pagesLeft} pages
+          </Button>
+        )}
       </div>
     </Card>
   )
