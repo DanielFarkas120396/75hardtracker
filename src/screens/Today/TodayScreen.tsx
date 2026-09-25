@@ -3,10 +3,10 @@ import { Mascot } from '../../components/mascot/Mascot'
 import { ProgressRing } from '../../components/ui/ProgressRing'
 import { mascotLine, taskCheer } from '../../content/microcopy'
 import type { Challenge, DayEntry } from '../../db/types'
+import { useChallengeStats } from '../../hooks/useChallengeStats'
 import { useDayCompletion } from '../../hooks/useDayCompletion'
 import { useTodayEntry } from '../../hooks/useTodayEntry'
 import { useWorkoutsForEntry } from '../../hooks/useWorkoutsForEntry'
-import { useXpTotal } from '../../hooks/useXpTotal'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { TASK_IDS } from '../../logic/dayCompletion'
 import { isChallengeDay } from '../../logic/days'
@@ -37,7 +37,7 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak }: To
   const entry = useTodayEntry({ challengeId: challenge.id, dayNumber: todayDayNumber, today, dayEntries })
   const workouts = useWorkoutsForEntry(entry?.id)
   const completion = useDayCompletion(entry, workouts)
-  const xpTotal = useXpTotal(challenge.id)
+  const { xp } = useChallengeStats(challenge.id)
 
   if (!entry || !workouts || !completion) {
     return (
@@ -57,7 +57,7 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak }: To
           <h1 className="font-rounded text-2xl font-extrabold text-ink">
             Day {todayDayNumber} / {CHALLENGE_LENGTH}
           </h1>
-          <p className="mt-1 font-rounded text-sm font-extrabold text-yellow-dark">⭐ {xpTotal} XP</p>
+          <p className="mt-1 font-rounded text-sm font-extrabold text-yellow-dark">⭐ {xp} XP</p>
         </div>
         <div className="flex items-center gap-3">
           <FlameStreak streak={streak} />

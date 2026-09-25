@@ -4,10 +4,9 @@ import { Button } from '../../components/ui/Button'
 import { Mascot } from '../../components/mascot/Mascot'
 import { challengeRepo } from '../../db/repositories/challengeRepo'
 import type { Challenge } from '../../db/types'
-import { useChallengeTotals } from '../../hooks/useChallengeTotals'
+import { useChallengeStats } from '../../hooks/useChallengeStats'
 import { useHaptics } from '../../hooks/useHaptics'
 import { useSound } from '../../hooks/useSound'
-import { useXpTotal } from '../../hooks/useXpTotal'
 import { celebrate } from '../../lib/confetti'
 import { dateForDayNumber, formatDisplayDate } from '../../lib/dates'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
@@ -24,8 +23,7 @@ interface VictoryScreenProps {
 
 /** Shown on the Today tab once all 75 days are complete. */
 export function VictoryScreen({ challenge, today, revealed }: VictoryScreenProps) {
-  const xpTotal = useXpTotal(challenge.id)
-  const totals = useChallengeTotals(challenge.id)
+  const stats = useChallengeStats(challenge.id)
   const playSound = useSound()
   const vibrate = useHaptics()
   const [starting, setStarting] = useState(false)
@@ -77,11 +75,11 @@ export function VictoryScreen({ challenge, today, revealed }: VictoryScreenProps
       </p>
 
       <div className="grid w-full max-w-sm grid-cols-2 gap-3">
-        <VictoryStat label="Total XP" value={`⭐ ${xpTotal}`} />
-        <VictoryStat label="Perfect days" value={`${totals.perfectDays}`} />
-        <VictoryStat label="Water" value={`${(totals.water_ml / 1000).toFixed(1)} L`} />
-        <VictoryStat label="Pages read" value={`${totals.pages}`} />
-        <VictoryStat label="Workout time" value={`${Math.round(totals.workoutMinutes / 60)} h`} />
+        <VictoryStat label="Total XP" value={`⭐ ${stats.xp}`} />
+        <VictoryStat label="Perfect days" value={`${stats.perfectDays}`} />
+        <VictoryStat label="Water" value={`${(stats.water_ml / 1000).toFixed(1)} L`} />
+        <VictoryStat label="Pages read" value={`${stats.pages}`} />
+        <VictoryStat label="Workout time" value={`${Math.round(stats.workoutMinutes / 60)} h`} />
         <VictoryStat label="Streak" value={`🔥 ${CHALLENGE_LENGTH}`} />
       </div>
 

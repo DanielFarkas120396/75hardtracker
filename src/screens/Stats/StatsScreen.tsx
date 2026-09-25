@@ -1,7 +1,6 @@
 import { FlameStreak } from '../../components/FlameStreak'
 import type { Challenge } from '../../db/types'
-import { useChallengeTotals } from '../../hooks/useChallengeTotals'
-import { useXpTotal } from '../../hooks/useXpTotal'
+import { useChallengeStats } from '../../hooks/useChallengeStats'
 import { BodySection } from './BodySection'
 
 interface StatsScreenProps {
@@ -20,8 +19,7 @@ function StatCard({ label, value, color }: { label: string; value: string; color
 }
 
 export function StatsScreen({ challenge, streak, today }: StatsScreenProps) {
-  const xpTotal = useXpTotal(challenge.id)
-  const totals = useChallengeTotals(challenge.id)
+  const stats = useChallengeStats(challenge.id)
 
   return (
     <div className="min-h-dvh bg-canvas pb-24">
@@ -35,16 +33,16 @@ export function StatsScreen({ challenge, streak, today }: StatsScreenProps) {
 
       <main className="flex flex-col gap-4 px-4">
         <div className="grid grid-cols-2 gap-3">
-          <StatCard label="Total XP" value={`⭐ ${xpTotal}`} color="text-yellow-dark" />
+          <StatCard label="Total XP" value={`⭐ ${stats.xp}`} color="text-yellow-dark" />
           <StatCard
             label="Current streak"
             value={`🔥 ${streak} ${streak === 1 ? 'day' : 'days'}`}
             color="text-orange"
           />
-          <StatCard label="Perfect days" value={`${totals.perfectDays}`} color="text-green" />
-          <StatCard label="Water logged" value={`${(totals.water_ml / 1000).toFixed(1)} L`} color="text-blue" />
-          <StatCard label="Pages read" value={`${totals.pages}`} color="text-green" />
-          <StatCard label="Workout minutes" value={`${totals.workoutMinutes} min`} color="text-green" />
+          <StatCard label="Perfect days" value={`${stats.perfectDays}`} color="text-green" />
+          <StatCard label="Water logged" value={`${(stats.water_ml / 1000).toFixed(1)} L`} color="text-blue" />
+          <StatCard label="Pages read" value={`${stats.pages}`} color="text-green" />
+          <StatCard label="Workout minutes" value={`${stats.workoutMinutes} min`} color="text-green" />
         </div>
 
         <BodySection today={today} />

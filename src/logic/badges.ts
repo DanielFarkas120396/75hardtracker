@@ -1,7 +1,7 @@
 import { MILESTONES, WATER_TARGET_ML } from './constants'
 import { isDayComplete, isQualifyingWorkout } from './dayCompletion'
 import { calculateStreak } from './streak'
-import type { DayTaskData } from './types'
+import type { ChallengeDayData } from './types'
 
 export type BadgeCategory = 'milestone' | 'first'
 
@@ -80,14 +80,9 @@ export function bookCountsForAttempt(finishedOn: string | undefined, attemptStar
   return finishedOn !== undefined && finishedOn >= attemptStartDate
 }
 
-export interface BadgeDayInput {
-  dayNumber: number
-  data: DayTaskData
-}
-
 /** Tallies an attempt's days (plus its finished books) into a BadgeContext. */
 export function buildBadgeContext(params: {
-  days: BadgeDayInput[]
+  days: readonly ChallengeDayData[]
   todayDayNumber: number
   booksFinished: number
 }): BadgeContext {

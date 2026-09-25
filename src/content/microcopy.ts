@@ -1,4 +1,4 @@
-import { PAGES_TARGET, WATER_TARGET_ML } from '../logic/constants'
+import { MIN_WORKOUT_MIN, PAGES_TARGET, REQUIRED_QUALIFYING_WORKOUTS, WATER_TARGET_ML } from '../logic/constants'
 import { TASK_IDS } from '../logic/dayCompletion'
 import type { TaskId } from '../logic/types'
 
@@ -9,6 +9,15 @@ export const TASK_NAMES: Record<TaskId, string> = {
   water: 'Water',
   reading: 'Reading',
   photo: 'Photo',
+}
+
+/** Each task's rule in a few words, e.g. for listing what a failed day missed. */
+export const TASK_RULES: Record<TaskId, string> = {
+  workouts: `${REQUIRED_QUALIFYING_WORKOUTS} workouts of ${MIN_WORKOUT_MIN}+ min, one outdoors`,
+  diet: 'Diet followed, no alcohol',
+  water: `${WATER_TARGET_ML / 1000} L of water`,
+  reading: `${PAGES_TARGET} pages read`,
+  photo: 'Progress photo',
 }
 
 /**

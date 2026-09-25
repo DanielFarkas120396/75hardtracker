@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { FlameStreak } from '../../components/FlameStreak'
 import type { Challenge, DayEntry } from '../../db/types'
-import { useXpTotal } from '../../hooks/useXpTotal'
+import { useChallengeStats } from '../../hooks/useChallengeStats'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { daysUntilStart, isChallengeDay } from '../../logic/days'
 import { JourneyPath } from './JourneyPath'
@@ -23,7 +23,7 @@ function journeyTitle(todayDayNumber: number, completed: boolean): string {
 }
 
 export function JourneyScreen({ challenge, dayEntries, todayDayNumber, streak, completed }: JourneyScreenProps) {
-  const xpTotal = useXpTotal(challenge.id)
+  const { xp } = useChallengeStats(challenge.id)
 
   const completedDayNumbers = useMemo(
     () => new Set(dayEntries.filter((e) => e.completed).map((e) => e.dayNumber)),
@@ -36,7 +36,7 @@ export function JourneyScreen({ challenge, dayEntries, todayDayNumber, streak, c
         <div>
           <p className="font-rounded text-sm font-bold text-ink-muted">Attempt #{challenge.attemptNumber}</p>
           <h1 className="font-rounded text-2xl font-extrabold text-ink">{journeyTitle(todayDayNumber, completed)}</h1>
-          <p className="mt-1 font-rounded text-sm font-extrabold text-yellow-dark">⭐ {xpTotal} XP</p>
+          <p className="mt-1 font-rounded text-sm font-extrabold text-yellow-dark">⭐ {xp} XP</p>
         </div>
         <FlameStreak streak={streak} />
       </header>

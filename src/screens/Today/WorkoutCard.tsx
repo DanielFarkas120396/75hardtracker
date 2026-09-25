@@ -4,10 +4,9 @@ import { Stepper } from '../../components/ui/Stepper'
 import { Toggle } from '../../components/ui/Toggle'
 import { workoutRepo } from '../../db/repositories/workoutRepo'
 import type { Workout, WorkoutType } from '../../db/types'
-import { MIN_WORKOUT_MIN } from '../../logic/constants'
+import { MAX_WORKOUTS, MIN_WORKOUT_MIN, REQUIRED_QUALIFYING_WORKOUTS } from '../../logic/constants'
 
 const WORKOUT_TYPES: WorkoutType[] = ['Running', 'Walking', 'Weights', 'Yoga', 'Cycling', 'Swimming', 'Other']
-const MAX_WORKOUTS = 2
 
 interface WorkoutCardProps {
   dayEntryId: number
@@ -25,7 +24,7 @@ export function WorkoutCard({ dayEntryId, workouts, complete, cheer }: WorkoutCa
     <Card complete={complete} cheer={cheer}>
       <h2 className="font-rounded text-lg font-extrabold text-ink">🏋️ Workouts</h2>
       <p className="mt-1 text-sm text-ink-muted">
-        Two sessions of at least {MIN_WORKOUT_MIN} minutes, one of them outdoors.
+        {REQUIRED_QUALIFYING_WORKOUTS} sessions of at least {MIN_WORKOUT_MIN} minutes, one of them outdoors.
       </p>
 
       <div className="mt-4 flex flex-col gap-3">

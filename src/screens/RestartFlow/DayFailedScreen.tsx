@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Mascot } from '../../components/mascot/Mascot'
+import { TASK_RULES } from '../../content/microcopy'
 import { toDayTaskData } from '../../db/mappers'
 import { challengeRepo } from '../../db/repositories/challengeRepo'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
@@ -9,14 +10,6 @@ import { workoutRepo } from '../../db/repositories/workoutRepo'
 import type { Challenge } from '../../db/types'
 import { TASK_IDS, missingTasks } from '../../logic/dayCompletion'
 import type { TaskId } from '../../logic/types'
-
-const TASK_LABELS: Record<TaskId, string> = {
-  workouts: 'Two 45+ min workouts, one outdoors',
-  diet: 'Diet followed, no alcohol',
-  water: '3.8 L of water',
-  reading: '10 pages read',
-  photo: 'Progress photo',
-}
 
 interface DayFailedScreenProps {
   challenge: Challenge
@@ -59,7 +52,7 @@ export function DayFailedScreen({ challenge, failedDayNumber, today }: DayFailed
               key={task}
               className="rounded-xl bg-danger/10 px-4 py-2 font-rounded text-sm font-bold text-danger-dark"
             >
-              ✕ {TASK_LABELS[task]}
+              ✕ {TASK_RULES[task]}
             </li>
           ))}
         </ul>

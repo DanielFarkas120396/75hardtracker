@@ -6,6 +6,7 @@ import type { DayCelebration } from '../../hooks/useDayCompleteCelebration'
 import { useHaptics } from '../../hooks/useHaptics'
 import { useSound } from '../../hooks/useSound'
 import { celebrate } from '../../lib/confetti'
+import { CHALLENGE_LENGTH } from '../../logic/constants'
 
 interface DayCompleteCelebrationProps {
   celebration: DayCelebration | null
@@ -46,7 +47,7 @@ export function DayCompleteCelebration({ celebration, onDismiss }: DayCompleteCe
           </h1>
           <p className="max-w-xs font-rounded font-semibold text-white/90">
             {celebration.isFinalDay
-              ? 'That was the last one. All 75 days — every task, every day.'
+              ? `That was the last one. All ${CHALLENGE_LENGTH} days — every task, every day.`
               : 'Every task, done. See you tomorrow — keep the streak alive.'}
           </p>
           <p className="font-rounded text-lg font-extrabold text-yellow">+{celebration.xpEarned} XP today</p>
