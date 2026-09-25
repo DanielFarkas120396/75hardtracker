@@ -32,6 +32,40 @@ function run(rig: Rig, seconds: number): RigPose {
 /** Smallest difference between two angles, in degrees. */
 const angleGap = (a: number, b: number) => Math.abs((((a - b) % 360) + 540) % 360 - 180)
 
+const ALL_MOODS = Object.keys(MOOD_POSES) as DuckMood[]
+
+/** Every RigPose field must match, field by field: toEqual treats -0 and 0 as different. */
+function expectSamePose(after: RigPose, before: RigPose): void {
+  const scalarKeys: Exclude<keyof RigPose, 'knifeOffset'>[] = [
+    'shake',
+    'hop',
+    'sway',
+    'scaleX',
+    'scaleY',
+    'breathe',
+    'arm',
+    'knife',
+    'rightWing',
+    'gazeX',
+    'gazeY',
+    'eyeScaleY',
+    'eyesOpacity',
+    'happyOpacity',
+    'happyLift',
+    'browsOpacity',
+    'browFlat',
+    'browsDx',
+    'browsDy',
+    'glintX',
+    'sweatOpacity',
+  ]
+  for (const key of scalarKeys) {
+    expect(after[key]).toBeCloseTo(before[key], 9)
+  }
+  expect(after.knifeOffset[0]).toBeCloseTo(before.knifeOffset[0], 9)
+  expect(after.knifeOffset[1]).toBeCloseTo(before.knifeOffset[1], 9)
+}
+
 describe('tapAngle', () => {
   it('lifts, strikes and settles without jumps', () => {
     expect(tapAngle(0)).toBeCloseTo(0)
@@ -136,6 +170,89 @@ describe('createRig', () => {
     expect(windUp.arm).toBeLessThan(-40)
     expect(windUp.scaleY).toBeGreaterThan(1.15)
     expect(Math.abs(run(rig, 2.5).arm)).toBeLessThan(0.5)
+  })
+})
+
+describe('mood changes without jumps', () => {
+  const pairs: [DuckMood, DuckMood][] = []
+  for (const from of ALL_MOODS) {
+    for (const to of ALL_MOODS) {
+      if (from !== to) pairs.push([from, to])
+    }
+  }
+
+  it.each(pairs)('does not jump when %s becomes %s', (from, to) => {
+    // 3.3 s lands mid-tap for both tap periods and mid-flight for the toss.
+    const rig = createRig({ mood: from, random: seeded() })
+    run(rig, 3.3)
+    const before = rig.step(0)
+    rig.setMood(to)
+    const after = rig.step(0)
+    expectSamePose(after, before)
+  })
+
+  it('catches a knife already in the air after the mood changes', () => {
+    const rig = createRig({ mood: 'celebrating', random: seeded() })
+    let pose = rig.step(FRAME)
+    while (Math.hypot(...pose.knifeOffset) <= 100) pose = rig.step(FRAME)
+    rig.setMood('watching')
+
+    let previous = pose
+    const frames = Math.round(5 / FRAME)
+    for (let i = 0; i < frames; i++) {
+      pose = rig.step(FRAME)
+      const jump = Math.hypot(
+        pose.knifeOffset[0] - previous.knifeOffset[0],
+        pose.knifeOffset[1] - previous.knifeOffset[1],
+      )
+      expect(jump).toBeLessThan(25)
+      const elapsed = (i + 1) * FRAME
+      if (elapsed >= 2) expect(pose.knifeOffset).toEqual([0, 0])
+      previous = pose
+    }
+  })
+})
+
+describe('reduced motion transitions', () => {
+  it.each(ALL_MOODS)('matches a fresh reduced-motion rig after turning it on mid-motion, in %s', (mood) => {
+    const rig = createRig({ mood, random: seeded() })
+    run(rig, 3.3)
+    rig.setReducedMotion(true)
+    const after = rig.step(FRAME)
+
+    const fresh = createRig({ mood, reducedMotion: true, random: seeded() })
+    const expected = fresh.step(FRAME)
+
+    expectSamePose(after, expected)
+  })
+
+  it('resumes blinking and glancing after reduced motion turns off', () => {
+    const rig = createRig({ mood: 'watching', random: seeded() })
+    run(rig, 60)
+    rig.setReducedMotion(true)
+    rig.setReducedMotion(false)
+
+    let blinked = false
+    let glanced = false
+    for (let i = 0; i < Math.round(3 / FRAME); i++) {
+      const pose = rig.step(FRAME)
+      if (pose.eyeScaleY < 0.5) blinked = true
+      if (Math.abs(pose.gazeX) > 1 || Math.abs(pose.gazeY) > 1) glanced = true
+    }
+    expect(blinked).toBe(true)
+    expect(glanced).toBe(true)
+  })
+})
+
+describe('blink duration', () => {
+  it('keeps its speed across a mood change', () => {
+    const rig = createRig({ mood: 'watching', random: seeded() })
+    let pose = rig.step(FRAME)
+    while (pose.eyeScaleY >= 0.9) pose = rig.step(FRAME)
+    const before = rig.step(0)
+    rig.setMood('hunting')
+    const after = rig.step(0)
+    expect(after.eyeScaleY).toBeCloseTo(before.eyeScaleY, 5)
   })
 })
 

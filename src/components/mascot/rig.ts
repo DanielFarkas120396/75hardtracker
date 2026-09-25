@@ -67,18 +67,20 @@ export const MOOD_POSES: Record<DuckMood, MoodPose> = {
   sad: { ...CALM, arm: 8, knife: 35, lean: 0.98, brow: 0, anger: 0, squint: 0.85, happy: 0, sweat: 1, tapPeriod: 0, glintEvery: 0, gaze: [0, 5] },
 }
 
+const smooth = (u: number) => u * u * (3 - 2 * u)
+
 /** The tap cycle's arm angle at `phase` (0–1): a slow lift to −12°, a quick strike to +3°, then a settle to 0. */
 export function tapAngle(phase: number): number {
   if (phase < 0.72) {
     const u = phase / 0.72
-    return -12 * u * u * (3 - 2 * u)
+    return -12 * smooth(u)
   }
   if (phase < 0.8) {
     const u = (phase - 0.72) / 0.08
     return -12 + 15 * u * u
   }
   const u = (phase - 0.8) / 0.2
-  return 3 * (1 - u * u * (3 - 2 * u))
+  return 3 * (1 - smooth(u))
 }
 
 /** Seconds per knife toss while celebrating. */
@@ -87,7 +89,6 @@ const RELEASE = 0.4
 const CATCH = 1.1
 const SETTLED = 1.6
 const TOSS_HEIGHT = 180
-const smooth = (u: number) => u * u * (3 - 2 * u)
 
 /**
  * The toss `seconds` into its cycle: the extra arm angle, the knife's spin,
@@ -231,6 +232,7 @@ export function createRig(options: { mood: DuckMood; reducedMotion?: boolean; ra
     shake: spring(0, 60, 14),
   }
   let blinkAt = -1
+  let blinkDuration = 0.15
   let nextBlink = 0.9
   let glintAt = -1
   let nextGlint = 1.6
@@ -239,10 +241,18 @@ export function createRig(options: { mood: DuckMood; reducedMotion?: boolean; ra
   let lungeAt = -1
   let glareUntil = -1
   let relaxUntil = -1
+  // The tap keeps its own phase and the toss its own clock (0–1 and seconds),
+  // so a mood change turns them continuously instead of snapping to a new
+  // formula. `lastTapPeriod` is the rate to keep using while the current
+  // mood doesn't tap, so the phase keeps advancing smoothly through a
+  // crossfade instead of freezing.
+  let tapPhase = 0
+  let lastTapPeriod = start.tapPeriod > 0 ? start.tapPeriod : 1
   let lastTapPhase = 0
+  let tossClock = 0
   let lastTossSeconds = 0
 
-  function setTargets(): void {
+  function setTargets(tossActive: boolean): void {
     const p = MOOD_POSES[mood]
     const lunging = lungeAt >= 0
     const glaring = t < glareUntil
@@ -260,7 +270,7 @@ export function createRig(options: { mood: DuckMood; reducedMotion?: boolean; ra
     S.tremble.to = p.tremble ? motion : 0
     S.bob.to = p.bob ? motion : 0
     S.wave.to = p.wave ? motion : 0
-    S.toss.to = p.toss ? motion : 0
+    S.toss.to = tossActive ? motion : 0
     S.shake.to = 0
     S.squash.to = 1
     S.nod.to = 0
@@ -280,12 +290,22 @@ export function createRig(options: { mood: DuckMood; reducedMotion?: boolean; ra
     setReducedMotion(next) {
       reduced = next
       if (reduced) {
+        // Return every clock and timer to a fresh rig's values, so the still
+        // pose never depends on history, and turning motion back on resumes
+        // blinking, glancing and glinting right away instead of picking up
+        // stale timers from a clock that's been frozen for a while.
         t = 0
         blinkAt = -1
+        nextBlink = 0.9
         glintAt = -1
+        nextGlint = 1.6
+        holdGazeUntil = 0
+        nextGlance = 0
         lungeAt = -1
         glareUntil = -1
         relaxUntil = -1
+        tapPhase = 0
+        tossClock = 0
       }
     },
 
@@ -345,12 +365,21 @@ export function createRig(options: { mood: DuckMood; reducedMotion?: boolean; ra
         S.shake.x = 1
         S.shake.v = 0
       }
-      setTargets()
+      // A toss already in flight (wound up, in the air or being caught) keeps
+      // running, and keeps the toss gate open, even after the mood stops
+      // tossing: the knife is always caught, never dropped mid-air.
+      const tossActive = p.toss || (tossClock > 0 && tossClock < SETTLED)
+      setTargets(tossActive)
 
       if (p.gaze) {
         S.gx.to = p.gaze[0]
         S.gy.to = p.gaze[1]
-      } else if (!reduced && t >= holdGazeUntil && t >= nextGlance) {
+      } else if (reduced) {
+        // No history-dependent stare: a still pose always centres the gaze
+        // unless the mood fixes it.
+        S.gx.to = 0
+        S.gy.to = 0
+      } else if (t >= holdGazeUntil && t >= nextGlance) {
         const glance = p.stare ? STARE : GLANCES[Math.floor(random() * GLANCES.length)]
         S.gx.to = glance[0]
         S.gy.to = glance[1]
@@ -359,31 +388,41 @@ export function createRig(options: { mood: DuckMood; reducedMotion?: boolean; ra
 
       let blink = 1
       if (!reduced) {
-        if (blinkAt < 0 && t >= nextBlink) blinkAt = t
+        if (blinkAt < 0 && t >= nextBlink) {
+          blinkAt = t
+          // Fixed for the whole blink, so a mood change mid-blink can't
+          // change its speed.
+          blinkDuration = p.stare ? 0.46 : 0.15
+        }
         if (blinkAt >= 0) {
-          const duration = p.stare ? 0.46 : 0.15
           const elapsed = t - blinkAt
-          if (elapsed >= duration) {
+          if (elapsed >= blinkDuration) {
             blinkAt = -1
             nextBlink = t + (p.stare ? 4.5 : 1.6) + random() * 3.2
           } else {
-            blink = 1 - 0.92 * Math.sin((elapsed / duration) * Math.PI)
+            blink = 1 - 0.92 * Math.sin((elapsed / blinkDuration) * Math.PI)
           }
         }
       }
 
-      const tapPhase = p.tapPeriod > 0 ? (t % p.tapPeriod) / p.tapPeriod : 0
-      const tapA = p.tapPeriod > 0 ? tapAngle(tapPhase) : 0
+      // The phase itself never jumps: it's carried state, advanced at the
+      // current mood's rate (or the last tapping mood's, while fading out).
+      const tapPeriod = p.tapPeriod > 0 ? p.tapPeriod : lastTapPeriod
+      lastTapPeriod = tapPeriod
+      if (!reduced) tapPhase = (tapPhase + dt / tapPeriod) % 1
+      const tapA = tapAngle(tapPhase)
       if (!reduced && p.tapPeriod > 0 && S.tap.x > 0.5 && lastTapPhase < 0.8 && tapPhase >= 0.8) {
         S.squash.v -= 1.4
         if (p.strikeGlint && glintAt < 0) glintAt = t
       }
       lastTapPhase = tapPhase
 
-      const tossSeconds = t % TOSS_PERIOD
-      const toss = p.toss ? tossAt(tossSeconds) : { arm: 0, spin: 0, lift: 0 }
-      if (!reduced && p.toss && lastTossSeconds < CATCH && tossSeconds >= CATCH) S.squash.v -= 1.5
-      lastTossSeconds = tossSeconds
+      // The clock keeps running (see tossActive above) until a toss already
+      // under way is finished, so it's always caught rather than dropped.
+      if (!reduced && tossActive) tossClock = (tossClock + dt) % TOSS_PERIOD
+      const toss = tossAt(tossClock)
+      if (!reduced && lastTossSeconds < CATCH && tossClock >= CATCH) S.squash.v -= 1.5
+      lastTossSeconds = tossClock
 
       if (!reduced && p.glintEvery > 0 && glintAt < 0 && t >= nextGlint) glintAt = t
       let glintX = -80
