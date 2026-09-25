@@ -15,7 +15,7 @@ interface BottomNavProps {
 
 export function BottomNav({ active, onChange }: BottomNavProps) {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-ink/10 bg-surface pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto flex max-w-md border-t border-ink/10 bg-surface pb-[env(safe-area-inset-bottom)]">
       {TABS.map((tab) => {
         const isActive = tab.id === active
         return (

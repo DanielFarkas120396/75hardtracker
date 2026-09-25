@@ -8,10 +8,39 @@ function getContext(): AudioContext | null {
   return sharedContext
 }
 
+/** Resumes a context the browser suspended (or, on iOS, interrupted); a no-op once it's running. */
+function resume(ctx: AudioContext): Promise<void> {
+  return ctx.state === 'running' ? Promise.resolve() : ctx.resume().catch(() => undefined)
+}
+
+// Touch taps only count as a user gesture on pointerup/touchend, mouse clicks on pointerdown.
+const UNLOCK_EVENTS = ['pointerdown', 'pointerup', 'touchend', 'keydown'] as const
+
+/**
+ * Browsers only let audio start from a user gesture, but the chime plays
+ * later — from an effect, after a save. So the shared context is created and
+ * resumed inside the user's taps and key presses until it's running.
+ */
+export function unlockAudioOnUserGesture(): void {
+  if (typeof window === 'undefined') return
+
+  const stop = () => UNLOCK_EVENTS.forEach((type) => window.removeEventListener(type, unlock, true))
+  function unlock() {
+    const ctx = getContext()
+    if (!ctx) return stop()
+    void resume(ctx).then(() => {
+      if (ctx.state === 'running') stop()
+    })
+  }
+
+  UNLOCK_EVENTS.forEach((type) => window.addEventListener(type, unlock, true))
+}
+
 /** Plays a short, synthesized two-note chime — no audio asset files needed. */
 export function playChime(): void {
   const ctx = getContext()
   if (!ctx) return
+  void resume(ctx)
 
   const notes = [523.25, 783.99] // C5, G5
   const now = ctx.currentTime

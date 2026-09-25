@@ -50,34 +50,37 @@ function App() {
 
   return (
     <>
-      <Suspense fallback={<LoadingScreen />}>
-        {screen === 'today' &&
-          (gate.kind === 'completed' ? (
-            <VictoryScreen challenge={gate.challenge} today={today} revealed={celebration === null} />
-          ) : (
-            <TodayScreen
+      {/* A phone-width column: on a wide screen the app stays readable instead of stretching. */}
+      <div className="mx-auto max-w-md">
+        <Suspense fallback={<LoadingScreen />}>
+          {screen === 'today' &&
+            (gate.kind === 'completed' ? (
+              <VictoryScreen challenge={gate.challenge} today={today} revealed={celebration === null} />
+            ) : (
+              <TodayScreen
+                challenge={gate.challenge}
+                dayEntries={gate.dayEntries}
+                today={today}
+                todayDayNumber={gate.todayDayNumber}
+                streak={gate.streak}
+              />
+            ))}
+          {screen === 'journey' && (
+            <JourneyScreen
               challenge={gate.challenge}
               dayEntries={gate.dayEntries}
-              today={today}
               todayDayNumber={gate.todayDayNumber}
               streak={gate.streak}
+              completed={gate.kind === 'completed'}
             />
-          ))}
-        {screen === 'journey' && (
-          <JourneyScreen
-            challenge={gate.challenge}
-            dayEntries={gate.dayEntries}
-            todayDayNumber={gate.todayDayNumber}
-            streak={gate.streak}
-            completed={gate.kind === 'completed'}
-          />
-        )}
-        {screen === 'stats' && <StatsScreen challenge={gate.challenge} streak={gate.streak} today={today} />}
-        {screen === 'gallery' && <GalleryScreen />}
-        {screen === 'settings' && (
-          <SettingsScreen challenge={gate.challenge} today={today} todayDayNumber={gate.todayDayNumber} />
-        )}
-      </Suspense>
+          )}
+          {screen === 'stats' && <StatsScreen challenge={gate.challenge} streak={gate.streak} today={today} />}
+          {screen === 'gallery' && <GalleryScreen />}
+          {screen === 'settings' && (
+            <SettingsScreen challenge={gate.challenge} today={today} todayDayNumber={gate.todayDayNumber} />
+          )}
+        </Suspense>
+      </div>
 
       <BottomNav active={screen} onChange={setScreen} />
 

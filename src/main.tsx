@@ -1,3 +1,4 @@
+import { MotionConfig } from 'framer-motion'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles/index.css'
@@ -6,10 +7,13 @@ import { AppErrorBoundary } from './components/AppErrorBoundary'
 import { StorageErrorScreen } from './components/StorageErrorScreen'
 import { openDatabase } from './db/openDatabase'
 import { listenForInstallPrompt } from './lib/installPrompt'
+import { unlockAudioOnUserGesture } from './lib/sound'
 import { requestPersistenceOnce } from './lib/storage'
 
 // Early: the browser can offer installation before the database is open.
 listenForInstallPrompt()
+// The chime plays from effects, outside any gesture; the first taps unlock audio for it.
+unlockAudioOnUserGesture()
 
 const root = createRoot(document.getElementById('root')!)
 let opened = false
@@ -27,7 +31,10 @@ openDatabase({
     root.render(
       <StrictMode>
         <AppErrorBoundary>
-          <App />
+          {/* Honours the OS "reduce motion" setting: Framer drops movement and keeps fades. */}
+          <MotionConfig reducedMotion="user">
+            <App />
+          </MotionConfig>
         </AppErrorBoundary>
       </StrictMode>,
     )

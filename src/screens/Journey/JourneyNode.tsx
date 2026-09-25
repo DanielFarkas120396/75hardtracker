@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 
 export type NodeState = 'completed' | 'today' | 'locked'
 
@@ -13,22 +13,26 @@ interface JourneyNodeProps {
 const RADIUS = 22
 
 export function JourneyNode({ x, y, dayNumber, state, isMilestone }: JourneyNodeProps) {
+  const reduceMotion = useReducedMotion()
   const fill = state === 'locked' ? 'var(--color-ink-muted)' : isMilestone ? 'var(--color-yellow)' : 'var(--color-green)'
   const opacity = state === 'locked' ? 0.35 : 1
 
   return (
     <g transform={`translate(${x} ${y})`}>
       <g opacity={opacity}>
-        {state === 'today' && (
-          <motion.circle
-            r={RADIUS + 6}
-            fill="none"
-            stroke="var(--color-orange)"
-            strokeWidth={3}
-            animate={{ scale: [1, 1.15, 1], opacity: [0.8, 0.3, 0.8] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        )}
+        {state === 'today' &&
+          (reduceMotion ? (
+            <circle r={RADIUS + 6} fill="none" stroke="var(--color-orange)" strokeWidth={3} opacity={0.8} />
+          ) : (
+            <motion.circle
+              r={RADIUS + 6}
+              fill="none"
+              stroke="var(--color-orange)"
+              strokeWidth={3}
+              animate={{ scale: [1, 1.15, 1], opacity: [0.8, 0.3, 0.8] }}
+              transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          ))}
         <circle
           r={RADIUS}
           fill={fill}
