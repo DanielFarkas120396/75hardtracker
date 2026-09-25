@@ -39,7 +39,7 @@ export function StorageErrorScreen({ problem, error }: StorageErrorScreenProps) 
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-canvas p-6 text-center">
-      <Mascot state={problem === 'failed' ? 'sad' : 'idle'} size={110} />
+      <Mascot mood={problem === 'failed' ? 'sad' : 'waiting'} size={110} />
       <h1 className="font-rounded text-2xl font-extrabold text-ink">{title}</h1>
       <p className="max-w-sm font-rounded text-ink-muted">{body}</p>
       {detail && <p className="max-w-sm break-words font-mono text-xs text-ink-muted">{detail}</p>}

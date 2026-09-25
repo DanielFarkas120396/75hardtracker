@@ -16,7 +16,7 @@ export function PreStartView({ challenge, todayDayNumber }: PreStartViewProps) {
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-canvas px-6 pb-24 text-center">
-      <Mascot state="idle" size={120} />
+      <Mascot mood="waiting" size={120} />
       <p className="font-rounded text-sm font-bold text-ink-muted">Attempt #{challenge.attemptNumber}</p>
       {brokenStartDate ? (
         <>

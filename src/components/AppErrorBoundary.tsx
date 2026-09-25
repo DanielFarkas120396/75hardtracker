@@ -48,7 +48,7 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
 
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-canvas p-6 text-center">
-        <Mascot state="sad" size={110} />
+        <Mascot mood="sad" size={110} />
         <h1 className="font-rounded text-2xl font-extrabold text-ink">Something went wrong</h1>
         <p className="max-w-sm font-rounded text-ink-muted">
           The app hit an unexpected error. Your data is still saved on this device — reloading usually fixes it.

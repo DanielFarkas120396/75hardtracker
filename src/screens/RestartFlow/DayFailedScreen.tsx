@@ -38,7 +38,7 @@ export function DayFailedScreen({ challenge, failedDayNumber, today }: DayFailed
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-canvas p-6 text-center">
-      <Mascot state="sad" />
+      <Mascot mood="judging" />
       <h1 className="font-rounded text-2xl font-extrabold text-ink">Day {failedDayNumber} wasn't completed</h1>
       <p className="max-w-xs font-rounded text-ink-muted">
         75 Hard is all-or-nothing on every task, every day. This attempt (#{challenge.attemptNumber}) ends here —
@@ -58,7 +58,7 @@ export function DayFailedScreen({ challenge, failedDayNumber, today }: DayFailed
         </ul>
       )}
 
-      <p className="mt-2 font-rounded font-bold text-ink">You've got this — let's go again.</p>
+      <p className="mt-2 font-rounded font-bold text-ink">Again. From Day 1. I'm watching.</p>
 
       <Button variant="primary" className="mt-2" onClick={() => void confirmRestart()} disabled={restarting}>
         {restarting ? 'Restarting…' : 'Restart from Day 1'}

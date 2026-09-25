@@ -70,7 +70,7 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak }: To
       <div className="flex items-center gap-3 px-4 pb-4">
         {/* Decorative: the speech bubble carries the message. */}
         <div aria-hidden="true" className="shrink-0">
-          <Mascot state={completion.isComplete ? 'cheering' : 'idle'} size={64} />
+          <Mascot mood={completion.isComplete ? 'content' : 'watching'} size={88} decorative />
         </div>
         <p className="relative rounded-2xl bg-surface px-4 py-2 font-rounded text-sm font-bold text-ink shadow-sm">
           <span aria-hidden="true" className="absolute top-1/2 -left-1.5 h-3 w-3 -translate-y-1/2 rotate-45 bg-surface" />
