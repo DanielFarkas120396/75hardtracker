@@ -7,6 +7,7 @@ import { bookRepo } from '../../db/repositories/bookRepo'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import { SETTING_KEYS, settingsRepo } from '../../db/repositories/settingsRepo'
 import type { DayEntry } from '../../db/types'
+import { validateBook, type BookErrors } from '../../logic/books'
 import { PAGES_TARGET } from '../../logic/constants'
 
 interface ReadingCardProps {
@@ -86,11 +87,17 @@ export function ReadingCard({ entry, complete, cheer }: ReadingCardProps) {
 
 function AddBookForm({ onDone }: { onDone: () => void }) {
   const [title, setTitle] = useState('')
-  const [totalPages, setTotalPages] = useState(200)
+  // Kept as typed, so the field can be cleared and retyped; validated on save.
+  const [totalPages, setTotalPages] = useState('200')
+  const [errors, setErrors] = useState<BookErrors>({})
 
   const submit = async () => {
-    if (!title.trim()) return
-    const id = await bookRepo.add({ title: title.trim(), totalPages, currentPage: 0 })
+    const result = validateBook({ title, totalPages, currentPage: '' })
+    if (!result.ok) {
+      setErrors(result.errors)
+      return
+    }
+    const id = await bookRepo.add(result.value)
     await settingsRepo.set(SETTING_KEYS.currentBookId, id)
     onDone()
   }
@@ -103,15 +110,27 @@ function AddBookForm({ onDone }: { onDone: () => void }) {
         placeholder="Book title"
         className="min-h-touch rounded-xl bg-surface px-3 font-rounded text-ink"
       />
+      {errors.title && (
+        <p role="alert" className="text-sm font-semibold text-danger-ink">
+          {errors.title}
+        </p>
+      )}
       <label className="flex items-center justify-between text-sm font-semibold text-ink-muted">
         Total pages
         <input
-          type="number"
+          type="text"
+          inputMode="numeric"
+          autoComplete="off"
           value={totalPages}
-          onChange={(e) => setTotalPages(Math.max(1, Number(e.target.value)))}
+          onChange={(e) => setTotalPages(e.target.value)}
           className="min-h-touch w-24 rounded-xl bg-surface px-3 text-right font-rounded text-ink"
         />
       </label>
+      {errors.totalPages && (
+        <p role="alert" className="text-sm font-semibold text-danger-ink">
+          {errors.totalPages}
+        </p>
+      )}
       <div className="flex gap-2">
         <Button variant="primary" className="flex-1" onClick={submit}>
           Save
