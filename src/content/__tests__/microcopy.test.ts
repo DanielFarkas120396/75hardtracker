@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { TASK_IDS } from '../../logic/dayCompletion'
 import type { Menace, MenaceLevel, MenaceReason } from '../../logic/menace'
-import { duckLine, GLARE_LINE, LUNGE_LINE, mascotLine, planSavedLine, pokeLine, POKE_LINES, taskCheer } from '../microcopy'
+import { duckLine, GLARE_LINE, LUNGE_LINE, planSavedLine, pokeLine, POKE_LINES, taskCheer } from '../microcopy'
 
 describe('taskCheer', () => {
   it('rotates, so consecutive days get different cheers', () => {
@@ -17,22 +17,6 @@ describe('taskCheer', () => {
         expect(cheer.length).toBeLessThanOrEqual(28)
       }
     }
-  })
-})
-
-describe('mascotLine', () => {
-  it('cheers a perfect day', () => {
-    expect(mascotLine([])).toMatch(/perfect day/i)
-  })
-
-  it('names the last task left', () => {
-    expect(mascotLine(['photo'])).toMatch(/photo/)
-    expect(mascotLine(['water'])).toMatch(/water/)
-  })
-
-  it('greets an untouched day, then counts progress', () => {
-    expect(mascotLine(TASK_IDS)).toMatch(/let's go/i)
-    expect(mascotLine(['water', 'reading'])).toBe('3 down, 2 to go!')
   })
 })
 
