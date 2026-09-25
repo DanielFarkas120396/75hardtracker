@@ -11,6 +11,8 @@ export const SETTING_KEYS = {
   persistRequested: 'persistRequested',
   /** 'system' | 'light' | 'dark' — mirrored to localStorage for the no-flash script in index.html. */
   theme: 'theme',
+  /** "HH:mm", 18:00–23:59 — the duck only turns menacing when what's left no longer fits before it. */
+  bedtime: 'bedtime',
 } as const
 
 export const settingsRepo = {

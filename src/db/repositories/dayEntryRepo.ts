@@ -1,5 +1,7 @@
-import { hasAnyProgress } from '../../logic/dayCompletion'
+import { hasAnyProgress, TASK_IDS } from '../../logic/dayCompletion'
 import { isChallengeDay } from '../../logic/days'
+import { parseHHmm } from '../../logic/menace'
+import type { TaskId } from '../../logic/types'
 import { syncDayCompletion } from '../completion'
 import { db } from '../db'
 import { groupWorkoutsByEntry, toDayTaskData } from '../mappers'
@@ -95,6 +97,16 @@ export const dayEntryRepo = {
 
   async update(id: number, changes: Partial<DayEntry>): Promise<void> {
     await changeAndSync(id, () => db.dayEntries.update(id, changes))
+  },
+
+  /** Replaces the day's plan; an empty plan removes the field. Plans never affect completion, so there's no re-sync. */
+  async setPlans(id: number, plans: Partial<Record<TaskId, string>>): Promise<void> {
+    const cleaned: Partial<Record<TaskId, string>> = {}
+    for (const task of TASK_IDS) {
+      const time = plans[task]
+      if (time !== undefined && parseHHmm(time) !== null) cleaned[task] = time
+    }
+    await db.dayEntries.update(id, { plans: Object.keys(cleaned).length > 0 ? cleaned : undefined })
   },
 
   /** Atomically adjusts water_ml by a signed delta, clamped at 0 — safe under rapid quick-add taps. */

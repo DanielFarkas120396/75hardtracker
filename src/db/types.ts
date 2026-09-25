@@ -1,3 +1,5 @@
+import type { TaskId } from '../logic/types'
+
 export type ChallengeStatus = 'active' | 'failed' | 'completed'
 
 export interface Challenge {
@@ -19,6 +21,8 @@ export interface DayEntry {
   photoId?: number
   notes?: string
   mood?: 1 | 2 | 3 | 4 | 5
+  /** Today's plan: when each task will be done, as local "HH:mm". Read by the Today duck only. */
+  plans?: Partial<Record<TaskId, string>>
   completed: boolean
 }
 

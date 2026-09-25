@@ -310,3 +310,16 @@ describe('dayEntryRepo.getAllForChallenges', () => {
     expect(await dayEntryRepo.getAllForChallenges([])).toEqual([])
   })
 })
+
+describe('dayEntryRepo.setPlans', () => {
+  it('saves a day plan, drops malformed times, and removes an empty plan', async () => {
+    const challengeId = await addChallenge({ startDate: today, attemptNumber: 1, status: 'active' })
+    const entry = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 1, date: today })
+
+    await dayEntryRepo.setPlans(entry.id, { reading: '22:30', workouts: '25:00' })
+    expect((await db.dayEntries.get(entry.id))?.plans).toEqual({ reading: '22:30' })
+
+    await dayEntryRepo.setPlans(entry.id, {})
+    expect(await db.dayEntries.get(entry.id)).not.toHaveProperty('plans')
+  })
+})

@@ -102,6 +102,16 @@ describe('export → reset → import', () => {
     expect(entries[0]).toMatchObject({ id: 10, water_ml: 1500 })
     expect(await db.workouts.toArray()).toEqual([expect.objectContaining({ dayEntryId: 10 })])
   })
+
+  it('keeps day plans through a backup', async () => {
+    await seedEverything()
+    const [entry] = await db.dayEntries.toArray()
+    await db.dayEntries.update(entry.id, { plans: { reading: '22:30' } })
+
+    await roundTrip()
+
+    expect((await db.dayEntries.get(entry.id))?.plans).toEqual({ reading: '22:30' })
+  })
 })
 
 describe('validateExportPayload', () => {
@@ -146,5 +156,14 @@ describe('validateExportPayload', () => {
     const payload = await validPayload()
     ;(payload.challenges as Record<string, unknown>[])[0].status = 'paused'
     expect(validateExportPayload(payload).ok).toBe(false)
+  })
+
+  it('rejects a day plan with an unknown task or an impossible time', async () => {
+    const base = await validPayload()
+    for (const plans of [{ reading: '25:00' }, { naps: '14:00' }, 'tonight']) {
+      const payload = structuredClone(base)
+      ;(payload.dayEntries as Record<string, unknown>[])[0].plans = plans
+      expect(validateExportPayload(payload).ok).toBe(false)
+    }
   })
 })
