@@ -7,6 +7,7 @@ No backend: all data (including photos) lives in the browser via IndexedDB (Dexi
 ## Features
 
 - **Today** — the five daily tasks: two workouts of 45+ minutes (one outdoors), diet and no alcohol, 3.8 L of water, 10 pages of reading, and a progress photo. Each card celebrates when it's done, and the mascot counts the day down. Mood and notes are optional and don't affect completion.
+- **The duck** — your companion is a knife-holding duck, drawn in code and animated: he breathes, blinks, watches what you touch and answers pokes. He only gets menacing when what's left no longer fits before your bedtime (Settings → Companion), and backs off once you tell him your plan ("I've got a plan" on Today). With "reduce motion" on, he holds still.
 - **Strict rules** — a day only completes with all five tasks. A missed day ends the attempt: the app shows what was missed and restarts from Day 1 once you confirm. The start date can be today or later, and it's locked from Day 2.
 - **Journey** — all 75 days on a winding path; future days are locked.
 - **XP, streaks and badges** — 10 XP per task, +25 for a perfect day, +100 at streaks of 7, 14, 21, 30, 50 and 75. A full-screen celebration for each completed day, and a victory screen after Day 75.
@@ -34,6 +35,8 @@ npm run lint       # oxlint
 
 In development, `?db=<name>` opens a separate scratch database, so experiments never touch your real data (production builds ignore it). `src/dev/scenarios.ts` seeds a scratch database from the browser console:
 
+`?now=HH:mm` freezes the duck's clock in development (production ignores it), so each menace level can be checked, e.g. `?db=duck&now=22:45`.
+
 ```js
 // at http://localhost:5173/?db=day75
 const s = await import('/src/dev/scenarios.ts')
@@ -47,6 +50,8 @@ await s.seedDay75Pending()
 | `seedNewMorning()` | Days 1–3 complete and nothing logged on Day 4 yet: the streak should show 3. |
 | `seedPreStart(daysAhead)` | An attempt that starts in a few days ("Starts in N days"). |
 | `seedDayOneWithLogs()` | Day 1 with some progress logged, for trying start-date changes. |
+| `seedMenaceDay()` | Day 3 with water at 2.1 L and the reading, photo and diet to do: try `?now=10:00`, `20:00` and `22:45`. |
+| `seedPlannedReading()` | Only the reading left, planned for 22:30: try `?now=19:00`, `22:35` and `23:10`. |
 
 Every scenario refuses to run against the default database.
 
@@ -66,4 +71,5 @@ Everything is stored only on the device, in this browser. Nothing is sent anywhe
 - `src/content/` — user-facing copy: task names and rules, cheers and the mascot's lines.
 - `src/lib/` — dates, theme, sound, confetti, storage and install helpers.
 - `src/screens/`, `src/components/` — UI.
+- `src/components/mascot/` — the duck: the traced SVG art, the pure motion rig (`rig.ts`) and the `Mascot` component. The design is in `docs/superpowers/specs/2026-09-25-knife-duck-companion-design.md`.
 - `src/dev/` — dev-only seeded scenarios (never imported by the app).
