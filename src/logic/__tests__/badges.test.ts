@@ -139,4 +139,31 @@ describe('buildBadgeContext', () => {
     })
     expect(context.streakLength).toBe(7)
   })
+
+  it("counts the water goal by the ruleset passed in: a Medium day misses Hard's higher target", () => {
+    const mediumPerfectDay: DayTaskData = {
+      water_ml: 3000,
+      pages_read: 10,
+      dietFollowed: true,
+      noAlcohol: true,
+      hasPhoto: true,
+      workouts: [{ durationMin: 45, isOutdoor: false }],
+    }
+    expect(
+      buildBadgeContext({
+        days: [{ dayNumber: 1, data: mediumPerfectDay }],
+        todayDayNumber: 2,
+        booksFinished: 0,
+        rules: RULESETS.medium,
+      }).waterGoalDays,
+    ).toBe(1)
+    expect(
+      buildBadgeContext({
+        days: [{ dayNumber: 1, data: mediumPerfectDay }],
+        todayDayNumber: 2,
+        booksFinished: 0,
+        rules: RULESETS.hard,
+      }).waterGoalDays,
+    ).toBe(0)
+  })
 })
