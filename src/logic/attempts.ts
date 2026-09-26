@@ -51,11 +51,8 @@ function reachedDayOf(
     return Number.isFinite(todayDayNumber) ? Math.min(Math.max(todayDayNumber, 0), CHALLENGE_LENGTH) : 0
   }
   // Failed: the miss that used up the jokers, the first miss if there weren't that many, or Day 75 if none at all.
-  return (
-    missedDayNumbers(summaries, CHALLENGE_LENGTH + 1)[jokers] ??
-    missedDayNumbers(summaries, CHALLENGE_LENGTH + 1)[0] ??
-    CHALLENGE_LENGTH
-  )
+  const missed = missedDayNumbers(summaries, CHALLENGE_LENGTH + 1)
+  return missed[jokers] ?? missed[0] ?? CHALLENGE_LENGTH
 }
 
 /** A stretch of consecutive complete days, or a single day with tasks missing. */

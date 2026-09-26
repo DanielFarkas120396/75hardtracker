@@ -51,7 +51,7 @@ export type GateKind = 'active' | 'needsRestart' | 'completed'
 
 export interface GateResolution {
   kind: GateKind
-  /** The first missed day, when `kind` is 'needsRestart'. */
+  /** The missed day that failed the attempt (the first miss beyond the jokers), when `kind` is 'needsRestart'. */
   failedDayNumber?: number
 }
 
@@ -73,11 +73,9 @@ export function resolveChallengeGate(params: {
   if (evaluation.status === 'active') return { kind: 'active' }
 
   const today = Number.isFinite(params.todayDayNumber) ? params.todayDayNumber : CHALLENGE_LENGTH + 1
+  const missed = missedDayNumbers(params.dayEntries, today)
   const failedDayNumber =
-    evaluation.failedDayNumber ??
-    evaluation.missed[params.jokers] ??
-    evaluation.missed[0] ??
-    Math.min(Math.max(today, 1), CHALLENGE_LENGTH)
+    evaluation.failedDayNumber ?? missed[params.jokers] ?? missed[0] ?? Math.min(Math.max(today, 1), CHALLENGE_LENGTH)
   return { kind: 'needsRestart', failedDayNumber }
 }
 

@@ -160,6 +160,20 @@ describe('resolveChallengeGate', () => {
     ).toEqual({ kind: 'needsRestart', failedDayNumber: 1 })
   })
 
+  it('finds the first incomplete day for an archived failed attempt even when the start date is broken', () => {
+    expect(
+      resolveChallengeGate({
+        currentStatus: 'failed',
+        dayEntries: [
+          { dayNumber: 1, completed: true },
+          { dayNumber: 2, completed: false },
+        ],
+        todayDayNumber: Number.NaN,
+        jokers: 0,
+      }),
+    ).toEqual({ kind: 'needsRestart', failedDayNumber: 2 })
+  })
+
   it('is completed once Day 75 is complete, on Day 75 itself and afterwards', () => {
     expect(
       resolveChallengeGate({ currentStatus: 'active', dayEntries: completeDays(75), todayDayNumber: 75, jokers: 0 })
