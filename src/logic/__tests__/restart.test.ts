@@ -77,13 +77,13 @@ describe('evaluateChallenge', () => {
 })
 
 describe('missedDayNumbers', () => {
-  it('returns undefined when every prior day is complete', () => {
+  it('has no missed day when every earlier day is complete', () => {
     expect(
-      missedDayNumbers([{ dayNumber: 1, completed: true }, { dayNumber: 2, completed: true }], 3)[0],
-    ).toBeUndefined()
+      missedDayNumbers([{ dayNumber: 1, completed: true }, { dayNumber: 2, completed: true }], 3),
+    ).toEqual([])
   })
 
-  it('returns the earliest incomplete or missing day', () => {
+  it('lists incomplete and missing days, earliest first', () => {
     expect(
       missedDayNumbers(
         [
@@ -91,8 +91,8 @@ describe('missedDayNumbers', () => {
           { dayNumber: 3, completed: false },
         ],
         4,
-      )[0],
-    ).toBe(2)
+      ),
+    ).toEqual([2, 3])
   })
 })
 
