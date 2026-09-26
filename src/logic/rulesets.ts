@@ -6,23 +6,23 @@ export type ChallengeVariant = 'hard' | 'strong' | 'medium' | 'soft'
  * of docs/superpowers/specs/2026-09-26-challenge-variants-design.md.
  */
 export interface Ruleset {
-  variant: ChallengeVariant
+  readonly variant: ChallengeVariant
   /** Qualifying workouts needed each day. */
-  requiredWorkouts: number
+  readonly requiredWorkouts: number
   /** Whether one of the qualifying workouts must be outdoors. */
-  requireOutdoor: boolean
+  readonly requireOutdoor: boolean
   /** The minutes a workout needs to qualify. */
-  minWorkoutMin: number
-  waterTargetMl: number
-  pagesTarget: number
+  readonly minWorkoutMin: number
+  readonly waterTargetMl: number
+  readonly pagesTarget: number
   /** Recovery days allowed per challenge week (the workouts task counts as done). */
-  restDaysPerWeek: number
+  readonly restDaysPerWeek: number
   /** Declared social occasions allowed per challenge week (a drink is allowed). */
-  socialDaysPerWeek: number
+  readonly socialDaysPerWeek: number
   /** Missed days forgiven before the attempt fails. */
-  jokers: number
-  dietKind: 'strict' | 'healthy'
-  readingKind: 'non-fiction' | 'any'
+  readonly jokers: number
+  readonly dietKind: 'strict' | 'healthy'
+  readonly readingKind: 'non-fiction' | 'any'
 }
 
 export const VARIANTS: readonly ChallengeVariant[] = ['hard', 'strong', 'medium', 'soft']

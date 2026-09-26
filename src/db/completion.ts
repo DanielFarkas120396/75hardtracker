@@ -4,7 +4,7 @@ import { db } from './db'
 import { toDayTaskData } from './mappers'
 
 /** The tables a transaction must cover to call syncDayCompletion. */
-export const COMPLETION_TABLES = [db.dayEntries, db.workouts, db.challenges]
+export const COMPLETION_TABLES = [db.dayEntries, db.workouts, db.challenges] as const
 
 /**
  * Recomputes a DayEntry's persisted `completed` flag from its data, its
