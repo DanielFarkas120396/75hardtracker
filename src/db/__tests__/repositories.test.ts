@@ -117,7 +117,12 @@ describe('the completion flow', () => {
     expect(await isCompleted()).toBe(true)
 
     const entries = await dayEntryRepo.getAllForChallenge(challengeId)
-    const gate = resolveChallengeGate({ currentStatus: 'active', dayEntries: entries, todayDayNumber: CHALLENGE_LENGTH })
+    const gate = resolveChallengeGate({
+      currentStatus: 'active',
+      dayEntries: entries,
+      todayDayNumber: CHALLENGE_LENGTH,
+      jokers: 0,
+    })
     expect(gate.kind).toBe('completed')
 
     await challengeRepo.markCompleted(challengeId)

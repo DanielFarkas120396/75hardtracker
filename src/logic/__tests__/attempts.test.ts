@@ -87,6 +87,13 @@ describe('summarizeAttempt', () => {
     })
     expect(summary).toEqual({ reachedDay: 0, completedDays: 0, startDate: '2026-10-01', endDate: undefined, xp: 0 })
   })
+
+  it('reaches the day the jokers ran out on: a failed Medium attempt that missed Days 3 and 6 reached Day 6, Hard reached Day 3', () => {
+    const days = [...perfectDays(1, 2), ...perfectDays(4, 5)] // Days 3 and 6 are missing entirely
+    const params = { startDate: '2026-09-01', status: 'failed' as const, days, todayDayNumber: 8 }
+    expect(summarizeAttempt({ ...params, rules: RULESETS.medium }).reachedDay).toBe(6)
+    expect(summarizeAttempt({ ...params, rules: RULESETS.hard }).reachedDay).toBe(3)
+  })
 })
 
 describe('attemptDayRows', () => {

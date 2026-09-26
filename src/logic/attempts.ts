@@ -1,7 +1,7 @@
 import { dateForDayNumber } from '../lib/dates'
 import { CHALLENGE_LENGTH } from './constants'
 import { isDayComplete, missingTasks, TASK_IDS } from './dayCompletion'
-import { findFirstIncompleteDayNumber } from './restart'
+import { missedDayNumbers } from './restart'
 import type { Ruleset } from './rulesets'
 import type { ChallengeDayData, ChallengeStatus, DayCompletionSummary, TaskId } from './types'
 import { calculateChallengeXp } from './xp'
@@ -29,7 +29,7 @@ export function summarizeAttempt(params: {
 }): AttemptSummary {
   const { startDate, status, days, todayDayNumber, rules } = params
   const summaries = days.map((d) => ({ dayNumber: d.dayNumber, completed: isDayComplete(d.data, rules) }))
-  const reachedDay = reachedDayOf(status, summaries, todayDayNumber)
+  const reachedDay = reachedDayOf(status, summaries, todayDayNumber, rules.jokers)
 
   return {
     reachedDay,
@@ -40,13 +40,22 @@ export function summarizeAttempt(params: {
   }
 }
 
-function reachedDayOf(status: ChallengeStatus, summaries: DayCompletionSummary[], todayDayNumber: number): number {
+function reachedDayOf(
+  status: ChallengeStatus,
+  summaries: DayCompletionSummary[],
+  todayDayNumber: number,
+  jokers: number,
+): number {
   if (status === 'completed') return CHALLENGE_LENGTH
   if (status === 'active') {
     return Number.isFinite(todayDayNumber) ? Math.min(Math.max(todayDayNumber, 0), CHALLENGE_LENGTH) : 0
   }
-  // Failed: the first day that wasn't completed, whether its entry is incomplete or missing.
-  return findFirstIncompleteDayNumber(summaries, CHALLENGE_LENGTH + 1) ?? CHALLENGE_LENGTH
+  // Failed: the miss that used up the jokers, the first miss if there weren't that many, or Day 75 if none at all.
+  return (
+    missedDayNumbers(summaries, CHALLENGE_LENGTH + 1)[jokers] ??
+    missedDayNumbers(summaries, CHALLENGE_LENGTH + 1)[0] ??
+    CHALLENGE_LENGTH
+  )
 }
 
 /** A stretch of consecutive complete days, or a single day with tasks missing. */
