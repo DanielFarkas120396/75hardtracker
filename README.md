@@ -65,7 +65,7 @@ Everything is stored only on the device, in this browser. Nothing is sent anywhe
 
 ## Project structure
 
-- `src/logic/` — pure challenge-rules module (day completion, streak, XP, badges, restart, attempts, stats, validation). No UI or persistence dependencies; fully unit tested.
+- `src/logic/` — pure challenge-rules module (the rulesets for each challenge in `rulesets.ts`, day completion, streak, XP, badges, restart, attempts, stats, validation). No UI or persistence dependencies; fully unit tested.
 - `src/db/` — Dexie schema, types, repositories (the only place persistence lives), migrations and export/import.
 - `src/hooks/` — bridges Dexie live queries and the logic module into React.
 - `src/content/` — user-facing copy: task names and rules, cheers and the mascot's lines.
