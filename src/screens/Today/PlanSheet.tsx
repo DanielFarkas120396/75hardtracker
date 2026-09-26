@@ -20,7 +20,7 @@ interface PlanSheetProps {
   missing: readonly TaskId[]
   nowMin: number
   onClose: () => void
-  /** Called after saving, with the earliest planned minute (null when the plan is now empty). */
+  /** Called after saving, with the earliest saved time still ahead of `nowMin` (null when there is none). */
   onSaved: (earliest: number | null) => void
 }
 
@@ -65,8 +65,10 @@ function PlanForm({ entry, data, missing, nowMin, onClose, onSaved }: PlanSheetP
         }
       }
       await dayEntryRepo.setPlans(entry.id, plans, estimates)
-      const times = Object.values(plans).map((value) => parseHHmm(value!)!)
-      onSaved(times.length > 0 ? Math.min(...times) : null)
+      const upcoming = Object.values(plans)
+        .map((value) => parseHHmm(value!)!)
+        .filter((at) => at >= nowMin)
+      onSaved(upcoming.length > 0 ? Math.min(...upcoming) : null)
     } catch {
       setSaveError("Couldn't save your plan — try again.")
     } finally {

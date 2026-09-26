@@ -86,8 +86,17 @@ describe('PlanSheet', () => {
     fireEvent.change(screen.getByLabelText('Reading'), { target: { value: '22:30' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save plan' }))
 
-    await waitFor(() => expect(onSaved).toHaveBeenCalledWith(19 * 60))
+    // photo's 19:00 has already passed (nowMin defaults to 20:00): the
+    // announced time is the earliest plan still ahead, not the earliest overall.
+    await waitFor(() => expect(onSaved).toHaveBeenCalledWith(22 * 60 + 30))
     expect((await db.dayEntries.get(entry.id))?.plans).toEqual({ reading: '22:30', photo: '19:00' })
+  })
+
+  it('reports no plan when every saved time has already passed', async () => {
+    const { onSaved } = await setup({ plans: { photo: '19:00' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save plan' }))
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledWith(null))
   })
 
   it('clears a planned time', async () => {

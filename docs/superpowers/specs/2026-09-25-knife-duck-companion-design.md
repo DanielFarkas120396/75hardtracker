@@ -211,7 +211,7 @@ type MenaceReason = 'done' | 'plenty' | 'plan-pending' | 'plan-due' | 'close' | 
 | Poke | "Hands off. Hands on your water bottle." · "Poke me again. I dare you." · "That tickles. The knife does not." |
 | Lunge | "That's it." |
 | Glare (task unticked) | "I saw that." |
-| Plan saved | "{HH:mm}. Not a minute later." (earliest plan) |
+| Plan saved | "{HH:mm}. Not a minute later." (the earliest plan still ahead; no line when none is) |
 
 `{Task}` uses `TASK_NAMES`.
 
