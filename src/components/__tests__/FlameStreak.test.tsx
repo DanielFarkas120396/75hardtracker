@@ -59,10 +59,29 @@ describe('FlameStreak', () => {
     expect(flame.play).not.toHaveBeenCalled()
   })
 
+  it('goes out when the streak drops to 0, and burns again when it restarts', async () => {
+    const { rerender } = render(<FlameStreak streak={12} />)
+    await waitFor(() => expect(flame.play).toHaveBeenCalledTimes(1))
+
+    rerender(<FlameStreak streak={0} />)
+    expect(flame.goToAndStop).toHaveBeenCalledTimes(1)
+
+    rerender(<FlameStreak streak={1} />)
+    expect(flame.play).toHaveBeenCalledTimes(2)
+  })
+
   it('destroys the animation when it unmounts', async () => {
     const { unmount } = render(<FlameStreak streak={12} />)
     await waitFor(() => expect(loadAnimation).toHaveBeenCalled())
     unmount()
     expect(flame.destroy).toHaveBeenCalled()
+  })
+
+  it('never builds the animation when it unmounts before the player has loaded', async () => {
+    const { unmount } = render(<FlameStreak streak={12} />)
+    unmount()
+    // Let the pending dynamic imports settle.
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(loadAnimation).not.toHaveBeenCalled()
   })
 })

@@ -6,7 +6,11 @@ interface FlameStreakProps {
   streak: number
 }
 
-/** The frame a still flame holds (reduce motion, or no streak): the flame at full height. */
+/**
+ * The frame a still flame holds (reduce motion, or no streak): the middle of
+ * fire.json's 26-frame loop (24 fps, `op: 26`), where its marker sits and the
+ * flame stands at full height. Re-check it if the animation is re-exported.
+ */
 const STILL_FRAME = 13
 
 /** The player and the flame load together on first use, so neither weighs on the app's first paint. */
