@@ -217,7 +217,7 @@ type MenaceReason = 'done' | 'plenty' | 'plan-pending' | 'plan-due' | 'close' | 
 
 ## 3. Plans ("I've got a plan")
 
-- **Button:** "🗓 I've got a plan" under the bubble on Today (touch height ≥ 48 px). It's shown while any task is missing, and reads "🗓 Edit plan" once a plan exists.
+- **Button:** "🗓️ I've got a plan" under the bubble on Today (touch height ≥ 48 px). It's shown while any task is missing, and reads "🗓️ Edit plan" once a missing task has a plan.
 - **Sheet:** the existing `Modal`, titled "Tell the duck your plan". One row per missing task, in `TASK_IDS` order:
   - the task name;
   - `<input type="time">` (the native iOS wheel);
