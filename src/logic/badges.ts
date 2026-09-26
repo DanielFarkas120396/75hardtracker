@@ -99,7 +99,7 @@ export function buildBadgeContext(params: {
     perfectDays: days.filter((d) => isDayComplete(d.data, rules)).length,
     workoutsLogged: allWorkouts.length,
     outdoorQualifyingWorkouts: allWorkouts.filter((w) => isQualifyingWorkout(w, rules) && w.isOutdoor).length,
-    waterGoalDays: days.filter((d) => d.data.water_ml >= params.rules.waterTargetMl).length,
+    waterGoalDays: days.filter((d) => d.data.water_ml >= rules.waterTargetMl).length,
     photosTaken: days.filter((d) => d.data.hasPhoto).length,
     booksFinished: params.booksFinished,
   }
