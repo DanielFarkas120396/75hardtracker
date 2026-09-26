@@ -73,3 +73,8 @@ Everything is stored only on the device, in this browser. Nothing is sent anywhe
 - `src/screens/`, `src/components/` — UI.
 - `src/components/mascot/` — the duck: the traced SVG art, the pure motion rig (`rig.ts`) and the `Mascot` component. The design is in `docs/superpowers/specs/2026-09-25-knife-duck-companion-design.md`.
 - `src/dev/` — dev-only seeded scenarios (never imported by the app).
+- `src/assets/animations/` — Lottie animations, loaded on demand with `lottie-web` (light SVG build).
+
+## Credits
+
+- The streak flame is the animated 🔥 from Google's [Noto Emoji](https://github.com/googlefonts/noto-emoji) animations, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
