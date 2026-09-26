@@ -1,5 +1,5 @@
-import { MIN_WORKOUT_MIN, PAGES_TARGET, REQUIRED_QUALIFYING_WORKOUTS, WATER_TARGET_ML } from './constants'
 import { isQualifyingWorkout, missingTasks } from './dayCompletion'
+import type { Ruleset } from './rulesets'
 import type { DayTaskData, TaskId } from './types'
 
 /** How menacing the duck is on the Today screen, calmest first. */
@@ -41,6 +41,7 @@ export interface MenaceInput {
   plans: Partial<Record<TaskId, number>>
   /** Each plan's estimate (minutes) frozen when it was saved; falls back to the live `minutesToFinish` when absent. */
   estimates?: Partial<Record<TaskId, number>>
+  rules: Ruleset
 }
 
 export type PlanError = 'past' | 'past-midnight'
@@ -98,24 +99,24 @@ export function plansToMinutes(plans: Partial<Record<TaskId, string>> | undefine
   return result
 }
 
-/** Qualifying workouts still to do, or one more if two qualify but neither is outdoors. */
-function workoutsStillNeeded(data: DayTaskData): number {
-  const qualifying = data.workouts.filter(isQualifyingWorkout)
-  const missing = Math.max(0, REQUIRED_QUALIFYING_WORKOUTS - qualifying.length)
+/** Qualifying workouts still to do, or one more if the rules want one outdoors and none is. */
+function workoutsStillNeeded(data: DayTaskData, rules: Ruleset): number {
+  const qualifying = data.workouts.filter((workout) => isQualifyingWorkout(workout, rules))
+  const missing = Math.max(0, rules.requiredWorkouts - qualifying.length)
   if (missing > 0) return missing
-  return qualifying.some((workout) => workout.isOutdoor) ? 0 : 1
+  return !rules.requireOutdoor || qualifying.some((workout) => workout.isOutdoor) ? 0 : 1
 }
 
 /** Estimated minutes to finish a task from where the day stands. */
-export function minutesToFinish(task: TaskId, data: DayTaskData): number {
+export function minutesToFinish(task: TaskId, data: DayTaskData, rules: Ruleset): number {
   switch (task) {
     case 'workouts':
-      return workoutsStillNeeded(data) * MIN_WORKOUT_MIN
+      return workoutsStillNeeded(data, rules) * rules.minWorkoutMin
     case 'water':
       // Integer maths first: 1700 ml → 102 min exactly, never 103.
-      return Math.ceil((Math.max(0, WATER_TARGET_ML - data.water_ml) * WATER_MIN_PER_LITRE) / 1000)
+      return Math.ceil((Math.max(0, rules.waterTargetMl - data.water_ml) * WATER_MIN_PER_LITRE) / 1000)
     case 'reading':
-      return Math.max(0, PAGES_TARGET - data.pages_read) * READING_MIN_PER_PAGE
+      return Math.max(0, rules.pagesTarget - data.pages_read) * READING_MIN_PER_PAGE
     case 'diet':
     case 'photo':
       return QUICK_TASK_MIN
@@ -123,11 +124,11 @@ export function minutesToFinish(task: TaskId, data: DayTaskData): number {
 }
 
 /** Why a planned time can't work, or null when it can. A blank or malformed time means "no plan", not an error. */
-export function planError(task: TaskId, time: string, data: DayTaskData, nowMin: number): PlanError | null {
+export function planError(task: TaskId, time: string, data: DayTaskData, nowMin: number, rules: Ruleset): PlanError | null {
   const at = parseHHmm(time)
   if (at === null) return null
   if (at < nowMin) return 'past'
-  if (at + minutesToFinish(task, data) > MINUTES_PER_DAY) return 'past-midnight'
+  if (at + minutesToFinish(task, data, rules) > MINUTES_PER_DAY) return 'past-midnight'
   return null
 }
 
@@ -140,8 +141,8 @@ const earlier = (current: PlannedTask | undefined, candidate: PlannedTask): Plan
  * The full rule, with reference cases, is in section 2 of
  * docs/superpowers/specs/2026-09-25-knife-duck-companion-design.md.
  */
-export function menace({ data, nowMin, bedtimeMin, plans, estimates }: MenaceInput): Menace {
-  const missing = missingTasks(data)
+export function menace({ data, nowMin, bedtimeMin, plans, estimates, rules }: MenaceInput): Menace {
+  const missing = missingTasks(data, rules)
   if (missing.length === 0) return { level: 'content', reason: 'done' }
 
   const uncovered: TaskId[] = []
@@ -154,7 +155,7 @@ export function menace({ data, nowMin, bedtimeMin, plans, estimates }: MenaceInp
       uncovered.push(task)
       continue
     }
-    const windowEnd = at + (estimates?.[task] ?? minutesToFinish(task, data)) + PLAN_GRACE_MIN
+    const windowEnd = at + (estimates?.[task] ?? minutesToFinish(task, data, rules)) + PLAN_GRACE_MIN
     if (nowMin >= windowEnd) {
       uncovered.push(task)
       broken = earlier(broken, { task, at })
@@ -169,8 +170,8 @@ export function menace({ data, nowMin, bedtimeMin, plans, estimates }: MenaceInp
   const timeLeft = bedtimeMin - nowMin
   const long = uncovered.filter((task) => LONG_TASKS.includes(task))
   const short = uncovered.filter((task) => !LONG_TASKS.includes(task))
-  const needed = sum(uncovered.map((task) => minutesToFinish(task, data)))
-  const neededShort = sum(short.map((task) => minutesToFinish(task, data)))
+  const needed = sum(uncovered.map((task) => minutesToFinish(task, data, rules)))
+  const neededShort = sum(short.map((task) => minutesToFinish(task, data, rules)))
 
   let wontFit = false
   let close = false

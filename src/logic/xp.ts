@@ -1,5 +1,6 @@
 import { isDayComplete, TASK_IDS, taskCompletionMap } from './dayCompletion'
 import { MILESTONES, PERFECT_DAY_BONUS, STREAK_MILESTONE_BONUS, XP_PER_TASK } from './constants'
+import type { Ruleset } from './rulesets'
 import type { ChallengeDayData, DayTaskData } from './types'
 
 export interface XpBreakdown {
@@ -20,8 +21,8 @@ export function streakMilestoneBonus(streakLengthAfterThisDay: number): number {
  * `streakEndingAt(entries, day)`, which is 0 while the day is incomplete, so
  * an unfinished day can never collect a milestone bonus.
  */
-export function calculateDayXp(data: DayTaskData, streakLengthAfterThisDay: number): XpBreakdown {
-  const completion = taskCompletionMap(data)
+export function calculateDayXp(data: DayTaskData, streakLengthAfterThisDay: number, rules: Ruleset): XpBreakdown {
+  const completion = taskCompletionMap(data, rules)
   const completedTaskCount = Object.values(completion).filter(Boolean).length
   const taskXp = completedTaskCount * XP_PER_TASK
 
@@ -47,15 +48,15 @@ export function completedDayXp(streakLengthAfterThisDay: number): number {
  * milestone bonuses only runs over consecutive day numbers, so a day with no
  * entry at all breaks it just like an incomplete one.
  */
-export function calculateChallengeXp(days: readonly ChallengeDayData[]): number {
+export function calculateChallengeXp(days: readonly ChallengeDayData[], rules: Ruleset): number {
   let total = 0
   let streak = 0
   let previousDayNumber = Number.NaN
   for (const day of [...days].sort((a, b) => a.dayNumber - b.dayNumber)) {
     const continuesStreak = day.dayNumber === previousDayNumber + 1
-    streak = isDayComplete(day.data) ? (continuesStreak ? streak : 0) + 1 : 0
+    streak = isDayComplete(day.data, rules) ? (continuesStreak ? streak : 0) + 1 : 0
     previousDayNumber = day.dayNumber
-    total += calculateDayXp(day.data, streak).total
+    total += calculateDayXp(day.data, streak, rules).total
   }
   return total
 }

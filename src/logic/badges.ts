@@ -1,5 +1,6 @@
-import { MILESTONES, WATER_TARGET_ML } from './constants'
+import { MILESTONES } from './constants'
 import { isDayComplete, isQualifyingWorkout } from './dayCompletion'
+import type { Ruleset } from './rulesets'
 import { calculateStreak } from './streak'
 import type { ChallengeDayData } from './types'
 
@@ -85,19 +86,20 @@ export function buildBadgeContext(params: {
   days: readonly ChallengeDayData[]
   todayDayNumber: number
   booksFinished: number
+  rules: Ruleset
 }): BadgeContext {
-  const { days } = params
+  const { days, rules } = params
   const allWorkouts = days.flatMap((d) => d.data.workouts)
 
   return {
     streakLength: calculateStreak(
-      days.map((d) => ({ dayNumber: d.dayNumber, completed: isDayComplete(d.data) })),
+      days.map((d) => ({ dayNumber: d.dayNumber, completed: isDayComplete(d.data, rules) })),
       params.todayDayNumber,
     ),
-    perfectDays: days.filter((d) => isDayComplete(d.data)).length,
+    perfectDays: days.filter((d) => isDayComplete(d.data, rules)).length,
     workoutsLogged: allWorkouts.length,
-    outdoorQualifyingWorkouts: allWorkouts.filter((w) => isQualifyingWorkout(w) && w.isOutdoor).length,
-    waterGoalDays: days.filter((d) => d.data.water_ml >= WATER_TARGET_ML).length,
+    outdoorQualifyingWorkouts: allWorkouts.filter((w) => isQualifyingWorkout(w, rules) && w.isOutdoor).length,
+    waterGoalDays: days.filter((d) => d.data.water_ml >= params.rules.waterTargetMl).length,
     photosTaken: days.filter((d) => d.data.hasPhoto).length,
     booksFinished: params.booksFinished,
   }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MIN_WORKOUT_MIN, PAGES_TARGET, WATER_TARGET_ML } from '../constants'
+import { RULESETS } from '../rulesets'
 import {
   bedtimeMinutes,
   formatHHmm,
@@ -16,18 +16,18 @@ import {
 import type { DayTaskData, TaskId } from '../types'
 
 const DONE: DayTaskData = {
-  water_ml: WATER_TARGET_ML,
-  pages_read: PAGES_TARGET,
+  water_ml: RULESETS.hard.waterTargetMl,
+  pages_read: RULESETS.hard.pagesTarget,
   dietFollowed: true,
   noAlcohol: true,
   hasPhoto: true,
   workouts: [
-    { durationMin: MIN_WORKOUT_MIN, isOutdoor: true },
-    { durationMin: MIN_WORKOUT_MIN, isOutdoor: false },
+    { durationMin: RULESETS.hard.minWorkoutMin, isOutdoor: true },
+    { durationMin: RULESETS.hard.minWorkoutMin, isOutdoor: false },
   ],
 }
 const NOTHING: DayTaskData = { water_ml: 0, pages_read: 0, dietFollowed: false, noAlcohol: false, hasPhoto: false, workouts: [] }
-const ONE_WORKOUT_LEFT: DayTaskData = { ...DONE, workouts: [{ durationMin: MIN_WORKOUT_MIN, isOutdoor: true }] }
+const ONE_WORKOUT_LEFT: DayTaskData = { ...DONE, workouts: [{ durationMin: RULESETS.hard.minWorkoutMin, isOutdoor: true }] }
 const ONLY_READING: DayTaskData = { ...DONE, pages_read: 0 }
 /** 1.7 L of water, reading, photo and diet left: 102 + 20 + 2 + 2 = 126 minutes. */
 const EVENING_MIX: DayTaskData = { ...DONE, water_ml: 2100, pages_read: 0, hasPhoto: false, dietFollowed: false }
@@ -43,6 +43,7 @@ function at(time: string, data: DayTaskData, options: Options = {}): Menace {
     bedtimeMin: min(options.bedtime ?? '23:00'),
     plans: plansToMinutes(options.plans),
     estimates: options.estimates,
+    rules: RULESETS.hard,
   })
 }
 
@@ -125,11 +126,11 @@ describe('menace: reason priority', () => {
 
 describe('minutesToFinish', () => {
   it('estimates each task from where the day stands', () => {
-    expect(minutesToFinish('water', { ...NOTHING, water_ml: 2100 })).toBe(102)
-    expect(minutesToFinish('reading', { ...NOTHING, pages_read: 4 })).toBe(12)
-    expect(minutesToFinish('workouts', NOTHING)).toBe(90)
-    expect(minutesToFinish('photo', NOTHING)).toBe(2)
-    expect(minutesToFinish('diet', NOTHING)).toBe(2)
+    expect(minutesToFinish('water', { ...NOTHING, water_ml: 2100 }, RULESETS.hard)).toBe(102)
+    expect(minutesToFinish('reading', { ...NOTHING, pages_read: 4 }, RULESETS.hard)).toBe(12)
+    expect(minutesToFinish('workouts', NOTHING, RULESETS.hard)).toBe(90)
+    expect(minutesToFinish('photo', NOTHING, RULESETS.hard)).toBe(2)
+    expect(minutesToFinish('diet', NOTHING, RULESETS.hard)).toBe(2)
   })
 
   it('needs one more workout when neither of two is outdoors', () => {
@@ -140,22 +141,34 @@ describe('minutesToFinish', () => {
         { durationMin: 60, isOutdoor: false },
       ],
     }
-    expect(minutesToFinish('workouts', indoors)).toBe(45)
+    expect(minutesToFinish('workouts', indoors, RULESETS.hard)).toBe(45)
+  })
+
+  it('estimates water toward the ruleset target', () => {
+    const data = { ...DONE, water_ml: 2100 }
+    expect(minutesToFinish('water', data, RULESETS.medium)).toBe(54)
+    expect(minutesToFinish('water', data, RULESETS.hard)).toBe(102)
+  })
+
+  it('needs one workout on Medium rules, where Hard needs two', () => {
+    const data = { ...DONE, workouts: [] }
+    expect(minutesToFinish('workouts', data, RULESETS.medium)).toBe(45)
+    expect(minutesToFinish('workouts', data, RULESETS.hard)).toBe(90)
   })
 })
 
 describe('planError', () => {
   it('refuses a time that has passed', () => {
-    expect(planError('reading', '19:59', ONLY_READING, min('20:00'))).toBe('past')
+    expect(planError('reading', '19:59', ONLY_READING, min('20:00'), RULESETS.hard)).toBe('past')
   })
 
   it('refuses a task that would run past midnight', () => {
-    expect(planError('reading', '23:50', ONLY_READING, min('20:00'))).toBe('past-midnight')
+    expect(planError('reading', '23:50', ONLY_READING, min('20:00'), RULESETS.hard)).toBe('past-midnight')
   })
 
   it('accepts a time that fits, and treats a blank time as no plan', () => {
-    expect(planError('reading', '23:40', ONLY_READING, min('20:00'))).toBeNull()
-    expect(planError('reading', '', ONLY_READING, min('20:00'))).toBeNull()
+    expect(planError('reading', '23:40', ONLY_READING, min('20:00'), RULESETS.hard)).toBeNull()
+    expect(planError('reading', '', ONLY_READING, min('20:00'), RULESETS.hard)).toBeNull()
   })
 })
 

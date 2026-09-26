@@ -15,7 +15,8 @@
 import { db, DEFAULT_DB_NAME } from '../db/db'
 import type { Challenge, DayEntry, Photo, Workout } from '../db/types'
 import { addDaysISO, todayISO } from '../lib/dates'
-import { CHALLENGE_LENGTH, MIN_WORKOUT_MIN, PAGES_TARGET, WATER_TARGET_ML } from '../logic/constants'
+import { CHALLENGE_LENGTH } from '../logic/constants'
+import { RULESETS } from '../logic/rulesets'
 
 interface SeedChallenge {
   challenge: Omit<Challenge, 'id'>
@@ -56,15 +57,15 @@ async function perfectDay(dayNumber: number): Promise<SeedDay> {
   return {
     dayNumber,
     entry: {
-      water_ml: WATER_TARGET_ML,
-      pages_read: PAGES_TARGET,
+      water_ml: RULESETS.hard.waterTargetMl,
+      pages_read: RULESETS.hard.pagesTarget,
       dietFollowed: true,
       noAlcohol: true,
       completed: true,
     },
     photo: await fakePhoto(`Day ${dayNumber}`, (dayNumber * 37) % 360),
     workouts: [
-      { type: 'Running', durationMin: MIN_WORKOUT_MIN, isOutdoor: true },
+      { type: 'Running', durationMin: RULESETS.hard.minWorkoutMin, isOutdoor: true },
       { type: 'Weights', durationMin: 60, isOutdoor: false },
     ],
   }
@@ -107,7 +108,7 @@ export async function seedDay75Pending(): Promise<void> {
   const days: SeedDay[] = []
   for (let day = 1; day <= CHALLENGE_LENGTH; day++) days.push(await perfectDay(day))
   const finalDay = days[CHALLENGE_LENGTH - 1]
-  finalDay.entry = { ...finalDay.entry, water_ml: WATER_TARGET_ML - 500, completed: false }
+  finalDay.entry = { ...finalDay.entry, water_ml: RULESETS.hard.waterTargetMl - 500, completed: false }
 
   await replaceDatabase([
     {
@@ -125,9 +126,9 @@ export async function seedMissedDay(): Promise<void> {
       days: [
         {
           dayNumber: 1,
-          entry: { water_ml: 2000, pages_read: PAGES_TARGET, dietFollowed: true, noAlcohol: true },
+          entry: { water_ml: 2000, pages_read: RULESETS.hard.pagesTarget, dietFollowed: true, noAlcohol: true },
           photo: await fakePhoto('Day 1', 200),
-          workouts: [{ type: 'Walking', durationMin: MIN_WORKOUT_MIN, isOutdoor: true }],
+          workouts: [{ type: 'Walking', durationMin: RULESETS.hard.minWorkoutMin, isOutdoor: true }],
         },
       ],
     },
@@ -160,7 +161,7 @@ export async function seedDayOneWithLogs(): Promise<void> {
         {
           dayNumber: 1,
           entry: { water_ml: 750 },
-          workouts: [{ type: 'Walking', durationMin: MIN_WORKOUT_MIN, isOutdoor: true }],
+          workouts: [{ type: 'Walking', durationMin: RULESETS.hard.minWorkoutMin, isOutdoor: true }],
         },
       ],
     },
@@ -169,7 +170,7 @@ export async function seedDayOneWithLogs(): Promise<void> {
 
 /** Two qualifying workouts, one outdoors: Day 3's workouts task is done. */
 const doneWorkouts: SeedDay['workouts'] = [
-  { type: 'Running', durationMin: MIN_WORKOUT_MIN, isOutdoor: true },
+  { type: 'Running', durationMin: RULESETS.hard.minWorkoutMin, isOutdoor: true },
   { type: 'Weights', durationMin: 60, isOutdoor: false },
 ]
 
@@ -202,7 +203,7 @@ export async function seedPlannedReading(): Promise<void> {
         {
           dayNumber: 3,
           entry: {
-            water_ml: WATER_TARGET_ML,
+            water_ml: RULESETS.hard.waterTargetMl,
             dietFollowed: true,
             noAlcohol: true,
             plans: { reading: '22:30' },

@@ -1,4 +1,5 @@
 import { isDayComplete } from '../logic/dayCompletion'
+import { RULESETS } from '../logic/rulesets'
 import { db } from './db'
 import { toDayTaskData } from './mappers'
 
@@ -12,7 +13,7 @@ export async function syncDayCompletion(entryId: number): Promise<void> {
   const entry = await db.dayEntries.get(entryId)
   if (!entry) return
   const workouts = await db.workouts.where('dayEntryId').equals(entryId).toArray()
-  const completed = isDayComplete(toDayTaskData(entry, workouts))
+  const completed = isDayComplete(toDayTaskData(entry, workouts), RULESETS.hard)
   if (completed !== entry.completed) {
     await db.dayEntries.update(entryId, { completed })
   }

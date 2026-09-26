@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { DayEntry } from '../db/types'
 import { bedtimeMinutes, menace, plansToMinutes, type Menace } from '../logic/menace'
+import { RULESETS } from '../logic/rulesets'
 import type { DayTaskData } from '../logic/types'
 import { useSettings } from './useSettings'
 
@@ -10,7 +11,14 @@ export function useMenace(data: DayTaskData | undefined, entry: DayEntry | undef
   return useMemo(
     () =>
       data && entry && bedtimeLoaded
-        ? menace({ data, nowMin, bedtimeMin: bedtimeMinutes(bedtime), plans: plansToMinutes(entry.plans), estimates: entry.planEstimates })
+        ? menace({
+            data,
+            nowMin,
+            bedtimeMin: bedtimeMinutes(bedtime),
+            plans: plansToMinutes(entry.plans),
+            estimates: entry.planEstimates,
+            rules: RULESETS.hard,
+          })
         : undefined,
     [data, entry, nowMin, bedtime, bedtimeLoaded],
   )

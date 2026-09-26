@@ -2,6 +2,7 @@ import { dateForDayNumber } from '../lib/dates'
 import { CHALLENGE_LENGTH } from './constants'
 import { isDayComplete, missingTasks, TASK_IDS } from './dayCompletion'
 import { findFirstIncompleteDayNumber } from './restart'
+import type { Ruleset } from './rulesets'
 import type { ChallengeDayData, ChallengeStatus, DayCompletionSummary, TaskId } from './types'
 import { calculateChallengeXp } from './xp'
 
@@ -24,9 +25,10 @@ export function summarizeAttempt(params: {
   status: ChallengeStatus
   days: readonly ChallengeDayData[]
   todayDayNumber: number
+  rules: Ruleset
 }): AttemptSummary {
-  const { startDate, status, days, todayDayNumber } = params
-  const summaries = days.map((d) => ({ dayNumber: d.dayNumber, completed: isDayComplete(d.data) }))
+  const { startDate, status, days, todayDayNumber, rules } = params
+  const summaries = days.map((d) => ({ dayNumber: d.dayNumber, completed: isDayComplete(d.data, rules) }))
   const reachedDay = reachedDayOf(status, summaries, todayDayNumber)
 
   return {
@@ -34,7 +36,7 @@ export function summarizeAttempt(params: {
     completedDays: summaries.filter((s) => s.completed).length,
     startDate,
     endDate: status !== 'active' && reachedDay >= 1 ? dateForDayNumber(startDate, reachedDay) : undefined,
-    xp: calculateChallengeXp(days),
+    xp: calculateChallengeXp(days, rules),
   }
 }
 
@@ -57,13 +59,13 @@ export type AttemptDayRow =
  * days are grouped, and every other day lists what was missed (all five
  * tasks when it has no entry).
  */
-export function attemptDayRows(days: readonly ChallengeDayData[], reachedDay: number): AttemptDayRow[] {
+export function attemptDayRows(days: readonly ChallengeDayData[], reachedDay: number, rules: Ruleset): AttemptDayRow[] {
   const dataByDay = new Map(days.map((d) => [d.dayNumber, d.data]))
   const rows: AttemptDayRow[] = []
 
   for (let dayNumber = 1; dayNumber <= reachedDay; dayNumber++) {
     const data = dataByDay.get(dayNumber)
-    const missing = data ? missingTasks(data) : [...TASK_IDS]
+    const missing = data ? missingTasks(data, rules) : [...TASK_IDS]
     const last = rows.at(-1)
 
     if (missing.length > 0) rows.push({ kind: 'incomplete', dayNumber, missing })

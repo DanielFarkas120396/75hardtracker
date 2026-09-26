@@ -9,6 +9,7 @@ import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import { workoutRepo } from '../../db/repositories/workoutRepo'
 import type { Challenge } from '../../db/types'
 import { TASK_IDS, missingTasks } from '../../logic/dayCompletion'
+import { RULESETS } from '../../logic/rulesets'
 import type { TaskId } from '../../logic/types'
 
 interface DayFailedScreenProps {
@@ -24,7 +25,7 @@ export function DayFailedScreen({ challenge, failedDayNumber, today }: DayFailed
   const missing = useLiveQuery(async (): Promise<TaskId[]> => {
     const entry = await dayEntryRepo.getByChallengeAndDayNumber(challenge.id, failedDayNumber)
     if (!entry) return [...TASK_IDS]
-    return missingTasks(toDayTaskData(entry, await workoutRepo.getForDayEntry(entry.id)))
+    return missingTasks(toDayTaskData(entry, await workoutRepo.getForDayEntry(entry.id)), RULESETS.hard)
   }, [challenge.id, failedDayNumber])
 
   const confirmRestart = async () => {

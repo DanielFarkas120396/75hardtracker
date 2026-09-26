@@ -1,7 +1,7 @@
-import { MIN_WORKOUT_MIN, PAGES_TARGET, REQUIRED_QUALIFYING_WORKOUTS, WATER_TARGET_ML } from '../logic/constants'
 import { TASK_IDS } from '../logic/dayCompletion'
-import type { TaskId } from '../logic/types'
 import { formatHHmm, type Menace } from '../logic/menace'
+import { RULESETS } from '../logic/rulesets'
+import type { TaskId } from '../logic/types'
 
 /** Short task names for lists, e.g. "missed Water, Photo". */
 export const TASK_NAMES: Record<TaskId, string> = {
@@ -14,10 +14,10 @@ export const TASK_NAMES: Record<TaskId, string> = {
 
 /** Each task's rule in a few words, e.g. for listing what a failed day missed. */
 export const TASK_RULES: Record<TaskId, string> = {
-  workouts: `${REQUIRED_QUALIFYING_WORKOUTS} workouts of ${MIN_WORKOUT_MIN}+ min, one outdoors`,
+  workouts: `${RULESETS.hard.requiredWorkouts} workouts of ${RULESETS.hard.minWorkoutMin}+ min, one outdoors`,
   diet: 'Diet followed, no alcohol',
-  water: `${WATER_TARGET_ML / 1000} L of water`,
-  reading: `${PAGES_TARGET} pages read`,
+  water: `${RULESETS.hard.waterTargetMl / 1000} L of water`,
+  reading: `${RULESETS.hard.pagesTarget} pages read`,
   photo: 'Progress photo',
 }
 
@@ -29,8 +29,8 @@ export const TASK_RULES: Record<TaskId, string> = {
 const TASK_CHEERS: Record<TaskId, readonly string[]> = {
   workouts: ['Both workouts done! 💪', 'Two sessions in the bank', 'Sweat logged. Beast mode.'],
   diet: ['Clean eating, locked in 🥗', 'Diet on point today', 'No cheats, no drinks. Solid.'],
-  water: ['Fully hydrated! 💧', `All ${WATER_TARGET_ML / 1000} L down`, 'Water goal crushed'],
-  reading: [`${PAGES_TARGET} pages smarter 📖`, 'Brain fed for today', 'Reading done. Nice.'],
+  water: ['Fully hydrated! 💧', `All ${RULESETS.hard.waterTargetMl / 1000} L down`, 'Water goal crushed'],
+  reading: [`${RULESETS.hard.pagesTarget} pages smarter 📖`, 'Brain fed for today', 'Reading done. Nice.'],
   photo: ['Progress captured! 📸', 'Future you will love this', 'Snap! Day documented.'],
 }
 

@@ -1,5 +1,6 @@
 import { todayISO } from '../lib/dates'
 import { bookCountsForAttempt, buildBadgeContext, type BadgeContext } from '../logic/badges'
+import { RULESETS } from '../logic/rulesets'
 import { loadChallengeDays } from './challengeDays'
 import { badgeRepo } from './repositories/badgeRepo'
 import { bookRepo } from './repositories/bookRepo'
@@ -31,6 +32,7 @@ export async function loadBadgeEvaluation(challenge: Challenge, todayDayNumber: 
     days,
     todayDayNumber,
     booksFinished: books.filter((b) => bookCountsForAttempt(finishedOn(b), challenge.startDate)).length,
+    rules: RULESETS.hard,
   })
 
   return { context, unlockedBadgeIds: new Set(unlocked.map((b) => b.badgeId)) }

@@ -5,20 +5,20 @@ import { db } from '../../../db/db'
 import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
 import { dayEntryRepo } from '../../../db/repositories/dayEntryRepo'
 import { todayISO } from '../../../lib/dates'
-import { MIN_WORKOUT_MIN, WATER_TARGET_ML } from '../../../logic/constants'
+import { RULESETS } from '../../../logic/rulesets'
 import type { DayTaskData } from '../../../logic/types'
 import { PlanSheet } from '../PlanSheet'
 
 /** Everything done but the reading and the photo. */
 const DATA: DayTaskData = {
-  water_ml: WATER_TARGET_ML,
+  water_ml: RULESETS.hard.waterTargetMl,
   pages_read: 0,
   dietFollowed: true,
   noAlcohol: true,
   hasPhoto: false,
   workouts: [
-    { durationMin: MIN_WORKOUT_MIN, isOutdoor: true },
-    { durationMin: MIN_WORKOUT_MIN, isOutdoor: false },
+    { durationMin: RULESETS.hard.minWorkoutMin, isOutdoor: true },
+    { durationMin: RULESETS.hard.minWorkoutMin, isOutdoor: false },
   ],
 }
 

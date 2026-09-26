@@ -1,6 +1,7 @@
 import { dayNumberForDate, isValidISODate } from '../lib/dates'
 import { isDayComplete } from '../logic/dayCompletion'
 import { isChallengeDay } from '../logic/days'
+import { RULESETS } from '../logic/rulesets'
 import { toDayTaskData } from './mappers'
 import type { Badge, Challenge, DayEntry, Workout } from './types'
 
@@ -162,7 +163,7 @@ function mergeDuplicateDayEntries(
       const merged = mergedEntries.get(entry.id)
       if (!merged) return entry
       const entryWorkouts = nextWorkouts.filter((w) => w.dayEntryId === entry.id)
-      return { ...merged, completed: isDayComplete(toDayTaskData(merged, entryWorkouts)) }
+      return { ...merged, completed: isDayComplete(toDayTaskData(merged, entryWorkouts), RULESETS.hard) }
     })
 
   return { dayEntries: nextEntries, workouts: nextWorkouts }

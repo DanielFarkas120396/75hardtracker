@@ -6,6 +6,7 @@ import { TASK_NAMES } from '../../content/microcopy'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import type { DayEntry } from '../../db/types'
 import { minutesToFinish, parseHHmm, planError, type PlanError } from '../../logic/menace'
+import { RULESETS } from '../../logic/rulesets'
 import type { DayTaskData, TaskId } from '../../logic/types'
 
 const ERROR_TEXT: Record<PlanError, string> = {
@@ -45,7 +46,7 @@ function PlanForm({ entry, data, missing, nowMin, onClose, onSaved }: PlanSheetP
   const errorFor = (task: TaskId): PlanError | null => {
     const value = draft[task]
     if (!value || value === saved[task]) return null
-    return planError(task, value, data, nowMin)
+    return planError(task, value, data, nowMin, RULESETS.hard)
   }
   const hasErrors = missing.some((task) => errorFor(task) !== null)
 
@@ -61,7 +62,7 @@ function PlanForm({ entry, data, missing, nowMin, onClose, onSaved }: PlanSheetP
         if (value && parseHHmm(value) !== null) {
           plans[task] = value
           const storedEstimate = entry.planEstimates?.[task]
-          estimates[task] = value === saved[task] && typeof storedEstimate === 'number' ? storedEstimate : minutesToFinish(task, data)
+          estimates[task] = value === saved[task] && typeof storedEstimate === 'number' ? storedEstimate : minutesToFinish(task, data, RULESETS.hard)
         }
       }
       await dayEntryRepo.setPlans(entry.id, plans, estimates)

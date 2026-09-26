@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { hasAnyProgress, isDayComplete, missingTasks, taskCompletionMap } from '../dayCompletion'
+import { hasAnyProgress, isDayComplete, isWaterTaskComplete, isWorkoutsTaskComplete, missingTasks, taskCompletionMap } from '../dayCompletion'
+import { RULESETS } from '../rulesets'
 import type { DayTaskData } from '../types'
 
 function perfectDay(): DayTaskData {
@@ -18,74 +19,83 @@ function perfectDay(): DayTaskData {
 
 describe('isDayComplete', () => {
   it('is true when all five tasks are satisfied', () => {
-    expect(isDayComplete(perfectDay())).toBe(true)
+    expect(isDayComplete(perfectDay(), RULESETS.hard)).toBe(true)
   })
 
   it('is false when water is short of the 3.8L target', () => {
-    expect(isDayComplete({ ...perfectDay(), water_ml: 3799 })).toBe(false)
+    expect(isDayComplete({ ...perfectDay(), water_ml: 3799 }, RULESETS.hard)).toBe(false)
   })
 
   it('is false when fewer than 10 pages were read', () => {
-    expect(isDayComplete({ ...perfectDay(), pages_read: 9 })).toBe(false)
+    expect(isDayComplete({ ...perfectDay(), pages_read: 9 }, RULESETS.hard)).toBe(false)
   })
 
   it('is false when a cheat meal broke the diet', () => {
-    expect(isDayComplete({ ...perfectDay(), dietFollowed: false })).toBe(false)
+    expect(isDayComplete({ ...perfectDay(), dietFollowed: false }, RULESETS.hard)).toBe(false)
   })
 
   it('is false when alcohol was consumed', () => {
-    expect(isDayComplete({ ...perfectDay(), noAlcohol: false })).toBe(false)
+    expect(isDayComplete({ ...perfectDay(), noAlcohol: false }, RULESETS.hard)).toBe(false)
   })
 
   it('is false when no photo was taken', () => {
-    expect(isDayComplete({ ...perfectDay(), hasPhoto: false })).toBe(false)
+    expect(isDayComplete({ ...perfectDay(), hasPhoto: false }, RULESETS.hard)).toBe(false)
   })
 
   it('is false with only one qualifying workout', () => {
-    expect(isDayComplete({ ...perfectDay(), workouts: [{ durationMin: 45, isOutdoor: true }] })).toBe(false)
+    expect(isDayComplete({ ...perfectDay(), workouts: [{ durationMin: 45, isOutdoor: true }] }, RULESETS.hard)).toBe(false)
   })
 
   it('is false when neither workout is outdoor', () => {
     expect(
-      isDayComplete({
-        ...perfectDay(),
-        workouts: [
-          { durationMin: 45, isOutdoor: false },
-          { durationMin: 60, isOutdoor: false },
-        ],
-      }),
+      isDayComplete(
+        {
+          ...perfectDay(),
+          workouts: [
+            { durationMin: 45, isOutdoor: false },
+            { durationMin: 60, isOutdoor: false },
+          ],
+        },
+        RULESETS.hard,
+      ),
     ).toBe(false)
   })
 
   it('is false when a workout is under the 45 minute minimum', () => {
     expect(
-      isDayComplete({
-        ...perfectDay(),
-        workouts: [
-          { durationMin: 44, isOutdoor: true },
-          { durationMin: 60, isOutdoor: false },
-        ],
-      }),
+      isDayComplete(
+        {
+          ...perfectDay(),
+          workouts: [
+            { durationMin: 44, isOutdoor: true },
+            { durationMin: 60, isOutdoor: false },
+          ],
+        },
+        RULESETS.hard,
+      ),
     ).toBe(false)
   })
 
   it('counts extra qualifying workouts beyond two', () => {
     expect(
-      isDayComplete({
-        ...perfectDay(),
-        workouts: [
-          { durationMin: 45, isOutdoor: false },
-          { durationMin: 45, isOutdoor: false },
-          { durationMin: 45, isOutdoor: true },
-        ],
-      }),
+      isDayComplete(
+        {
+          ...perfectDay(),
+          workouts: [
+            { durationMin: 45, isOutdoor: false },
+            { durationMin: 45, isOutdoor: false },
+            { durationMin: 45, isOutdoor: true },
+          ],
+        },
+        RULESETS.hard,
+      ),
     ).toBe(true)
   })
 })
 
 describe('missingTasks', () => {
   it('is empty for a perfect day', () => {
-    expect(missingTasks(perfectDay())).toEqual([])
+    expect(missingTasks(perfectDay(), RULESETS.hard)).toEqual([])
   })
 
   it('lists every unmet task in fixed order', () => {
@@ -97,23 +107,46 @@ describe('missingTasks', () => {
       hasPhoto: false,
       workouts: [],
     }
-    expect(missingTasks(data)).toEqual(['workouts', 'diet', 'water', 'reading', 'photo'])
+    expect(missingTasks(data, RULESETS.hard)).toEqual(['workouts', 'diet', 'water', 'reading', 'photo'])
   })
 
   it('lists only the tasks that are unmet', () => {
-    expect(missingTasks({ ...perfectDay(), water_ml: 0, hasPhoto: false })).toEqual(['water', 'photo'])
+    expect(missingTasks({ ...perfectDay(), water_ml: 0, hasPhoto: false }, RULESETS.hard)).toEqual(['water', 'photo'])
   })
 })
 
 describe('taskCompletionMap', () => {
   it('reports each task independently', () => {
-    expect(taskCompletionMap(perfectDay())).toEqual({
+    expect(taskCompletionMap(perfectDay(), RULESETS.hard)).toEqual({
       workouts: true,
       diet: true,
       water: true,
       reading: true,
       photo: true,
     })
+  })
+})
+
+describe('completion under 75 Medium rules', () => {
+  const medium = RULESETS.medium
+  const base = { water_ml: 3000, pages_read: 10, dietFollowed: true, noAlcohol: true, hasPhoto: true }
+
+  it('counts one indoor 45-minute workout', () => {
+    const data = { ...base, workouts: [{ durationMin: 45, isOutdoor: false }] }
+    expect(isWorkoutsTaskComplete(data, medium)).toBe(true)
+    expect(isWorkoutsTaskComplete(data, RULESETS.hard)).toBe(false)
+  })
+
+  it('completes the water at 3 L', () => {
+    const data = { ...base, workouts: [] }
+    expect(isWaterTaskComplete(data, medium)).toBe(true)
+    expect(isWaterTaskComplete(data, RULESETS.hard)).toBe(false)
+  })
+
+  it('completes a whole day on Medium targets', () => {
+    const data = { ...base, workouts: [{ durationMin: 45, isOutdoor: false }] }
+    expect(isDayComplete(data, medium)).toBe(true)
+    expect(missingTasks(data, RULESETS.hard)).toEqual(['workouts', 'water'])
   })
 })
 
