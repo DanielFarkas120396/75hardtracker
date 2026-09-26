@@ -35,7 +35,8 @@ export function TodayScreen(props: TodayScreenProps) {
   if (!isChallengeDay(props.todayDayNumber)) {
     return <PreStartView challenge={props.challenge} todayDayNumber={props.todayDayNumber} />
   }
-  return <TodayTasks {...props} />
+  // Keyed by day: the lunges, the plan sheet and the announcement all belong to one day.
+  return <TodayTasks key={props.todayDayNumber} {...props} />
 }
 
 function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak }: TodayScreenProps) {
