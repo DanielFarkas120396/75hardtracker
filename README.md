@@ -35,8 +35,6 @@ npm run lint       # oxlint
 
 In development, `?db=<name>` opens a separate scratch database, so experiments never touch your real data (production builds ignore it). `src/dev/scenarios.ts` seeds a scratch database from the browser console:
 
-`?now=HH:mm` freezes the duck's clock in development (production ignores it), so each menace level can be checked, e.g. `?db=duck&now=22:45`.
-
 ```js
 // at http://localhost:5173/?db=day75
 const s = await import('/src/dev/scenarios.ts')
@@ -52,6 +50,8 @@ await s.seedDay75Pending()
 | `seedDayOneWithLogs()` | Day 1 with some progress logged, for trying start-date changes. |
 | `seedMenaceDay()` | Day 3 with water at 2.1 L and the reading, photo and diet to do: try `?now=10:00`, `20:00` and `22:45`. |
 | `seedPlannedReading()` | Only the reading left, planned for 22:30: try `?now=19:00`, `22:35` and `23:10`. |
+
+`?now=HH:mm` freezes the duck's clock in development (production ignores it), so each menace level can be checked, e.g. `?db=duck&now=22:45`.
 
 Every scenario refuses to run against the default database.
 

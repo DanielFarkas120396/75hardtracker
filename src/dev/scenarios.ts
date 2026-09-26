@@ -190,7 +190,7 @@ export async function seedMenaceDay(): Promise<void> {
 /**
  * Days 1–2 complete. On Day 3 (today) only the reading is left, planned for
  * 22:30. Open it with ?now=19:00 (plan pending), ?now=22:35 (plan due) or
- * ?now=23:10 (plan broken).
+ * ?now=23:10 (past bedtime: past-bedtime outranks the broken plan).
  */
 export async function seedPlannedReading(): Promise<void> {
   await replaceDatabase([

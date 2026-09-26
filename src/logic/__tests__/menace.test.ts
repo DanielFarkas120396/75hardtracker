@@ -106,6 +106,23 @@ describe('menace: plans', () => {
   })
 })
 
+describe('menace: reason priority', () => {
+  // A broken plan (one qualifying workout still needed, planned for 20:00,
+  // live estimate 45 min): the window closes at 20:00 + 45 + 15 = 21:00.
+  it('wont-fit outranks plan-broken once the remaining time is gone', () => {
+    // timeLeft 40 (22:20 to 23:00) against 45 needed: slack -5.
+    const result = at('22:20', ONE_WORKOUT_LEFT, { plans: { workouts: '20:00' } })
+    expect([result.level, result.reason]).toEqual(['hunting', 'wont-fit'])
+    expect(result.broken).toEqual({ task: 'workouts', at: min('20:00') })
+  })
+
+  it('plan-broken outranks close', () => {
+    // timeLeft 100 (21:20 to 23:00) against 45 needed: slack 55, which alone would be `close`.
+    const result = at('21:20', ONE_WORKOUT_LEFT, { plans: { workouts: '20:00' } })
+    expect([result.level, result.reason]).toEqual(['tapping', 'plan-broken'])
+  })
+})
+
 describe('minutesToFinish', () => {
   it('estimates each task from where the day stands', () => {
     expect(minutesToFinish('water', { ...NOTHING, water_ml: 2100 })).toBe(102)

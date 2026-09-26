@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { pokeLine } from '../../../content/microcopy'
 import { freshDatabase } from '../../../db/__tests__/fixtures'
 import { TASK_IDS } from '../../../logic/dayCompletion'
 import type { Menace } from '../../../logic/menace'
@@ -55,8 +56,22 @@ describe('DuckHeader', () => {
     rerender(
       <DuckHeader menace={{ level: 'watching', reason: 'plenty' }} missing={TASK_IDS} completion={completionOf([...TASK_IDS])} dayNumber={4} onLunge={onLunge} />,
     )
-    expect(screen.queryByText('I saw that.')).not.toBeInTheDocument()
+    // The findByText below is the real guard: a glare's line stays up for
+    // 2.2s, well past this query's default timeout, so a wrongly fired
+    // glare would still show "I saw that." here instead of the day's line.
     expect(await screen.findByText("New day. I'm watching.")).toBeInTheDocument()
+    expect(screen.queryByText('I saw that.')).not.toBeInTheDocument()
+  })
+
+  it('returns to his menace line once a reaction line expires', async () => {
+    render(<DuckHeader menace={TAPPING} missing={['reading']} completion={completionOf(['reading'])} dayNumber={3} onLunge={vi.fn()} />)
+    const duck = screen.getByRole('button', { name: 'Poke the duck' })
+
+    fireEvent.click(duck)
+    expect(await screen.findByText(pokeLine(0))).toBeInTheDocument()
+
+    // Real timers: faking setTimeout can freeze the AnimatePresence swap.
+    expect(await screen.findByText("Tick. Tock. You're cutting it close.", undefined, { timeout: 3000 })).toBeInTheDocument()
   })
 
   it('shows an announcement pushed from outside', async () => {
