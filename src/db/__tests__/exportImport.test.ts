@@ -112,6 +112,16 @@ describe('export → reset → import', () => {
 
     expect((await db.dayEntries.get(entry.id))?.plans).toEqual({ reading: '22:30' })
   })
+
+  it('keeps a plan’s frozen estimate through a backup', async () => {
+    await seedEverything()
+    const [entry] = await db.dayEntries.toArray()
+    await db.dayEntries.update(entry.id, { plans: { reading: '22:30' }, planEstimates: { reading: 20 } })
+
+    await roundTrip()
+
+    expect((await db.dayEntries.get(entry.id))?.planEstimates).toEqual({ reading: 20 })
+  })
 })
 
 describe('validateExportPayload', () => {
@@ -163,6 +173,15 @@ describe('validateExportPayload', () => {
     for (const plans of [{ reading: '25:00' }, { naps: '14:00' }, 'tonight']) {
       const payload = structuredClone(base)
       ;(payload.dayEntries as Record<string, unknown>[])[0].plans = plans
+      expect(validateExportPayload(payload).ok).toBe(false)
+    }
+  })
+
+  it('rejects a planEstimates with an unknown task key or a negative value', async () => {
+    const base = await validPayload()
+    for (const planEstimates of [{ naps: 5 }, { reading: -1 }]) {
+      const payload = structuredClone(base)
+      ;(payload.dayEntries as Record<string, unknown>[])[0].planEstimates = planEstimates
       expect(validateExportPayload(payload).ok).toBe(false)
     }
   })

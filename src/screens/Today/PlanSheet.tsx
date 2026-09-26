@@ -5,7 +5,7 @@ import { Modal } from '../../components/ui/Modal'
 import { TASK_NAMES } from '../../content/microcopy'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import type { DayEntry } from '../../db/types'
-import { parseHHmm, planError, type PlanError } from '../../logic/menace'
+import { minutesToFinish, parseHHmm, planError, type PlanError } from '../../logic/menace'
 import type { DayTaskData, TaskId } from '../../logic/types'
 
 const ERROR_TEXT: Record<PlanError, string> = {
@@ -55,11 +55,16 @@ function PlanForm({ entry, data, missing, nowMin, onClose, onSaved }: PlanSheetP
     setSaveError(null)
     try {
       const plans: Partial<Record<TaskId, string>> = {}
+      const estimates: Partial<Record<TaskId, number>> = {}
       for (const task of missing) {
         const value = draft[task]
-        if (value && parseHHmm(value) !== null) plans[task] = value
+        if (value && parseHHmm(value) !== null) {
+          plans[task] = value
+          const storedEstimate = entry.planEstimates?.[task]
+          estimates[task] = value === saved[task] && typeof storedEstimate === 'number' ? storedEstimate : minutesToFinish(task, data)
+        }
       }
-      await dayEntryRepo.setPlans(entry.id, plans)
+      await dayEntryRepo.setPlans(entry.id, plans, estimates)
       const times = Object.values(plans).map((value) => parseHHmm(value!)!)
       onSaved(times.length > 0 ? Math.min(...times) : null)
     } catch {

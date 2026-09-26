@@ -322,4 +322,37 @@ describe('dayEntryRepo.setPlans', () => {
     await dayEntryRepo.setPlans(entry.id, {})
     expect(await db.dayEntries.get(entry.id)).not.toHaveProperty('plans')
   })
+
+  it('round-trips the estimate frozen for each planned task', async () => {
+    const challengeId = await addChallenge({ startDate: today, attemptNumber: 1, status: 'active' })
+    const entry = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 1, date: today })
+
+    await dayEntryRepo.setPlans(entry.id, { reading: '22:30', photo: '21:00' }, { reading: 20, photo: 2 })
+    expect((await db.dayEntries.get(entry.id))?.planEstimates).toEqual({ reading: 20, photo: 2 })
+  })
+
+  it('drops an estimate for a task with no plan, and any negative or non-finite estimate', async () => {
+    const challengeId = await addChallenge({ startDate: today, attemptNumber: 1, status: 'active' })
+    const entry = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 1, date: today })
+
+    // photo has no plan, so its estimate is dropped even though it's a valid number.
+    await dayEntryRepo.setPlans(entry.id, { reading: '22:30' }, { reading: 20, photo: 5 })
+    expect((await db.dayEntries.get(entry.id))?.planEstimates).toEqual({ reading: 20 })
+
+    // Both tasks are planned now, but a negative and a non-finite estimate are both dropped.
+    await dayEntryRepo.setPlans(entry.id, { reading: '22:30', photo: '21:00' }, { reading: -1, photo: Number.NaN })
+    expect(await db.dayEntries.get(entry.id)).not.toHaveProperty('planEstimates')
+  })
+
+  it('removes both plans and planEstimates when the plan becomes empty', async () => {
+    const challengeId = await addChallenge({ startDate: today, attemptNumber: 1, status: 'active' })
+    const entry = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 1, date: today })
+
+    await dayEntryRepo.setPlans(entry.id, { reading: '22:30' }, { reading: 20 })
+    await dayEntryRepo.setPlans(entry.id, {})
+
+    const stored = await db.dayEntries.get(entry.id)
+    expect(stored).not.toHaveProperty('plans')
+    expect(stored).not.toHaveProperty('planEstimates')
+  })
 })

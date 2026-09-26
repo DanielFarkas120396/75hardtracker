@@ -22,10 +22,14 @@ const DATA: DayTaskData = {
   ],
 }
 
-async function setup({ nowMin = 20 * 60, plans }: { nowMin?: number; plans?: Record<string, string> } = {}) {
+async function setup({
+  nowMin = 20 * 60,
+  plans,
+  estimates,
+}: { nowMin?: number; plans?: Record<string, string>; estimates?: Record<string, number> } = {}) {
   const challengeId = await addChallenge({ startDate: todayISO(), attemptNumber: 1, status: 'active' })
   const created = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 1, date: todayISO() })
-  if (plans) await dayEntryRepo.setPlans(created.id, plans)
+  if (plans) await dayEntryRepo.setPlans(created.id, plans, estimates)
   const entry = (await db.dayEntries.get(created.id))!
   const onSaved = vi.fn()
   render(
@@ -52,6 +56,16 @@ describe('PlanSheet', () => {
 
     await waitFor(() => expect(onSaved).toHaveBeenCalledWith(22 * 60 + 30))
     expect((await db.dayEntries.get(entry.id))?.plans).toEqual({ reading: '22:30' })
+  })
+
+  it('keeps a stored estimate for an unchanged plan, and estimates a freshly planned task', async () => {
+    const { entry } = await setup({ plans: { reading: '22:30' }, estimates: { reading: 99 } })
+    fireEvent.change(screen.getByLabelText('Photo'), { target: { value: '21:00' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save plan' }))
+
+    await waitFor(async () =>
+      expect((await db.dayEntries.get(entry.id))?.planEstimates).toEqual({ reading: 99, photo: 2 }),
+    )
   })
 
   it('refuses a time that has passed', async () => {

@@ -23,6 +23,8 @@ export interface DayEntry {
   mood?: 1 | 2 | 3 | 4 | 5
   /** Today's plan: when each task will be done, as local "HH:mm". Read by the Today duck only. */
   plans?: Partial<Record<TaskId, string>>
+  /** Minutes each planned task was estimated to need when its plan was saved; fixes the plan's window so later progress can't shrink it. */
+  planEstimates?: Partial<Record<TaskId, number>>
   completed: boolean
 }
 

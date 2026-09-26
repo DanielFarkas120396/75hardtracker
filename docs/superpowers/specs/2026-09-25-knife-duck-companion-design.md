@@ -123,7 +123,7 @@ Angles are in degrees: negative raises the arm or knife. Brow `anger` goes from 
 A pure function in `src/logic/menace.ts`:
 
 ```ts
-menace({ data: DayTaskData, nowMin: number, bedtimeMin: number, plans: Partial<Record<TaskId, number>> })
+menace({ data: DayTaskData, nowMin: number, bedtimeMin: number, plans: Partial<Record<TaskId, number>>, estimates?: Partial<Record<TaskId, number>> })
   → { level: 'content' | 'watching' | 'tapping' | 'hunting', reason: MenaceReason, next?: { task: TaskId; at: number }, broken?: { task: TaskId; at: number } }
 type MenaceReason = 'done' | 'plenty' | 'plan-pending' | 'plan-due' | 'close' | 'plan-broken' | 'wont-fit' | 'past-bedtime'
 ```
@@ -140,7 +140,7 @@ type MenaceReason = 'done' | 'plenty' | 'plan-pending' | 'plan-due' | 'close' | 
 | photo | 2 | short |
 | diet | 2 | short |
 
-**Plans.** A missing task planned at minute `p` has a window ending at `p + minutes(task) + 15`.
+**Plans.** A missing task planned at minute `p` has a window ending at `p + e + 15`, where `e` is the task's estimate stored when the plan was saved. When none is stored, `e` is the live `minutes(task)`. Progress made after saving never shortens the window.
 - Before the window ends, the task is *covered*: it doesn't count. If `nowMin ≥ p`, the reason becomes `plan-due`.
 - After the window ends, the task counts normally, and the level is at least `tapping` (`plan-broken`).
 - Plans on tasks that are already complete are ignored.
@@ -230,7 +230,7 @@ type MenaceReason = 'done' | 'plenty' | 'plan-pending' | 'plan-due' | 'close' | 
   - Only rows changed since the sheet opened are checked, so an earlier plan whose time has passed never blocks saving the others.
 - **After saving**: the duck lowers the knife (a short `content`-like relax) and says the plan-saved line for 2.2 s.
 - **Persistence:**
-  - Plans live in `DayEntry.plans?: Partial<Record<TaskId, string>>` ("HH:mm"), written by `dayEntryRepo.setPlans(entryId, plans)`.
+  - Plans live in `DayEntry.plans?: Partial<Record<TaskId, string>>` ("HH:mm"), and each plan's estimate (minutes, frozen at save time) lives in `DayEntry.planEstimates?: Partial<Record<TaskId, number>>`. Both are written by `dayEntryRepo.setPlans(entryId, plans, estimates)`.
   - Plans don't affect completion, so there's no re-sync.
   - Plans are per day: a new day starts with none.
 
@@ -308,14 +308,14 @@ It plays on pokes and the lunge, gated by the sound setting through a `useSound`
 | `src/screens/RestartFlow/FailedDayCinematic.tsx` | The clip player (section 6). |
 | `src/screens/Settings/CompanionSection.tsx` | The bedtime setting. |
 | `src/content/microcopy.ts` | `duckLine` and the poke, lunge, glare and plan-saved lines; `mascotLine` is removed. |
-| `src/db/types.ts`, `dayEntryRepo.ts`, `settingsRepo.ts`, `exportImport.ts` | `DayEntry.plans`, `setPlans`, the `bedtime` key, and import validation of `plans` (optional; keys must be task ids, values "HH:mm"). |
+| `src/db/types.ts`, `dayEntryRepo.ts`, `settingsRepo.ts`, `exportImport.ts` | `DayEntry.plans` and `DayEntry.planEstimates`, `setPlans`, the `bedtime` key, and import validation of `plans` and `planEstimates` (both optional; keys must be task ids, values "HH:mm" for `plans` and finite minutes ≥ 0 for `planEstimates`). |
 | `src/hooks/useSettings.ts` | Exposes `bedtime` and `setBedtime`. |
 | `src/lib/sound.ts`, `src/hooks/useSound.ts` | The knife sound, and `useKnifeSound`, which is gated by the sound setting. |
 | `public/mascot.svg`, `pwa-assets.config.ts`, generated icons | The new icon. |
 | `vite.config.ts` | Precache the clip and poster. |
 | `src/dev/scenarios.ts` | Seeds for the menace and plan states, used with `?now=`. |
 
-There is no Dexie schema version bump: `plans` isn't indexed, and settings are key-value rows.
+There is no Dexie schema version bump: neither `plans` nor `planEstimates` is indexed, and settings are key-value rows.
 
 ## 9. Testing
 

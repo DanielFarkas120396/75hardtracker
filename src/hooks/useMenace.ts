@@ -10,7 +10,7 @@ export function useMenace(data: DayTaskData | undefined, entry: DayEntry | undef
   return useMemo(
     () =>
       data && entry
-        ? menace({ data, nowMin, bedtimeMin: bedtimeMinutes(bedtime), plans: plansToMinutes(entry.plans) })
+        ? menace({ data, nowMin, bedtimeMin: bedtimeMinutes(bedtime), plans: plansToMinutes(entry.plans), estimates: entry.planEstimates })
         : undefined,
     [data, entry, nowMin, bedtime],
   )

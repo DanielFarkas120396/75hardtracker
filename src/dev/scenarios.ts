@@ -201,7 +201,13 @@ export async function seedPlannedReading(): Promise<void> {
         await perfectDay(2),
         {
           dayNumber: 3,
-          entry: { water_ml: WATER_TARGET_ML, dietFollowed: true, noAlcohol: true, plans: { reading: '22:30' } },
+          entry: {
+            water_ml: WATER_TARGET_ML,
+            dietFollowed: true,
+            noAlcohol: true,
+            plans: { reading: '22:30' },
+            planEstimates: { reading: 20 },
+          },
           photo: await fakePhoto('Day 3', 120),
           workouts: doneWorkouts,
         },

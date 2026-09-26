@@ -39,6 +39,8 @@ export interface MenaceInput {
   bedtimeMin: number
   /** Planned times (minutes since midnight) for some of today's tasks. */
   plans: Partial<Record<TaskId, number>>
+  /** Each plan's estimate (minutes) frozen when it was saved; falls back to the live `minutesToFinish` when absent. */
+  estimates?: Partial<Record<TaskId, number>>
 }
 
 export type PlanError = 'past' | 'past-midnight'
@@ -138,7 +140,7 @@ const earlier = (current: PlannedTask | undefined, candidate: PlannedTask): Plan
  * The full rule, with reference cases, is in section 2 of
  * docs/superpowers/specs/2026-09-25-knife-duck-companion-design.md.
  */
-export function menace({ data, nowMin, bedtimeMin, plans }: MenaceInput): Menace {
+export function menace({ data, nowMin, bedtimeMin, plans, estimates }: MenaceInput): Menace {
   const missing = missingTasks(data)
   if (missing.length === 0) return { level: 'content', reason: 'done' }
 
@@ -152,7 +154,8 @@ export function menace({ data, nowMin, bedtimeMin, plans }: MenaceInput): Menace
       uncovered.push(task)
       continue
     }
-    if (nowMin >= at + minutesToFinish(task, data) + PLAN_GRACE_MIN) {
+    const windowEnd = at + (estimates?.[task] ?? minutesToFinish(task, data)) + PLAN_GRACE_MIN
+    if (nowMin >= windowEnd) {
       uncovered.push(task)
       broken = earlier(broken, { task, at })
       continue

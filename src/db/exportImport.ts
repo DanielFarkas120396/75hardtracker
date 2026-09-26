@@ -104,6 +104,12 @@ const isPlanMap = (value: unknown): boolean =>
     ([task, time]) => (TASK_IDS as readonly string[]).includes(task) && isString(time) && parseHHmm(time) !== null,
   )
 
+const isEstimateMap = (value: unknown): boolean =>
+  isRow(value) &&
+  Object.entries(value).every(
+    ([task, minutes]) => (TASK_IDS as readonly string[]).includes(task) && isNumber(minutes) && minutes >= 0,
+  )
+
 type FieldChecks = Record<string, (value: unknown) => boolean>
 
 const ROW_CHECKS: Record<Exclude<keyof ExportPayload, 'version' | 'exportedAt'>, FieldChecks> = {
@@ -126,6 +132,7 @@ const ROW_CHECKS: Record<Exclude<keyof ExportPayload, 'version' | 'exportedAt'>,
     completed: isBoolean,
     photoId: isOptional(isNumber),
     plans: isOptional(isPlanMap),
+    planEstimates: isOptional(isEstimateMap),
   },
   workouts: { id: isNumber, dayEntryId: isNumber, type: isString, durationMin: isNumber, isOutdoor: isBoolean },
   books: { id: isNumber, title: isString, totalPages: isNumber, currentPage: isNumber, finished: isBoolean },

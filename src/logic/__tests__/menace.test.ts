@@ -32,7 +32,7 @@ const ONLY_READING: DayTaskData = { ...DONE, pages_read: 0 }
 /** 1.7 L of water, reading, photo and diet left: 102 + 20 + 2 + 2 = 126 minutes. */
 const EVENING_MIX: DayTaskData = { ...DONE, water_ml: 2100, pages_read: 0, hasPhoto: false, dietFollowed: false }
 
-type Options = { plans?: Partial<Record<TaskId, string>>; bedtime?: string }
+type Options = { plans?: Partial<Record<TaskId, string>>; bedtime?: string; estimates?: Partial<Record<TaskId, number>> }
 
 const min = (time: string) => parseHHmm(time)!
 
@@ -42,6 +42,7 @@ function at(time: string, data: DayTaskData, options: Options = {}): Menace {
     nowMin: min(time),
     bedtimeMin: min(options.bedtime ?? '23:00'),
     plans: plansToMinutes(options.plans),
+    estimates: options.estimates,
   })
 }
 
@@ -87,6 +88,21 @@ describe('menace: plans', () => {
       task: 'workouts',
       at: min('20:00'),
     })
+  })
+
+  it("uses the estimate frozen at save time for the window, so later progress can't shrink it", () => {
+    // Everything done except water; 0.7 L left (42 min live), but the plan
+    // was saved when 1.7 L was left (102 min). Without the frozen estimate,
+    // the window would already have closed by 20:00 (19:00 + 42 + 15 = 19:57).
+    const data = { ...DONE, water_ml: 3100 }
+    const result = at('20:00', data, { plans: { water: '19:00' }, estimates: { water: 102 } })
+    expect([result.level, result.reason]).toEqual(['watching', 'plan-due'])
+  })
+
+  it('falls back to the live estimate when none was stored for the plan', () => {
+    const data = { ...DONE, water_ml: 3100 }
+    const result = at('20:00', data, { plans: { water: '19:00' } })
+    expect([result.level, result.reason]).toEqual(['tapping', 'plan-broken'])
   })
 })
 
