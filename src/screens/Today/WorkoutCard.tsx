@@ -5,7 +5,7 @@ import { Toggle } from '../../components/ui/Toggle'
 import { workoutRepo } from '../../db/repositories/workoutRepo'
 import type { Workout, WorkoutType } from '../../db/types'
 import { MAX_WORKOUTS } from '../../logic/constants'
-import { RULESETS } from '../../logic/rulesets'
+import type { Ruleset } from '../../logic/rulesets'
 
 const WORKOUT_TYPES: WorkoutType[] = ['Running', 'Walking', 'Weights', 'Yoga', 'Cycling', 'Swimming', 'Other']
 
@@ -14,18 +14,19 @@ interface WorkoutCardProps {
   workouts: Workout[]
   complete: boolean
   cheer: string
+  rules: Ruleset
 }
 
-export function WorkoutCard({ dayEntryId, workouts, complete, cheer }: WorkoutCardProps) {
+export function WorkoutCard({ dayEntryId, workouts, complete, cheer, rules }: WorkoutCardProps) {
   const addWorkout = () => {
-    void workoutRepo.add({ dayEntryId, type: 'Running', durationMin: RULESETS.hard.minWorkoutMin, isOutdoor: false })
+    void workoutRepo.add({ dayEntryId, type: 'Running', durationMin: rules.minWorkoutMin, isOutdoor: false })
   }
 
   return (
     <Card complete={complete} cheer={cheer}>
       <h2 className="font-rounded text-lg font-extrabold text-ink">🏋️ Workouts</h2>
       <p className="mt-1 text-sm text-ink-muted">
-        {RULESETS.hard.requiredWorkouts} sessions of at least {RULESETS.hard.minWorkoutMin} minutes, one of them outdoors.
+        {rules.requiredWorkouts} sessions of at least {rules.minWorkoutMin} minutes, one of them outdoors.
       </p>
 
       <div className="mt-4 flex flex-col gap-3">

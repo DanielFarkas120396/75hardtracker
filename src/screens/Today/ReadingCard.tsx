@@ -8,15 +8,16 @@ import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import { SETTING_KEYS, settingsRepo } from '../../db/repositories/settingsRepo'
 import type { DayEntry } from '../../db/types'
 import { validateBook, type BookErrors } from '../../logic/books'
-import { RULESETS } from '../../logic/rulesets'
+import type { Ruleset } from '../../logic/rulesets'
 
 interface ReadingCardProps {
   entry: DayEntry
   complete: boolean
   cheer: string
+  rules: Ruleset
 }
 
-export function ReadingCard({ entry, complete, cheer }: ReadingCardProps) {
+export function ReadingCard({ entry, complete, cheer, rules }: ReadingCardProps) {
   const books = useLiveQuery(() => bookRepo.getAll(), []) ?? []
   const currentBookId = useLiveQuery(() => settingsRepo.get<number | null>(SETTING_KEYS.currentBookId, null), [])
   const currentBook = books.find((b) => b.id === currentBookId)
@@ -27,12 +28,12 @@ export function ReadingCard({ entry, complete, cheer }: ReadingCardProps) {
     void dayEntryRepo.adjustPages(entry.id, delta)
     if (currentBook) void bookRepo.adjustCurrentPage(currentBook.id, delta)
   }
-  const pagesLeft = Math.max(0, RULESETS.hard.pagesTarget - entry.pages_read)
+  const pagesLeft = Math.max(0, rules.pagesTarget - entry.pages_read)
 
   return (
     <Card complete={complete} cheer={cheer}>
       <h2 className="font-rounded text-lg font-extrabold text-ink">📖 Reading</h2>
-      <p className="mt-1 text-sm text-ink-muted">{RULESETS.hard.pagesTarget} pages of non-fiction a day.</p>
+      <p className="mt-1 text-sm text-ink-muted">{rules.pagesTarget} pages of non-fiction a day.</p>
 
       <div className="mt-4">
         {books.length > 0 ? (

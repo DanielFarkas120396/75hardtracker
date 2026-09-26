@@ -45,7 +45,7 @@ describe('useMenace', () => {
 
     const results: ReturnType<typeof useMenace>[] = []
     renderHook(() => {
-      const result = useMenace(DATA, ENTRY, 19 * 60)
+      const result = useMenace(DATA, ENTRY, 19 * 60, RULESETS.hard)
       results.push(result)
       return result
     })
