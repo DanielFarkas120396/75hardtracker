@@ -122,6 +122,16 @@ describe('export → reset → import', () => {
 
     expect((await db.dayEntries.get(entry.id))?.planEstimates).toEqual({ reading: 20 })
   })
+
+  it('keeps a challenge’s variant through a backup', async () => {
+    await seedEverything()
+    const [challenge] = await db.challenges.toArray()
+    await db.challenges.update(challenge.id, { variant: 'soft' })
+
+    await roundTrip()
+
+    expect((await db.challenges.get(challenge.id))?.variant).toBe('soft')
+  })
 })
 
 describe('validateExportPayload', () => {
@@ -165,6 +175,12 @@ describe('validateExportPayload', () => {
   it('rejects rows with the wrong shape', async () => {
     const payload = await validPayload()
     ;(payload.challenges as Record<string, unknown>[])[0].status = 'paused'
+    expect(validateExportPayload(payload).ok).toBe(false)
+  })
+
+  it('rejects a backup with an unknown challenge variant', async () => {
+    const payload = await validPayload()
+    ;(payload.challenges as Record<string, unknown>[])[0].variant = 'extreme'
     expect(validateExportPayload(payload).ok).toBe(false)
   })
 

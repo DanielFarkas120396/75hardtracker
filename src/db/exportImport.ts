@@ -1,6 +1,7 @@
 import { todayISO } from '../lib/dates'
 import { TASK_IDS } from '../logic/dayCompletion'
 import { parseHHmm } from '../logic/menace'
+import { isChallengeVariant } from '../logic/rulesets'
 import { db } from './db'
 import { normalizeRecords } from './normalize'
 import { SETTING_KEYS } from './repositories/settingsRepo'
@@ -118,6 +119,7 @@ const ROW_CHECKS: Record<Exclude<keyof ExportPayload, 'version' | 'exportedAt'>,
     startDate: isString,
     attemptNumber: isNumber,
     status: (v) => v === 'active' || v === 'failed' || v === 'completed',
+    variant: isOptional(isChallengeVariant),
   },
   dayEntries: {
     id: isNumber,

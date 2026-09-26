@@ -1,6 +1,6 @@
 import { todayISO } from '../lib/dates'
 import { bookCountsForAttempt, buildBadgeContext, type BadgeContext } from '../logic/badges'
-import { RULESETS } from '../logic/rulesets'
+import { rulesFor } from '../logic/rulesets'
 import { loadChallengeDays } from './challengeDays'
 import { badgeRepo } from './repositories/badgeRepo'
 import { bookRepo } from './repositories/bookRepo'
@@ -24,7 +24,7 @@ export interface BadgeEvaluationInput {
  * badges it already has. Read-only — safe to run inside a live query.
  */
 export async function loadBadgeEvaluation(challenge: Challenge, todayDayNumber: number): Promise<BadgeEvaluationInput> {
-  const days = await loadChallengeDays(challenge.id)
+  const { days } = await loadChallengeDays(challenge.id)
   const books = await bookRepo.getAll()
   const unlocked = await badgeRepo.getForChallenge(challenge.id)
 
@@ -32,7 +32,7 @@ export async function loadBadgeEvaluation(challenge: Challenge, todayDayNumber: 
     days,
     todayDayNumber,
     booksFinished: books.filter((b) => bookCountsForAttempt(finishedOn(b), challenge.startDate)).length,
-    rules: RULESETS.hard,
+    rules: rulesFor(challenge),
   })
 
   return { context, unlockedBadgeIds: new Set(unlocked.map((b) => b.badgeId)) }
