@@ -1,3 +1,4 @@
+import { MotionConfig } from 'framer-motion'
 import { Mascot } from './mascot/Mascot'
 
 export type StorageProblem = 'failed' | 'blocked' | 'slow'
@@ -38,18 +39,23 @@ export function StorageErrorScreen({ problem, error }: StorageErrorScreenProps) 
   const detail = describeError(error)
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-canvas p-6 text-center">
-      <Mascot state={problem === 'failed' ? 'sad' : 'idle'} size={110} />
-      <h1 className="font-rounded text-2xl font-extrabold text-ink">{title}</h1>
-      <p className="max-w-sm font-rounded text-ink-muted">{body}</p>
-      {detail && <p className="max-w-sm break-words font-mono text-xs text-ink-muted">{detail}</p>}
-      <button
-        type="button"
-        onClick={() => window.location.reload()}
-        className="min-h-touch rounded-2xl border-b-4 border-ink/15 bg-surface px-6 py-3 font-rounded font-bold text-ink active:translate-y-1 active:border-b-0"
-      >
-        Reload
-      </button>
-    </div>
+    // This screen renders outside the app's <MotionConfig> (see main.tsx — it
+    // shows before the app, or the app failed to mount), so it sets its own,
+    // otherwise the duck would ignore the OS "reduce motion" setting.
+    <MotionConfig reducedMotion="user">
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-canvas p-6 text-center">
+        <Mascot mood={problem === 'failed' ? 'sad' : 'waiting'} size={110} />
+        <h1 className="font-rounded text-2xl font-extrabold text-ink">{title}</h1>
+        <p className="max-w-sm font-rounded text-ink-muted">{body}</p>
+        {detail && <p className="max-w-sm break-words font-mono text-xs text-ink-muted">{detail}</p>}
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="min-h-touch rounded-2xl border-b-4 border-ink/15 bg-surface px-6 py-3 font-rounded font-bold text-ink active:translate-y-1 active:border-b-0"
+        >
+          Reload
+        </button>
+      </div>
+    </MotionConfig>
   )
 }

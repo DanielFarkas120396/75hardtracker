@@ -1,3 +1,4 @@
+import { MotionConfig } from 'framer-motion'
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { exportAll } from '../db/exportImport'
 import { downloadFile } from '../lib/backupFile'
@@ -47,35 +48,40 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
     if (!error) return this.props.children
 
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-canvas p-6 text-center">
-        <Mascot state="sad" size={110} />
-        <h1 className="font-rounded text-2xl font-extrabold text-ink">Something went wrong</h1>
-        <p className="max-w-sm font-rounded text-ink-muted">
-          The app hit an unexpected error. Your data is still saved on this device — reloading usually fixes it.
-        </p>
-        <p className="max-w-sm break-words font-mono text-xs text-ink-muted">
-          {error.name}: {error.message}
-        </p>
-        <div className="flex flex-wrap justify-center gap-2">
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="min-h-touch rounded-2xl border-b-4 border-green-dark bg-green px-6 py-3 font-rounded font-bold text-on-accent active:translate-y-1 active:border-b-0"
-          >
-            Reload
-          </button>
-          <button
-            type="button"
-            onClick={() => void this.downloadBackup()}
-            disabled={backupState === 'working'}
-            className="min-h-touch rounded-2xl border-b-4 border-ink/15 bg-surface px-6 py-3 font-rounded font-bold text-ink active:translate-y-1 active:border-b-0 disabled:opacity-50"
-          >
-            {backupState === 'working' ? 'Preparing…' : 'Download a backup'}
-          </button>
+      // This fallback renders outside the app's <MotionConfig> (see
+      // main.tsx — the boundary sits above it, so an error thrown inside
+      // never gets its context), so it sets its own here.
+      <MotionConfig reducedMotion="user">
+        <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-canvas p-6 text-center">
+          <Mascot mood="sad" size={110} />
+          <h1 className="font-rounded text-2xl font-extrabold text-ink">Something went wrong</h1>
+          <p className="max-w-sm font-rounded text-ink-muted">
+            The app hit an unexpected error. Your data is still saved on this device — reloading usually fixes it.
+          </p>
+          <p className="max-w-sm break-words font-mono text-xs text-ink-muted">
+            {error.name}: {error.message}
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="min-h-touch rounded-2xl border-b-4 border-green-dark bg-green px-6 py-3 font-rounded font-bold text-on-accent active:translate-y-1 active:border-b-0"
+            >
+              Reload
+            </button>
+            <button
+              type="button"
+              onClick={() => void this.downloadBackup()}
+              disabled={backupState === 'working'}
+              className="min-h-touch rounded-2xl border-b-4 border-ink/15 bg-surface px-6 py-3 font-rounded font-bold text-ink active:translate-y-1 active:border-b-0 disabled:opacity-50"
+            >
+              {backupState === 'working' ? 'Preparing…' : 'Download a backup'}
+            </button>
+          </div>
+          {backupState === 'done' && <p className="text-sm text-ink-muted">Backup downloaded.</p>}
+          {backupState === 'failed' && <p className="text-sm text-danger-ink">Couldn’t create a backup.</p>}
         </div>
-        {backupState === 'done' && <p className="text-sm text-ink-muted">Backup downloaded.</p>}
-        {backupState === 'failed' && <p className="text-sm text-danger-ink">Couldn’t create a backup.</p>}
-      </div>
+      </MotionConfig>
     )
   }
 }

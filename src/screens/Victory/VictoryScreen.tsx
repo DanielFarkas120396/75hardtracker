@@ -58,7 +58,7 @@ export function VictoryScreen({ challenge, today, revealed }: VictoryScreenProps
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 220, damping: 14 }}
       >
-        <Mascot state="cheering" size={160} />
+        <Mascot mood="triumphant" size={160} />
       </motion.div>
 
       <div>

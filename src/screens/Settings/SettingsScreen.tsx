@@ -9,6 +9,7 @@ import { AppearanceSection } from './AppearanceSection'
 import { AttemptHistorySection } from './AttemptHistorySection'
 import { BadgesSection } from './BadgesSection'
 import { BooksSection } from './BooksSection'
+import { CompanionSection } from './CompanionSection'
 import { ExportImportSection } from './ExportImportSection'
 import { InstallSection } from './InstallSection'
 import { StartDateSection } from './StartDateSection'
@@ -20,7 +21,7 @@ interface SettingsScreenProps {
 }
 
 export function SettingsScreen({ challenge, today, todayDayNumber }: SettingsScreenProps) {
-  const { soundEnabled, hapticsEnabled, setSoundEnabled, setHapticsEnabled } = useSettings()
+  const { soundEnabled, hapticsEnabled, bedtime, setSoundEnabled, setHapticsEnabled, setBedtime } = useSettings()
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [resetting, setResetting] = useState(false)
 
@@ -62,6 +63,8 @@ export function SettingsScreen({ challenge, today, todayDayNumber }: SettingsScr
             <Toggle checked={hapticsEnabled} onChange={setHapticsEnabled} label="Haptic feedback" />
           </div>
         </section>
+
+        <CompanionSection bedtime={bedtime} onBedtimeChange={setBedtime} />
 
         <ExportImportSection today={today} />
 

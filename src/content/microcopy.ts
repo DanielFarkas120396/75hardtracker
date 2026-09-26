@@ -1,6 +1,7 @@
 import { MIN_WORKOUT_MIN, PAGES_TARGET, REQUIRED_QUALIFYING_WORKOUTS, WATER_TARGET_ML } from '../logic/constants'
 import { TASK_IDS } from '../logic/dayCompletion'
 import type { TaskId } from '../logic/types'
+import { formatHHmm, type Menace } from '../logic/menace'
 
 /** Short task names for lists, e.g. "missed Water, Photo". */
 export const TASK_NAMES: Record<TaskId, string> = {
@@ -39,20 +40,65 @@ export function taskCheer(task: TaskId, dayNumber: number): string {
   return cheers[(dayNumber - 1) % cheers.length]
 }
 
-/** What the mascot says when only this task is left. */
-const LAST_TASK_LINES: Record<TaskId, string> = {
-  workouts: 'Just the workouts left — finish strong!',
-  diet: 'Just tick off your diet — almost there!',
-  water: 'Just the water left — bottoms up!',
-  reading: 'Just your pages left — finish strong!',
-  photo: 'Just the progress photo left — say cheese!',
+/** The duck's lines once every task is done, rotated by day number. */
+const CONTENT_LINES = ['Perfect day. The knife rests.', 'All five. You may live.', 'Acceptable. Same time tomorrow.'] as const
+
+/** What the duck says when only this task is left, and there's still time. */
+const ONE_LEFT_LINES: Record<TaskId, string> = {
+  workouts: 'Just the workouts left. Go.',
+  diet: "Tick off your diet. I'll wait.",
+  water: 'Just the water left. Drink.',
+  reading: 'Just your pages left. Read.',
+  photo: 'Just the photo left. Smile. Or else.',
 }
 
-/** The mascot's speech bubble in the Today header, given the tasks still missing today. */
-export function mascotLine(missing: readonly TaskId[]): string {
+export const POKE_LINES = [
+  'Hands off. Hands on your water bottle.',
+  'Poke me again. I dare you.',
+  'That tickles. The knife does not.',
+] as const
+export const LUNGE_LINE = "That's it."
+export const GLARE_LINE = 'I saw that.'
+
+/** The poke line for the `count`th poke (0-based), cycling. */
+export function pokeLine(count: number): string {
+  return POKE_LINES[count % POKE_LINES.length]
+}
+
+/** The duck's answer once a plan is saved, quoting its earliest time. */
+export function planSavedLine(at: number): string {
+  return `${formatHHmm(at)}. Not a minute later.`
+}
+
+function watchingLine(missing: readonly TaskId[]): string {
   const done = TASK_IDS.length - missing.length
-  if (missing.length === 0) return 'Perfect day! See you tomorrow 🎉'
-  if (missing.length === 1) return LAST_TASK_LINES[missing[0]]
-  if (done === 0) return "New day, clean slate. Let's go!"
-  return `${done} down, ${missing.length} to go!`
+  if (missing.length === 1) return ONE_LEFT_LINES[missing[0]]
+  if (done === 0) return "New day. I'm watching."
+  return `${done} down, ${missing.length} to go. I'm watching.`
+}
+
+/** The duck's speech bubble on Today, from his menace and the tasks still missing. */
+export function duckLine({ menace, missing, dayNumber }: { menace: Menace; missing: readonly TaskId[]; dayNumber: number }): string {
+  switch (menace.reason) {
+    case 'done':
+      return CONTENT_LINES[(dayNumber - 1) % CONTENT_LINES.length]
+    case 'plenty':
+      return watchingLine(missing)
+    case 'plan-pending':
+      return menace.next
+        ? `${TASK_NAMES[menace.next.task]} at ${formatHHmm(menace.next.at)}. I'll be there.`
+        : watchingLine(missing)
+    case 'plan-due':
+      return menace.next
+        ? `It's ${formatHHmm(menace.next.at)}. ${TASK_NAMES[menace.next.task]}. I'm watching.`
+        : watchingLine(missing)
+    case 'close':
+      return "Tick. Tock. You're cutting it close."
+    case 'plan-broken':
+      return menace.broken ? `You said ${formatHHmm(menace.broken.at)}.` : "Tick. Tock. You're cutting it close."
+    case 'wont-fit':
+      return "Midnight's coming. So am I."
+    case 'past-bedtime':
+      return 'Past your bedtime. Not mine.'
+  }
 }

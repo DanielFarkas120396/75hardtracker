@@ -166,3 +166,52 @@ export async function seedDayOneWithLogs(): Promise<void> {
     },
   ])
 }
+
+/** Two qualifying workouts, one outdoors: Day 3's workouts task is done. */
+const doneWorkouts: SeedDay['workouts'] = [
+  { type: 'Running', durationMin: MIN_WORKOUT_MIN, isOutdoor: true },
+  { type: 'Weights', durationMin: 60, isOutdoor: false },
+]
+
+/**
+ * Days 1–2 complete. Day 3 (today) has the workouts done, 2.1 L of water,
+ * and the reading, photo and diet still to do. Open it with ?now=10:00,
+ * ?now=20:00 or ?now=22:45 to see the duck watch, tap and hunt.
+ */
+export async function seedMenaceDay(): Promise<void> {
+  await replaceDatabase([
+    {
+      challenge: { startDate: addDaysISO(todayISO(), -2), attemptNumber: 1, status: 'active' },
+      days: [await perfectDay(1), await perfectDay(2), { dayNumber: 3, entry: { water_ml: 2100 }, workouts: doneWorkouts }],
+    },
+  ])
+}
+
+/**
+ * Days 1–2 complete. On Day 3 (today) only the reading is left, planned for
+ * 22:30. Open it with ?now=19:00 (plan pending), ?now=22:35 (plan due) or
+ * ?now=23:10 (past bedtime: past-bedtime outranks the broken plan).
+ */
+export async function seedPlannedReading(): Promise<void> {
+  await replaceDatabase([
+    {
+      challenge: { startDate: addDaysISO(todayISO(), -2), attemptNumber: 1, status: 'active' },
+      days: [
+        await perfectDay(1),
+        await perfectDay(2),
+        {
+          dayNumber: 3,
+          entry: {
+            water_ml: WATER_TARGET_ML,
+            dietFollowed: true,
+            noAlcohol: true,
+            plans: { reading: '22:30' },
+            planEstimates: { reading: 20 },
+          },
+          photo: await fakePhoto('Day 3', 120),
+          workouts: doneWorkouts,
+        },
+      ],
+    },
+  ])
+}

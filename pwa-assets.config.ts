@@ -1,7 +1,7 @@
 import { defineConfig, minimal2023Preset } from '@vite-pwa/assets-generator/config'
 
-/** Solid, warm background behind the mascot for icons that can't be transparent (Android maskable, iOS). */
-const ICON_BACKGROUND = '#fff6dd'
+/** Behind the duck for icons that can't be transparent (Android maskable, iOS): the reference image's backdrop. */
+const ICON_BACKGROUND = '#e2ddca'
 
 // Regenerate the icons in public/ with `npm run generate-pwa-assets` after changing public/mascot.svg.
 export default defineConfig({

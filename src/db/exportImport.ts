@@ -1,4 +1,6 @@
 import { todayISO } from '../lib/dates'
+import { TASK_IDS } from '../logic/dayCompletion'
+import { parseHHmm } from '../logic/menace'
 import { db } from './db'
 import { normalizeRecords } from './normalize'
 import { SETTING_KEYS } from './repositories/settingsRepo'
@@ -96,6 +98,18 @@ const isString = (value: unknown): value is string => typeof value === 'string'
 const isBoolean = (value: unknown): value is boolean => typeof value === 'boolean'
 const isOptional = (check: (value: unknown) => boolean) => (value: unknown) => value === undefined || value === null || check(value)
 
+const isPlanMap = (value: unknown): boolean =>
+  isRow(value) &&
+  Object.entries(value).every(
+    ([task, time]) => (TASK_IDS as readonly string[]).includes(task) && isString(time) && parseHHmm(time) !== null,
+  )
+
+const isEstimateMap = (value: unknown): boolean =>
+  isRow(value) &&
+  Object.entries(value).every(
+    ([task, minutes]) => (TASK_IDS as readonly string[]).includes(task) && isNumber(minutes) && minutes >= 0,
+  )
+
 type FieldChecks = Record<string, (value: unknown) => boolean>
 
 const ROW_CHECKS: Record<Exclude<keyof ExportPayload, 'version' | 'exportedAt'>, FieldChecks> = {
@@ -117,6 +131,8 @@ const ROW_CHECKS: Record<Exclude<keyof ExportPayload, 'version' | 'exportedAt'>,
     noAlcohol: isBoolean,
     completed: isBoolean,
     photoId: isOptional(isNumber),
+    plans: isOptional(isPlanMap),
+    planEstimates: isOptional(isEstimateMap),
   },
   workouts: { id: isNumber, dayEntryId: isNumber, type: isString, durationMin: isNumber, isOutdoor: isBoolean },
   books: { id: isNumber, title: isString, totalPages: isNumber, currentPage: isNumber, finished: isBoolean },

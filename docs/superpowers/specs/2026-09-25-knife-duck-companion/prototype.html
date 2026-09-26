@@ -1,0 +1,233 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<style>:root{--surface-1:#f3f2ee;--border-stronger:#999;--text-secondary:#666}body{margin:0;padding:12px;font-family:system-ui,sans-serif;background:#fff}
+button{font:inherit;padding:6px 12px;border-radius:8px;border:0.5px solid #bbb;background:transparent;cursor:pointer}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}</style>
+</head><body>
+<h2 class="sr-only">Animated prototype v3 of the knife-holding duck companion on the Today screen, with four menace levels.</h2>
+<style>
+.mk{--cv:#fbfbf8;--sf:#ffffff;--ink:#1f2426;--mu:#626a76}
+[data-mode="dark"] .mk{--cv:#14181a;--sf:#1f2426;--ink:#f2f4f5;--mu:#9aa4a9}
+@media (prefers-color-scheme: dark){:root:not([data-mode]) .mk{--cv:#14181a;--sf:#1f2426;--ink:#f2f4f5;--mu:#9aa4a9}}
+.seg{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:0 0 12px}
+.seg button[aria-pressed="true"]{background:var(--surface-1);border-color:var(--border-stronger)}
+.mk{position:relative;overflow:hidden;background:var(--cv);border-radius:16px;padding:16px;max-width:380px;margin:0 auto;color:var(--ink);touch-action:none;user-select:none;-webkit-user-select:none}
+.bub{position:relative;background:var(--sf);border-radius:14px;padding:8px 14px;font-size:14px;font-weight:500;line-height:1.4;transition:opacity .16s ease}
+.card{position:relative;z-index:1;background:var(--sf);border-radius:16px;padding:12px 14px;margin-top:10px;font-size:14px;display:flex;justify-content:space-between}
+.vig{position:absolute;inset:0;pointer-events:none;opacity:0}
+</style>
+<div style="padding:.5rem 0">
+  <div class="seg" role="group" aria-label="Situation">
+    <button data-m="content" aria-pressed="false">All done</button>
+    <button data-m="watching" aria-pressed="true">Plenty of time</button>
+    <button data-m="sharpening" aria-pressed="false">Cutting it close</button>
+    <button data-m="hunting" aria-pressed="false">Out of time</button>
+  </div>
+  <div class="mk" id="mk">
+    <div class="vig" id="vig-dark" style="background:radial-gradient(ellipse at 50% 40%, transparent 50%, rgba(40,14,10,.26) 100%)"></div>
+    <div class="vig" id="vig-red" style="background:radial-gradient(ellipse at 50% 40%, transparent 45%, rgba(190,24,34,.40) 100%)"></div>
+    <div style="position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-size:13px;color:var(--mu)">Attempt #1</div><div style="font-size:20px;font-weight:500">Day 12 / 75</div></div>
+      <div style="font-size:14px;font-weight:500;color:var(--mu)">3/5</div>
+    </div>
+    <div style="position:relative;z-index:1;display:flex;align-items:center;gap:10px;margin-top:10px">
+      <svg id="dk" viewBox="-10 20 490 500" width="150" height="153" style="overflow:visible;flex-shrink:0;cursor:pointer" role="img" aria-label="Duck companion">
+        <defs><clipPath id="bladeclip"><path d="M112 313 L224 310 C232 310 237 314 237 321 C236 330 229 339 221 346 C206 360 188 372 164 375 C146 376 128 366 112 353 Z"/></clipPath></defs>
+        <g id="d-whole">
+          <g stroke="#5a1a16" stroke-width="12" stroke-linejoin="round" stroke-linecap="round">
+            <path fill="#ffb624" d="M96 460 C91 460 99 467 101 471 C103 475 103 480 106 484 C109 488 113 491 117 494 C121 497 126 499 131 501 C136 503 144 505 150 506 C156 507 160 507 165 507 C170 507 174 507 177 505 C180 503 182 500 184 497 C186 494 188 490 186 487 C184 484 179 481 170 478 C161 475 142 473 130 470 C118 467 101 460 96 460 Z"/>
+            <path fill="#ffb624" d="M279 478 C276 481 278 488 281 491 C284 494 290 496 294 498 C298 500 302 500 307 500 C312 500 316 500 321 499 C326 498 330 498 334 496 C338 494 344 491 348 488 C352 485 354 483 356 480 C358 477 359 472 360 468 C361 464 366 459 361 458 C356 457 340 462 330 464 C320 466 308 470 300 472 C292 474 282 475 279 478 Z"/>
+            <g id="d-body">
+              <path fill="#f9dd97" d="M238 39 C229 38 222 39 215 39 C208 39 203 40 196 41 C189 42 182 44 173 47 C164 50 154 55 145 60 C136 65 129 70 122 75 C115 80 109 86 104 91 C99 96 95 100 90 106 C85 112 80 121 76 127 C72 133 72 134 69 140 C66 146 62 157 59 165 C56 173 54 180 52 190 C50 200 48 212 47 225 C46 238 44 252 43 265 C42 278 41 292 40 305 C39 318 39 330 39 340 C39 350 39 357 40 365 C41 373 41 378 44 387 C47 396 52 410 58 420 C64 430 70 438 77 446 C84 454 90 463 101 469 C112 475 131 478 145 481 C159 484 171 485 183 486 C195 487 205 486 215 486 C225 486 235 486 243 486 C251 486 258 485 265 484 C272 483 280 480 287 479 C294 478 303 476 310 475 C317 474 324 472 330 470 C336 468 343 465 348 463 C353 461 357 462 362 458 C367 454 373 446 377 440 C381 434 384 431 388 424 C392 417 396 405 399 398 C402 391 402 387 403 381 C404 375 404 368 404 360 C404 352 403 345 403 335 C403 325 403 312 403 300 C403 288 404 275 405 262 C406 249 408 237 407 224 C406 211 401 196 397 184 C393 172 391 163 385 151 C379 139 372 123 363 111 C354 99 343 87 334 79 C325 71 318 68 311 63 C304 58 298 55 291 52 C284 49 277 46 268 44 C259 42 247 40 238 39 Z"/>
+              <g id="d-rw">
+                <path fill="#f9dd97" stroke="none" d="M405 215 C407 215 404 220 407 224 C410 228 416 236 420 242 C424 248 428 253 433 262 C438 271 445 285 449 295 C453 305 456 316 457 324 C458 332 458 340 457 345 C456 350 455 354 453 357 C451 360 448 363 445 364 C442 365 440 366 437 365 C434 364 431 363 428 361 C425 359 420 354 417 352 C414 350 410 350 408 348 C406 346 405 344 404 341 C403 338 404 338 402 331 C400 324 396 312 394 300 C392 288 393 274 393 262 C393 250 394 234 396 226 C398 218 403 215 405 215 Z"/>
+                <path fill="none" d="M405 215 C405 216 404 220 407 224 C410 228 416 236 420 242 C424 248 428 253 433 262 C438 271 445 285 449 295 C453 305 456 316 457 324 C458 332 458 340 457 345 C456 350 455 354 453 357 C451 360 448 363 445 364 C442 365 440 366 437 365 C434 364 431 363 428 361 C425 359 420 354 417 352 C414 350 410 350 408 348 C406 346 405 344 404 341 C403 338 402 333 402 331"/>
+                <line x1="398" y1="306" x2="400" y2="319" stroke="#ffc605" stroke-width="10"/>
+              </g>
+              <g id="d-eyes" stroke="none" fill="#5a1a16">
+                <ellipse id="d-eL" cx="155.5" cy="177.4" rx="12.8" ry="12.8"/>
+                <ellipse id="d-eR" cx="314.8" cy="170.6" rx="12.8" ry="12.8"/>
+              </g>
+              <g id="d-happy" fill="none" stroke-width="10" opacity="0">
+                <path d="M139 184 Q155.5 164 172 184"/>
+                <path d="M298 177 Q314.8 157 331 177"/>
+              </g>
+              <g id="d-brows" stroke-width="11" opacity="0">
+                <path id="d-browL" d="M128 146 L180 163"/>
+                <path id="d-browR" d="M342 139 L291 157"/>
+              </g>
+              <ellipse cx="239" cy="213" rx="64" ry="26" fill="#ffb624" stroke-width="13"/>
+              <g id="d-lw">
+                <path fill="#f9dd97" stroke="none" d="M51 195 C46 197 42 205 38 210 C34 215 33 219 30 224 C27 229 23 236 21 242 C19 248 18 251 16 258 C14 265 13 277 12 283 C11 289 11 289 12 295 C13 301 14 312 16 319 C18 326 22 334 26 340 C30 346 34 353 39 356 C44 359 49 358 53 359 C57 360 60 361 64 361 C68 361 73 360 76 359 C79 358 81 354 83 352 C85 350 86 350 88 346 C90 342 93 334 96 325 C99 316 103 307 104 295 C105 283 103 267 100 255 C97 243 91 231 86 222 C81 213 74 204 68 200 C62 196 56 193 51 195 Z"/>
+                <path fill="none" d="M51 195 C49 198 42 205 38 210 C34 215 33 219 30 224 C27 229 23 236 21 242 C19 248 18 251 16 258 C14 265 13 277 12 283 C11 289 11 289 12 295 C13 301 14 312 16 319 C18 326 22 334 26 340 C30 346 34 353 39 356 C44 359 49 358 53 359 C57 360 60 361 64 361 C68 361 73 360 76 359 C79 358 81 354 83 352 C85 350 87 347 88 346"/>
+                <line x1="114" y1="271" x2="98" y2="303" stroke="#ffc605" stroke-width="9"/>
+                <g id="d-kn">
+                  <path fill="#d8d7d5" stroke-width="13" d="M112 313 L224 310 C232 310 237 314 237 321 C236 330 229 339 221 346 C206 360 188 372 164 375 C146 376 128 366 112 353 Z"/>
+                  <g clip-path="url(#bladeclip)" stroke="none"><path id="d-glint" d="M0 290 L22 290 L-8 390 L-30 390 Z" fill="#ffffff" opacity="0.9"/></g>
+                  <path fill="#ffa6c5" stroke-width="13" d="M95 314 L112 313 L111 350 L88 350 Z"/>
+                </g>
+              </g>
+            </g>
+          </g>
+        </g>
+      </svg>
+      <div class="bub" id="bub">3 down, 2 to go. I'm watching.</div>
+    </div>
+    <div class="card"><span>Water</span><span style="color:var(--mu)">2.1 / 3.8 L</span></div>
+    <div class="card"><span>Reading</span><span style="color:var(--mu)">0 / 10 pages</span></div>
+  </div>
+</div>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id)
+  const svg = $('dk'), whole = $('d-whole'), body = $('d-body'), lw = $('d-lw'), kn = $('d-kn'), rw = $('d-rw')
+  const eL = $('d-eL'), eR = $('d-eR'), eyes = $('d-eyes'), brows = $('d-brows'), happy = $('d-happy'), glint = $('d-glint')
+  const browL = $('d-browL'), browR = $('d-browR')
+  const vigDark = $('vig-dark'), vigRed = $('vig-red'), mk = $('mk'), bub = $('bub')
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const LINES = {
+    content: 'Perfect day. The knife rests.',
+    watching: "3 down, 2 to go. I'm watching.",
+    sharpening: "Tick. Tock. You're cutting it close.",
+    hunting: "Midnight's coming. So am I.",
+  }
+  const POKES = ['Hands off. Hands on your water bottle.', 'Poke me again. I dare you.', 'That tickles. The knife does not.']
+  const POSES = {
+    content: { arm: 5, knife: 28, lean: 1, brow: 0, anger: 0, squint: 1, happy: 1, dark: 0, red: 0, glint: 0 },
+    watching: { arm: 0, knife: 0, lean: 1, brow: 0, anger: 0, squint: 1, happy: 0, dark: 0, red: 0, glint: 4200 },
+    sharpening: { arm: -15, knife: 15, lean: 1.03, brow: 1, anger: 0.15, squint: 0.9, happy: 0, dark: 1, red: 0, glint: 1800 },
+    hunting: { arm: -26, knife: 26, lean: 1.08, brow: 1, anger: 1, squint: 0.72, happy: 0, dark: 0, red: 1, glint: 1100 },
+  }
+  // Time-based springs: frame-rate independent and interruptible, so nothing jumps.
+  const spring = (x, k = 170, c = 24) => ({ x, v: 0, to: x, k, c })
+  const S = {
+    arm: spring(0, 140, 18), knife: spring(0, 160, 20), lean: spring(1, 120, 20), brow: spring(0, 200, 26), anger: spring(0, 200, 26),
+    squint: spring(1, 220, 28), happy: spring(0, 180, 24), dark: spring(0, 40, 13), red: spring(0, 40, 13),
+    gx: spring(0, 520, 42), gy: spring(0, 520, 42), squash: spring(1, 380, 16), tap: spring(0, 60, 16),
+    tremble: spring(0, 60, 16), bob: spring(0, 60, 16), wave: spring(0, 60, 16), shake: spring(0, 60, 14),
+  }
+  function stepSpring(s, dt) {
+    const n = Math.max(1, Math.ceil(dt / 0.004)), h = dt / n
+    for (let i = 0; i < n; i++) { s.v += (-s.k * (s.x - s.to) - s.c * s.v) * h; s.x += s.v * h }
+  }
+  let mood = 'watching', lastT = performance.now(), phase = 0, lastTapPhase = 0
+  let blinkAt = -1, nextBlink = 900, glintAt = -1, nextGlint = 1600, touchUntil = 0, nextGlance = 0
+  let lungeAt = -1, pokes = [], bubbleUntil = 0, shownLine = LINES.watching
+  function setLine(text) {
+    if (text === shownLine) return
+    shownLine = text
+    bub.style.opacity = '0'
+    setTimeout(() => { bub.textContent = text; bub.style.opacity = '1' }, 160)
+  }
+  function setMood(m) {
+    mood = m
+    document.querySelectorAll('.seg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.m === m)))
+    const p = POSES[m]
+    for (const key of ['arm', 'knife', 'lean', 'brow', 'anger', 'squint', 'happy', 'dark', 'red']) S[key].to = p[key]
+    S.tap.to = m === 'sharpening' ? 1 : 0
+    S.tremble.to = m === 'hunting' ? 1 : 0
+    S.bob.to = m === 'content' ? 1 : 0
+    S.wave.to = m === 'content' ? 1 : 0
+    nextGlint = performance.now() + 600
+    if (performance.now() > bubbleUntil) setLine(LINES[m])
+  }
+  document.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => setMood(b.dataset.m)))
+  // Touch-style gaze: the eyes only know where you are while a finger is on the screen.
+  function lookAt(clientX, clientY) {
+    const p = new DOMPoint(clientX, clientY).matrixTransform(svg.getScreenCTM().inverse())
+    const dx = p.x - 235, dy = p.y - 175, d = Math.hypot(dx, dy) || 1, k = Math.min(d / 200, 1) * 10
+    S.gx.to = (dx / d) * k; S.gy.to = (dy / d) * k * 0.8
+    touchUntil = performance.now() + 1300
+  }
+  mk.addEventListener('pointerdown', (e) => lookAt(e.clientX, e.clientY))
+  mk.addEventListener('pointermove', (e) => { if (e.buttons) lookAt(e.clientX, e.clientY) })
+  svg.addEventListener('pointerdown', () => {
+    const now = performance.now()
+    pokes = pokes.filter((t) => now - t < 1800)
+    pokes.push(now)
+    if (reduce) return
+    if (pokes.length >= 3) {
+      pokes = []; lungeAt = now; bubbleUntil = now + 2400; setLine("That's it.")
+      S.arm.to = -70; S.knife.to = 0; S.lean.to = 1.32; S.brow.to = 1; S.anger.to = 1; S.red.v += 6
+    } else {
+      bubbleUntil = now + 2200; setLine(POKES[Math.floor(Math.random() * POKES.length)])
+      S.squash.v -= 5; S.arm.v -= 420; S.knife.v -= 260; S.brow.v += 12; S.anger.v += 12
+    }
+  })
+  const GLANCES = [[0, 3], [5, 9], [-9, 1], [8, -1], [0, 3]]
+  const bump = (t, dur) => (t < 0 || t > dur ? 0 : Math.sin((t / dur) * Math.PI))
+  function frame(now) {
+    const dt = Math.min((now - lastT) / 1000, 0.05); lastT = now
+    if (!reduce) phase += dt
+    const P = POSES[mood]
+    if (lungeAt >= 0 && now - lungeAt > 320) {
+      lungeAt = -1; S.arm.to = P.arm; S.knife.to = P.knife; S.lean.to = P.lean; S.brow.to = P.brow; S.anger.to = P.anger
+      S.arm.v += 900; S.shake.x = 1; S.shake.v = 0
+    }
+    if (now > bubbleUntil && lungeAt < 0) setLine(LINES[mood])
+    if (now > touchUntil && now > nextGlance) {
+      const g = mood === 'hunting' ? [0, 2] : GLANCES[Math.floor(Math.random() * GLANCES.length)]
+      S.gx.to = g[0]; S.gy.to = g[1]
+      nextGlance = now + (mood === 'hunting' ? 3500 : 1800 + Math.random() * 2600)
+    }
+    if (now > nextBlink && blinkAt < 0) blinkAt = now
+    let blink = 1
+    if (blinkAt >= 0) {
+      const dur = mood === 'hunting' ? 460 : 150, bt = now - blinkAt
+      blink = 1 - 0.92 * bump(bt, dur)
+      if (bt > dur) { blinkAt = -1; nextBlink = now + (mood === 'hunting' ? 4500 : 1600) + Math.random() * 3200 }
+    }
+    if (P.glint && mood !== 'sharpening' && now > nextGlint && glintAt < 0) glintAt = now
+    let gpos = -80
+    if (glintAt >= 0) {
+      const g = (now - glintAt) / 520, e = g < 0.5 ? 2 * g * g : 1 - Math.pow(-2 * g + 2, 2) / 2
+      gpos = -60 + e * 330
+      if (g >= 1) { glintAt = -1; nextGlint = now + P.glint * (0.75 + Math.random() * 0.5) }
+    }
+    if (reduce) { for (const s of Object.values(S)) { s.x = s.to; s.v = 0 } }
+    else for (const s of Object.values(S)) stepSpring(s, dt)
+    S.shake.to = 0
+    const t = phase, TAU = Math.PI * 2
+    const breathe = 1 + 0.012 * Math.sin((TAU * t) / 2.6)
+    const hop = -9 * S.bob.x * Math.pow(Math.sin((TAU * t) / 1.8), 2)
+    const sway = 1.8 * Math.sin((TAU * t) / 4.2)
+    const shake = 9 * S.shake.x * Math.sin((TAU * t) / 0.07)
+    const sq = S.squash.x, sc = S.lean.x
+    whole.setAttribute('transform', `translate(${shake.toFixed(2)} ${hop.toFixed(2)}) rotate(${sway.toFixed(3)} 234 500) translate(234 500) scale(${(sc * (2 - sq)).toFixed(4)} ${(sc * sq).toFixed(4)}) translate(-234 -500)`)
+    body.setAttribute('transform', `translate(234 490) scale(1 ${breathe.toFixed(4)}) translate(-234 -490)`)
+    const tremble = 1.1 * S.tremble.x * Math.sin((TAU * t) / 0.09)
+    // Impatient tapping, one tap a second like a clock: the arm lifts slowly, then strikes and rebounds.
+    // The knife never moves on its own: the arm carries it, and the wrist only rotates it around the grip.
+    const tp = (t % 1) / 1
+    let tapAngle
+    if (tp < 0.72) { const u = tp / 0.72; tapAngle = -12 * u * u * (3 - 2 * u) }
+    else if (tp < 0.8) { const u = (tp - 0.72) / 0.08; tapAngle = -12 + 15 * u * u }
+    else { const u = (tp - 0.8) / 0.2; tapAngle = 3 * (1 - u * u * (3 - 2 * u)) }
+    const tapAmt = Math.min(Math.max(S.tap.x, 0), 1)
+    if (tapAmt > 0.5 && lastTapPhase < 0.8 && tp >= 0.8) { S.squash.v -= 1.4; if (glintAt < 0) glintAt = now }
+    lastTapPhase = tp
+    lw.setAttribute('transform', `rotate(${(S.arm.x + tremble + tapAngle * tapAmt).toFixed(3)} 51 195)`)
+    kn.setAttribute('transform', `rotate(${(S.knife.x + tapAngle * 0.5 * tapAmt).toFixed(3)} 100 332)`)
+    rw.setAttribute('transform', `rotate(${(6 * S.wave.x * Math.sin((TAU * t) / 0.7)).toFixed(3)} 405 225)`)
+    const h = Math.min(Math.max(S.happy.x, 0), 1), sy = Math.max(0.02, (1 - h) * blink * S.squint.x)
+    const gx = S.gx.x.toFixed(2), gy = S.gy.x.toFixed(2)
+    eL.setAttribute('transform', `translate(${gx} ${gy}) translate(155.5 177.4) scale(1 ${sy.toFixed(4)}) translate(-155.5 -177.4)`)
+    eR.setAttribute('transform', `translate(${gx} ${gy}) translate(314.8 170.6) scale(1 ${sy.toFixed(4)}) translate(-314.8 -170.6)`)
+    eyes.setAttribute('opacity', (1 - h).toFixed(3))
+    happy.setAttribute('opacity', h.toFixed(3))
+    happy.setAttribute('transform', `translate(0 ${((1 - h) * 8).toFixed(2)})`)
+    const b = Math.min(Math.max(S.brow.x, 0), 1)
+    brows.setAttribute('opacity', Math.min(1, b * 1.6).toFixed(3))
+    const flat = 12 * (1 - Math.min(Math.max(S.anger.x, 0), 1.2))
+    browL.setAttribute('transform', `rotate(${(-flat).toFixed(2)} 154 154.5)`)
+    browR.setAttribute('transform', `rotate(${flat.toFixed(2)} 316.5 148)`)
+    brows.setAttribute('transform', `translate(${(S.gx.x * 0.4).toFixed(2)} ${(S.gy.x * 0.4 + 10 * (1 - b) + 7 * (1 - S.squint.x)).toFixed(2)})`)
+    glint.setAttribute('transform', `translate(${(gpos + 100).toFixed(1)} 0)`)
+    vigDark.style.opacity = Math.min(Math.max(S.dark.x, 0), 1).toFixed(3)
+    const pulse = reduce ? 1 : 0.78 + 0.22 * Math.sin((TAU * t) / 2.8)
+    vigRed.style.opacity = Math.min(Math.max(S.red.x * pulse, 0), 1).toFixed(3)
+    requestAnimationFrame(frame)
+  }
+  setMood('watching')
+  requestAnimationFrame(frame)
+})()
+</script>
+</body></html>

@@ -1,5 +1,7 @@
-import { hasAnyProgress } from '../../logic/dayCompletion'
+import { hasAnyProgress, TASK_IDS } from '../../logic/dayCompletion'
 import { isChallengeDay } from '../../logic/days'
+import { parseHHmm } from '../../logic/menace'
+import type { TaskId } from '../../logic/types'
 import { syncDayCompletion } from '../completion'
 import { db } from '../db'
 import { groupWorkoutsByEntry, toDayTaskData } from '../mappers'
@@ -95,6 +97,35 @@ export const dayEntryRepo = {
 
   async update(id: number, changes: Partial<DayEntry>): Promise<void> {
     await changeAndSync(id, () => db.dayEntries.update(id, changes))
+  },
+
+  /**
+   * Replaces the day's plan and the per-task estimate frozen at save time;
+   * an empty plan removes both fields. An estimate is kept only for a task
+   * that's also in the cleaned plan, and only if it's a finite number >= 0.
+   * Plans never affect completion, so there's no re-sync.
+   */
+  async setPlans(
+    id: number,
+    plans: Partial<Record<TaskId, string>>,
+    estimates: Partial<Record<TaskId, number>> = {},
+  ): Promise<void> {
+    const cleaned: Partial<Record<TaskId, string>> = {}
+    for (const task of TASK_IDS) {
+      const time = plans[task]
+      if (time !== undefined && parseHHmm(time) !== null) cleaned[task] = time
+    }
+    const cleanedEstimates: Partial<Record<TaskId, number>> = {}
+    for (const task of TASK_IDS) {
+      const estimate = estimates[task]
+      if (cleaned[task] !== undefined && typeof estimate === 'number' && Number.isFinite(estimate) && estimate >= 0) {
+        cleanedEstimates[task] = estimate
+      }
+    }
+    await db.dayEntries.update(id, {
+      plans: Object.keys(cleaned).length > 0 ? cleaned : undefined,
+      planEstimates: Object.keys(cleanedEstimates).length > 0 ? cleanedEstimates : undefined,
+    })
   },
 
   /** Atomically adjusts water_ml by a signed delta, clamped at 0 — safe under rapid quick-add taps. */
