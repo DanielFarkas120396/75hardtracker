@@ -25,7 +25,7 @@ describe('a pre-variants 75 Hard attempt', () => {
     await addPerfectDays(challengeId, startDate, 1, 11)
 
     const day12 = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 12, date: today })
-    await dayEntryRepo.adjustWater(day12.id, 3800)
+    await dayEntryRepo.adjustWater(day12.id, 3000)
     await dayEntryRepo.adjustPages(day12.id, 10)
     await dayEntryRepo.setPlans(day12.id, { photo: '21:00' }, { photo: 2 })
 
@@ -57,8 +57,9 @@ describe('a pre-variants 75 Hard attempt', () => {
     expect(calculateStreak(allEntries, 12)).toBe(11)
 
     const { rules, days } = await loadChallengeDays(challengeId)
-    // 11 perfect days x 75, plus the Day-7 streak-milestone bonus of 100, plus Day 12's water and reading (2 x 10).
-    expect(calculateChallengeStats(days, rules)).toMatchObject({ xp: 945, perfectDays: 11 })
+    // 11 perfect days x 75, plus the Day-7 streak-milestone bonus of 100, plus Day 12's reading (10);
+    // under Medium or Soft its 3 L would also count (945).
+    expect(calculateChallengeStats(days, rules)).toMatchObject({ xp: 935, perfectDays: 11 })
 
     expect('variant' in challengeRow).toBe(false)
   })
