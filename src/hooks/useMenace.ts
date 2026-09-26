@@ -6,12 +6,12 @@ import { useSettings } from './useSettings'
 
 /** The Today duck's menace, from today's progress, today's plan, the bedtime setting and the time. */
 export function useMenace(data: DayTaskData | undefined, entry: DayEntry | undefined, nowMin: number): Menace | undefined {
-  const { bedtime } = useSettings()
+  const { bedtime, bedtimeLoaded } = useSettings()
   return useMemo(
     () =>
-      data && entry
+      data && entry && bedtimeLoaded
         ? menace({ data, nowMin, bedtimeMin: bedtimeMinutes(bedtime), plans: plansToMinutes(entry.plans), estimates: entry.planEstimates })
         : undefined,
-    [data, entry, nowMin, bedtime],
+    [data, entry, nowMin, bedtime, bedtimeLoaded],
   )
 }
