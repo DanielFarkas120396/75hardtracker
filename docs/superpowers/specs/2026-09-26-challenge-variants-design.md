@@ -218,7 +218,7 @@ Completion wins over `jokerUsed`.
 | PreStart line | …plan two workouts a day… | as Hard | …plan a workout a day… | as Medium |
 
 Other rules for the copy:
-- Litres print without a trailing ".0": `formatLiters` turns 3800 into "3.8" and 3000 into "3" — the water amount, task rule and water cheer rows above all go through it.
+- Litres print without a trailing ".0": `formatLiters` turns 3800 into "3.8" and 3000 into "3" — the water amount, water card, task rule and water cheer rows above all go through it.
 - The rest of the copy (the duck's lines, the menace lines) is unchanged.
 - `index.html`'s description names 75 Hard, Strong, Medium and Soft.
 - The README gets a variants table.
