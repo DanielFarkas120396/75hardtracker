@@ -39,7 +39,7 @@ describe('JokerUsedScreen', () => {
     expect(screen.getByText('Joker used. 0 left.')).toBeInTheDocument()
     expect(screen.getByText("That was your last joker. Next time, it's Day 1.")).toBeInTheDocument()
     expect(screen.getByText("Your streak starts over. Your challenge doesn't.")).toBeInTheDocument()
-    expect(await screen.findByText('✕ Diet followed, no alcohol')).toBeInTheDocument()
+    expect(await screen.findByText('✕ Ate healthy, no alcohol unless declared')).toBeInTheDocument()
     expect(screen.getAllByRole('listitem')).toHaveLength(5)
   })
 

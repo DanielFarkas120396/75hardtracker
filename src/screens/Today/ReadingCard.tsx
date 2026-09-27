@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Stepper } from '../../components/ui/Stepper'
+import { readingRuleLine } from '../../content/variants'
 import { bookRepo } from '../../db/repositories/bookRepo'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import { SETTING_KEYS, settingsRepo } from '../../db/repositories/settingsRepo'
@@ -33,7 +34,7 @@ export function ReadingCard({ entry, complete, cheer, rules }: ReadingCardProps)
   return (
     <Card complete={complete} cheer={cheer}>
       <h2 className="font-rounded text-lg font-extrabold text-ink">📖 Reading</h2>
-      <p className="mt-1 text-sm text-ink-muted">{rules.pagesTarget} pages of non-fiction a day.</p>
+      <p className="mt-1 text-sm text-ink-muted">{readingRuleLine(rules)}</p>
 
       <div className="mt-4">
         {books.length > 0 ? (

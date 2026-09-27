@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Mascot } from '../../components/mascot/Mascot'
+import { missedDayExplanation } from '../../content/variants'
 import { challengeRepo } from '../../db/repositories/challengeRepo'
 import type { Challenge } from '../../db/types'
+import { rulesFor } from '../../logic/rulesets'
 import { MissedTasksList } from './MissedTasksList'
 
 interface DayFailedScreenProps {
@@ -29,8 +31,7 @@ export function DayFailedScreen({ challenge, failedDayNumber, today }: DayFailed
       <Mascot mood="judging" />
       <h1 className="font-rounded text-2xl font-extrabold text-ink">Day {failedDayNumber} wasn't completed</h1>
       <p className="max-w-xs font-rounded text-ink-muted">
-        75 Hard is all-or-nothing on every task, every day. This attempt (#{challenge.attemptNumber}) ends here —
-        but every photo and stat you logged is saved for good.
+        {missedDayExplanation(rulesFor(challenge), challenge.attemptNumber)}
       </p>
 
       <MissedTasksList challenge={challenge} dayNumber={failedDayNumber} />

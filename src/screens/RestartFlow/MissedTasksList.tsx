@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { TASK_RULES } from '../../content/microcopy'
+import { taskRule } from '../../content/microcopy'
 import { toDayTaskData } from '../../db/mappers'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import { workoutRepo } from '../../db/repositories/workoutRepo'
@@ -15,13 +15,11 @@ interface MissedTasksListProps {
 
 /** What a given day was missing, as a list of rule lines — for the restart and joker-used screens. */
 export function MissedTasksList({ challenge, dayNumber }: MissedTasksListProps) {
+  const rules = rulesFor(challenge)
   const missing = useLiveQuery(async (): Promise<TaskId[]> => {
     const entry = await dayEntryRepo.getByChallengeAndDayNumber(challenge.id, dayNumber)
     if (!entry) return [...TASK_IDS]
-    return missingTasks(
-      toDayTaskData(entry, await workoutRepo.getForDayEntry(entry.id), challenge.socialDays),
-      rulesFor(challenge),
-    )
+    return missingTasks(toDayTaskData(entry, await workoutRepo.getForDayEntry(entry.id), challenge.socialDays), rules)
   }, [challenge.id, dayNumber])
 
   if (!missing || missing.length === 0) return null
@@ -30,7 +28,7 @@ export function MissedTasksList({ challenge, dayNumber }: MissedTasksListProps) 
     <ul className="mt-2 flex w-full max-w-xs flex-col gap-2 text-left">
       {missing.map((task) => (
         <li key={task} className="rounded-xl bg-danger/10 px-4 py-2 font-rounded text-sm font-bold text-danger-ink">
-          ✕ {TASK_RULES[task]}
+          ✕ {taskRule(task, rules)}
         </li>
       ))}
     </ul>

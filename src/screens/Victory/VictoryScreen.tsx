@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { useEffect, useEffectEvent, useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Mascot } from '../../components/mascot/Mascot'
+import { victoryLine, victoryTitle } from '../../content/variants'
 import { challengeRepo } from '../../db/repositories/challengeRepo'
 import type { Challenge } from '../../db/types'
 import { useChallengeStats } from '../../hooks/useChallengeStats'
@@ -10,7 +11,7 @@ import { useSound } from '../../hooks/useSound'
 import { celebrate } from '../../lib/confetti'
 import { dateForDayNumber, formatDisplayDate } from '../../lib/dates'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
-import { variantOf } from '../../logic/rulesets'
+import { rulesFor, variantOf } from '../../logic/rulesets'
 
 /** Attempts whose victory confetti already fired this session, so revisiting the tab stays calm. */
 const celebratedThisSession = new Set<number>()
@@ -24,6 +25,7 @@ interface VictoryScreenProps {
 
 /** Shown on the Today tab once all 75 days are complete. */
 export function VictoryScreen({ challenge, today, revealed }: VictoryScreenProps) {
+  const rules = rulesFor(challenge)
   const stats = useChallengeStats(challenge.id)
   const playSound = useSound()
   const vibrate = useHaptics()
@@ -64,16 +66,13 @@ export function VictoryScreen({ challenge, today, revealed }: VictoryScreenProps
 
       <div>
         <p className="font-rounded text-sm font-bold text-ink-muted">Attempt #{challenge.attemptNumber}</p>
-        <h1 className="font-rounded text-3xl font-extrabold text-ink">75 Hard complete! 🏆</h1>
+        <h1 className="font-rounded text-3xl font-extrabold text-ink">{victoryTitle(rules)}</h1>
         <p className="mt-1 font-rounded text-sm font-semibold text-ink-muted">
           {formatDisplayDate(challenge.startDate)} – {formatDisplayDate(endDate)}
         </p>
       </div>
 
-      <p className="max-w-xs font-rounded text-ink-muted">
-        {CHALLENGE_LENGTH} days. Two workouts, the diet, the water, the reading and the photo — every single day.
-        That's done now, and it's yours.
-      </p>
+      <p className="max-w-xs font-rounded text-ink-muted">{victoryLine(rules)}</p>
 
       <div className="grid w-full max-w-sm grid-cols-2 gap-3">
         <VictoryStat label="Total XP" value={`⭐ ${stats.xp}`} />

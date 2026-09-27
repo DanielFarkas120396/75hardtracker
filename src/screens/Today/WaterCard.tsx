@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
+import { formatLiters } from '../../content/variants'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import type { DayEntry } from '../../db/types'
 import type { Ruleset } from '../../logic/rulesets'
@@ -28,7 +29,7 @@ export function WaterCard({ entry, complete, cheer, rules }: WaterCardProps) {
 
   const fillPercent = Math.min(100, (entry.water_ml / rules.waterTargetMl) * 100)
   const liters = (entry.water_ml / 1000).toFixed(2)
-  const targetLiters = (rules.waterTargetMl / 1000).toFixed(1)
+  const targetLiters = formatLiters(rules.waterTargetMl)
 
   return (
     <Card complete={complete} cheer={cheer}>

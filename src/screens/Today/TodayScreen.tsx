@@ -108,23 +108,28 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak }: To
             dayEntryId={entry.id}
             workouts={workouts}
             complete={completion.completion.workouts}
-            cheer={taskCheer('workouts', todayDayNumber)}
+            cheer={taskCheer('workouts', todayDayNumber, rules)}
             rules={rules}
           />
-          <DietCard entry={entry} complete={completion.completion.diet} cheer={taskCheer('diet', todayDayNumber)} />
+          <DietCard
+            entry={entry}
+            complete={completion.completion.diet}
+            cheer={taskCheer('diet', todayDayNumber, rules)}
+            rules={rules}
+          />
           <WaterCard
             entry={entry}
             complete={completion.completion.water}
-            cheer={taskCheer('water', todayDayNumber)}
+            cheer={taskCheer('water', todayDayNumber, rules)}
             rules={rules}
           />
           <ReadingCard
             entry={entry}
             complete={completion.completion.reading}
-            cheer={taskCheer('reading', todayDayNumber)}
+            cheer={taskCheer('reading', todayDayNumber, rules)}
             rules={rules}
           />
-          <PhotoCard entry={entry} complete={completion.completion.photo} cheer={taskCheer('photo', todayDayNumber)} />
+          <PhotoCard entry={entry} complete={completion.completion.photo} cheer={taskCheer('photo', todayDayNumber, rules)} />
           <DayNotesCard entry={entry} />
         </main>
       </div>

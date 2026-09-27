@@ -1,8 +1,10 @@
 import { Mascot } from '../../components/mascot/Mascot'
+import { preStartPlanLine } from '../../content/variants'
 import type { Challenge } from '../../db/types'
 import { formatDisplayDate } from '../../lib/dates'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { daysUntilStart } from '../../logic/days'
+import { rulesFor } from '../../logic/rulesets'
 
 interface PreStartViewProps {
   challenge: Challenge
@@ -13,6 +15,7 @@ interface PreStartViewProps {
 export function PreStartView({ challenge, todayDayNumber }: PreStartViewProps) {
   const brokenStartDate = !Number.isFinite(todayDayNumber)
   const days = daysUntilStart(todayDayNumber)
+  const rules = rulesFor(challenge)
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-canvas px-6 pb-24 text-center">
@@ -32,7 +35,7 @@ export function PreStartView({ challenge, todayDayNumber }: PreStartViewProps) {
           </h1>
           <p className="max-w-xs font-rounded text-ink-muted">
             Your {CHALLENGE_LENGTH} days begin on {formatDisplayDate(challenge.startDate)}. Use the time to pick
-            your book, plan two workouts a day and stock up on water.
+            your book, {preStartPlanLine(rules)} and stock up on water.
           </p>
           <p className="max-w-xs font-rounded text-sm text-ink-muted">
             You can still move the start date in Settings.

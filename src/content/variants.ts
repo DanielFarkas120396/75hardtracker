@@ -1,0 +1,70 @@
+import { CHALLENGE_LENGTH } from '../logic/constants'
+import type { ChallengeVariant, Ruleset } from '../logic/rulesets'
+
+/** Each challenge's display name. */
+export const VARIANT_NAMES: Record<ChallengeVariant, string> = {
+  hard: '75 Hard',
+  strong: '75 Strong',
+  medium: '75 Medium',
+  soft: '75 Soft',
+}
+
+/** One line per challenge for the variant picker. */
+export const VARIANT_SUMMARIES: Record<ChallengeVariant, string> = {
+  hard: 'Two 45-min workouts (one outdoors), strict diet, no alcohol, 3.8 L of water, 10 pages of non-fiction, a photo. Miss a day: back to Day 1.',
+  strong: 'Everything in 75 Hard, plus one social occasion a week, declared the day before.',
+  medium: 'One 45-min workout, eat healthy, 3 L of water, 10 pages of any book, a photo. One social occasion a week. One joker.',
+  soft: 'Like 75 Medium, plus a recovery day a week. Three jokers.',
+}
+
+/** Litres for display, without a trailing ".0": 3800 → "3.8", 3000 → "3". */
+export function formatLiters(ml: number): string {
+  return String(Number((ml / 1000).toFixed(1)))
+}
+
+export function workoutRuleLine(rules: Ruleset): string {
+  const sessions = rules.requiredWorkouts === 1 ? '1 session' : `${rules.requiredWorkouts} sessions`
+  const outdoors = rules.requireOutdoor ? ', one of them outdoors.' : '.'
+  const recovery = rules.restDaysPerWeek > 0 ? ' One recovery day a week.' : ''
+  return `${sessions} of at least ${rules.minWorkoutMin} minutes${outdoors}${recovery}`
+}
+
+export function dietRuleLine(rules: Ruleset): string {
+  if (rules.dietKind === 'healthy') return 'Eat healthy. No alcohol, except a declared social occasion.'
+  return rules.socialDaysPerWeek > 0
+    ? 'No cheat meals. No alcohol, except a declared social occasion.'
+    : 'No cheat meals, no alcohol.'
+}
+
+export function dietToggleLabel(rules: Ruleset): string {
+  return rules.dietKind === 'healthy' ? 'I ate healthy' : 'I followed my diet'
+}
+
+export function readingRuleLine(rules: Ruleset): string {
+  return `${rules.pagesTarget} pages of ${rules.readingKind === 'non-fiction' ? 'non-fiction' : 'any book'} a day.`
+}
+
+const MISS_ORDINALS = ['first', 'second', 'third', 'fourth', 'fifth'] as const
+const JOKER_WORDS = ['no', 'one', 'two', 'three', 'four'] as const
+
+export function missedDayExplanation(rules: Ruleset, attemptNumber: number): string {
+  const name = VARIANT_NAMES[rules.variant]
+  const saved = `this attempt (#${attemptNumber}) ends here — but every photo and stat you logged is saved for good.`
+  if (rules.jokers === 0) return `${name} is all-or-nothing on every task, every day. ${saved[0].toUpperCase()}${saved.slice(1)}`
+  const forgives = `${JOKER_WORDS[rules.jokers]} missed ${rules.jokers === 1 ? 'day' : 'days'}`
+  return `${name} forgives ${forgives}. This was your ${MISS_ORDINALS[rules.jokers]}, so ${saved}`
+}
+
+export function victoryTitle(rules: Ruleset): string {
+  return `${VARIANT_NAMES[rules.variant]} complete! 🏆`
+}
+
+export function victoryLine(rules: Ruleset): string {
+  return rules.requiredWorkouts === 2
+    ? `${CHALLENGE_LENGTH} days. Two workouts, the diet, the water, the reading and the photo — every single day. That's done now, and it's yours.`
+    : `${CHALLENGE_LENGTH} days. The workout, the diet, the water, the reading and the photo. That's done now, and it's yours.`
+}
+
+export function preStartPlanLine(rules: Ruleset): string {
+  return rules.requiredWorkouts === 2 ? 'plan two workouts a day' : 'plan a workout a day'
+}

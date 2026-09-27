@@ -1,6 +1,7 @@
+import { formatLiters } from './variants'
 import { TASK_IDS } from '../logic/dayCompletion'
 import { formatHHmm, type Menace } from '../logic/menace'
-import { RULESETS } from '../logic/rulesets'
+import type { Ruleset } from '../logic/rulesets'
 import type { TaskId } from '../logic/types'
 
 /** Short task names for lists, e.g. "missed Water, Photo". */
@@ -13,12 +14,25 @@ export const TASK_NAMES: Record<TaskId, string> = {
 }
 
 /** Each task's rule in a few words, e.g. for listing what a failed day missed. */
-export const TASK_RULES: Record<TaskId, string> = {
-  workouts: `${RULESETS.hard.requiredWorkouts} workouts of ${RULESETS.hard.minWorkoutMin}+ min, one outdoors`,
-  diet: 'Diet followed, no alcohol',
-  water: `${RULESETS.hard.waterTargetMl / 1000} L of water`,
-  reading: `${RULESETS.hard.pagesTarget} pages read`,
-  photo: 'Progress photo',
+export function taskRule(task: TaskId, rules: Ruleset): string {
+  switch (task) {
+    case 'workouts': {
+      const base = rules.requiredWorkouts === 1
+        ? `1 workout of ${rules.minWorkoutMin}+ min`
+        : `${rules.requiredWorkouts} workouts of ${rules.minWorkoutMin}+ min`
+      return `${base}${rules.requireOutdoor ? ', one outdoors' : ''}${rules.restDaysPerWeek > 0 ? ' (or a recovery day)' : ''}`
+    }
+    case 'diet':
+      return rules.dietKind === 'healthy'
+        ? 'Ate healthy, no alcohol unless declared'
+        : rules.socialDaysPerWeek > 0 ? 'Diet followed, no alcohol unless declared' : 'Diet followed, no alcohol'
+    case 'water':
+      return `${formatLiters(rules.waterTargetMl)} L of water`
+    case 'reading':
+      return `${rules.pagesTarget} pages read`
+    case 'photo':
+      return 'Progress photo'
+  }
 }
 
 /**
@@ -26,17 +40,28 @@ export const TASK_RULES: Record<TaskId, string> = {
  * few, rotated by day number so the same line doesn't show up every day.
  * Keep them short: they sit in a one-line pill on the card's top edge.
  */
-const TASK_CHEERS: Record<TaskId, readonly string[]> = {
-  workouts: ['Both workouts done! 💪', 'Two sessions in the bank', 'Sweat logged. Beast mode.'],
-  diet: ['Clean eating, locked in 🥗', 'Diet on point today', 'No cheats, no drinks. Solid.'],
-  water: ['Fully hydrated! 💧', `All ${RULESETS.hard.waterTargetMl / 1000} L down`, 'Water goal crushed'],
-  reading: [`${RULESETS.hard.pagesTarget} pages smarter 📖`, 'Brain fed for today', 'Reading done. Nice.'],
-  photo: ['Progress captured! 📸', 'Future you will love this', 'Snap! Day documented.'],
+function taskCheers(task: TaskId, rules: Ruleset): readonly string[] {
+  switch (task) {
+    case 'workouts':
+      return rules.requiredWorkouts === 2
+        ? ['Both workouts done! 💪', 'Two sessions in the bank', 'Sweat logged. Beast mode.']
+        : ['Workout done! 💪', 'Session in the bank', 'Sweat logged. Beast mode.']
+    case 'diet':
+      return rules.dietKind === 'strict'
+        ? ['Clean eating, locked in 🥗', 'Diet on point today', 'No cheats, no drinks. Solid.']
+        : ['Clean eating, locked in 🥗', 'Diet on point today', 'Ate well. Solid.']
+    case 'water':
+      return ['Fully hydrated! 💧', `All ${formatLiters(rules.waterTargetMl)} L down`, 'Water goal crushed']
+    case 'reading':
+      return [`${rules.pagesTarget} pages smarter 📖`, 'Brain fed for today', 'Reading done. Nice.']
+    case 'photo':
+      return ['Progress captured! 📸', 'Future you will love this', 'Snap! Day documented.']
+  }
 }
 
-/** The cheer for a task on a given challenge day (1–75). */
-export function taskCheer(task: TaskId, dayNumber: number): string {
-  const cheers = TASK_CHEERS[task]
+/** The cheer for a task on a given challenge day (1–75), worded for the attempt's rules. */
+export function taskCheer(task: TaskId, dayNumber: number, rules: Ruleset): string {
+  const cheers = taskCheers(task, rules)
   return cheers[(dayNumber - 1) % cheers.length]
 }
 
