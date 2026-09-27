@@ -71,7 +71,13 @@ function App() {
         <Suspense fallback={<LoadingScreen />}>
           {screen === 'today' &&
             (gate.kind === 'completed' ? (
-              <VictoryScreen challenge={gate.challenge} today={today} revealed={celebration === null} />
+              <VictoryScreen
+                challenge={gate.challenge}
+                today={today}
+                revealed={celebration === null}
+                streak={gate.streak}
+                missedDays={gate.missedDays}
+              />
             ) : (
               <TodayScreen
                 challenge={gate.challenge}
