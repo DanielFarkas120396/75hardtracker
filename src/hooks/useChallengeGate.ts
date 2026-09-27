@@ -5,6 +5,7 @@ import { dayEntryRepo } from '../db/repositories/dayEntryRepo'
 import type { Challenge, DayEntry } from '../db/types'
 import { dayNumberForDate } from '../lib/dates'
 import { resolveChallengeGate } from '../logic/restart'
+import { rulesFor } from '../logic/rulesets'
 import { calculateStreak } from '../logic/streak'
 
 interface GateBase {
@@ -68,7 +69,12 @@ function resolveGate(challenge: Challenge, dayEntries: DayEntry[], today: string
     streak: calculateStreak(summaries, todayDayNumber),
   }
 
-  const resolution = resolveChallengeGate({ currentStatus: challenge.status, dayEntries: summaries, todayDayNumber })
+  const resolution = resolveChallengeGate({
+    currentStatus: challenge.status,
+    dayEntries: summaries,
+    todayDayNumber,
+    jokers: rulesFor(challenge).jokers,
+  })
   if (resolution.kind === 'needsRestart') {
     return { ...base, kind: 'needsRestart', failedDayNumber: resolution.failedDayNumber ?? 1 }
   }

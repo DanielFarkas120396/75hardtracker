@@ -1,6 +1,7 @@
 import { dayNumberForDate, isValidISODate } from '../lib/dates'
 import { isDayComplete } from '../logic/dayCompletion'
 import { isChallengeDay } from '../logic/days'
+import { RULESETS, rulesFor, type Ruleset } from '../logic/rulesets'
 import { toDayTaskData } from './mappers'
 import type { Badge, Challenge, DayEntry, Workout } from './types'
 
@@ -50,6 +51,7 @@ export function normalizeRecords(
 
   const challenges = normalizeChallenges(records.challenges, records.dayEntries, today, report)
   const startDateById = new Map(challenges.map((c) => [c.id, c.startDate]))
+  const rulesByChallenge = new Map(challenges.map((c) => [c.id, rulesFor(c)]))
 
   const dayEntries = records.dayEntries.map((entry) => {
     if (isChallengeDay(entry.dayNumber)) return entry
@@ -60,7 +62,7 @@ export function normalizeRecords(
     return { ...entry, dayNumber }
   })
 
-  const merged = mergeDuplicateDayEntries(dayEntries, records.workouts, report)
+  const merged = mergeDuplicateDayEntries(dayEntries, records.workouts, rulesByChallenge, report)
   const badges = dedupeBadges(records.badges, report)
 
   return { challenges, dayEntries: merged.dayEntries, workouts: merged.workouts, badges, report }
@@ -113,6 +115,7 @@ function normalizeChallenges(
 function mergeDuplicateDayEntries(
   dayEntries: DayEntry[],
   workouts: Workout[],
+  rulesByChallenge: Map<number, Ruleset>,
   report: NormalizationReport,
 ): { dayEntries: DayEntry[]; workouts: Workout[] } {
   const groups = new Map<string, DayEntry[]>()
@@ -162,7 +165,8 @@ function mergeDuplicateDayEntries(
       const merged = mergedEntries.get(entry.id)
       if (!merged) return entry
       const entryWorkouts = nextWorkouts.filter((w) => w.dayEntryId === entry.id)
-      return { ...merged, completed: isDayComplete(toDayTaskData(merged, entryWorkouts)) }
+      const rules = rulesByChallenge.get(entry.challengeId) ?? RULESETS.hard
+      return { ...merged, completed: isDayComplete(toDayTaskData(merged, entryWorkouts), rules) }
     })
 
   return { dayEntries: nextEntries, workouts: nextWorkouts }

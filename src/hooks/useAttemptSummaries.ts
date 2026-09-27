@@ -6,6 +6,7 @@ import { workoutRepo } from '../db/repositories/workoutRepo'
 import type { Challenge } from '../db/types'
 import { dayNumberForDate } from '../lib/dates'
 import { summarizeAttempt, type AttemptSummary } from '../logic/attempts'
+import { rulesFor } from '../logic/rulesets'
 import type { ChallengeDayData } from '../logic/types'
 
 export interface AttemptRecord {
@@ -40,6 +41,7 @@ export function useAttemptSummaries(today: string): AttemptRecord[] | undefined 
         status: challenge.status,
         days,
         todayDayNumber: dayNumberForDate(challenge.startDate, today),
+        rules: rulesFor(challenge),
       })
       return { challenge, summary, days }
     })

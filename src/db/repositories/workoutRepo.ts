@@ -1,10 +1,10 @@
-import { syncDayCompletion } from '../completion'
+import { COMPLETION_TABLES, syncDayCompletion } from '../completion'
 import { db } from '../db'
 import type { Workout } from '../types'
 
 /** Runs a change to a DayEntry's workouts and re-syncs the entry's `completed` flag, atomically. */
 function changeAndSync<T>(dayEntryId: number, change: () => Promise<T>): Promise<T> {
-  return db.transaction('rw', db.dayEntries, db.workouts, async () => {
+  return db.transaction('rw', COMPLETION_TABLES, async () => {
     const result = await change()
     await syncDayCompletion(dayEntryId)
     return result
@@ -13,7 +13,7 @@ function changeAndSync<T>(dayEntryId: number, change: () => Promise<T>): Promise
 
 /** Like changeAndSync, for a change addressed by workout id. */
 function changeWorkoutAndSync(id: number, change: () => Promise<unknown>): Promise<void> {
-  return db.transaction('rw', db.dayEntries, db.workouts, async () => {
+  return db.transaction('rw', COMPLETION_TABLES, async () => {
     const workout = await db.workouts.get(id)
     if (!workout) return
     await change()

@@ -7,7 +7,8 @@ export function useChallengeStats(challengeId: number | undefined): ChallengeSta
   return (
     useLiveQuery(async () => {
       if (challengeId === undefined) return EMPTY_CHALLENGE_STATS
-      return calculateChallengeStats(await loadChallengeDays(challengeId))
+      const { rules, days } = await loadChallengeDays(challengeId)
+      return calculateChallengeStats(days, rules)
     }, [challengeId]) ?? EMPTY_CHALLENGE_STATS
   )
 }

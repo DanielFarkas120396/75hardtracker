@@ -2,14 +2,14 @@ import { hasAnyProgress, TASK_IDS } from '../../logic/dayCompletion'
 import { isChallengeDay } from '../../logic/days'
 import { parseHHmm } from '../../logic/menace'
 import type { TaskId } from '../../logic/types'
-import { syncDayCompletion } from '../completion'
+import { COMPLETION_TABLES, syncDayCompletion } from '../completion'
 import { db } from '../db'
 import { groupWorkoutsByEntry, toDayTaskData } from '../mappers'
 import type { DayEntry } from '../types'
 
 /** Runs a change to one DayEntry and re-syncs its `completed` flag, atomically. */
 function changeAndSync(entryId: number, change: () => Promise<unknown>): Promise<void> {
-  return db.transaction('rw', db.dayEntries, db.workouts, async () => {
+  return db.transaction('rw', COMPLETION_TABLES, async () => {
     await change()
     await syncDayCompletion(entryId)
   })

@@ -1,4 +1,4 @@
-import { syncDayCompletion } from '../completion'
+import { COMPLETION_TABLES, syncDayCompletion } from '../completion'
 import { db } from '../db'
 import type { Photo } from '../types'
 
@@ -21,7 +21,7 @@ export const photoRepo = {
    * and the day's completion is re-synced.
    */
   async replaceForEntry(entryId: number, blob: Blob): Promise<number> {
-    return db.transaction('rw', [db.photos, db.dayEntries, db.workouts], async () => {
+    return db.transaction('rw', [db.photos, ...COMPLETION_TABLES], async () => {
       const entry = await db.dayEntries.get(entryId)
       if (!entry) throw new Error(`Day entry ${entryId} not found`)
 

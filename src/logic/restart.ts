@@ -2,79 +2,80 @@ import { CHALLENGE_LENGTH } from './constants'
 import type { ChallengeStatus, DayCompletionSummary } from './types'
 
 /**
- * The earliest day strictly before `todayDayNumber` that has no entry at
- * all, or an entry that isn't complete. `undefined` if every prior day is
- * complete.
+ * Days before today, never past Day 75, that have no entry at all or an
+ * entry that isn't complete. Gaps (the app wasn't opened that day) count
+ * just like an explicitly incomplete day.
  */
-export function findFirstIncompleteDayNumber(
-  dayEntries: DayCompletionSummary[],
-  todayDayNumber: number,
-): number | undefined {
-  const entryByDayNumber = new Map(dayEntries.map((e) => [e.dayNumber, e]))
-
-  for (let day = 1; day < todayDayNumber; day++) {
-    const entry = entryByDayNumber.get(day)
-    if (!entry || !entry.completed) {
-      return day
-    }
+export function missedDayNumbers(dayEntries: DayCompletionSummary[], todayDayNumber: number): number[] {
+  const completedDays = new Set(dayEntries.filter((e) => e.completed).map((e) => e.dayNumber))
+  const lastDay = Math.min(todayDayNumber - 1, CHALLENGE_LENGTH)
+  const missed: number[] = []
+  for (let day = 1; day <= lastDay; day++) {
+    if (!completedDays.has(day)) missed.push(day)
   }
-  return undefined
+  return missed
+}
+
+export interface ChallengeEvaluation {
+  status: ChallengeStatus
+  /** Every missed day so far (each one used a joker while the attempt is active). */
+  missed: number[]
+  /** The miss that failed the attempt, when `status` is 'failed' because of this evaluation. */
+  failedDayNumber?: number
 }
 
 /**
- * Determines whether an active challenge should transition to `failed` or
- * `completed`, based on every day strictly before `todayDayNumber`. A day
- * counts as missed if it has no entry at all, or an entry that isn't
- * complete — so gaps (the app wasn't opened that day) fail the challenge
- * just like an explicitly incomplete day.
+ * Whether an active challenge should turn `failed` or `completed`. A miss
+ * uses a joker; the first miss beyond them fails the attempt. It completes
+ * once Day 75 is complete, or once Day 75 has passed with every miss
+ * forgiven.
  */
-export function evaluateChallengeStatus(params: {
+export function evaluateChallenge(params: {
   currentStatus: ChallengeStatus
   dayEntries: DayCompletionSummary[]
   todayDayNumber: number
-}): ChallengeStatus {
-  if (params.currentStatus !== 'active') return params.currentStatus
+  jokers: number
+}): ChallengeEvaluation {
+  const missed = missedDayNumbers(params.dayEntries, params.todayDayNumber)
+  if (params.currentStatus !== 'active') return { status: params.currentStatus, missed }
+  if (missed.length > params.jokers) return { status: 'failed', missed, failedDayNumber: missed[params.jokers] }
 
-  if (findFirstIncompleteDayNumber(params.dayEntries, params.todayDayNumber) !== undefined) {
-    return 'failed'
-  }
-
-  const entryByDayNumber = new Map(params.dayEntries.map((e) => [e.dayNumber, e]))
-  const finalDay = entryByDayNumber.get(CHALLENGE_LENGTH)
-  if (finalDay?.completed && params.todayDayNumber >= CHALLENGE_LENGTH) {
-    return 'completed'
-  }
-
-  return 'active'
+  const finalDay = params.dayEntries.find((e) => e.dayNumber === CHALLENGE_LENGTH)
+  const pastTheEnd = params.todayDayNumber > CHALLENGE_LENGTH
+  const lastDayDone = params.todayDayNumber === CHALLENGE_LENGTH && finalDay?.completed === true
+  if (pastTheEnd || lastDayDone) return { status: 'completed', missed }
+  return { status: 'active', missed }
 }
 
 export type GateKind = 'active' | 'needsRestart' | 'completed'
 
 export interface GateResolution {
   kind: GateKind
-  /** The first missed day, when `kind` is 'needsRestart'. */
+  /** The missed day that failed the attempt (the first miss beyond the jokers), when `kind` is 'needsRestart'. */
   failedDayNumber?: number
 }
 
 /**
  * What the app should show for the current challenge: the normal screens
  * ('active', which includes the days before Day 1), the restart flow
- * ('needsRestart' — a day was missed or the attempt is already archived as
- * failed), or the victory screen ('completed').
+ * ('needsRestart' — a day was missed beyond the ruleset's jokers, or the
+ * attempt is already archived as failed), or the victory screen
+ * ('completed').
  */
 export function resolveChallengeGate(params: {
   currentStatus: ChallengeStatus
   dayEntries: DayCompletionSummary[]
   todayDayNumber: number
+  jokers: number
 }): GateResolution {
-  const status = evaluateChallengeStatus(params)
-  if (status === 'completed') return { kind: 'completed' }
-  if (status === 'active') return { kind: 'active' }
+  const evaluation = evaluateChallenge(params)
+  if (evaluation.status === 'completed') return { kind: 'completed' }
+  if (evaluation.status === 'active') return { kind: 'active' }
 
   const today = Number.isFinite(params.todayDayNumber) ? params.todayDayNumber : CHALLENGE_LENGTH + 1
+  const missed = missedDayNumbers(params.dayEntries, today)
   const failedDayNumber =
-    findFirstIncompleteDayNumber(params.dayEntries, Math.min(today, CHALLENGE_LENGTH + 1)) ??
-    Math.min(Math.max(today, 1), CHALLENGE_LENGTH)
+    evaluation.failedDayNumber ?? missed[params.jokers] ?? missed[0] ?? Math.min(Math.max(today, 1), CHALLENGE_LENGTH)
   return { kind: 'needsRestart', failedDayNumber }
 }
 

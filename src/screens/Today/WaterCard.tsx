@@ -3,15 +3,16 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import type { DayEntry } from '../../db/types'
-import { WATER_TARGET_ML } from '../../logic/constants'
+import type { Ruleset } from '../../logic/rulesets'
 
 interface WaterCardProps {
   entry: DayEntry
   complete: boolean
   cheer: string
+  rules: Ruleset
 }
 
-export function WaterCard({ entry, complete, cheer }: WaterCardProps) {
+export function WaterCard({ entry, complete, cheer, rules }: WaterCardProps) {
   const [lastDelta, setLastDelta] = useState<number | null>(null)
 
   const addWater = (deltaMl: number) => {
@@ -25,9 +26,9 @@ export function WaterCard({ entry, complete, cheer }: WaterCardProps) {
     setLastDelta(null)
   }
 
-  const fillPercent = Math.min(100, (entry.water_ml / WATER_TARGET_ML) * 100)
+  const fillPercent = Math.min(100, (entry.water_ml / rules.waterTargetMl) * 100)
   const liters = (entry.water_ml / 1000).toFixed(2)
-  const targetLiters = (WATER_TARGET_ML / 1000).toFixed(1)
+  const targetLiters = (rules.waterTargetMl / 1000).toFixed(1)
 
   return (
     <Card complete={complete} cheer={cheer}>

@@ -117,7 +117,12 @@ describe('the completion flow', () => {
     expect(await isCompleted()).toBe(true)
 
     const entries = await dayEntryRepo.getAllForChallenge(challengeId)
-    const gate = resolveChallengeGate({ currentStatus: 'active', dayEntries: entries, todayDayNumber: CHALLENGE_LENGTH })
+    const gate = resolveChallengeGate({
+      currentStatus: 'active',
+      dayEntries: entries,
+      todayDayNumber: CHALLENGE_LENGTH,
+      jokers: 0,
+    })
     expect(gate.kind).toBe('completed')
 
     await challengeRepo.markCompleted(challengeId)
@@ -129,6 +134,38 @@ describe('the completion flow', () => {
     const nextId = await challengeRepo.startNew(today)
     expect(await db.challenges.get(nextId)).toMatchObject({ attemptNumber: 2, status: 'active', startDate: today })
     expect(await db.challenges.where('status').equals('active').count()).toBe(1)
+  })
+})
+
+describe("completion follows the attempt's rules", () => {
+  it('completes a day under Medium rules that would not complete under Hard, and un-completes on remove', async () => {
+    const challengeId = await addChallenge({ startDate: today, attemptNumber: 1, status: 'active', variant: 'medium' })
+    const entry = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 1, date: today })
+
+    await dayEntryRepo.update(entry.id, { dietFollowed: true, noAlcohol: true })
+    await dayEntryRepo.adjustWater(entry.id, 3000)
+    await dayEntryRepo.adjustPages(entry.id, 10)
+    const workoutId = await workoutRepo.add({ dayEntryId: entry.id, type: 'Weights', durationMin: 45, isOutdoor: false })
+    await photoRepo.replaceForEntry(entry.id, photoBlob())
+
+    // Under Hard rules this would stay false: one indoor workout, 3 L of water.
+    expect((await db.dayEntries.get(entry.id))!.completed).toBe(true)
+
+    await workoutRepo.remove(workoutId)
+    expect((await db.dayEntries.get(entry.id))!.completed).toBe(false)
+  })
+
+  it('treats an attempt with no variant as Hard', async () => {
+    const challengeId = await addChallenge({ startDate: today, attemptNumber: 1, status: 'active' })
+    const entry = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 1, date: today })
+
+    await dayEntryRepo.update(entry.id, { dietFollowed: true, noAlcohol: true })
+    await dayEntryRepo.adjustWater(entry.id, 3000)
+    await dayEntryRepo.adjustPages(entry.id, 10)
+    await workoutRepo.add({ dayEntryId: entry.id, type: 'Weights', durationMin: 45, isOutdoor: false })
+    await photoRepo.replaceForEntry(entry.id, photoBlob())
+
+    expect((await db.dayEntries.get(entry.id))!.completed).toBe(false)
   })
 })
 

@@ -7,6 +7,7 @@ import { useAttemptSummaries, type AttemptRecord } from '../../hooks/useAttemptS
 import { useGalleryPhotos } from '../../hooks/useGalleryPhotos'
 import { dateForDayNumber, formatDisplayDate } from '../../lib/dates'
 import { attemptDayRows, type AttemptDayRow, type AttemptSummary } from '../../logic/attempts'
+import { rulesFor } from '../../logic/rulesets'
 import { PhotoLightbox } from '../Gallery/PhotoLightbox'
 import { PhotoThumbnail } from '../Gallery/PhotoThumbnail'
 
@@ -96,7 +97,7 @@ function AttemptDetail({ attempt, open, onClose }: { attempt: AttemptRecord; ope
   const { challenge, summary, days } = attempt
   const photos = useGalleryPhotos(challenge.id)
   const [photoIndex, setPhotoIndex] = useState<number | null>(null)
-  const rows = attemptDayRows(days, summary.reachedDay)
+  const rows = attemptDayRows(days, summary.reachedDay, rulesFor(challenge))
 
   return (
     <>

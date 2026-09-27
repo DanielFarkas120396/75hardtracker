@@ -12,6 +12,7 @@ import { useWorkoutsForEntry } from '../../hooks/useWorkoutsForEntry'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { TASK_IDS } from '../../logic/dayCompletion'
 import { isChallengeDay } from '../../logic/days'
+import { rulesFor } from '../../logic/rulesets'
 import { DayNotesCard } from './DayNotesCard'
 import { DietCard } from './DietCard'
 import { DuckHeader, type DuckAnnouncement } from './DuckHeader'
@@ -40,11 +41,12 @@ export function TodayScreen(props: TodayScreenProps) {
 }
 
 function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak }: TodayScreenProps) {
+  const rules = rulesFor(challenge)
   const entry = useTodayEntry({ challengeId: challenge.id, dayNumber: todayDayNumber, today, dayEntries })
   const workouts = useWorkoutsForEntry(entry?.id)
-  const completion = useDayCompletion(entry, workouts)
+  const completion = useDayCompletion(entry, workouts, rules)
   const nowMin = useNow()
-  const menace = useMenace(completion?.data, entry, nowMin)
+  const menace = useMenace(completion?.data, entry, nowMin, rules)
   const { xp } = useChallengeStats(challenge.id)
   const [lunges, setLunges] = useState(0)
   const [planOpen, setPlanOpen] = useState(false)
@@ -107,13 +109,20 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak }: To
             workouts={workouts}
             complete={completion.completion.workouts}
             cheer={taskCheer('workouts', todayDayNumber)}
+            rules={rules}
           />
           <DietCard entry={entry} complete={completion.completion.diet} cheer={taskCheer('diet', todayDayNumber)} />
-          <WaterCard entry={entry} complete={completion.completion.water} cheer={taskCheer('water', todayDayNumber)} />
+          <WaterCard
+            entry={entry}
+            complete={completion.completion.water}
+            cheer={taskCheer('water', todayDayNumber)}
+            rules={rules}
+          />
           <ReadingCard
             entry={entry}
             complete={completion.completion.reading}
             cheer={taskCheer('reading', todayDayNumber)}
+            rules={rules}
           />
           <PhotoCard entry={entry} complete={completion.completion.photo} cheer={taskCheer('photo', todayDayNumber)} />
           <DayNotesCard entry={entry} />
@@ -126,6 +135,7 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak }: To
         data={completion.data}
         missing={completion.missing}
         nowMin={nowMin}
+        rules={rules}
         onClose={() => setPlanOpen(false)}
         onSaved={(earliest) => {
           setPlanOpen(false)

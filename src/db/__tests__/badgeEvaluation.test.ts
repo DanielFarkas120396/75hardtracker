@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { addDaysISO, todayISO } from '../../lib/dates'
 import { loadBadgeEvaluation } from '../badgeEvaluation'
 import { db } from '../db'
+import { dayEntryRepo } from '../repositories/dayEntryRepo'
 import type { Book, Challenge } from '../types'
 import { addChallenge, freshDatabase } from './fixtures'
 
@@ -44,5 +45,22 @@ describe('Bookworm across attempts', () => {
 
     const { context } = await loadBadgeEvaluation(attempt, 1)
     expect(context.booksFinished).toBe(1)
+  })
+})
+
+describe('a variant changed after the caller loaded the challenge', () => {
+  it('judges badges by the rules stored now, not the rules on the stale challenge object', async () => {
+    const challengeId = await addChallenge({ startDate: today, attemptNumber: 1, status: 'active' })
+    const staleChallenge = (await db.challenges.get(challengeId))! // captured before the variant change below: no `variant`, so Hard
+
+    const day1 = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 1, date: today })
+    await dayEntryRepo.adjustWater(day1.id, 3000)
+
+    await db.challenges.update(challengeId, { variant: 'medium' })
+
+    // Medium's target is 3 L, so today's 3000 ml should count — even though the object
+    // passed in is the pre-update one, which still looks like a variant-less Hard attempt.
+    const { context } = await loadBadgeEvaluation(staleChallenge, 1)
+    expect(context.waterGoalDays).toBe(1)
   })
 })

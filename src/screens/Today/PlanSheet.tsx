@@ -6,6 +6,7 @@ import { TASK_NAMES } from '../../content/microcopy'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import type { DayEntry } from '../../db/types'
 import { minutesToFinish, parseHHmm, planError, type PlanError } from '../../logic/menace'
+import type { Ruleset } from '../../logic/rulesets'
 import type { DayTaskData, TaskId } from '../../logic/types'
 
 const ERROR_TEXT: Record<PlanError, string> = {
@@ -19,6 +20,7 @@ interface PlanSheetProps {
   data: DayTaskData
   missing: readonly TaskId[]
   nowMin: number
+  rules: Ruleset
   onClose: () => void
   /** Called after saving, with the earliest saved time still ahead of `nowMin` (null when there is none). */
   onSaved: (earliest: number | null) => void
@@ -34,7 +36,7 @@ export function PlanSheet(props: PlanSheetProps) {
 }
 
 /** Mounted each time the sheet opens, so the draft starts from the saved plan. */
-function PlanForm({ entry, data, missing, nowMin, onClose, onSaved }: PlanSheetProps) {
+function PlanForm({ entry, data, missing, nowMin, rules, onClose, onSaved }: PlanSheetProps) {
   const saved = entry.plans ?? {}
   const [draft, setDraft] = useState<Partial<Record<TaskId, string>>>(() => ({ ...saved }))
   const [saving, setSaving] = useState(false)
@@ -45,7 +47,7 @@ function PlanForm({ entry, data, missing, nowMin, onClose, onSaved }: PlanSheetP
   const errorFor = (task: TaskId): PlanError | null => {
     const value = draft[task]
     if (!value || value === saved[task]) return null
-    return planError(task, value, data, nowMin)
+    return planError(task, value, data, nowMin, rules)
   }
   const hasErrors = missing.some((task) => errorFor(task) !== null)
 
@@ -61,7 +63,7 @@ function PlanForm({ entry, data, missing, nowMin, onClose, onSaved }: PlanSheetP
         if (value && parseHHmm(value) !== null) {
           plans[task] = value
           const storedEstimate = entry.planEstimates?.[task]
-          estimates[task] = value === saved[task] && typeof storedEstimate === 'number' ? storedEstimate : minutesToFinish(task, data)
+          estimates[task] = value === saved[task] && typeof storedEstimate === 'number' ? storedEstimate : minutesToFinish(task, data, rules)
         }
       }
       await dayEntryRepo.setPlans(entry.id, plans, estimates)

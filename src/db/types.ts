@@ -1,3 +1,4 @@
+import type { ChallengeVariant } from '../logic/rulesets'
 import type { TaskId } from '../logic/types'
 
 export type ChallengeStatus = 'active' | 'failed' | 'completed'
@@ -7,6 +8,8 @@ export interface Challenge {
   startDate: string // ISO date (yyyy-MM-dd), local
   attemptNumber: number
   status: ChallengeStatus
+  /** Which challenge this attempt is. Missing means 75 Hard (attempts made before variants existed). */
+  variant?: ChallengeVariant
 }
 
 export interface DayEntry {

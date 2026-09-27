@@ -1,7 +1,7 @@
 import { db } from '../db'
 import type { Challenge, DayEntry, Photo, Workout } from '../types'
 import { addDaysISO } from '../../lib/dates'
-import { MIN_WORKOUT_MIN, PAGES_TARGET, WATER_TARGET_ML } from '../../logic/constants'
+import { RULESETS } from '../../logic/rulesets'
 
 /** Wipes the test database and reopens it on the latest schema. */
 export async function freshDatabase(): Promise<void> {
@@ -34,16 +34,16 @@ export async function addPerfectDay(challengeId: number, startDate: string, dayN
     challengeId,
     date,
     dayNumber,
-    water_ml: WATER_TARGET_ML,
-    pages_read: PAGES_TARGET,
+    water_ml: RULESETS.hard.waterTargetMl,
+    pages_read: RULESETS.hard.pagesTarget,
     dietFollowed: true,
     noAlcohol: true,
     photoId,
     completed: true,
   } as DayEntry)
   await db.workouts.bulkAdd([
-    { dayEntryId: entryId, type: 'Running', durationMin: MIN_WORKOUT_MIN, isOutdoor: true },
-    { dayEntryId: entryId, type: 'Weights', durationMin: MIN_WORKOUT_MIN, isOutdoor: false },
+    { dayEntryId: entryId, type: 'Running', durationMin: RULESETS.hard.minWorkoutMin, isOutdoor: true },
+    { dayEntryId: entryId, type: 'Weights', durationMin: RULESETS.hard.minWorkoutMin, isOutdoor: false },
   ] as Workout[])
   return entryId
 }

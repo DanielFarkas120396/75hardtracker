@@ -5,20 +5,20 @@ import { db } from '../../../db/db'
 import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
 import { dayEntryRepo } from '../../../db/repositories/dayEntryRepo'
 import { todayISO } from '../../../lib/dates'
-import { MIN_WORKOUT_MIN, WATER_TARGET_ML } from '../../../logic/constants'
-import type { DayTaskData } from '../../../logic/types'
+import { RULESETS, type Ruleset } from '../../../logic/rulesets'
+import type { DayTaskData, TaskId } from '../../../logic/types'
 import { PlanSheet } from '../PlanSheet'
 
 /** Everything done but the reading and the photo. */
 const DATA: DayTaskData = {
-  water_ml: WATER_TARGET_ML,
+  water_ml: RULESETS.hard.waterTargetMl,
   pages_read: 0,
   dietFollowed: true,
   noAlcohol: true,
   hasPhoto: false,
   workouts: [
-    { durationMin: MIN_WORKOUT_MIN, isOutdoor: true },
-    { durationMin: MIN_WORKOUT_MIN, isOutdoor: false },
+    { durationMin: RULESETS.hard.minWorkoutMin, isOutdoor: true },
+    { durationMin: RULESETS.hard.minWorkoutMin, isOutdoor: false },
   ],
 }
 
@@ -26,14 +26,24 @@ async function setup({
   nowMin = 20 * 60,
   plans,
   estimates,
-}: { nowMin?: number; plans?: Record<string, string>; estimates?: Record<string, number> } = {}) {
+  rules = RULESETS.hard,
+  missing = ['reading', 'photo'],
+  data = DATA,
+}: {
+  nowMin?: number
+  plans?: Record<string, string>
+  estimates?: Record<string, number>
+  rules?: Ruleset
+  missing?: readonly TaskId[]
+  data?: DayTaskData
+} = {}) {
   const challengeId = await addChallenge({ startDate: todayISO(), attemptNumber: 1, status: 'active' })
   const created = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 1, date: todayISO() })
   if (plans) await dayEntryRepo.setPlans(created.id, plans, estimates)
   const entry = (await db.dayEntries.get(created.id))!
   const onSaved = vi.fn()
   render(
-    <PlanSheet open entry={entry} data={DATA} missing={['reading', 'photo']} nowMin={nowMin} onClose={vi.fn()} onSaved={onSaved} />,
+    <PlanSheet open entry={entry} data={data} missing={missing} nowMin={nowMin} rules={rules} onClose={vi.fn()} onSaved={onSaved} />,
   )
   return { entry, onSaved }
 }
@@ -66,6 +76,15 @@ describe('PlanSheet', () => {
     await waitFor(async () =>
       expect((await db.dayEntries.get(entry.id))?.planEstimates).toEqual({ reading: 99, photo: 2 }),
     )
+  })
+
+  it("estimates a freshly planned task against the day's own ruleset, not Hard", async () => {
+    // Medium's 3 L target from empty is 180 min at 60 min/L; Hard's 3.8 L would be 228.
+    const { entry } = await setup({ rules: RULESETS.medium, missing: ['water'], data: { ...DATA, water_ml: 0 } })
+    fireEvent.change(screen.getByLabelText('Water'), { target: { value: '21:00' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save plan' }))
+
+    await waitFor(async () => expect((await db.dayEntries.get(entry.id))?.planEstimates).toEqual({ water: 180 }))
   })
 
   it('refuses a time that has passed', async () => {

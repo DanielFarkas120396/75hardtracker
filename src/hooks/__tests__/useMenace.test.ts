@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { freshDatabase } from '../../db/__tests__/fixtures'
 import { SETTING_KEYS, settingsRepo } from '../../db/repositories/settingsRepo'
 import type { DayEntry } from '../../db/types'
-import { MIN_WORKOUT_MIN } from '../../logic/constants'
+import { RULESETS } from '../../logic/rulesets'
 import type { DayTaskData } from '../../logic/types'
 import { useMenace } from '../useMenace'
 
@@ -20,7 +20,7 @@ const DATA: DayTaskData = {
   noAlcohol: false,
   hasPhoto: false,
   workouts: [
-    { durationMin: MIN_WORKOUT_MIN, isOutdoor: true },
+    { durationMin: RULESETS.hard.minWorkoutMin, isOutdoor: true },
     { durationMin: 60, isOutdoor: false },
   ],
 }
@@ -45,7 +45,7 @@ describe('useMenace', () => {
 
     const results: ReturnType<typeof useMenace>[] = []
     renderHook(() => {
-      const result = useMenace(DATA, ENTRY, 19 * 60)
+      const result = useMenace(DATA, ENTRY, 19 * 60, RULESETS.hard)
       results.push(result)
       return result
     })

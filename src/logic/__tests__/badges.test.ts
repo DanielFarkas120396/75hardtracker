@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { bookCountsForAttempt, buildBadgeContext, evaluateNewBadges, type BadgeContext } from '../badges'
+import { RULESETS } from '../rulesets'
 import type { DayTaskData } from '../types'
 
 function emptyContext(overrides: Partial<BadgeContext> = {}): BadgeContext {
@@ -93,9 +94,14 @@ describe('bookCountsForAttempt', () => {
 
 describe('buildBadgeContext', () => {
   it('is all zeros for an attempt with nothing logged', () => {
-    expect(buildBadgeContext({ days: [{ dayNumber: 1, data: emptyDay }], todayDayNumber: 1, booksFinished: 0 })).toEqual(
-      emptyContext(),
-    )
+    expect(
+      buildBadgeContext({
+        days: [{ dayNumber: 1, data: emptyDay }],
+        todayDayNumber: 1,
+        booksFinished: 0,
+        rules: RULESETS.hard,
+      }),
+    ).toEqual(emptyContext())
   })
 
   it('tallies workouts, outdoor qualifying workouts, water goal days, photos and perfect days', () => {
@@ -109,6 +115,7 @@ describe('buildBadgeContext', () => {
       ],
       todayDayNumber: 2,
       booksFinished: 1,
+      rules: RULESETS.hard,
     })
     expect(context).toEqual({
       streakLength: 1,
@@ -128,7 +135,35 @@ describe('buildBadgeContext', () => {
       days: [...days, { dayNumber: 8, data: emptyDay }],
       todayDayNumber: 8,
       booksFinished: 0,
+      rules: RULESETS.hard,
     })
     expect(context.streakLength).toBe(7)
+  })
+
+  it("counts the water goal by the ruleset passed in: a Medium day misses Hard's higher target", () => {
+    const mediumPerfectDay: DayTaskData = {
+      water_ml: 3000,
+      pages_read: 10,
+      dietFollowed: true,
+      noAlcohol: true,
+      hasPhoto: true,
+      workouts: [{ durationMin: 45, isOutdoor: false }],
+    }
+    expect(
+      buildBadgeContext({
+        days: [{ dayNumber: 1, data: mediumPerfectDay }],
+        todayDayNumber: 2,
+        booksFinished: 0,
+        rules: RULESETS.medium,
+      }).waterGoalDays,
+    ).toBe(1)
+    expect(
+      buildBadgeContext({
+        days: [{ dayNumber: 1, data: mediumPerfectDay }],
+        todayDayNumber: 2,
+        booksFinished: 0,
+        rules: RULESETS.hard,
+      }).waterGoalDays,
+    ).toBe(0)
   })
 })
