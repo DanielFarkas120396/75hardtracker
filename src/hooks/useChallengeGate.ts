@@ -4,6 +4,7 @@ import { challengeRepo } from '../db/repositories/challengeRepo'
 import { dayEntryRepo } from '../db/repositories/dayEntryRepo'
 import type { Challenge, DayEntry } from '../db/types'
 import { dayNumberForDate } from '../lib/dates'
+import { isChallengeDay } from '../logic/days'
 import { resolveChallengeGate } from '../logic/restart'
 import { rulesFor } from '../logic/rulesets'
 import { calculateStreak } from '../logic/streak'
@@ -94,4 +95,9 @@ export function resolveGate(challenge: Challenge, dayEntries: DayEntry[], today:
     return { ...base, kind: 'jokerUsed', newlyMissed: resolution.missed.slice(acknowledged) }
   }
   return { ...base, kind: resolution.kind }
+}
+
+/** Whether the attempt can be given up now: the normal screens are showing and today is Day 1–75. */
+export function canGiveUp(gate: ChallengeGate): boolean {
+  return gate.kind === 'active' && isChallengeDay(gate.todayDayNumber)
 }

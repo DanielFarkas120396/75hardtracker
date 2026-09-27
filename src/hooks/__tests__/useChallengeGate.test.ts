@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Challenge, DayEntry } from '../../db/types'
 import { addDaysISO, todayISO } from '../../lib/dates'
-import { resolveGate } from '../useChallengeGate'
+import { canGiveUp, resolveGate } from '../useChallengeGate'
 
 const today = todayISO()
 const startDate = addDaysISO(today, -5) // the challenge started 5 days ago, so today is Day 6
@@ -90,5 +90,41 @@ describe('resolveGate', () => {
       today,
     )
     expect(gate.kind).toBe('abandoned')
+  })
+})
+
+describe('canGiveUp', () => {
+  it('is false before Day 1', () => {
+    const gate = resolveGate(challenge({ startDate: addDaysISO(today, 1) }), [], today)
+    expect(canGiveUp(gate)).toBe(false)
+  })
+
+  it('is true on Day 1', () => {
+    const gate = resolveGate(challenge({ startDate: today }), [], today)
+    expect(canGiveUp(gate)).toBe(true)
+  })
+
+  it('is true on Day 75 with Days 1–74 complete', () => {
+    const longStart = addDaysISO(today, -74)
+    const days = Array.from({ length: 74 }, (_, i) => dayEntry(i + 1, true))
+
+    const gate = resolveGate(challenge({ startDate: longStart }), days, today)
+
+    expect(canGiveUp(gate)).toBe(true)
+  })
+
+  it('is false once the attempt has completed', () => {
+    const gate = resolveGate(challenge({ status: 'completed' }), [], today)
+    expect(canGiveUp(gate)).toBe(false)
+  })
+
+  it('is false for an abandoned gate', () => {
+    const gate = resolveGate(challenge({ status: 'abandoned', abandonedOn: today }), [], today)
+    expect(canGiveUp(gate)).toBe(false)
+  })
+
+  it('is false with a broken start date', () => {
+    const gate = resolveGate(challenge({ startDate: 'not-a-date' }), [], today)
+    expect(canGiveUp(gate)).toBe(false)
   })
 })

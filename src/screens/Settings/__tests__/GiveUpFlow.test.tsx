@@ -3,7 +3,7 @@ import { MotionGlobalConfig } from 'framer-motion'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../../db/db'
 import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
-import { challengeRepo } from '../../../db/repositories/challengeRepo'
+import { challengeRepo, type GiveUpResult } from '../../../db/repositories/challengeRepo'
 import type { Challenge } from '../../../db/types'
 import { addDaysISO, todayISO } from '../../../lib/dates'
 import { GiveUpFlow } from '../GiveUpFlow'
@@ -121,6 +121,16 @@ describe('GiveUpFlow', () => {
     expect(screen.getByText("Not one perfect day yet, and you're already out?")).toBeInTheDocument()
   })
 
+  it('closes on Escape without giving up', async () => {
+    const { challengeId, onClose } = await setup()
+    click('Give up') // step 2
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+
+    expect(onClose).toHaveBeenCalledTimes(1)
+    expect((await db.challenges.get(challengeId))?.status).toBe('active')
+  })
+
   it('locks Give up on step 3 for five seconds, counting down', async () => {
     const { onClose } = await setup()
     click('Give up')
@@ -169,6 +179,33 @@ describe('GiveUpFlow', () => {
     await waitFor(async () =>
       expect(await db.challenges.get(challengeId)).toMatchObject({ status: 'abandoned', abandonedOn: today }),
     )
+  })
+
+  it('shows Giving up… and locks both buttons while saving', async () => {
+    vi.spyOn(challengeRepo, 'giveUp').mockReturnValueOnce(new Promise<GiveUpResult>(() => {}))
+    await setup()
+    reachStepFour()
+
+    typeConfirmation('GIVE UP')
+    click('Give up for good')
+
+    expect(await screen.findByRole('button', { name: 'Giving up…' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled()
+  })
+
+  it('lets Enter on the confirm field hide the keyboard instead of submitting', async () => {
+    const giveUpSpy = vi.spyOn(challengeRepo, 'giveUp')
+    await setup()
+    reachStepFour()
+
+    const field = screen.getByRole('textbox', { name: 'Type GIVE UP to confirm' })
+    field.focus()
+    expect(field).toHaveFocus()
+
+    fireEvent.keyDown(field, { key: 'Enter' })
+
+    expect(field).not.toHaveFocus()
+    expect(giveUpSpy).not.toHaveBeenCalled()
   })
 
   it('closes on Cancel at the last step without giving up', async () => {

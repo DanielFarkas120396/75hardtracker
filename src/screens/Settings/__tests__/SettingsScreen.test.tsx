@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../../db/db'
@@ -22,7 +22,10 @@ async function setup(canGiveUp: boolean) {
   const today = todayISO()
   const challengeId = await addChallenge({ startDate: addDaysISO(today, -11), attemptNumber: 1, status: 'active' })
   const challenge = (await db.challenges.get(challengeId)) as Challenge
-  render(<SettingsScreen challenge={challenge} today={today} todayDayNumber={12} streak={11} canGiveUp={canGiveUp} />)
+  const view = render(
+    <SettingsScreen challenge={challenge} today={today} todayDayNumber={12} streak={11} canGiveUp={canGiveUp} />,
+  )
+  return { challenge, today, ...view }
 }
 
 describe('SettingsScreen danger zone', () => {
@@ -46,5 +49,15 @@ describe('SettingsScreen danger zone', () => {
 
     expect(screen.queryByRole('button', { name: 'Give up this challenge' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Reset everything' })).toBeInTheDocument()
+  })
+
+  it('closes the flow when giving up stops being allowed while it is open', async () => {
+    const { challenge, today, rerender } = await setup(true)
+    fireEvent.click(screen.getByRole('button', { name: 'Give up this challenge' }))
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+
+    rerender(<SettingsScreen challenge={challenge} today={today} todayDayNumber={12} streak={11} canGiveUp={false} />)
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 })

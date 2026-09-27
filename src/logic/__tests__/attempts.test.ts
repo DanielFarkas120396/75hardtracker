@@ -124,6 +124,28 @@ describe('summarizeAttempt', () => {
     })
     expect(summary).toMatchObject({ reachedDay: 6, completedDays: 4, endDate: '2026-09-06' })
   })
+
+  it('has reached no day when a given-up attempt has neither a give-up date nor a logged day', () => {
+    const summary = summarizeAttempt({
+      startDate: '2026-09-01',
+      status: 'abandoned',
+      days: [],
+      todayDayNumber: 20,
+      rules: RULESETS.hard,
+    })
+    expect(summary).toMatchObject({ reachedDay: 0, endDate: undefined })
+  })
+
+  it('ignores a logged day without a day number when a given-up attempt has no give-up date', () => {
+    const summary = summarizeAttempt({
+      startDate: '2026-09-01',
+      status: 'abandoned',
+      days: [...perfectDays(1, 3), { dayNumber: undefined as unknown as number, data: waterAndReadingOnly }],
+      todayDayNumber: 20,
+      rules: RULESETS.hard,
+    })
+    expect(summary).toMatchObject({ reachedDay: 3, endDate: '2026-09-03' })
+  })
 })
 
 describe('givenUpDay', () => {

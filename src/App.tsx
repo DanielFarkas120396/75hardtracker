@@ -2,11 +2,10 @@ import { lazy, Suspense, useState } from 'react'
 import { BadgeUnlockToast } from './components/BadgeUnlockToast'
 import { BottomNav, type ScreenId } from './components/ui/BottomNav'
 import { useBadgeUnlocks } from './hooks/useBadgeUnlocks'
-import { useChallengeGate } from './hooks/useChallengeGate'
+import { canGiveUp, useChallengeGate } from './hooks/useChallengeGate'
 import { useDayCompleteCelebration } from './hooks/useDayCompleteCelebration'
 import { useApplyTheme } from './hooks/useThemePreference'
 import { useToday } from './hooks/useToday'
-import { isChallengeDay } from './logic/days'
 import { DayCompleteCelebration } from './screens/Today/DayCompleteCelebration'
 import { TodayScreen } from './screens/Today/TodayScreen'
 
@@ -42,6 +41,9 @@ function App() {
   const gate = useChallengeGate(today)
   const { celebration, dismiss: dismissCelebration } = useDayCompleteCelebration(gate)
   const { toasts, dismiss: dismissToast } = useBadgeUnlocks(gate)
+
+  // Giving up happens from Settings: the next attempt should open on Today, not back there.
+  if (gate?.kind === 'abandoned' && screen !== 'today') setScreen('today')
 
   if (!gate) return <LoadingScreen />
 
@@ -116,7 +118,7 @@ function App() {
               today={today}
               todayDayNumber={gate.todayDayNumber}
               streak={gate.streak}
-              canGiveUp={gate.kind === 'active' && isChallengeDay(gate.todayDayNumber)}
+              canGiveUp={canGiveUp(gate)}
             />
           )}
         </Suspense>

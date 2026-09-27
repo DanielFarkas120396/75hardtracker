@@ -96,7 +96,7 @@ export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGi
       </main>
 
       <GiveUpFlow
-        open={showGiveUp}
+        open={showGiveUp && canGiveUp}
         onClose={() => setShowGiveUp(false)}
         challenge={challenge}
         today={today}

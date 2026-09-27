@@ -54,8 +54,10 @@ function reachedDayOf(
   if (status === 'active') {
     return Number.isFinite(todayDayNumber) ? Math.min(Math.max(todayDayNumber, 0), CHALLENGE_LENGTH) : 0
   }
-  // Given up: that day, or the last logged day when its date is missing (a hand-edited backup).
-  if (status === 'abandoned') return givenUp ?? summaries.reduce((last, s) => Math.max(last, s.dayNumber), 0)
+  // Given up: that day, or the last logged challenge day when its date is missing (a hand-edited backup).
+  if (status === 'abandoned') {
+    return givenUp ?? summaries.reduce((last, s) => (isChallengeDay(s.dayNumber) ? Math.max(last, s.dayNumber) : last), 0)
+  }
   // Failed: the miss that used up the jokers, the first miss if there weren't that many, or Day 75 if none at all.
   const missed = missedDayNumbers(summaries, CHALLENGE_LENGTH + 1)
   return missed[jokers] ?? missed[0] ?? CHALLENGE_LENGTH

@@ -202,10 +202,16 @@ function TypeToConfirm({ challenge, today, onCancel }: { challenge: Challenge; t
         type="text"
         value={typed}
         onChange={(e) => setTyped(e.target.value)}
+        // The iPhone keyboard's Done key sends Enter: hide the keyboard instead of leaving it
+        // covering "Give up for good", where a backdrop tap to dismiss it would close the flow.
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') e.currentTarget.blur()
+        }}
         aria-label={`Type ${CONFIRM_PHRASE} to confirm`}
         autoCapitalize="characters"
         autoComplete="off"
         spellCheck={false}
+        enterKeyHint="done"
         className="mt-3 min-h-touch w-full rounded-xl bg-canvas px-3 font-rounded font-bold text-ink"
       />
       {error && (
