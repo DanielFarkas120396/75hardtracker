@@ -164,8 +164,8 @@ Completion wins over `jokerUsed`.
   - if the week's recovery day was used on another day: "Day 9 was this week's recovery day."
 - **Diet card (Strong, Medium, Soft):**
   - "🥂 Plan a social occasion" opens a sheet (`Modal`);
-  - the sheet lists the challenge days from tomorrow to Day 75, one row per day ("Sat 4 Oct · Day 9"), with the current declaration in each week marked and the week's other days disabled;
-  - declared days can be cancelled from the same sheet;
+  - the sheet has a date picker (tomorrow to Day 75) and a "Declare" button; errors explain `too-late` (before tomorrow) and `week-taken` (the week already has one);
+  - below the picker, the sheet lists the declared occasions from today on, each with a "Cancel" button;
   - on a declared day, the "No alcohol" toggle is replaced by "🥂 Social occasion today — a drink is allowed.";
   - after declaring, the duck announces "Saturday. One drink. I'm counting." (the weekday of the declared day), through the existing DuckHeader announcement.
 
@@ -206,6 +206,7 @@ Completion wins over `jokerUsed`.
 | Workouts card | 2 sessions of at least 45 minutes, one of them outdoors. | as Hard | 1 session of at least 45 minutes. | 1 session of at least 45 minutes. One recovery day a week. |
 | Diet card | No cheat meals, no alcohol. | No cheat meals. No alcohol, except a declared social occasion. | Eat healthy. No alcohol, except a declared social occasion. | as Medium |
 | Diet toggle | I followed my diet | I followed my diet | I ate healthy | I ate healthy |
+| Water amount | 3.8 | 3.8 | 3 | 3 |
 | Water card | Goal: 3.8 L a day. | 3.8 L | 3 L | 3 L |
 | Reading card | 10 pages of non-fiction a day. | as Hard | 10 pages of any book a day. | as Medium |
 | Task rule (failed-day list) | 2 workouts of 45+ min, one outdoors / Diet followed, no alcohol / 3.8 L of water / 10 pages read / Progress photo | as Hard, with the diet line "Diet followed, no alcohol unless declared" | 1 workout of 45+ min / Ate healthy, no alcohol unless declared / 3 L of water / 10 pages read / Progress photo | Soft workout: "1 workout of 45+ min (or a recovery day)" |
@@ -217,6 +218,7 @@ Completion wins over `jokerUsed`.
 | PreStart line | …plan two workouts a day… | as Hard | …plan a workout a day… | as Medium |
 
 Other rules for the copy:
+- Litres print without a trailing ".0": `formatLiters` turns 3800 into "3.8" and 3000 into "3" — the water amount, task rule and water cheer rows above all go through it.
 - The rest of the copy (the duck's lines, the menace lines) is unchanged.
 - `index.html`'s description names 75 Hard, Strong, Medium and Soft.
 - The README gets a variants table.
