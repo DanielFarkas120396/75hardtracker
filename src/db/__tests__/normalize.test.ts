@@ -164,6 +164,22 @@ describe('normalizeRecords', () => {
     expect(result.report.invalidFlagsCleared).toBe(1)
   })
 
+  it('drops a restDay flag on a 75 Strong entry, since its rules allow none, and recomputes completed', () => {
+    const result = normalizeRecords(
+      {
+        challenges: [challenge(1, { status: 'active', variant: 'strong' })],
+        dayEntries: [day(2, 2, { restDay: true, completed: true })],
+        workouts: [],
+        badges: [],
+      },
+      today,
+    )
+    const [entry2] = result.dayEntries
+    expect(entry2.restDay).toBeUndefined()
+    expect(entry2.completed).toBe(false)
+    expect(result.report.invalidFlagsCleared).toBe(1)
+  })
+
   it('keeps only the earliest rest day in a week on 75 Soft, and recomputes completed for the day that loses it', () => {
     const result = normalizeRecords(
       {

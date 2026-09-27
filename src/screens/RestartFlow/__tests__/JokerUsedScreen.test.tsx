@@ -60,6 +60,12 @@ describe('JokerUsedScreen', () => {
     expect(screen.getByText('Day 13')).toBeInTheDocument()
   })
 
+  it('joins three or more missed days with commas and "and"', async () => {
+    await setup({ newlyMissed: [3, 4, 5], missedCount: 3, jokersLeft: 0 })
+
+    expect(screen.getByText("Days 3, 4 and 5 weren't completed")).toBeInTheDocument()
+  })
+
   it('shows an error and re-enables the button when saving fails', async () => {
     vi.spyOn(challengeRepo, 'acknowledgeJokers').mockRejectedValueOnce(new Error('quota'))
     await setup({ newlyMissed: [3], missedCount: 1, jokersLeft: 0 })

@@ -55,4 +55,26 @@ describe('resolveGate', () => {
     const gate = resolveGate(challenge(), everyDayComplete, today)
     expect(gate).toMatchObject({ kind: 'active', missedDays: [], jokersLeft: 0 })
   })
+
+  it('lets completion win over an unacknowledged joker once every day but one is done past Day 75', () => {
+    // Today is Day 76; every day but Day 10 is complete, and the miss was never acknowledged.
+    const longStart = addDaysISO(today, -75)
+    const days = Array.from({ length: 75 }, (_, i) => i + 1)
+      .filter((n) => n !== 10)
+      .map((n) => dayEntry(n, true))
+
+    const gate = resolveGate(challenge({ variant: 'medium', startDate: longStart }), days, today)
+
+    expect(gate).toMatchObject({ kind: 'completed' })
+  })
+
+  it('reports only the newly missed day once some misses were already acknowledged', () => {
+    // Today is Day 12 of a Soft challenge; Days 3 and 9 are missing, and Day 3's miss is already acknowledged.
+    const shortStart = addDaysISO(today, -11)
+    const days = [1, 2, 4, 5, 6, 7, 8, 10, 11].map((n) => dayEntry(n, true))
+
+    const gate = resolveGate(challenge({ variant: 'soft', startDate: shortStart, jokersAcknowledged: 1 }), days, today)
+
+    expect(gate).toMatchObject({ kind: 'jokerUsed', newlyMissed: [9], jokersLeft: 1 })
+  })
 })

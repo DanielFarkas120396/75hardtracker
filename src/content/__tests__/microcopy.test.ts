@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { TASK_IDS } from '../../logic/dayCompletion'
 import type { Menace, MenaceLevel, MenaceReason } from '../../logic/menace'
-import { RULESETS } from '../../logic/rulesets'
+import { RULESETS, VARIANTS } from '../../logic/rulesets'
 import { duckLine, GLARE_LINE, LUNGE_LINE, planSavedLine, pokeLine, POKE_LINES, taskCheer } from '../microcopy'
 
 describe('taskCheer', () => {
@@ -10,12 +10,14 @@ describe('taskCheer', () => {
     for (const task of TASK_IDS) expect(taskCheer(task, 2, RULESETS.hard)).not.toBe(taskCheer(task, 1, RULESETS.hard))
   })
 
-  it('has a cheer short enough for the one-line pill on every challenge day', () => {
-    for (const task of TASK_IDS) {
-      for (let day = 1; day <= CHALLENGE_LENGTH; day++) {
-        const cheer = taskCheer(task, day, RULESETS.hard)
-        expect(cheer).toBeTruthy()
-        expect(cheer.length).toBeLessThanOrEqual(28)
+  it('has a cheer short enough for the one-line pill on every challenge day, for every variant', () => {
+    for (const variant of VARIANTS) {
+      for (const task of TASK_IDS) {
+        for (let day = 1; day <= CHALLENGE_LENGTH; day++) {
+          const cheer = taskCheer(task, day, RULESETS[variant])
+          expect(cheer).toBeTruthy()
+          expect(cheer.length).toBeLessThanOrEqual(28)
+        }
       }
     }
   })

@@ -60,4 +60,30 @@ describe('TodayScreen', () => {
     expect(await screen.findByRole('switch', { name: 'No alcohol' })).toBeInTheDocument()
     expect(screen.queryByText('🥂 Social occasion today — a drink is allowed.')).not.toBeInTheDocument()
   })
+
+  it('Hard on Day 3: names the attempt, and offers no joker, recovery or social controls', async () => {
+    await setup({ variant: 'hard', todayDayNumber: 3 })
+
+    expect(await screen.findByText('75 Hard · Attempt #1')).toBeInTheDocument()
+    expect(screen.queryByText(/joker/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Take my recovery day' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '🥂 Plan a social occasion' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Doing 75 Hard\./)).not.toBeInTheDocument()
+  })
+
+  it('Medium on Day 1: shows the joker chip, the switch-challenge hint and the plan-a-social-occasion button', async () => {
+    await setup({ variant: 'medium', todayDayNumber: 1, jokersLeft: 1 })
+
+    expect(await screen.findByText('🃏 1 joker left')).toBeInTheDocument()
+    expect(
+      screen.getByText('Doing 75 Medium. You can switch challenge in Settings until the end of Day 1.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '🥂 Plan a social occasion' })).toBeInTheDocument()
+  })
+
+  it('Strong on Day 3 with a declared occasion: shows the drink-allowed note', async () => {
+    await setup({ variant: 'strong', todayDayNumber: 3, socialDays: [3] })
+
+    expect(await screen.findByText('🥂 Social occasion today — a drink is allowed.')).toBeInTheDocument()
+  })
 })
