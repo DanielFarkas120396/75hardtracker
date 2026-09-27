@@ -96,26 +96,33 @@ describe('summarizeAttempt', () => {
   })
 
   it('reaches the day a given-up attempt ended on, and ends that day', () => {
+    // Day 6 is missing (a joker), so the failed fallback (missed[jokers] with
+    // 3 jokers) would land on missed[3]: [6, 12, 13, 14, …][3] = Day 14. Only
+    // the abandoned branch reaches Day 12, the actual give-up day.
     const summary = summarizeAttempt({
       startDate: '2026-09-01',
       status: 'abandoned',
       abandonedOn: '2026-09-12',
-      days: perfectDays(1, 11),
+      days: [...perfectDays(1, 5), ...perfectDays(7, 11)],
       todayDayNumber: 20,
-      rules: RULESETS.hard,
+      rules: RULESETS.soft,
     })
-    expect(summary).toMatchObject({ reachedDay: 12, completedDays: 11, endDate: '2026-09-12' })
+    expect(summary).toMatchObject({ reachedDay: 12, completedDays: 10, endDate: '2026-09-12' })
   })
 
   it('falls back to the last logged day when a given-up attempt has no give-up date', () => {
+    // Day 5 was never opened and Day 6 is only partly logged (incomplete), so
+    // the failed fallback (missed[0], no jokers under Hard) would land on the
+    // first miss, Day 5. Only the abandoned branch reaches Day 6, the last day
+    // with an entry at all.
     const summary = summarizeAttempt({
       startDate: '2026-09-01',
       status: 'abandoned',
-      days: [...perfectDays(1, 4), { dayNumber: 5, data: waterAndReadingOnly }],
+      days: [...perfectDays(1, 4), { dayNumber: 6, data: waterAndReadingOnly }],
       todayDayNumber: 20,
       rules: RULESETS.hard,
     })
-    expect(summary).toMatchObject({ reachedDay: 5, completedDays: 4, endDate: '2026-09-05' })
+    expect(summary).toMatchObject({ reachedDay: 6, completedDays: 4, endDate: '2026-09-06' })
   })
 })
 
