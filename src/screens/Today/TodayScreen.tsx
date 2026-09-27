@@ -39,7 +39,7 @@ interface TodayScreenProps {
 
 export function TodayScreen(props: TodayScreenProps) {
   if (!isChallengeDay(props.todayDayNumber)) {
-    return <PreStartView challenge={props.challenge} todayDayNumber={props.todayDayNumber} />
+    return <PreStartView challenge={props.challenge} todayDayNumber={props.todayDayNumber} today={props.today} />
   }
   // Keyed by day: the lunges, the plan sheet and the announcement all belong to one day.
   return <TodayTasks key={props.todayDayNumber} {...props} />
@@ -67,7 +67,7 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak, joke
   }
 
   const completedCount = Object.values(completion.completion).filter(Boolean).length
-  const socialToday = challenge.socialDays?.includes(todayDayNumber) ?? false
+  const socialToday = rules.socialDaysPerWeek > 0 && (challenge.socialDays?.includes(todayDayNumber) ?? false)
 
   return (
     <div className="min-h-dvh bg-canvas pb-24">
@@ -138,6 +138,7 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak, joke
             cheer={taskCheer('diet', todayDayNumber, rules)}
             rules={rules}
             socialToday={socialToday}
+            canPlanSocial={rules.socialDaysPerWeek > 0 && todayDayNumber < CHALLENGE_LENGTH}
             onPlanSocial={() => setSocialOpen(true)}
           />
           <WaterCard

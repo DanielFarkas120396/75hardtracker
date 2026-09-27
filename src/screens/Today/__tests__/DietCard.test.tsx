@@ -24,7 +24,15 @@ describe('DietCard', () => {
 
   it('Hard: has no social button, and shows the alcohol toggle', () => {
     render(
-      <DietCard entry={entry} complete={false} cheer="" rules={RULESETS.hard} socialToday={false} onPlanSocial={vi.fn()} />,
+      <DietCard
+        entry={entry}
+        complete={false}
+        cheer=""
+        rules={RULESETS.hard}
+        socialToday={false}
+        canPlanSocial={false}
+        onPlanSocial={vi.fn()}
+      />,
     )
 
     expect(screen.queryByRole('button', { name: '🥂 Plan a social occasion' })).not.toBeInTheDocument()
@@ -40,6 +48,7 @@ describe('DietCard', () => {
         cheer=""
         rules={RULESETS.strong}
         socialToday={false}
+        canPlanSocial
         onPlanSocial={onPlanSocial}
       />,
     )
@@ -50,10 +59,34 @@ describe('DietCard', () => {
 
   it('Strong, a social occasion today: shows the allowance line instead of the alcohol toggle', () => {
     render(
-      <DietCard entry={entry} complete={false} cheer="" rules={RULESETS.strong} socialToday onPlanSocial={vi.fn()} />,
+      <DietCard
+        entry={entry}
+        complete={false}
+        cheer=""
+        rules={RULESETS.strong}
+        socialToday
+        canPlanSocial
+        onPlanSocial={vi.fn()}
+      />,
     )
 
     expect(screen.getByText('🥂 Social occasion today — a drink is allowed.')).toBeInTheDocument()
     expect(screen.queryByRole('switch', { name: 'No alcohol' })).not.toBeInTheDocument()
+  })
+
+  it('Strong, canPlanSocial false (e.g. Day 75): hides the plan button even though the rules allow it', () => {
+    render(
+      <DietCard
+        entry={entry}
+        complete={false}
+        cheer=""
+        rules={RULESETS.strong}
+        socialToday={false}
+        canPlanSocial={false}
+        onPlanSocial={vi.fn()}
+      />,
+    )
+
+    expect(screen.queryByRole('button', { name: '🥂 Plan a social occasion' })).not.toBeInTheDocument()
   })
 })

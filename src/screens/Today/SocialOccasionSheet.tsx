@@ -34,6 +34,8 @@ function SocialForm({ challenge, today, todayDayNumber, onClose, onDeclared }: S
   const [error, setError] = useState<string | null>(null)
 
   const tomorrow = addDaysISO(today, 1)
+  const start = challenge.startDate
+  const min = tomorrow > start ? tomorrow : start
   const maxDate = dateForDayNumber(challenge.startDate, CHALLENGE_LENGTH)
   const declaredDays = (challenge.socialDays ?? []).filter((dayNumber) => dayNumber >= todayDayNumber)
 
@@ -81,7 +83,7 @@ function SocialForm({ challenge, today, todayDayNumber, onClose, onDeclared }: S
         <input
           type="date"
           aria-label="Day"
-          min={tomorrow}
+          min={min}
           max={maxDate}
           value={picked}
           onChange={(e) => {
@@ -112,22 +114,95 @@ function SocialForm({ challenge, today, todayDayNumber, onClose, onDeclared }: S
           <h4 className="text-sm font-semibold text-ink-muted">Declared</h4>
           <div className="mt-2 flex flex-col gap-2">
             {declaredDays.map((dayNumber) => (
-              <div key={dayNumber} className="flex items-center justify-between gap-2 rounded-xl bg-canvas px-3 py-2">
-                <span className="font-rounded text-sm font-bold text-ink">
-                  {formatShortDay(dateForDayNumber(challenge.startDate, dayNumber))} · Day {dayNumber}
-                </span>
-                <Button
-                  variant="secondary"
-                  aria-label={`Cancel Day ${dayNumber}`}
-                  onClick={() => void challengeRepo.setSocialDay(challenge.id, dayNumber, false, today)}
-                >
-                  Cancel
-                </Button>
-              </div>
+              <DeclaredRow
+                key={dayNumber}
+                challenge={challenge}
+                today={today}
+                dayNumber={dayNumber}
+                isToday={dayNumber === todayDayNumber}
+              />
             ))}
           </div>
         </div>
       )}
     </>
+  )
+}
+
+interface DeclaredRowProps {
+  challenge: Challenge
+  today: string
+  dayNumber: number
+  isToday: boolean
+}
+
+/**
+ * One declared day in the list. Today's row asks for confirmation before
+ * cancelling — it can't be re-declared, and losing it flips the diet task —
+ * while other days cancel as soon as Cancel is tapped, as before.
+ */
+function DeclaredRow({ challenge, today, dayNumber, isToday }: DeclaredRowProps) {
+  const [confirming, setConfirming] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const cancel = async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      await challengeRepo.setSocialDay(challenge.id, dayNumber, false, today)
+    } catch {
+      setError("Couldn't save that — try again.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (isToday && confirming) {
+    return (
+      <div className="flex flex-col gap-2 rounded-xl bg-canvas px-3 py-2">
+        <p className="font-rounded text-sm font-bold text-ink">
+          Cancel today's occasion? You can't declare today again, and a drink today would break your diet.
+        </p>
+        {error && (
+          <p role="alert" className="text-sm font-semibold text-danger-ink">
+            {error}
+          </p>
+        )}
+        <div className="flex gap-2">
+          <Button variant="danger" className="flex-1" onClick={() => void cancel()} disabled={busy}>
+            {busy ? 'Cancelling…' : 'Cancel it'}
+          </Button>
+          <Button variant="secondary" className="flex-1" onClick={() => setConfirming(false)} disabled={busy}>
+            Keep it
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  const label = isToday
+    ? `Today · Day ${dayNumber}`
+    : `${formatShortDay(dateForDayNumber(challenge.startDate, dayNumber))} · Day ${dayNumber}`
+
+  return (
+    <div className="flex flex-col gap-2 rounded-xl bg-canvas px-3 py-2">
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-rounded text-sm font-bold text-ink">{label}</span>
+        <Button
+          variant="secondary"
+          aria-label={`Cancel Day ${dayNumber}`}
+          disabled={busy}
+          onClick={() => (isToday ? setConfirming(true) : void cancel())}
+        >
+          Cancel
+        </Button>
+      </div>
+      {error && (
+        <p role="alert" className="text-sm font-semibold text-danger-ink">
+          {error}
+        </p>
+      )}
+    </div>
   )
 }

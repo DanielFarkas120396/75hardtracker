@@ -13,10 +13,12 @@ interface DietCardProps {
   rules: Ruleset
   /** Whether today is a declared social occasion: a drink is allowed. */
   socialToday: boolean
+  /** Whether the "Plan a social occasion" button should show at all (the rules allow it, and there's still a day left to declare). */
+  canPlanSocial: boolean
   onPlanSocial: () => void
 }
 
-export function DietCard({ entry, complete, cheer, rules, socialToday, onPlanSocial }: DietCardProps) {
+export function DietCard({ entry, complete, cheer, rules, socialToday, canPlanSocial, onPlanSocial }: DietCardProps) {
   return (
     <Card complete={complete} cheer={cheer}>
       <h2 className="font-rounded text-lg font-extrabold text-ink">🥗 Diet</h2>
@@ -39,7 +41,7 @@ export function DietCard({ entry, complete, cheer, rules, socialToday, onPlanSoc
             label="No alcohol"
           />
         )}
-        {rules.socialDaysPerWeek > 0 && (
+        {canPlanSocial && (
           <Button variant="secondary" className="w-full" onClick={onPlanSocial}>
             🥂 Plan a social occasion
           </Button>

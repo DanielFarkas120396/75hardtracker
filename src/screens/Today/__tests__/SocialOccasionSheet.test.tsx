@@ -87,12 +87,49 @@ describe('SocialOccasionSheet', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Week 1 already has one: Day 2.')
   })
 
-  it('lists a declared upcoming day and cancels it', async () => {
+  it('lists a declared upcoming day and cancels it directly, without a confirmation', async () => {
     const { challenge, start } = await setup({ socialDays: [2] })
     const label = `${formatShortDay(dateForDayNumber(start, 2))} · Day 2`
 
     expect(screen.getByText(label)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Cancel Day 2' }))
+
+    expect(screen.queryByText(/Cancel today's occasion/)).not.toBeInTheDocument()
+    await waitFor(async () => expect((await db.challenges.get(challenge.id))?.socialDays).toBeUndefined())
+  })
+
+  it("labels today's declared row \"Today · Day N\"", async () => {
+    await setup({ socialDays: [1] })
+
+    expect(screen.getByText('Today · Day 1')).toBeInTheDocument()
+  })
+
+  it("tapping today's Cancel shows a confirmation instead of cancelling", async () => {
+    const { challenge } = await setup({ socialDays: [1] })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel Day 1' }))
+
+    expect(
+      screen.getByText("Cancel today's occasion? You can't declare today again, and a drink today would break your diet."),
+    ).toBeInTheDocument()
+    expect((await db.challenges.get(challenge.id))?.socialDays).toEqual([1])
+  })
+
+  it('"Keep it" restores the row without cancelling', async () => {
+    const { challenge } = await setup({ socialDays: [1] })
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel Day 1' }))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Keep it' }))
+
+    expect(screen.getByText('Today · Day 1')).toBeInTheDocument()
+    expect((await db.challenges.get(challenge.id))?.socialDays).toEqual([1])
+  })
+
+  it('"Cancel it" removes the day', async () => {
+    const { challenge } = await setup({ socialDays: [1] })
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel Day 1' }))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel it' }))
 
     await waitFor(async () => expect((await db.challenges.get(challenge.id))?.socialDays).toBeUndefined())
   })
