@@ -6,6 +6,7 @@ import { useChallengeGate } from './hooks/useChallengeGate'
 import { useDayCompleteCelebration } from './hooks/useDayCompleteCelebration'
 import { useApplyTheme } from './hooks/useThemePreference'
 import { useToday } from './hooks/useToday'
+import { isChallengeDay } from './logic/days'
 import { DayCompleteCelebration } from './screens/Today/DayCompleteCelebration'
 import { TodayScreen } from './screens/Today/TodayScreen'
 
@@ -110,7 +111,13 @@ function App() {
           {screen === 'stats' && <StatsScreen challenge={gate.challenge} streak={gate.streak} today={today} />}
           {screen === 'gallery' && <GalleryScreen />}
           {screen === 'settings' && (
-            <SettingsScreen challenge={gate.challenge} today={today} todayDayNumber={gate.todayDayNumber} />
+            <SettingsScreen
+              challenge={gate.challenge}
+              today={today}
+              todayDayNumber={gate.todayDayNumber}
+              streak={gate.streak}
+              canGiveUp={gate.kind === 'active' && isChallengeDay(gate.todayDayNumber)}
+            />
           )}
         </Suspense>
       </div>
