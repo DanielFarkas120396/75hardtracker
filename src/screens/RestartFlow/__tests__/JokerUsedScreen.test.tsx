@@ -43,6 +43,14 @@ describe('JokerUsedScreen', () => {
     expect(screen.getAllByRole('listitem')).toHaveLength(5)
   })
 
+  it('moves focus to its heading, since it replaces the whole app', async () => {
+    await setup({ newlyMissed: [3], missedCount: 1, jokersLeft: 0 })
+    // Let the missed-task list load, so nothing updates after the test.
+    await screen.findAllByRole('listitem')
+
+    expect(screen.getByRole('heading', { name: "Day 3 wasn't completed" })).toHaveFocus()
+  })
+
   it('calls acknowledgeJokers with the total missed count on Keep going', async () => {
     const { challengeId } = await setup({ newlyMissed: [3], missedCount: 1, jokersLeft: 0 })
     fireEvent.click(screen.getByRole('button', { name: 'Keep going' }))

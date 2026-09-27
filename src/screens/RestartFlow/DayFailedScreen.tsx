@@ -5,6 +5,7 @@ import { missedDayExplanation } from '../../content/variants'
 import { challengeRepo } from '../../db/repositories/challengeRepo'
 import type { Challenge } from '../../db/types'
 import { rulesFor } from '../../logic/rulesets'
+import { GateHeading } from './GateHeading'
 import { MissedTasksList } from './MissedTasksList'
 
 interface DayFailedScreenProps {
@@ -29,7 +30,7 @@ export function DayFailedScreen({ challenge, failedDayNumber, today }: DayFailed
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-canvas p-6 text-center">
       <Mascot mood="judging" />
-      <h1 className="font-rounded text-2xl font-extrabold text-ink">Day {failedDayNumber} wasn't completed</h1>
+      <GateHeading>Day {failedDayNumber} wasn't completed</GateHeading>
       <p className="max-w-xs font-rounded text-ink-muted">
         {missedDayExplanation(rulesFor(challenge), challenge.attemptNumber)}
       </p>
