@@ -44,7 +44,7 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak }: To
   const rules = rulesFor(challenge)
   const entry = useTodayEntry({ challengeId: challenge.id, dayNumber: todayDayNumber, today, dayEntries })
   const workouts = useWorkoutsForEntry(entry?.id)
-  const completion = useDayCompletion(entry, workouts, rules)
+  const completion = useDayCompletion(entry, workouts, rules, challenge.socialDays)
   const nowMin = useNow()
   const menace = useMenace(completion?.data, entry, nowMin, rules)
   const { xp } = useChallengeStats(challenge.id)

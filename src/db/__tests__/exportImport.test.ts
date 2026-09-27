@@ -132,6 +132,21 @@ describe('export → reset → import', () => {
 
     expect((await db.challenges.get(challenge.id))?.variant).toBe('soft')
   })
+
+  it('keeps a challenge’s social days, its acknowledged jokers, and a day’s rest day through a backup', async () => {
+    await seedEverything()
+    const [challenge] = await db.challenges.toArray()
+    const [entry] = await db.dayEntries.toArray()
+    // Soft allows both, so normalizeRecords (run on import) doesn't clean them away.
+    await db.challenges.update(challenge.id, { variant: 'soft', socialDays: [4], jokersAcknowledged: 1 })
+    await db.dayEntries.update(entry.id, { restDay: true })
+
+    await roundTrip()
+
+    expect((await db.challenges.get(challenge.id))?.socialDays).toEqual([4])
+    expect((await db.challenges.get(challenge.id))?.jokersAcknowledged).toBe(1)
+    expect((await db.dayEntries.get(entry.id))?.restDay).toBe(true)
+  })
 })
 
 describe('validateExportPayload', () => {
@@ -181,6 +196,18 @@ describe('validateExportPayload', () => {
   it('rejects a backup with an unknown challenge variant', async () => {
     const payload = await validPayload()
     ;(payload.challenges as Record<string, unknown>[])[0].variant = 'extreme'
+    expect(validateExportPayload(payload).ok).toBe(false)
+  })
+
+  it('rejects a social day number outside the challenge', async () => {
+    const payload = await validPayload()
+    ;(payload.challenges as Record<string, unknown>[])[0].socialDays = [0]
+    expect(validateExportPayload(payload).ok).toBe(false)
+  })
+
+  it('rejects a negative count of acknowledged jokers', async () => {
+    const payload = await validPayload()
+    ;(payload.challenges as Record<string, unknown>[])[0].jokersAcknowledged = -1
     expect(validateExportPayload(payload).ok).toBe(false)
   })
 

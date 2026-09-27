@@ -25,7 +25,10 @@ export function DayFailedScreen({ challenge, failedDayNumber, today }: DayFailed
   const missing = useLiveQuery(async (): Promise<TaskId[]> => {
     const entry = await dayEntryRepo.getByChallengeAndDayNumber(challenge.id, failedDayNumber)
     if (!entry) return [...TASK_IDS]
-    return missingTasks(toDayTaskData(entry, await workoutRepo.getForDayEntry(entry.id)), rulesFor(challenge))
+    return missingTasks(
+      toDayTaskData(entry, await workoutRepo.getForDayEntry(entry.id), challenge.socialDays),
+      rulesFor(challenge),
+    )
   }, [challenge.id, failedDayNumber])
 
   const confirmRestart = async () => {

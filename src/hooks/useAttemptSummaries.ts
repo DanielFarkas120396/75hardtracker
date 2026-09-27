@@ -23,12 +23,16 @@ export interface AttemptRecord {
 export function useAttemptSummaries(today: string): AttemptRecord[] | undefined {
   return useLiveQuery(async () => {
     const challenges = await challengeRepo.getAll()
+    const challengeById = new Map(challenges.map((c) => [c.id, c]))
     const entries = await dayEntryRepo.getAllForChallenges(challenges.map((c) => c.id))
     const workoutsByEntry = groupWorkoutsByEntry(await workoutRepo.getForDayEntries(entries.map((e) => e.id)))
 
     const daysByChallenge = new Map<number, ChallengeDayData[]>()
     for (const entry of entries) {
-      const day = { dayNumber: entry.dayNumber, data: toDayTaskData(entry, workoutsByEntry.get(entry.id) ?? []) }
+      const day = {
+        dayNumber: entry.dayNumber,
+        data: toDayTaskData(entry, workoutsByEntry.get(entry.id) ?? [], challengeById.get(entry.challengeId)?.socialDays),
+      }
       const days = daysByChallenge.get(entry.challengeId)
       if (days) days.push(day)
       else daysByChallenge.set(entry.challengeId, [day])

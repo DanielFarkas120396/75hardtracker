@@ -1,7 +1,7 @@
 import { dayNumberForDate, isValidISODate } from '../lib/dates'
 import { isDayComplete } from '../logic/dayCompletion'
 import { isChallengeDay } from '../logic/days'
-import { RULESETS, rulesFor, type Ruleset } from '../logic/rulesets'
+import { challengeWeek, RULESETS, rulesFor, type Ruleset } from '../logic/rulesets'
 import { toDayTaskData } from './mappers'
 import type { Badge, Challenge, DayEntry, Workout } from './types'
 
@@ -19,6 +19,8 @@ export interface NormalizationReport {
   dayNumbersRepaired: number
   duplicateDayEntriesMerged: number
   duplicateBadgesRemoved: number
+  /** `socialDays` entries a challenge's rules don't allow, and `restDay` flags a week already had — all dropped. */
+  invalidFlagsCleared: number
 }
 
 /**
@@ -28,6 +30,12 @@ export interface NormalizationReport {
  * - colliding or invalid attempt numbers → renumbered in their existing order;
  * - more than one active challenge → all but the latest archived as failed;
  * - invalid day numbers → recomputed from the entry's date;
+ * - a challenge's `socialDays` past what its rules allow, or more than one
+ *   per challenge week → trimmed to the earliest per week (none at all when
+ *   the rules allow no social days);
+ * - a day entry's `restDay` the challenge's rules don't allow, or a week's
+ *   second one → dropped, and `completed` recomputed for every day entry
+ *   that loses a rest day or a declared social day this way;
  * - several entries for one challenge day → merged into the oldest (most of
  *   each field, workouts moved over, `completed` recomputed);
  * - the same badge unlocked twice in one attempt → the earliest one kept.
@@ -47,13 +55,14 @@ export function normalizeRecords(
     dayNumbersRepaired: 0,
     duplicateDayEntriesMerged: 0,
     duplicateBadgesRemoved: 0,
+    invalidFlagsCleared: 0,
   }
 
-  const challenges = normalizeChallenges(records.challenges, records.dayEntries, today, report)
-  const startDateById = new Map(challenges.map((c) => [c.id, c.startDate]))
-  const rulesByChallenge = new Map(challenges.map((c) => [c.id, rulesFor(c)]))
+  const normalizedChallenges = normalizeChallenges(records.challenges, records.dayEntries, today, report)
+  const startDateById = new Map(normalizedChallenges.map((c) => [c.id, c.startDate]))
+  const rulesByChallenge = new Map(normalizedChallenges.map((c) => [c.id, rulesFor(c)]))
 
-  const dayEntries = records.dayEntries.map((entry) => {
+  const dayNumberRepaired = records.dayEntries.map((entry) => {
     if (isChallengeDay(entry.dayNumber)) return entry
     const startDate = startDateById.get(entry.challengeId)
     const dayNumber = startDate ? dayNumberForDate(startDate, entry.date) : Number.NaN
@@ -62,10 +71,116 @@ export function normalizeRecords(
     return { ...entry, dayNumber }
   })
 
-  const merged = mergeDuplicateDayEntries(dayEntries, records.workouts, rulesByChallenge, report)
+  const { challenges, removedSocialDaysByChallenge } = cleanSocialDays(normalizedChallenges, rulesByChallenge, report)
+  const socialDaysByChallenge = new Map(challenges.map((c) => [c.id, c.socialDays]))
+
+  const { dayEntries: restDaysCleaned, changedEntryIds } = cleanRestDays(dayNumberRepaired, rulesByChallenge, report)
+
+  const dayEntries = restDaysCleaned.map((entry) => {
+    const lostSocialDay = removedSocialDaysByChallenge.get(entry.challengeId)?.has(entry.dayNumber) ?? false
+    if (!changedEntryIds.has(entry.id) && !lostSocialDay) return entry
+    const rules = rulesByChallenge.get(entry.challengeId) ?? RULESETS.hard
+    const socialDays = socialDaysByChallenge.get(entry.challengeId)
+    const entryWorkouts = records.workouts.filter((w) => w.dayEntryId === entry.id)
+    return { ...entry, completed: isDayComplete(toDayTaskData(entry, entryWorkouts, socialDays), rules) }
+  })
+
+  const merged = mergeDuplicateDayEntries(dayEntries, records.workouts, rulesByChallenge, socialDaysByChallenge, report)
   const badges = dedupeBadges(records.badges, report)
 
   return { challenges, dayEntries: merged.dayEntries, workouts: merged.workouts, badges, report }
+}
+
+/**
+ * Keeps only the `socialDays` a challenge's rules allow: none when the rules
+ * allow no social days at all, else the sorted, de-duplicated day numbers,
+ * one per challenge week (the earliest). An empty result removes the field.
+ * Returns which day numbers were dropped per challenge, so their entries'
+ * `completed` can be recomputed.
+ */
+function cleanSocialDays(
+  challenges: Challenge[],
+  rulesByChallenge: Map<number, Ruleset>,
+  report: NormalizationReport,
+): { challenges: Challenge[]; removedSocialDaysByChallenge: Map<number, Set<number>> } {
+  const removedSocialDaysByChallenge = new Map<number, Set<number>>()
+
+  const cleaned = challenges.map((challenge) => {
+    if (!challenge.socialDays || challenge.socialDays.length === 0) return challenge
+
+    const rules = rulesByChallenge.get(challenge.id)
+    const kept = rules ? keepEarliestPerWeek(challenge.socialDays, rules.socialDaysPerWeek) : []
+    const keptSet = new Set(kept)
+    const removed = [...new Set(challenge.socialDays)].filter((d) => !keptSet.has(d))
+
+    if (removed.length > 0) {
+      removedSocialDaysByChallenge.set(challenge.id, new Set(removed))
+      report.invalidFlagsCleared += removed.length
+    }
+
+    const next = { ...challenge, socialDays: kept.length > 0 ? kept : undefined }
+    if (next.socialDays === undefined) delete next.socialDays
+    return next
+  })
+
+  return { challenges: cleaned, removedSocialDaysByChallenge }
+}
+
+/** The sorted, de-duplicated days, keeping only the earliest in each challenge week. Empty when `perWeek` is 0. */
+function keepEarliestPerWeek(days: number[], perWeek: number): number[] {
+  if (perWeek === 0) return []
+  const seenWeeks = new Set<number>()
+  const kept: number[] = []
+  for (const dayNumber of [...new Set(days)].sort((a, b) => a - b)) {
+    const week = challengeWeek(dayNumber)
+    if (seenWeeks.has(week)) continue
+    seenWeeks.add(week)
+    kept.push(dayNumber)
+  }
+  return kept
+}
+
+/**
+ * Drops a day entry's `restDay` when its challenge's rules allow none, or
+ * when an earlier-numbered entry of the same challenge already holds that
+ * week's rest day. Returns the ids of entries that lost theirs, so their
+ * `completed` can be recomputed.
+ */
+function cleanRestDays(
+  dayEntries: DayEntry[],
+  rulesByChallenge: Map<number, Ruleset>,
+  report: NormalizationReport,
+): { dayEntries: DayEntry[]; changedEntryIds: Set<number> } {
+  const restDayEntries = dayEntries
+    .filter((e) => e.restDay === true && isChallengeDay(e.dayNumber))
+    .sort((a, b) => a.dayNumber - b.dayNumber)
+
+  const keptIds = new Set<number>()
+  const seenWeeksByChallenge = new Map<number, Set<number>>()
+  for (const entry of restDayEntries) {
+    const rules = rulesByChallenge.get(entry.challengeId)
+    if (!rules || rules.restDaysPerWeek === 0) continue
+
+    const seenWeeks = seenWeeksByChallenge.get(entry.challengeId) ?? new Set<number>()
+    seenWeeksByChallenge.set(entry.challengeId, seenWeeks)
+
+    const week = challengeWeek(entry.dayNumber)
+    if (seenWeeks.has(week)) continue
+    seenWeeks.add(week)
+    keptIds.add(entry.id)
+  }
+
+  const changedEntryIds = new Set<number>()
+  const cleaned = dayEntries.map((entry) => {
+    if (entry.restDay !== true || keptIds.has(entry.id)) return entry
+    changedEntryIds.add(entry.id)
+    report.invalidFlagsCleared++
+    const next = { ...entry }
+    delete next.restDay
+    return next
+  })
+
+  return { dayEntries: cleaned, changedEntryIds }
 }
 
 function normalizeChallenges(
@@ -116,6 +231,7 @@ function mergeDuplicateDayEntries(
   dayEntries: DayEntry[],
   workouts: Workout[],
   rulesByChallenge: Map<number, Ruleset>,
+  socialDaysByChallenge: Map<number, number[] | undefined>,
   report: NormalizationReport,
 ): { dayEntries: DayEntry[]; workouts: Workout[] } {
   const groups = new Map<string, DayEntry[]>()
@@ -166,7 +282,8 @@ function mergeDuplicateDayEntries(
       if (!merged) return entry
       const entryWorkouts = nextWorkouts.filter((w) => w.dayEntryId === entry.id)
       const rules = rulesByChallenge.get(entry.challengeId) ?? RULESETS.hard
-      return { ...merged, completed: isDayComplete(toDayTaskData(merged, entryWorkouts), rules) }
+      const socialDays = socialDaysByChallenge.get(entry.challengeId)
+      return { ...merged, completed: isDayComplete(toDayTaskData(merged, entryWorkouts, socialDays), rules) }
     })
 
   return { dayEntries: nextEntries, workouts: nextWorkouts }

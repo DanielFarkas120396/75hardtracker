@@ -17,7 +17,7 @@ export async function syncDayCompletion(entryId: number): Promise<void> {
   if (!entry) return
   const challenge = await db.challenges.get(entry.challengeId)
   const workouts = await db.workouts.where('dayEntryId').equals(entryId).toArray()
-  const completed = isDayComplete(toDayTaskData(entry, workouts), rulesFor(challenge ?? {}))
+  const completed = isDayComplete(toDayTaskData(entry, workouts, challenge?.socialDays), rulesFor(challenge ?? {}))
   if (completed !== entry.completed) {
     await db.dayEntries.update(entryId, { completed })
   }

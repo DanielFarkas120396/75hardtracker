@@ -1,4 +1,5 @@
 import { todayISO } from '../lib/dates'
+import { CHALLENGE_LENGTH } from '../logic/constants'
 import { TASK_IDS } from '../logic/dayCompletion'
 import { parseHHmm } from '../logic/menace'
 import { isChallengeVariant } from '../logic/rulesets'
@@ -99,6 +100,10 @@ const isString = (value: unknown): value is string => typeof value === 'string'
 const isBoolean = (value: unknown): value is boolean => typeof value === 'boolean'
 const isOptional = (check: (value: unknown) => boolean) => (value: unknown) => value === undefined || value === null || check(value)
 
+const isDayNumberList = (value: unknown): boolean =>
+  Array.isArray(value) && value.every((d) => Number.isInteger(d) && d >= 1 && d <= CHALLENGE_LENGTH)
+const isNonNegativeInteger = (value: unknown): boolean => Number.isInteger(value) && (value as number) >= 0
+
 const isPlanMap = (value: unknown): boolean =>
   isRow(value) &&
   Object.entries(value).every(
@@ -120,6 +125,8 @@ const ROW_CHECKS: Record<Exclude<keyof ExportPayload, 'version' | 'exportedAt'>,
     attemptNumber: isNumber,
     status: (v) => v === 'active' || v === 'failed' || v === 'completed',
     variant: isOptional(isChallengeVariant),
+    socialDays: isOptional(isDayNumberList),
+    jokersAcknowledged: isOptional(isNonNegativeInteger),
   },
   dayEntries: {
     id: isNumber,
@@ -135,6 +142,7 @@ const ROW_CHECKS: Record<Exclude<keyof ExportPayload, 'version' | 'exportedAt'>,
     photoId: isOptional(isNumber),
     plans: isOptional(isPlanMap),
     planEstimates: isOptional(isEstimateMap),
+    restDay: isOptional(isBoolean),
   },
   workouts: { id: isNumber, dayEntryId: isNumber, type: isString, durationMin: isNumber, isOutdoor: isBoolean },
   books: { id: isNumber, title: isString, totalPages: isNumber, currentPage: isNumber, finished: isBoolean },

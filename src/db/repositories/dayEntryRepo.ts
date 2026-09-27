@@ -89,7 +89,7 @@ export const dayEntryRepo = {
     )
     return entries.some(
       (entry) =>
-        hasAnyProgress(toDayTaskData(entry, workoutsByEntry.get(entry.id) ?? [])) ||
+        hasAnyProgress(toDayTaskData(entry, workoutsByEntry.get(entry.id) ?? [], undefined)) ||
         entry.mood != null ||
         Boolean(entry.notes?.trim()),
     )
