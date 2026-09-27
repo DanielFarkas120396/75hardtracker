@@ -128,6 +128,8 @@ function AttemptDetail({ attempt, open, onClose }: { attempt: AttemptRecord; ope
                 startDate={challenge.startDate}
                 // The running attempt's current day isn't missed yet — it's in progress.
                 inProgress={challenge.status === 'active' && row.kind === 'incomplete' && row.dayNumber === summary.reachedDay}
+                // A given-up attempt's last day wasn't missed either: it's the day it ended.
+                givenUp={challenge.status === 'abandoned' && row.kind === 'incomplete' && row.dayNumber === summary.reachedDay}
               />
             ))}
           </ul>
@@ -160,7 +162,17 @@ function AttemptDetail({ attempt, open, onClose }: { attempt: AttemptRecord; ope
   )
 }
 
-function DayRow({ row, startDate, inProgress }: { row: AttemptDayRow; startDate: string; inProgress: boolean }) {
+function DayRow({
+  row,
+  startDate,
+  inProgress,
+  givenUp,
+}: {
+  row: AttemptDayRow
+  startDate: string
+  inProgress: boolean
+  givenUp: boolean
+}) {
   const dateOf = (dayNumber: number) => formatDisplayDate(dateForDayNumber(startDate, dayNumber))
 
   if (row.kind === 'complete') {
@@ -176,6 +188,18 @@ function DayRow({ row, startDate, inProgress }: { row: AttemptDayRow; startDate:
             {' '}
             · {single ? dateOf(row.fromDay) : `${dateOf(row.fromDay)} – ${dateOf(row.toDay)}`} · all done
           </span>
+        </span>
+      </li>
+    )
+  }
+
+  if (givenUp) {
+    return (
+      <li className="flex gap-2 text-sm">
+        <span aria-hidden="true">🏳️</span>
+        <span>
+          <span className="font-bold text-ink">Day {row.dayNumber}</span>
+          <span className="text-ink-muted"> · {dateOf(row.dayNumber)} · gave up</span>
         </span>
       </li>
     )

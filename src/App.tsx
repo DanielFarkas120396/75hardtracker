@@ -23,6 +23,7 @@ const DayFailedScreen = lazy(() =>
 const JokerUsedScreen = lazy(() =>
   import('./screens/RestartFlow/JokerUsedScreen').then((m) => ({ default: m.JokerUsedScreen })),
 )
+const GaveUpScreen = lazy(() => import('./screens/RestartFlow/GaveUpScreen').then((m) => ({ default: m.GaveUpScreen })))
 const VictoryScreen = lazy(() => import('./screens/Victory/VictoryScreen').then((m) => ({ default: m.VictoryScreen })))
 
 function LoadingScreen() {
@@ -60,6 +61,14 @@ function App() {
           missedCount={gate.missedDays.length}
           jokersLeft={gate.jokersLeft}
         />
+      </Suspense>
+    )
+  }
+
+  if (gate.kind === 'abandoned') {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <GaveUpScreen challenge={gate.challenge} today={today} />
       </Suspense>
     )
   }

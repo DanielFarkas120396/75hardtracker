@@ -64,6 +64,7 @@ await s.seedDay75Pending()
 | `seedMediumJoker()` | 75 Medium on Day 5 with Day 3 missed: opens on the joker screen. |
 | `seedSoftRestDay()` | 75 Soft on Day 2, taking its recovery day: diet, water and reading done, only the photo left. |
 | `seedDay77Complete()` | A Hard attempt with all 75 days perfect, opened on Day 77: opens on Victory. |
+| `seedGaveUp()` | A 75 Hard attempt given up today on Day 12, after 11 perfect days: opens on the "You gave up" screen. |
 
 `?now=HH:mm` freezes the duck's clock in development (production ignores it), so each menace level can be checked, e.g. `?db=duck&now=22:45`.
 
