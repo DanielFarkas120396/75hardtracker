@@ -109,15 +109,25 @@ describe('nextAttemptNumber', () => {
 
 describe('buildNextChallenge', () => {
   it('builds an active challenge with the next attempt number and the given start date', () => {
-    expect(buildNextChallenge([1, 2], '2026-01-15')).toEqual({
+    expect(buildNextChallenge([1, 2], '2026-01-15', 'hard')).toEqual({
       startDate: '2026-01-15',
       attemptNumber: 3,
       status: 'active',
+      variant: 'hard',
     })
   })
 
   it('builds attempt #1 on first launch', () => {
-    expect(buildNextChallenge([], '2026-01-15').attemptNumber).toBe(1)
+    expect(buildNextChallenge([], '2026-01-15', 'hard').attemptNumber).toBe(1)
+  })
+
+  it('carries the given variant', () => {
+    expect(buildNextChallenge([1, 2], '2026-10-01', 'medium')).toEqual({
+      startDate: '2026-10-01',
+      attemptNumber: 3,
+      status: 'active',
+      variant: 'medium',
+    })
   })
 })
 

@@ -8,6 +8,7 @@ import { calculateStreak } from '../../logic/streak'
 import { loadChallengeDays } from '../challengeDays'
 import { COMPLETION_TABLES, syncDayCompletion } from '../completion'
 import { db } from '../db'
+import { challengeRepo } from '../repositories/challengeRepo'
 import { dayEntryRepo } from '../repositories/dayEntryRepo'
 import { addChallenge, addPerfectDays, freshDatabase } from './fixtures'
 
@@ -62,5 +63,18 @@ describe('a pre-variants 75 Hard attempt', () => {
     expect(calculateChallengeStats(days, rules)).toMatchObject({ xp: 935, perfectDays: 11 })
 
     expect('variant' in challengeRow).toBe(false)
+  })
+
+  it('challengeRepo.setSocialDay refuses it and leaves the row untouched', async () => {
+    const today = todayISO()
+    const startDate = addDaysISO(today, -11)
+    const challengeId = await addChallenge({ startDate, attemptNumber: 1, status: 'active' })
+    const before = await db.challenges.get(challengeId)
+
+    expect(await challengeRepo.setSocialDay(challengeId, 5, true, today)).toEqual({
+      ok: false,
+      reason: 'not-allowed',
+    })
+    expect(await db.challenges.get(challengeId)).toEqual(before)
   })
 })

@@ -10,6 +10,7 @@ import { useSound } from '../../hooks/useSound'
 import { celebrate } from '../../lib/confetti'
 import { dateForDayNumber, formatDisplayDate } from '../../lib/dates'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
+import { variantOf } from '../../logic/rulesets'
 
 /** Attempts whose victory confetti already fired this session, so revisiting the tab stays calm. */
 const celebratedThisSession = new Set<number>()
@@ -43,7 +44,7 @@ export function VictoryScreen({ challenge, today, revealed }: VictoryScreenProps
   const startNewChallenge = async () => {
     setStarting(true)
     try {
-      await challengeRepo.startNew(today)
+      await challengeRepo.startNew(today, variantOf(challenge))
     } finally {
       setStarting(false)
     }

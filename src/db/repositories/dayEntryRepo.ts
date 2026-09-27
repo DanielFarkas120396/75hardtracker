@@ -1,11 +1,14 @@
 import { hasAnyProgress, TASK_IDS } from '../../logic/dayCompletion'
 import { isChallengeDay } from '../../logic/days'
 import { parseHHmm } from '../../logic/menace'
+import { challengeWeek, rulesFor } from '../../logic/rulesets'
 import type { TaskId } from '../../logic/types'
 import { COMPLETION_TABLES, syncDayCompletion } from '../completion'
 import { db } from '../db'
 import { groupWorkoutsByEntry, toDayTaskData } from '../mappers'
 import type { DayEntry } from '../types'
+
+export type RestDayResult = { ok: true } | { ok: false; reason: 'not-allowed' | 'week-taken'; dayNumber?: number }
 
 /** Runs a change to one DayEntry and re-syncs its `completed` flag, atomically. */
 function changeAndSync(entryId: number, change: () => Promise<unknown>): Promise<void> {
@@ -150,5 +153,30 @@ export const dayEntryRepo = {
           entry.pages_read = Math.max(0, entry.pages_read + deltaPages)
         }),
     )
+  },
+
+  /**
+   * Takes (or gives back) 75 Soft's recovery day on this entry: at most one
+   * per challenge week, and only in challenges that allow one. The workouts
+   * task counts as done that day.
+   */
+  async setRestDay(entryId: number, on: boolean): Promise<RestDayResult> {
+    return db.transaction('rw', COMPLETION_TABLES, async () => {
+      const entry = await db.dayEntries.get(entryId)
+      if (!entry) return { ok: false, reason: 'not-allowed' } as const
+      const challenge = await db.challenges.get(entry.challengeId)
+      if (rulesFor(challenge ?? {}).restDaysPerWeek === 0) return { ok: false, reason: 'not-allowed' } as const
+
+      if (on) {
+        const siblings = await db.dayEntries.where('challengeId').equals(entry.challengeId).toArray()
+        const taken = siblings.find(
+          (e) => e.id !== entry.id && e.restDay && challengeWeek(e.dayNumber) === challengeWeek(entry.dayNumber),
+        )
+        if (taken) return { ok: false, reason: 'week-taken', dayNumber: taken.dayNumber } as const
+      }
+      await db.dayEntries.update(entryId, { restDay: on ? true : undefined })
+      await syncDayCompletion(entryId)
+      return { ok: true } as const
+    })
   },
 }

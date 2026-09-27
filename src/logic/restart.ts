@@ -1,4 +1,5 @@
 import { CHALLENGE_LENGTH } from './constants'
+import type { ChallengeVariant } from './rulesets'
 import type { ChallengeStatus, DayCompletionSummary } from './types'
 
 /**
@@ -88,13 +89,19 @@ export interface NewChallenge {
   startDate: string
   attemptNumber: number
   status: 'active'
+  variant: ChallengeVariant
 }
 
 /** Builds the next Challenge to persist — after a failed attempt, a completed one, or on first launch. */
-export function buildNextChallenge(existingAttemptNumbers: readonly number[], startDate: string): NewChallenge {
+export function buildNextChallenge(
+  existingAttemptNumbers: readonly number[],
+  startDate: string,
+  variant: ChallengeVariant,
+): NewChallenge {
   return {
     startDate,
     attemptNumber: nextAttemptNumber(existingAttemptNumbers),
     status: 'active',
+    variant,
   }
 }
