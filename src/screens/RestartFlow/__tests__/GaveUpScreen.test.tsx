@@ -37,6 +37,12 @@ describe('GaveUpScreen', () => {
     expect(screen.getByText("Fine. Pick something. I'm still watching.")).toBeInTheDocument()
   })
 
+  it('moves focus to its heading, since it replaces the whole app', async () => {
+    await setup(today)
+
+    expect(screen.getByRole('heading', { name: 'You gave up on Day 12' })).toHaveFocus()
+  })
+
   it('says only "You gave up" when the give-up date is missing', async () => {
     await setup(undefined)
 

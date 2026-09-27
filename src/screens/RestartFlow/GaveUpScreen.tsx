@@ -6,6 +6,7 @@ import type { Challenge } from '../../db/types'
 import { givenUpDay } from '../../logic/attempts'
 import { variantOf } from '../../logic/rulesets'
 import { NewChallengeSheet } from '../Victory/NewChallengeSheet'
+import { GateHeading } from './GateHeading'
 
 interface GaveUpScreenProps {
   challenge: Challenge
@@ -21,9 +22,7 @@ export function GaveUpScreen({ challenge, today }: GaveUpScreenProps) {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-canvas p-6 text-center">
       <Mascot mood="judging" />
-      <h1 className="font-rounded text-2xl font-extrabold text-ink">
-        {day === undefined ? 'You gave up' : `You gave up on Day ${day}`}
-      </h1>
+      <GateHeading>{day === undefined ? 'You gave up' : `You gave up on Day ${day}`}</GateHeading>
       <p className="max-w-xs font-rounded text-ink-muted">
         {VARIANT_NAMES[variant]}, attempt #{challenge.attemptNumber}. It stays in your history.
       </p>

@@ -3,6 +3,7 @@ import { Button } from '../../components/ui/Button'
 import { Mascot } from '../../components/mascot/Mascot'
 import { challengeRepo } from '../../db/repositories/challengeRepo'
 import type { Challenge } from '../../db/types'
+import { GateHeading } from './GateHeading'
 import { MissedTasksList } from './MissedTasksList'
 
 interface JokerUsedScreenProps {
@@ -50,7 +51,7 @@ export function JokerUsedScreen({ challenge, newlyMissed, missedCount, jokersLef
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-canvas p-6 text-center">
       <Mascot mood="judging" />
-      <h1 className="font-rounded text-2xl font-extrabold text-ink">{heading}</h1>
+      <GateHeading>{heading}</GateHeading>
 
       {newlyMissed.map((dayNumber) => (
         <div key={dayNumber} className="w-full max-w-xs">
