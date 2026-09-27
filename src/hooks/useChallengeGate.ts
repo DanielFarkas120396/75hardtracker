@@ -26,13 +26,15 @@ export interface GateBase {
  * - `active`: the normal screens (including the countdown before Day 1);
  * - `needsRestart`: a miss beyond the ruleset's jokers, so the restart flow blocks the app;
  * - `jokerUsed`: a miss that a joker forgave, not yet announced;
- * - `completed`: all 75 days are done — the victory screen.
+ * - `completed`: all 75 days are done — the victory screen;
+ * - `abandoned`: the attempt was given up — the "You gave up" screen, until the next one starts.
  */
 export type ChallengeGate =
   | (GateBase & { kind: 'active' })
   | (GateBase & { kind: 'needsRestart'; failedDayNumber: number })
   | (GateBase & { kind: 'jokerUsed'; newlyMissed: number[] })
   | (GateBase & { kind: 'completed' })
+  | (GateBase & { kind: 'abandoned' })
 
 /**
  * Loads the current challenge and its day entries in one live query and

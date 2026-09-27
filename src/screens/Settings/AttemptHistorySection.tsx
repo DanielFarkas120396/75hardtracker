@@ -15,6 +15,7 @@ const STATUS_STYLES: Record<ChallengeStatus, string> = {
   active: 'bg-green-light text-green-ink',
   completed: 'bg-yellow-light text-yellow-ink',
   failed: 'bg-danger/10 text-danger-ink',
+  abandoned: 'bg-ink/10 text-ink',
 }
 
 interface AttemptHistorySectionProps {

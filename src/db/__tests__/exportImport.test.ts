@@ -147,6 +147,19 @@ describe('export → reset → import', () => {
     expect((await db.challenges.get(challenge.id))?.jokersAcknowledged).toBe(1)
     expect((await db.dayEntries.get(entry.id))?.restDay).toBe(true)
   })
+
+  it('keeps a given-up attempt and its give-up date through a backup', async () => {
+    await seedEverything()
+    const [challenge] = await db.challenges.toArray()
+    await db.challenges.update(challenge.id, { status: 'abandoned', abandonedOn: challenge.startDate })
+
+    await roundTrip()
+
+    expect(await db.challenges.get(challenge.id)).toMatchObject({
+      status: 'abandoned',
+      abandonedOn: challenge.startDate,
+    })
+  })
 })
 
 describe('validateExportPayload', () => {
@@ -208,6 +221,12 @@ describe('validateExportPayload', () => {
   it('rejects a negative count of acknowledged jokers', async () => {
     const payload = await validPayload()
     ;(payload.challenges as Record<string, unknown>[])[0].jokersAcknowledged = -1
+    expect(validateExportPayload(payload).ok).toBe(false)
+  })
+
+  it('rejects a give-up date that is not a real date', async () => {
+    const payload = await validPayload()
+    ;(payload.challenges as Record<string, unknown>[])[0].abandonedOn = '2026-02-30'
     expect(validateExportPayload(payload).ok).toBe(false)
   })
 

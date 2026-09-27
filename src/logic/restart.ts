@@ -48,7 +48,7 @@ export function evaluateChallenge(params: {
   return { status: 'active', missed }
 }
 
-export type GateKind = 'active' | 'needsRestart' | 'completed'
+export type GateKind = 'active' | 'needsRestart' | 'completed' | 'abandoned'
 
 export interface GateResolution {
   kind: GateKind
@@ -62,8 +62,8 @@ export interface GateResolution {
  * What the app should show for the current challenge: the normal screens
  * ('active', which includes the days before Day 1), the restart flow
  * ('needsRestart' — a day was missed beyond the ruleset's jokers, or the
- * attempt is already archived as failed), or the victory screen
- * ('completed').
+ * attempt is already archived as failed), the victory screen
+ * ('completed'), or the "You gave up" screen ('abandoned').
  */
 export function resolveChallengeGate(params: {
   currentStatus: ChallengeStatus
@@ -74,6 +74,7 @@ export function resolveChallengeGate(params: {
   const evaluation = evaluateChallenge(params)
   if (evaluation.status === 'completed') return { kind: 'completed', missed: evaluation.missed }
   if (evaluation.status === 'active') return { kind: 'active', missed: evaluation.missed }
+  if (evaluation.status === 'abandoned') return { kind: 'abandoned', missed: evaluation.missed }
 
   const today = Number.isFinite(params.todayDayNumber) ? params.todayDayNumber : CHALLENGE_LENGTH + 1
   const missed = missedDayNumbers(params.dayEntries, today)

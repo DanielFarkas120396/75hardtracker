@@ -1,7 +1,7 @@
 import type { ChallengeVariant } from '../logic/rulesets'
 import type { TaskId } from '../logic/types'
 
-export type ChallengeStatus = 'active' | 'failed' | 'completed'
+export type ChallengeStatus = 'active' | 'failed' | 'completed' | 'abandoned'
 
 export interface Challenge {
   id: number
@@ -14,6 +14,8 @@ export interface Challenge {
   socialDays?: number[]
   /** How many used jokers the player has seen announced. Only ever grows. */
   jokersAcknowledged?: number
+  /** The local ISO date the attempt was given up on (status 'abandoned'). Set only by challengeRepo.giveUp. */
+  abandonedOn?: string
 }
 
 export interface DayEntry {

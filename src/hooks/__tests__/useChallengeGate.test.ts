@@ -77,4 +77,18 @@ describe('resolveGate', () => {
 
     expect(gate).toMatchObject({ kind: 'jokerUsed', newlyMissed: [9], jokersLeft: 1 })
   })
+
+  it('is abandoned for a given-up attempt, even with a day missed beyond its jokers', () => {
+    const gate = resolveGate(challenge({ status: 'abandoned', abandonedOn: today }), oneMissingDay, today)
+    expect(gate.kind).toBe('abandoned')
+  })
+
+  it('never announces a joker on a given-up attempt', () => {
+    const gate = resolveGate(
+      challenge({ status: 'abandoned', variant: 'medium', abandonedOn: today }),
+      oneMissingDay,
+      today,
+    )
+    expect(gate.kind).toBe('abandoned')
+  })
 })

@@ -150,6 +150,12 @@ describe('resolveChallengeGate', () => {
     })
   })
 
+  it('reports a given-up attempt as abandoned, whatever its days say', () => {
+    expect(
+      resolveChallengeGate({ currentStatus: 'abandoned', dayEntries: completeDays(3), todayDayNumber: 9, jokers: 0 }),
+    ).toEqual({ kind: 'abandoned', missed: [4, 5, 6, 7, 8] })
+  })
+
   it('forgives a missed day within the joker allowance, keeping the attempt active', () => {
     expect(
       resolveChallengeGate({
