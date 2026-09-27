@@ -4,6 +4,8 @@ import {
   dateForDayNumber,
   dayNumberForDate,
   formatDisplayDate,
+  formatShortDay,
+  formatWeekday,
   isValidISODate,
   msUntilNextLocalMidnight,
   todayISO,
@@ -38,6 +40,14 @@ describe(`dates (TZ=${TEST_TZ})`, () => {
     expect(formatDisplayDate('2026-09-24')).toBe('24 Sep 2026')
     expect(addDaysISO('2026-09-24', 1)).toBe('2026-09-25')
     expect(addDaysISO('2026-09-24', -1)).toBe('2026-09-23')
+  })
+
+  it('formats a short weekday and date', () => {
+    expect(formatShortDay('2026-10-03')).toBe('Sat 3 Oct')
+  })
+
+  it('formats the full weekday name', () => {
+    expect(formatWeekday('2026-10-03')).toBe('Saturday')
   })
 
   it('numbers days from the start date, starting at 1', () => {

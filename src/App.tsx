@@ -79,6 +79,7 @@ function App() {
                 today={today}
                 todayDayNumber={gate.todayDayNumber}
                 streak={gate.streak}
+                jokersLeft={gate.jokersLeft}
               />
             ))}
           {screen === 'journey' && (

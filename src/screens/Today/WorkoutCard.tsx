@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Stepper } from '../../components/ui/Stepper'
 import { Toggle } from '../../components/ui/Toggle'
 import { workoutRuleLine } from '../../content/variants'
+import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import { workoutRepo } from '../../db/repositories/workoutRepo'
 import type { Workout, WorkoutType } from '../../db/types'
 import { MAX_WORKOUTS } from '../../logic/constants'
@@ -16,11 +18,28 @@ interface WorkoutCardProps {
   complete: boolean
   cheer: string
   rules: Ruleset
+  /** Whether this attempt's weekly recovery day (75 Soft) was taken on this entry. */
+  restDay: boolean
 }
 
-export function WorkoutCard({ dayEntryId, workouts, complete, cheer, rules }: WorkoutCardProps) {
+export function WorkoutCard({ dayEntryId, workouts, complete, cheer, rules, restDay }: WorkoutCardProps) {
+  const [restDayError, setRestDayError] = useState<string | null>(null)
+
   const addWorkout = () => {
     void workoutRepo.add({ dayEntryId, type: 'Running', durationMin: rules.minWorkoutMin, isOutdoor: false })
+  }
+
+  const takeRestDay = async () => {
+    setRestDayError(null)
+    const result = await dayEntryRepo.setRestDay(dayEntryId, true)
+    if (!result.ok && result.reason === 'week-taken') {
+      setRestDayError(`Day ${result.dayNumber} was this week's recovery day.`)
+    }
+  }
+
+  const undoRestDay = () => {
+    setRestDayError(null)
+    void dayEntryRepo.setRestDay(dayEntryId, false)
   }
 
   return (
@@ -38,6 +57,32 @@ export function WorkoutCard({ dayEntryId, workouts, complete, cheer, rules }: Wo
         <Button variant="secondary" className="mt-4 w-full" onClick={addWorkout}>
           + Add workout
         </Button>
+      )}
+
+      {rules.restDaysPerWeek > 0 && (
+        <div className="mt-4">
+          {restDay ? (
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-green-light px-3 py-1 font-rounded text-sm font-bold text-green-ink">
+                Recovery day ✓
+              </span>
+              <Button variant="secondary" onClick={undoRestDay}>
+                Undo
+              </Button>
+            </div>
+          ) : (
+            <>
+              <Button variant="secondary" className="w-full" onClick={() => void takeRestDay()}>
+                Take my recovery day
+              </Button>
+              {restDayError && (
+                <p role="alert" className="mt-2 text-sm font-semibold text-danger-ink">
+                  {restDayError}
+                </p>
+              )}
+            </>
+          )}
+        </div>
       )}
     </Card>
   )
