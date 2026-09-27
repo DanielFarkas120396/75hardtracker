@@ -10,12 +10,13 @@ export function isQualifyingWorkout(workout: WorkoutTaskData, rules: Ruleset): b
 }
 
 export function isWorkoutsTaskComplete(data: DayTaskData, rules: Ruleset): boolean {
+  if (rules.restDaysPerWeek > 0 && data.restDay === true) return true
   const qualifying = data.workouts.filter((workout) => isQualifyingWorkout(workout, rules))
   return qualifying.length >= rules.requiredWorkouts && (!rules.requireOutdoor || qualifying.some((w) => w.isOutdoor))
 }
 
-export function isDietTaskComplete(data: DayTaskData): boolean {
-  return data.dietFollowed && data.noAlcohol
+export function isDietTaskComplete(data: DayTaskData, rules: Ruleset): boolean {
+  return data.dietFollowed && (data.noAlcohol || (rules.socialDaysPerWeek > 0 && data.socialDay === true))
 }
 
 export function isWaterTaskComplete(data: DayTaskData, rules: Ruleset): boolean {
@@ -34,7 +35,7 @@ export function isPhotoTaskComplete(data: DayTaskData): boolean {
 export function taskCompletionMap(data: DayTaskData, rules: Ruleset): Record<TaskId, boolean> {
   return {
     workouts: isWorkoutsTaskComplete(data, rules),
-    diet: isDietTaskComplete(data),
+    diet: isDietTaskComplete(data, rules),
     water: isWaterTaskComplete(data, rules),
     reading: isReadingTaskComplete(data, rules),
     photo: isPhotoTaskComplete(data),
@@ -60,6 +61,7 @@ export function hasAnyProgress(data: DayTaskData): boolean {
     data.dietFollowed ||
     data.noAlcohol ||
     data.hasPhoto ||
-    data.workouts.length > 0
+    data.workouts.length > 0 ||
+    data.restDay === true
   )
 }

@@ -216,3 +216,86 @@ export async function seedPlannedReading(): Promise<void> {
     },
   ])
 }
+
+/**
+ * A 75 Strong attempt on Day 3 (today), started 2 days ago. Days 1–2 are
+ * perfect. Day 3 declares itself as this week's social occasion
+ * (`socialDays: [3]`) and follows the diet with alcohol allowed, so Today
+ * shows the social-occasion note and a complete diet task — nothing else is
+ * logged yet, so the day itself isn't done.
+ */
+export async function seedStrongSocial(): Promise<void> {
+  await replaceDatabase([
+    {
+      challenge: {
+        startDate: addDaysISO(todayISO(), -2),
+        attemptNumber: 1,
+        status: 'active',
+        variant: 'strong',
+        socialDays: [3],
+      },
+      days: [
+        await perfectDay(1),
+        await perfectDay(2),
+        { dayNumber: 3, entry: { dietFollowed: true, noAlcohol: false }, workouts: [] },
+      ],
+    },
+  ])
+}
+
+/**
+ * A 75 Medium attempt on Day 5 (today), started 4 days ago. Days 1, 2 and 4
+ * are perfect; Day 3 has no entry at all, so it's a missed day. Medium's one
+ * joker forgives it, and `jokersAcknowledged` is unset, so the app opens on
+ * the joker screen.
+ */
+export async function seedMediumJoker(): Promise<void> {
+  await replaceDatabase([
+    {
+      challenge: { startDate: addDaysISO(todayISO(), -4), attemptNumber: 1, status: 'active', variant: 'medium' },
+      days: [await perfectDay(1), await perfectDay(2), await perfectDay(4)],
+    },
+  ])
+}
+
+/**
+ * A 75 Soft attempt on Day 2 (today), started 1 day ago. Day 1 is perfect.
+ * Day 2 takes its weekly recovery day (`restDay: true`) and also finishes
+ * the diet, water and reading — only the photo is left.
+ */
+export async function seedSoftRestDay(): Promise<void> {
+  await replaceDatabase([
+    {
+      challenge: { startDate: addDaysISO(todayISO(), -1), attemptNumber: 1, status: 'active', variant: 'soft' },
+      days: [
+        await perfectDay(1),
+        {
+          dayNumber: 2,
+          entry: {
+            restDay: true,
+            water_ml: RULESETS.soft.waterTargetMl,
+            pages_read: RULESETS.soft.pagesTarget,
+            dietFollowed: true,
+            noAlcohol: true,
+          },
+          workouts: [],
+        },
+      ],
+    },
+  ])
+}
+
+/**
+ * A Hard attempt (no `variant`) that started 76 days ago, with all 75 days
+ * perfect and `status` still `'active'`. Today is Day 77 — the case the
+ * capped scan in evaluateChallenge fixes — so the app opens straight on
+ * Victory instead of wrongly restarting.
+ */
+export async function seedDay77Complete(): Promise<void> {
+  const days: SeedDay[] = []
+  for (let day = 1; day <= CHALLENGE_LENGTH; day++) days.push(await perfectDay(day))
+
+  await replaceDatabase([
+    { challenge: { startDate: addDaysISO(todayISO(), -76), attemptNumber: 1, status: 'active' }, days },
+  ])
+}

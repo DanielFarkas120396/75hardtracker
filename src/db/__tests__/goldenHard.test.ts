@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from 'vitest'
+import { resolveGate } from '../../hooks/useChallengeGate'
 import { addDaysISO, todayISO } from '../../lib/dates'
 import { resolveChallengeGate } from '../../logic/restart'
 import { rulesFor } from '../../logic/rulesets'
@@ -8,6 +9,7 @@ import { calculateStreak } from '../../logic/streak'
 import { loadChallengeDays } from '../challengeDays'
 import { COMPLETION_TABLES, syncDayCompletion } from '../completion'
 import { db } from '../db'
+import { challengeRepo } from '../repositories/challengeRepo'
 import { dayEntryRepo } from '../repositories/dayEntryRepo'
 import { addChallenge, addPerfectDays, freshDatabase } from './fixtures'
 
@@ -52,7 +54,7 @@ describe('a pre-variants 75 Hard attempt', () => {
       todayDayNumber: 12,
       jokers: rulesFor(challengeRow).jokers,
     })
-    expect(gate).toEqual({ kind: 'active' })
+    expect(gate).toEqual({ kind: 'active', missed: [] })
 
     expect(calculateStreak(allEntries, 12)).toBe(11)
 
@@ -62,5 +64,43 @@ describe('a pre-variants 75 Hard attempt', () => {
     expect(calculateChallengeStats(days, rules)).toMatchObject({ xp: 935, perfectDays: 11 })
 
     expect('variant' in challengeRow).toBe(false)
+  })
+
+  it('challengeRepo.setSocialDay refuses it and leaves the row untouched', async () => {
+    const today = todayISO()
+    const startDate = addDaysISO(today, -11)
+    const challengeId = await addChallenge({ startDate, attemptNumber: 1, status: 'active' })
+    const before = await db.challenges.get(challengeId)
+
+    expect(await challengeRepo.setSocialDay(challengeId, 5, true, today)).toEqual({
+      ok: false,
+      reason: 'not-allowed',
+    })
+    expect(await db.challenges.get(challengeId)).toEqual(before)
+  })
+
+  it('every other new write path refuses it too, leaving the whole database untouched', async () => {
+    const today = todayISO()
+    const startDate = addDaysISO(today, -11) // today is Day 12
+    const challengeId = await addChallenge({ startDate, attemptNumber: 1, status: 'active' })
+    await addPerfectDays(challengeId, startDate, 1, 11)
+    const day12 = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 12, date: today })
+
+    const challengesSnapshot = await db.challenges.toArray()
+    const dayEntriesSnapshot = await db.dayEntries.toArray()
+    const workoutsSnapshot = await db.workouts.toArray()
+
+    expect(await challengeRepo.changeVariant(challengeId, 'soft', today)).toEqual({ ok: false, reason: 'locked' })
+    expect(await dayEntryRepo.setRestDay(day12.id, true)).toEqual({ ok: false, reason: 'not-allowed' })
+    await challengeRepo.acknowledgeJokers(challengeId, 0)
+
+    expect(await db.challenges.toArray()).toEqual(challengesSnapshot)
+    expect(await db.dayEntries.toArray()).toEqual(dayEntriesSnapshot)
+    expect(await db.workouts.toArray()).toEqual(workoutsSnapshot)
+
+    const challengeRow = (await db.challenges.get(challengeId))!
+    const allEntries = await dayEntryRepo.getAllForChallenge(challengeId)
+    const gate = resolveGate(challengeRow, allEntries, today)
+    expect(gate).toMatchObject({ kind: 'active', missedDays: [], jokersLeft: 0 })
   })
 })

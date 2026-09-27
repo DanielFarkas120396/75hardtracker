@@ -47,3 +47,13 @@ export function msUntilNextLocalMidnight(now: Date = new Date()): number {
 export function formatDisplayDate(dateISO: string): string {
   return isValidISODate(dateISO) ? format(parseISO(dateISO), 'd MMM yyyy') : dateISO
 }
+
+/** A short weekday and date, e.g. "Sat 4 Oct". */
+export function formatShortDay(dateISO: string): string {
+  return isValidISODate(dateISO) ? format(parseISO(dateISO), 'EEE d MMM') : dateISO
+}
+
+/** The weekday's full name, e.g. "Saturday". */
+export function formatWeekday(dateISO: string): string {
+  return isValidISODate(dateISO) ? format(parseISO(dateISO), 'EEEE') : dateISO
+}

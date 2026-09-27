@@ -1,23 +1,33 @@
+import { useState } from 'react'
 import { Mascot } from '../../components/mascot/Mascot'
+import { Button } from '../../components/ui/Button'
+import { preStartPlanLine, VARIANT_NAMES } from '../../content/variants'
 import type { Challenge } from '../../db/types'
 import { formatDisplayDate } from '../../lib/dates'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { daysUntilStart } from '../../logic/days'
+import { rulesFor } from '../../logic/rulesets'
+import { SocialOccasionSheet } from './SocialOccasionSheet'
 
 interface PreStartViewProps {
   challenge: Challenge
   todayDayNumber: number
+  today: string
 }
 
 /** What Today shows before Day 1: a countdown instead of task cards (no day can be logged yet). */
-export function PreStartView({ challenge, todayDayNumber }: PreStartViewProps) {
+export function PreStartView({ challenge, todayDayNumber, today }: PreStartViewProps) {
   const brokenStartDate = !Number.isFinite(todayDayNumber)
   const days = daysUntilStart(todayDayNumber)
+  const rules = rulesFor(challenge)
+  const [socialOpen, setSocialOpen] = useState(false)
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-canvas px-6 pb-24 text-center">
       <Mascot mood="waiting" size={120} />
-      <p className="font-rounded text-sm font-bold text-ink-muted">Attempt #{challenge.attemptNumber}</p>
+      <p className="font-rounded text-sm font-bold text-ink-muted">
+        {VARIANT_NAMES[rules.variant]} · Attempt #{challenge.attemptNumber}
+      </p>
       {brokenStartDate ? (
         <>
           <h1 className="font-rounded text-2xl font-extrabold text-ink">Pick a start date</h1>
@@ -32,13 +42,27 @@ export function PreStartView({ challenge, todayDayNumber }: PreStartViewProps) {
           </h1>
           <p className="max-w-xs font-rounded text-ink-muted">
             Your {CHALLENGE_LENGTH} days begin on {formatDisplayDate(challenge.startDate)}. Use the time to pick
-            your book, plan two workouts a day and stock up on water.
+            your book, {preStartPlanLine(rules)} and stock up on water.
           </p>
           <p className="max-w-xs font-rounded text-sm text-ink-muted">
             You can still move the start date in Settings.
           </p>
+          {rules.socialDaysPerWeek > 0 && (
+            <Button variant="secondary" onClick={() => setSocialOpen(true)}>
+              🥂 Plan a social occasion
+            </Button>
+          )}
         </>
       )}
+
+      <SocialOccasionSheet
+        open={socialOpen}
+        challenge={challenge}
+        today={today}
+        todayDayNumber={todayDayNumber}
+        onClose={() => setSocialOpen(false)}
+        onDeclared={() => {}}
+      />
     </div>
   )
 }

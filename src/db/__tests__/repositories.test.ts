@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { addDaysISO, todayISO } from '../../lib/dates'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { resolveChallengeGate } from '../../logic/restart'
+import { RULESETS } from '../../logic/rulesets'
 import { db } from '../db'
 import { badgeRepo } from '../repositories/badgeRepo'
 import { bookRepo } from '../repositories/bookRepo'
@@ -13,6 +14,7 @@ import { measurementRepo } from '../repositories/measurementRepo'
 import { photoRepo } from '../repositories/photoRepo'
 import { SETTING_KEYS, settingsRepo } from '../repositories/settingsRepo'
 import { workoutRepo } from '../repositories/workoutRepo'
+import type { DayEntry, Photo, Workout } from '../types'
 import { addChallenge, addPerfectDays, freshDatabase, jpegBytes } from './fixtures'
 
 const today = todayISO()
@@ -131,7 +133,7 @@ describe('the completion flow', () => {
       expect.objectContaining({ id: challengeId, attemptNumber: 1, status: 'completed' }),
     ])
 
-    const nextId = await challengeRepo.startNew(today)
+    const nextId = await challengeRepo.startNew(today, 'hard')
     expect(await db.challenges.get(nextId)).toMatchObject({ attemptNumber: 2, status: 'active', startDate: today })
     expect(await db.challenges.where('status').equals('active').count()).toBe(1)
   })
@@ -211,6 +213,36 @@ describe('challengeRepo.changeStartDate', () => {
     const challengeId = await addChallenge({ startDate: today, attemptNumber: 1, status: 'active' })
     expect(await challengeRepo.changeStartDate(challengeId, '', today)).toEqual({ ok: false, reason: 'empty' })
     expect(await db.challenges.get(challengeId)).toMatchObject({ startDate: today })
+  })
+
+  it('shifts a declared social day so it keeps its calendar date when the start moves later', async () => {
+    const challengeId = await addChallenge({
+      startDate: today,
+      attemptNumber: 1,
+      status: 'active',
+      variant: 'medium',
+      socialDays: [6],
+    })
+    const tomorrow = addDaysISO(today, 1)
+
+    expect(await challengeRepo.changeStartDate(challengeId, tomorrow, today)).toEqual({ ok: true })
+
+    expect((await db.challenges.get(challengeId))?.socialDays).toEqual([5])
+  })
+
+  it('drops a declared day that would land before Day 1 once the start moves', async () => {
+    const challengeId = await addChallenge({
+      startDate: today,
+      attemptNumber: 1,
+      status: 'active',
+      variant: 'medium',
+      socialDays: [2],
+    })
+    const later = addDaysISO(today, 3)
+
+    expect(await challengeRepo.changeStartDate(challengeId, later, today)).toEqual({ ok: true })
+
+    expect(await db.challenges.get(challengeId)).not.toHaveProperty('socialDays')
   })
 })
 
@@ -391,5 +423,268 @@ describe('dayEntryRepo.setPlans', () => {
     const stored = await db.dayEntries.get(entry.id)
     expect(stored).not.toHaveProperty('plans')
     expect(stored).not.toHaveProperty('planEstimates')
+  })
+})
+
+describe('social occasions', () => {
+  it('declares a future day within the week', async () => {
+    const challengeId = await addChallenge({
+      startDate: addDaysISO(today, -2), // today is Day 3
+      attemptNumber: 1,
+      status: 'active',
+      variant: 'strong',
+    })
+    expect(await challengeRepo.setSocialDay(challengeId, 4, true, today)).toEqual({ ok: true })
+    expect((await db.challenges.get(challengeId))?.socialDays).toEqual([4])
+  })
+
+  it('refuses to declare today or a day already past', async () => {
+    const challengeId = await addChallenge({
+      startDate: addDaysISO(today, -2),
+      attemptNumber: 1,
+      status: 'active',
+      variant: 'strong',
+    })
+    expect(await challengeRepo.setSocialDay(challengeId, 3, true, today)).toEqual({ ok: false, reason: 'too-late' })
+    expect(await challengeRepo.setSocialDay(challengeId, 2, true, today)).toEqual({ ok: false, reason: 'too-late' })
+  })
+
+  it('refuses a second declaration in the same challenge week', async () => {
+    const challengeId = await addChallenge({
+      startDate: addDaysISO(today, -2),
+      attemptNumber: 1,
+      status: 'active',
+      variant: 'strong',
+    })
+    await challengeRepo.setSocialDay(challengeId, 4, true, today)
+    expect(await challengeRepo.setSocialDay(challengeId, 5, true, today)).toEqual({
+      ok: false,
+      reason: 'week-taken',
+      dayNumber: 4,
+    })
+  })
+
+  it('allows a declaration in a later challenge week', async () => {
+    const challengeId = await addChallenge({
+      startDate: addDaysISO(today, -2),
+      attemptNumber: 1,
+      status: 'active',
+      variant: 'strong',
+    })
+    await challengeRepo.setSocialDay(challengeId, 4, true, today)
+    expect(await challengeRepo.setSocialDay(challengeId, 8, true, today)).toEqual({ ok: true })
+  })
+
+  it('refuses a day outside the challenge', async () => {
+    const challengeId = await addChallenge({
+      startDate: addDaysISO(today, -2),
+      attemptNumber: 1,
+      status: 'active',
+      variant: 'strong',
+    })
+    expect(await challengeRepo.setSocialDay(challengeId, 76, true, today)).toEqual({
+      ok: false,
+      reason: 'out-of-range',
+    })
+  })
+
+  it('refuses on a Hard challenge', async () => {
+    const challengeId = await addChallenge({
+      startDate: addDaysISO(today, -2),
+      attemptNumber: 1,
+      status: 'active',
+      variant: 'hard',
+    })
+    expect(await challengeRepo.setSocialDay(challengeId, 4, true, today)).toEqual({ ok: false, reason: 'not-allowed' })
+  })
+
+  it('is idempotent when declared twice', async () => {
+    const challengeId = await addChallenge({
+      startDate: addDaysISO(today, -2),
+      attemptNumber: 1,
+      status: 'active',
+      variant: 'strong',
+    })
+    await challengeRepo.setSocialDay(challengeId, 4, true, today)
+    expect(await challengeRepo.setSocialDay(challengeId, 4, true, today)).toEqual({ ok: true })
+    expect((await db.challenges.get(challengeId))?.socialDays).toEqual([4])
+  })
+
+  it('cancelling empties the day and removes the field', async () => {
+    const challengeId = await addChallenge({
+      startDate: addDaysISO(today, -2),
+      attemptNumber: 1,
+      status: 'active',
+      variant: 'strong',
+    })
+    await challengeRepo.setSocialDay(challengeId, 4, true, today)
+    expect(await challengeRepo.setSocialDay(challengeId, 4, false, today)).toEqual({ ok: true })
+    expect(await db.challenges.get(challengeId)).not.toHaveProperty('socialDays')
+  })
+
+  it('refuses to cancel a day already in the past', async () => {
+    const challengeId = await addChallenge({
+      startDate: addDaysISO(today, -2),
+      attemptNumber: 1,
+      status: 'active',
+      variant: 'strong',
+      socialDays: [2],
+    })
+    expect(await challengeRepo.setSocialDay(challengeId, 2, false, today)).toEqual({ ok: false, reason: 'too-late' })
+  })
+
+  it("cancelling today's occasion re-syncs today", async () => {
+    const startDate = addDaysISO(today, -2)
+    const challengeId = await addChallenge({
+      startDate,
+      attemptNumber: 1,
+      status: 'active',
+      variant: 'strong',
+      socialDays: [3],
+    })
+    const photoId = await db.photos.add({ date: today, blob: new Blob([jpegBytes(3)], { type: 'image/jpeg' }) } as Photo)
+    const entryId = await db.dayEntries.add({
+      challengeId,
+      date: today,
+      dayNumber: 3,
+      water_ml: RULESETS.strong.waterTargetMl,
+      pages_read: RULESETS.strong.pagesTarget,
+      dietFollowed: true,
+      noAlcohol: false,
+      photoId,
+      completed: true,
+    } as DayEntry)
+    await db.workouts.bulkAdd([
+      { dayEntryId: entryId, type: 'Running', durationMin: RULESETS.strong.minWorkoutMin, isOutdoor: true },
+      { dayEntryId: entryId, type: 'Weights', durationMin: RULESETS.strong.minWorkoutMin, isOutdoor: false },
+    ] as Workout[])
+
+    expect(await challengeRepo.setSocialDay(challengeId, 3, false, today)).toEqual({ ok: true })
+    expect((await db.dayEntries.get(entryId))?.completed).toBe(false)
+  })
+})
+
+describe('recovery days', () => {
+  it("completes the day's workouts task", async () => {
+    const startDate = addDaysISO(today, -2) // today is Day 3
+    const challengeId = await addChallenge({ startDate, attemptNumber: 1, status: 'active', variant: 'soft' })
+    const day2 = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 2, date: addDaysISO(startDate, 1) })
+    await dayEntryRepo.update(day2.id, { dietFollowed: true, noAlcohol: true })
+    await dayEntryRepo.adjustWater(day2.id, RULESETS.soft.waterTargetMl)
+    await dayEntryRepo.adjustPages(day2.id, RULESETS.soft.pagesTarget)
+    await photoRepo.replaceForEntry(day2.id, photoBlob())
+
+    expect(await dayEntryRepo.setRestDay(day2.id, true)).toEqual({ ok: true })
+    expect((await db.dayEntries.get(day2.id))?.completed).toBe(true)
+  })
+
+  it('refuses a second recovery day in the same challenge week', async () => {
+    const startDate = addDaysISO(today, -2)
+    const challengeId = await addChallenge({ startDate, attemptNumber: 1, status: 'active', variant: 'soft' })
+    const day2 = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 2, date: addDaysISO(startDate, 1) })
+    const day3 = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 3, date: today })
+    await dayEntryRepo.setRestDay(day2.id, true)
+
+    expect(await dayEntryRepo.setRestDay(day3.id, true)).toEqual({ ok: false, reason: 'week-taken', dayNumber: 2 })
+  })
+
+  it('clears the field and re-syncs when taken back', async () => {
+    const startDate = addDaysISO(today, -2)
+    const challengeId = await addChallenge({ startDate, attemptNumber: 1, status: 'active', variant: 'soft' })
+    const day2 = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 2, date: addDaysISO(startDate, 1) })
+    await dayEntryRepo.setRestDay(day2.id, true)
+
+    expect(await dayEntryRepo.setRestDay(day2.id, false)).toEqual({ ok: true })
+    const entry = await db.dayEntries.get(day2.id)
+    expect(entry).not.toHaveProperty('restDay')
+    expect(entry?.completed).toBe(false)
+  })
+
+  it('refuses on a Medium challenge', async () => {
+    const startDate = addDaysISO(today, -2)
+    const challengeId = await addChallenge({ startDate, attemptNumber: 1, status: 'active', variant: 'medium' })
+    const day2 = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 2, date: addDaysISO(startDate, 1) })
+
+    expect(await dayEntryRepo.setRestDay(day2.id, true)).toEqual({ ok: false, reason: 'not-allowed' })
+  })
+})
+
+describe('changing the variant', () => {
+  it('switches on Day 1; switching to Hard clears social days and rest days, and re-judges Day 1', async () => {
+    const challengeId = await addChallenge({ startDate: today, attemptNumber: 1, status: 'active', variant: 'medium' })
+    const entry = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 1, date: today })
+
+    expect(await challengeRepo.changeVariant(challengeId, 'soft', today)).toEqual({ ok: true })
+    expect((await db.challenges.get(challengeId))?.variant).toBe('soft')
+
+    await challengeRepo.setSocialDay(challengeId, 4, true, today)
+    await dayEntryRepo.setRestDay(entry.id, true)
+    await dayEntryRepo.update(entry.id, { dietFollowed: true, noAlcohol: true })
+    await dayEntryRepo.adjustWater(entry.id, RULESETS.soft.waterTargetMl)
+    await dayEntryRepo.adjustPages(entry.id, RULESETS.soft.pagesTarget)
+    await photoRepo.replaceForEntry(entry.id, photoBlob())
+    expect((await db.dayEntries.get(entry.id))?.completed).toBe(true)
+
+    expect(await challengeRepo.changeVariant(challengeId, 'hard', today)).toEqual({ ok: true })
+
+    const challenge = await db.challenges.get(challengeId)
+    expect(challenge?.variant).toBe('hard')
+    expect(challenge).not.toHaveProperty('socialDays')
+    const updatedEntry = await db.dayEntries.get(entry.id)
+    expect(updatedEntry).not.toHaveProperty('restDay')
+    expect(updatedEntry?.completed).toBe(false)
+  })
+
+  it('is locked from Day 2 on', async () => {
+    const challengeId = await addChallenge({
+      startDate: addDaysISO(today, -1),
+      attemptNumber: 1,
+      status: 'active',
+      variant: 'medium',
+    })
+    expect(await challengeRepo.changeVariant(challengeId, 'soft', today)).toEqual({ ok: false, reason: 'locked' })
+  })
+})
+
+describe('starting attempts', () => {
+  it('bootstrapIfEmpty writes variant hard', async () => {
+    await challengeRepo.bootstrapIfEmpty(today)
+    const [challenge] = await db.challenges.toArray()
+    expect(challenge.variant).toBe('hard')
+  })
+
+  it('startNew writes the given variant', async () => {
+    const id = await challengeRepo.startNew(today, 'medium')
+    expect((await db.challenges.get(id))?.variant).toBe('medium')
+  })
+
+  it('restart keeps a Soft attempt Soft', async () => {
+    const failedId = await addChallenge({
+      startDate: addDaysISO(today, -1),
+      attemptNumber: 1,
+      status: 'active',
+      variant: 'soft',
+    })
+    const newId = await challengeRepo.restart(failedId, today)
+    expect((await db.challenges.get(newId))?.variant).toBe('soft')
+  })
+
+  it('restart of a variant-less attempt starts Hard, leaving the old row without a variant key', async () => {
+    const failedId = await addChallenge({ startDate: addDaysISO(today, -1), attemptNumber: 1, status: 'active' })
+    const newId = await challengeRepo.restart(failedId, today)
+    expect((await db.challenges.get(newId))?.variant).toBe('hard')
+    expect(await db.challenges.get(failedId)).not.toHaveProperty('variant')
+  })
+})
+
+describe('acknowledging jokers', () => {
+  it('only grows, never shrinks', async () => {
+    const challengeId = await addChallenge({ startDate: today, attemptNumber: 1, status: 'active', variant: 'soft' })
+
+    await challengeRepo.acknowledgeJokers(challengeId, 1)
+    expect((await db.challenges.get(challengeId))?.jokersAcknowledged).toBe(1)
+
+    await challengeRepo.acknowledgeJokers(challengeId, 0)
+    expect((await db.challenges.get(challengeId))?.jokersAcknowledged).toBe(1)
   })
 })

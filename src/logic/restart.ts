@@ -1,4 +1,5 @@
 import { CHALLENGE_LENGTH } from './constants'
+import type { ChallengeVariant } from './rulesets'
 import type { ChallengeStatus, DayCompletionSummary } from './types'
 
 /**
@@ -53,6 +54,8 @@ export interface GateResolution {
   kind: GateKind
   /** The missed day that failed the attempt (the first miss beyond the jokers), when `kind` is 'needsRestart'. */
   failedDayNumber?: number
+  /** Every missed day so far (each one used a joker while the attempt is active). */
+  missed: number[]
 }
 
 /**
@@ -69,14 +72,14 @@ export function resolveChallengeGate(params: {
   jokers: number
 }): GateResolution {
   const evaluation = evaluateChallenge(params)
-  if (evaluation.status === 'completed') return { kind: 'completed' }
-  if (evaluation.status === 'active') return { kind: 'active' }
+  if (evaluation.status === 'completed') return { kind: 'completed', missed: evaluation.missed }
+  if (evaluation.status === 'active') return { kind: 'active', missed: evaluation.missed }
 
   const today = Number.isFinite(params.todayDayNumber) ? params.todayDayNumber : CHALLENGE_LENGTH + 1
   const missed = missedDayNumbers(params.dayEntries, today)
   const failedDayNumber =
     evaluation.failedDayNumber ?? missed[params.jokers] ?? missed[0] ?? Math.min(Math.max(today, 1), CHALLENGE_LENGTH)
-  return { kind: 'needsRestart', failedDayNumber }
+  return { kind: 'needsRestart', failedDayNumber, missed }
 }
 
 /** The attempt number for a new challenge: one more than the highest so far (1 for the first). */
@@ -88,13 +91,19 @@ export interface NewChallenge {
   startDate: string
   attemptNumber: number
   status: 'active'
+  variant: ChallengeVariant
 }
 
 /** Builds the next Challenge to persist — after a failed attempt, a completed one, or on first launch. */
-export function buildNextChallenge(existingAttemptNumbers: readonly number[], startDate: string): NewChallenge {
+export function buildNextChallenge(
+  existingAttemptNumbers: readonly number[],
+  startDate: string,
+  variant: ChallengeVariant,
+): NewChallenge {
   return {
     startDate,
     attemptNumber: nextAttemptNumber(existingAttemptNumbers),
     status: 'active',
+    variant,
   }
 }

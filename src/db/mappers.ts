@@ -1,8 +1,8 @@
 import type { DayTaskData } from '../logic/types'
 import type { DayEntry, Workout } from './types'
 
-/** Maps a DayEntry row and its Workout rows onto the plain data the logic module works with. */
-export function toDayTaskData(entry: DayEntry, workouts: Workout[]): DayTaskData {
+/** Maps a DayEntry row, its Workout rows and its attempt's declared social days onto the logic module's data. */
+export function toDayTaskData(entry: DayEntry, workouts: Workout[], socialDays: readonly number[] | undefined): DayTaskData {
   return {
     water_ml: entry.water_ml,
     pages_read: entry.pages_read,
@@ -10,6 +10,8 @@ export function toDayTaskData(entry: DayEntry, workouts: Workout[]): DayTaskData
     noAlcohol: entry.noAlcohol,
     hasPhoto: entry.photoId != null,
     workouts: workouts.map((w) => ({ durationMin: w.durationMin, isOutdoor: w.isOutdoor })),
+    restDay: entry.restDay === true,
+    socialDay: socialDays?.includes(entry.dayNumber) ?? false,
   }
 }
 

@@ -6,14 +6,24 @@ No backend: all data (including photos) lives in the browser via IndexedDB (Dexi
 
 ## Features
 
-- **Today** — the five daily tasks: two workouts of 45+ minutes (one outdoors), diet and no alcohol, 3.8 L of water, 10 pages of reading, and a progress photo. Each card celebrates when it's done, and the mascot counts the day down. Mood and notes are optional and don't affect completion.
+- **Today** — the five daily tasks, worded for whichever challenge you're doing: workouts, diet and alcohol, water, reading, and a progress photo. Each card celebrates when it's done, and the mascot counts the day down. Mood and notes are optional and don't affect completion.
+- **Four challenges** — pick yours when you start, or until the end of Day 1 (Settings → Challenge):
+
+  | | 75 Hard | 75 Strong | 75 Medium | 75 Soft |
+  |---|---|---|---|---|
+  | Workouts | 2 × 45 min, one outdoors | as Hard | 1 × 45 min | 1 × 45 min + a recovery day a week |
+  | Diet | strict, no alcohol | strict; a drink on a social occasion declared the day before (one a week) | eat healthy; same social rule | as Medium |
+  | Water | 3.8 L | 3.8 L | 3 L | 3 L |
+  | Reading | 10 pages, non-fiction | as Hard | 10 pages, any book | as Medium |
+  | Photo | daily | daily | daily | daily |
+  | Missed day | back to Day 1 | back to Day 1 | 1 joker | 3 jokers |
 - **The duck** — your companion is a knife-holding duck, drawn in code and animated: he breathes, blinks, watches what you touch and answers pokes. He only gets menacing when what's left no longer fits before your bedtime (Settings → Companion), and backs off once you tell him your plan ("I've got a plan" on Today). With "reduce motion" on, he holds still.
-- **Strict rules** — a day only completes with all five tasks. A missed day ends the attempt: the app shows what was missed and restarts from Day 1 once you confirm. The start date can be today or later, and it's locked from Day 2.
-- **Journey** — all 75 days on a winding path; future days are locked.
+- **Strict rules** — a day only completes with all five tasks. On 75 Hard and 75 Strong, a missed day ends the attempt: the app shows what was missed and restarts from Day 1 once you confirm. 75 Medium forgives one missed day and 75 Soft forgives three, each with a joker, before ending the attempt the same way. The start date can be today or later, and it's locked from Day 2.
+- **Journey** — all 75 days on a winding path; future days are locked, and 🃏 marks a day a joker forgave.
 - **XP, streaks and badges** — 10 XP per task, +25 for a perfect day, +100 at streaks of 7, 14, 21, 30, 50 and 75. A full-screen celebration for each completed day, and a victory screen after Day 75.
 - **Stats** — totals for the attempt, plus weight and body measurements with a weight chart.
 - **Gallery** — every progress photo across all attempts.
-- **Settings** — start date, books, badges, attempt history (days and photos of every past attempt), sound and haptics, light/dark/system theme, installing the app, and backup & storage.
+- **Settings** — Challenge (the challenge and its start date), books, badges, attempt history (days and photos of every past attempt), sound and haptics, light/dark/system theme, installing the app, and backup & storage.
 - **Installable and offline** — a PWA with a precached service worker; after the first visit it loads without a network.
 - **Accessible** — text and state colours meet WCAG contrast (4.5:1 for text) in both themes, and the app honours the "reduce motion" setting.
 
@@ -50,6 +60,10 @@ await s.seedDay75Pending()
 | `seedDayOneWithLogs()` | Day 1 with some progress logged, for trying start-date changes. |
 | `seedMenaceDay()` | Day 3 with water at 2.1 L and the reading, photo and diet to do: try `?now=10:00`, `20:00` and `22:45`. |
 | `seedPlannedReading()` | Only the reading left, planned for 22:30: try `?now=19:00`, `22:35` and `23:10`. |
+| `seedStrongSocial()` | 75 Strong on Day 3, declared as this week's social occasion: diet is complete, the rest isn't logged. |
+| `seedMediumJoker()` | 75 Medium on Day 5 with Day 3 missed: opens on the joker screen. |
+| `seedSoftRestDay()` | 75 Soft on Day 2, taking its recovery day: diet, water and reading done, only the photo left. |
+| `seedDay77Complete()` | A Hard attempt with all 75 days perfect, opened on Day 77: opens on Victory. |
 
 `?now=HH:mm` freezes the duck's clock in development (production ignores it), so each menace level can be checked, e.g. `?db=duck&now=22:45`.
 

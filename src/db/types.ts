@@ -10,6 +10,10 @@ export interface Challenge {
   status: ChallengeStatus
   /** Which challenge this attempt is. Missing means 75 Hard (attempts made before variants existed). */
   variant?: ChallengeVariant
+  /** Day numbers declared ahead as social occasions (Strong, Medium, Soft): a drink is allowed that day. */
+  socialDays?: number[]
+  /** How many used jokers the player has seen announced. Only ever grows. */
+  jokersAcknowledged?: number
 }
 
 export interface DayEntry {
@@ -28,6 +32,8 @@ export interface DayEntry {
   plans?: Partial<Record<TaskId, string>>
   /** Minutes each planned task was estimated to need when its plan was saved; fixes the plan's window so later progress can't shrink it. */
   planEstimates?: Partial<Record<TaskId, number>>
+  /** 75 Soft's recovery day: the workouts task counts as done. Set only through dayEntryRepo.setRestDay. */
+  restDay?: true
   completed: boolean
 }
 

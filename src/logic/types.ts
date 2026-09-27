@@ -17,6 +17,10 @@ export interface DayTaskData {
   noAlcohol: boolean
   hasPhoto: boolean
   workouts: WorkoutTaskData[]
+  /** The attempt's recovery day for its week (75 Soft). */
+  restDay?: boolean
+  /** A social occasion declared ahead: a drink doesn't break the diet. */
+  socialDay?: boolean
 }
 
 /** One logged day of an attempt, for whole-attempt calculations (XP, attempt summaries). */

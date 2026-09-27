@@ -16,7 +16,7 @@ export async function loadChallengeDays(challengeId: number): Promise<{ rules: R
   const workoutsByEntry = groupWorkoutsByEntry(await workoutRepo.getForDayEntries(entries.map((e) => e.id)))
   const days = entries.map((entry) => ({
     dayNumber: entry.dayNumber,
-    data: toDayTaskData(entry, workoutsByEntry.get(entry.id) ?? []),
+    data: toDayTaskData(entry, workoutsByEntry.get(entry.id) ?? [], challenge?.socialDays),
   }))
   return { rules: rulesFor(challenge ?? {}), days }
 }

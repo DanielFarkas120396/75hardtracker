@@ -1,12 +1,15 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
+import { VariantPicker } from '../../components/VariantPicker'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
+import { VARIANT_NAMES } from '../../content/variants'
 import { challengeRepo } from '../../db/repositories/challengeRepo'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import type { Challenge } from '../../db/types'
 import { formatDisplayDate } from '../../lib/dates'
 import { daysUntilStart, isChallengeDay } from '../../logic/days'
+import { variantOf, type ChallengeVariant } from '../../logic/rulesets'
 import { isStartDateEditable, validateStartDateChange, type StartDateChangeResult } from '../../logic/startDate'
 
 type Rejection = Extract<StartDateChangeResult, { ok: false }>['reason']
@@ -33,18 +36,31 @@ function statusLine(challenge: Challenge, todayDayNumber: number): string {
 }
 
 /**
- * Edits the active attempt's start date: today or later, and only before or
- * on Day 1 (see validateStartDateChange). Moving the start while Day 1 has
- * logs clears them, so that asks for confirmation first.
+ * The active attempt's challenge and start date, both editable only before
+ * or on Day 1 (see isStartDateEditable / validateStartDateChange). Moving
+ * the start while Day 1 has logs clears them, so that asks for confirmation
+ * first.
  */
 export function StartDateSection({ challenge, today, todayDayNumber }: StartDateSectionProps) {
   const [draft, setDraft] = useState(challenge.startDate)
   const [error, setError] = useState<string | null>(null)
   const [confirmClear, setConfirmClear] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [switching, setSwitching] = useState(false)
   const hasLoggedProgress = useLiveQuery(() => dayEntryRepo.hasLoggedProgress(challenge.id), [challenge.id]) ?? false
 
   const editable = isStartDateEditable(todayDayNumber)
+
+  const changeVariant = async (variant: ChallengeVariant) => {
+    if (variant === variantOf(challenge)) return
+    setSwitching(true)
+    try {
+      const result = await challengeRepo.changeVariant(challenge.id, variant, today)
+      setError(result.ok ? null : REJECTION_MESSAGES[result.reason])
+    } finally {
+      setSwitching(false)
+    }
+  }
 
   const apply = async () => {
     setSaving(true)
@@ -74,11 +90,16 @@ export function StartDateSection({ challenge, today, todayDayNumber }: StartDate
 
   return (
     <section className="rounded-card bg-surface p-4 shadow-sm">
-      <h2 className="font-rounded text-lg font-extrabold text-ink">Challenge start date</h2>
+      <h2 className="font-rounded text-lg font-extrabold text-ink">Challenge</h2>
       <p className="mt-1 text-sm text-ink-muted">{statusLine(challenge, todayDayNumber)}</p>
 
       {editable ? (
         <>
+          <div className="mt-3">
+            <VariantPicker value={variantOf(challenge)} onChange={(v) => void changeVariant(v)} disabled={switching} />
+          </div>
+          <p className="mt-2 text-xs text-ink-muted">You can switch until the end of Day 1.</p>
+
           <div className="mt-3 flex gap-2">
             <input
               type="date"
@@ -103,9 +124,14 @@ export function StartDateSection({ challenge, today, todayDayNumber }: StartDate
           <p className="mt-2 text-xs text-ink-muted">Today or later. It locks once Day 2 begins.</p>
         </>
       ) : (
-        <p className="mt-3 rounded-xl bg-canvas px-3 py-2 text-sm font-semibold text-ink-muted">
-          🔒 Locked — your attempt is past Day 1, so its days are set.
-        </p>
+        <>
+          <p className="mt-3 rounded-xl bg-canvas px-3 py-2 text-sm font-semibold text-ink-muted">
+            🔒 Locked — your attempt is past Day 1, so its days are set.
+          </p>
+          <p className="mt-3 text-sm font-semibold text-ink-muted">
+            {VARIANT_NAMES[variantOf(challenge)]} — locked for this attempt.
+          </p>
+        </>
       )}
 
       {error && (

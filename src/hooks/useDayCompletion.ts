@@ -5,16 +5,21 @@ import { isDayComplete, missingTasks, taskCompletionMap } from '../logic/dayComp
 import type { Ruleset } from '../logic/rulesets'
 
 /** Derives per-task and overall completion for a DayEntry + its Workouts. */
-export function useDayCompletion(entry: DayEntry | undefined, workouts: Workout[] | undefined, rules: Ruleset) {
+export function useDayCompletion(
+  entry: DayEntry | undefined,
+  workouts: Workout[] | undefined,
+  rules: Ruleset,
+  socialDays: readonly number[] | undefined,
+) {
   return useMemo(() => {
     if (!entry || !workouts) return undefined
 
-    const data = toDayTaskData(entry, workouts)
+    const data = toDayTaskData(entry, workouts, socialDays)
     return {
       data,
       completion: taskCompletionMap(data, rules),
       missing: missingTasks(data, rules),
       isComplete: isDayComplete(data, rules),
     }
-  }, [entry, workouts, rules])
+  }, [entry, workouts, rules, socialDays])
 }

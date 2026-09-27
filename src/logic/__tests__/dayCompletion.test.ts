@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { hasAnyProgress, isDayComplete, isWaterTaskComplete, isWorkoutsTaskComplete, missingTasks, taskCompletionMap } from '../dayCompletion'
+import {
+  hasAnyProgress,
+  isDayComplete,
+  isDietTaskComplete,
+  isWaterTaskComplete,
+  isWorkoutsTaskComplete,
+  missingTasks,
+  taskCompletionMap,
+} from '../dayCompletion'
 import { RULESETS } from '../rulesets'
 import type { DayTaskData } from '../types'
 
@@ -171,5 +179,38 @@ describe('hasAnyProgress', () => {
     expect(hasAnyProgress({ ...nothing, noAlcohol: true })).toBe(true)
     expect(hasAnyProgress({ ...nothing, hasPhoto: true })).toBe(true)
     expect(hasAnyProgress({ ...nothing, workouts: [{ durationMin: 0, isOutdoor: false }] })).toBe(true)
+  })
+})
+
+describe('recovery days and social occasions', () => {
+  const day = {
+    water_ml: 3800,
+    pages_read: 10,
+    dietFollowed: true,
+    noAlcohol: true,
+    hasPhoto: true,
+    workouts: [] as { durationMin: number; isOutdoor: boolean }[],
+  }
+
+  it('counts a recovery day as the workouts on 75 Soft only', () => {
+    expect(isWorkoutsTaskComplete({ ...day, restDay: true }, RULESETS.soft)).toBe(true)
+    expect(isWorkoutsTaskComplete({ ...day, restDay: true }, RULESETS.medium)).toBe(false)
+    expect(isWorkoutsTaskComplete({ ...day, restDay: true }, RULESETS.hard)).toBe(false)
+  })
+
+  it('allows a drink on a declared social occasion, except on 75 Hard', () => {
+    const drank = { ...day, noAlcohol: false, socialDay: true }
+    expect(isDietTaskComplete(drank, RULESETS.strong)).toBe(true)
+    expect(isDietTaskComplete(drank, RULESETS.medium)).toBe(true)
+    expect(isDietTaskComplete(drank, RULESETS.soft)).toBe(true)
+    expect(isDietTaskComplete(drank, RULESETS.hard)).toBe(false)
+  })
+
+  it('still needs the diet itself on a social occasion', () => {
+    expect(isDietTaskComplete({ ...day, dietFollowed: false, noAlcohol: false, socialDay: true }, RULESETS.strong)).toBe(false)
+  })
+
+  it('needs no alcohol on an ordinary day', () => {
+    expect(isDietTaskComplete({ ...day, noAlcohol: false }, RULESETS.strong)).toBe(false)
   })
 })
