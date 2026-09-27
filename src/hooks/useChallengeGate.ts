@@ -4,6 +4,7 @@ import { challengeRepo } from '../db/repositories/challengeRepo'
 import { dayEntryRepo } from '../db/repositories/dayEntryRepo'
 import type { Challenge, DayEntry } from '../db/types'
 import { dayNumberForDate } from '../lib/dates'
+import { isChallengeDay } from '../logic/days'
 import { resolveChallengeGate } from '../logic/restart'
 import { rulesFor } from '../logic/rulesets'
 import { calculateStreak } from '../logic/streak'
@@ -26,13 +27,15 @@ export interface GateBase {
  * - `active`: the normal screens (including the countdown before Day 1);
  * - `needsRestart`: a miss beyond the ruleset's jokers, so the restart flow blocks the app;
  * - `jokerUsed`: a miss that a joker forgave, not yet announced;
- * - `completed`: all 75 days are done — the victory screen.
+ * - `completed`: all 75 days are done — the victory screen;
+ * - `abandoned`: the attempt was given up — the "You gave up" screen, until the next one starts.
  */
 export type ChallengeGate =
   | (GateBase & { kind: 'active' })
   | (GateBase & { kind: 'needsRestart'; failedDayNumber: number })
   | (GateBase & { kind: 'jokerUsed'; newlyMissed: number[] })
   | (GateBase & { kind: 'completed' })
+  | (GateBase & { kind: 'abandoned' })
 
 /**
  * Loads the current challenge and its day entries in one live query and
@@ -92,4 +95,9 @@ export function resolveGate(challenge: Challenge, dayEntries: DayEntry[], today:
     return { ...base, kind: 'jokerUsed', newlyMissed: resolution.missed.slice(acknowledged) }
   }
   return { ...base, kind: resolution.kind }
+}
+
+/** Whether the attempt can be given up now: the normal screens are showing and today is Day 1–75. */
+export function canGiveUp(gate: ChallengeGate): boolean {
+  return gate.kind === 'active' && isChallengeDay(gate.todayDayNumber)
 }

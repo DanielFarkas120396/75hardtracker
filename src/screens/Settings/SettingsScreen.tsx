@@ -11,6 +11,7 @@ import { BadgesSection } from './BadgesSection'
 import { BooksSection } from './BooksSection'
 import { CompanionSection } from './CompanionSection'
 import { ExportImportSection } from './ExportImportSection'
+import { GiveUpFlow } from './GiveUpFlow'
 import { InstallSection } from './InstallSection'
 import { StartDateSection } from './StartDateSection'
 
@@ -18,11 +19,16 @@ interface SettingsScreenProps {
   challenge: Challenge
   today: string
   todayDayNumber: number
+  /** The running attempt's streak, shown by the give-up flow. */
+  streak: number
+  /** True while the attempt can be given up: the gate is active and today is Day 1–75. */
+  canGiveUp: boolean
 }
 
-export function SettingsScreen({ challenge, today, todayDayNumber }: SettingsScreenProps) {
+export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGiveUp }: SettingsScreenProps) {
   const { soundEnabled, hapticsEnabled, bedtime, setSoundEnabled, setHapticsEnabled, setBedtime } = useSettings()
   const [showResetConfirm, setShowResetConfirm] = useState(false)
+  const [showGiveUp, setShowGiveUp] = useState(false)
   const [resetting, setResetting] = useState(false)
 
   const confirmReset = async () => {
@@ -72,12 +78,31 @@ export function SettingsScreen({ challenge, today, todayDayNumber }: SettingsScr
 
         <section className="rounded-card bg-surface p-4 shadow-sm">
           <h2 className="font-rounded text-lg font-extrabold text-ink">Danger zone</h2>
-          <p className="mt-1 text-sm text-ink-muted">Permanently erase all attempts, photos, and badges.</p>
+          {canGiveUp && (
+            <>
+              <p className="mt-1 text-sm text-ink-muted">Stop this attempt for good. It stays in your history.</p>
+              <Button variant="danger" className="mt-3 w-full" onClick={() => setShowGiveUp(true)}>
+                Give up this challenge
+              </Button>
+            </>
+          )}
+          <p className={`${canGiveUp ? 'mt-4' : 'mt-1'} text-sm text-ink-muted`}>
+            Permanently erase all attempts, photos, and badges.
+          </p>
           <Button variant="danger" className="mt-3 w-full" onClick={() => setShowResetConfirm(true)}>
             Reset everything
           </Button>
         </section>
       </main>
+
+      <GiveUpFlow
+        open={showGiveUp && canGiveUp}
+        onClose={() => setShowGiveUp(false)}
+        challenge={challenge}
+        today={today}
+        todayDayNumber={todayDayNumber}
+        streak={streak}
+      />
 
       <Modal open={showResetConfirm} onClose={() => setShowResetConfirm(false)}>
         <h3 className="font-rounded text-lg font-extrabold text-ink">Erase everything?</h3>

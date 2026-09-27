@@ -43,6 +43,7 @@ export function useAttemptSummaries(today: string): AttemptRecord[] | undefined 
       const summary = summarizeAttempt({
         startDate: challenge.startDate,
         status: challenge.status,
+        abandonedOn: challenge.abandonedOn,
         days,
         todayDayNumber: dayNumberForDate(challenge.startDate, today),
         rules: rulesFor(challenge),

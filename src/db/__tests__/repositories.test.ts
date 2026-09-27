@@ -677,6 +677,66 @@ describe('starting attempts', () => {
   })
 })
 
+describe('giving up', () => {
+  it('changes only the status and the give-up date, leaving a pre-variants attempt variant-less', async () => {
+    const startDate = addDaysISO(today, -11)
+    const challengeId = await addChallenge({ startDate, attemptNumber: 1, status: 'active' })
+    await addPerfectDays(challengeId, startDate, 1, 11)
+    const before = await db.challenges.get(challengeId)
+    const entriesBefore = await db.dayEntries.where('challengeId').equals(challengeId).toArray()
+
+    expect(await challengeRepo.giveUp(challengeId, today)).toEqual({ ok: true })
+
+    expect(await db.challenges.get(challengeId)).toEqual({ ...before, status: 'abandoned', abandonedOn: today })
+    expect(await db.challenges.get(challengeId)).not.toHaveProperty('variant')
+    expect(await db.dayEntries.where('challengeId').equals(challengeId).toArray()).toEqual(entriesBefore)
+  })
+
+  it('works from Day 1 to Day 75', async () => {
+    const dayOne = await addChallenge({ startDate: today, attemptNumber: 1, status: 'active', variant: 'soft' })
+    expect(await challengeRepo.giveUp(dayOne, today)).toEqual({ ok: true })
+
+    const lastDay = await addChallenge({
+      startDate: addDaysISO(today, -(CHALLENGE_LENGTH - 1)),
+      attemptNumber: 2,
+      status: 'active',
+    })
+    expect(await challengeRepo.giveUp(lastDay, today)).toEqual({ ok: true })
+  })
+
+  it('is locked before Day 1 and after Day 75', async () => {
+    const challengeId = await addChallenge({ startDate: addDaysISO(today, 1), attemptNumber: 1, status: 'active' })
+    expect(await challengeRepo.giveUp(challengeId, today)).toEqual({ ok: false, reason: 'locked' })
+
+    await db.challenges.update(challengeId, { startDate: addDaysISO(today, -CHALLENGE_LENGTH) }) // today is Day 76
+    expect(await challengeRepo.giveUp(challengeId, today)).toEqual({ ok: false, reason: 'locked' })
+    expect((await db.challenges.get(challengeId))?.status).toBe('active')
+  })
+
+  it('is locked on an attempt that is no longer active, or that does not exist', async () => {
+    const completed = await addChallenge({ startDate: addDaysISO(today, -3), attemptNumber: 1, status: 'completed' })
+    expect(await challengeRepo.giveUp(completed, today)).toEqual({ ok: false, reason: 'locked' })
+    expect((await db.challenges.get(completed))?.status).toBe('completed')
+    expect(await challengeRepo.giveUp(completed + 1, today)).toEqual({ ok: false, reason: 'locked' })
+  })
+
+  it('stays the current attempt until startNew begins the next one, numbered after it', async () => {
+    const givenUp = await addChallenge({ startDate: addDaysISO(today, -4), attemptNumber: 3, status: 'active' })
+    await challengeRepo.giveUp(givenUp, today)
+    expect(await challengeRepo.getCurrent()).toMatchObject({ id: givenUp, status: 'abandoned', abandonedOn: today })
+
+    const nextId = await challengeRepo.startNew(addDaysISO(today, 1), 'medium')
+
+    expect(await db.challenges.get(nextId)).toMatchObject({
+      attemptNumber: 4,
+      status: 'active',
+      variant: 'medium',
+      startDate: addDaysISO(today, 1),
+    })
+    expect((await challengeRepo.getCurrent())?.id).toBe(nextId)
+  })
+})
+
 describe('acknowledging jokers', () => {
   it('only grows, never shrinks', async () => {
     const challengeId = await addChallenge({ startDate: today, attemptNumber: 1, status: 'active', variant: 'soft' })

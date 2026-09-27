@@ -1,6 +1,7 @@
-import { dateForDayNumber } from '../lib/dates'
+import { dateForDayNumber, dayNumberForDate } from '../lib/dates'
 import { CHALLENGE_LENGTH } from './constants'
 import { isDayComplete, missingTasks, TASK_IDS } from './dayCompletion'
+import { isChallengeDay } from './days'
 import { missedDayNumbers } from './restart'
 import type { Ruleset } from './rulesets'
 import type { ChallengeDayData, ChallengeStatus, DayCompletionSummary, TaskId } from './types'
@@ -8,8 +9,8 @@ import { calculateChallengeXp } from './xp'
 
 export interface AttemptSummary {
   /**
-   * How far the attempt got: the day it failed on, 75 once completed, or
-   * today's day while it's running (0 before Day 1).
+   * How far the attempt got: the day it failed on, 75 once completed, the
+   * day it was given up on, or today's day while it's running (0 before Day 1).
    */
   reachedDay: number
   completedDays: number
@@ -23,13 +24,15 @@ export interface AttemptSummary {
 export function summarizeAttempt(params: {
   startDate: string
   status: ChallengeStatus
+  /** When a given-up attempt ended (Challenge.abandonedOn). */
+  abandonedOn?: string
   days: readonly ChallengeDayData[]
   todayDayNumber: number
   rules: Ruleset
 }): AttemptSummary {
-  const { startDate, status, days, todayDayNumber, rules } = params
+  const { startDate, status, abandonedOn, days, todayDayNumber, rules } = params
   const summaries = days.map((d) => ({ dayNumber: d.dayNumber, completed: isDayComplete(d.data, rules) }))
-  const reachedDay = reachedDayOf(status, summaries, todayDayNumber, rules.jokers)
+  const reachedDay = reachedDayOf(status, summaries, todayDayNumber, rules.jokers, givenUpDay(startDate, abandonedOn))
 
   return {
     reachedDay,
@@ -45,14 +48,29 @@ function reachedDayOf(
   summaries: DayCompletionSummary[],
   todayDayNumber: number,
   jokers: number,
+  givenUp: number | undefined,
 ): number {
   if (status === 'completed') return CHALLENGE_LENGTH
   if (status === 'active') {
     return Number.isFinite(todayDayNumber) ? Math.min(Math.max(todayDayNumber, 0), CHALLENGE_LENGTH) : 0
   }
+  // Given up: that day, or the last logged challenge day when its date is missing (a hand-edited backup).
+  if (status === 'abandoned') {
+    return givenUp ?? summaries.reduce((last, s) => (isChallengeDay(s.dayNumber) ? Math.max(last, s.dayNumber) : last), 0)
+  }
   // Failed: the miss that used up the jokers, the first miss if there weren't that many, or Day 75 if none at all.
   const missed = missedDayNumbers(summaries, CHALLENGE_LENGTH + 1)
   return missed[jokers] ?? missed[0] ?? CHALLENGE_LENGTH
+}
+
+/**
+ * The day an attempt was given up on: its `abandonedOn` date as a day
+ * number, or undefined when that date is missing or isn't a challenge day.
+ */
+export function givenUpDay(startDate: string, abandonedOn: string | undefined): number | undefined {
+  if (!abandonedOn) return undefined
+  const day = dayNumberForDate(startDate, abandonedOn)
+  return isChallengeDay(day) ? day : undefined
 }
 
 /** A stretch of consecutive complete days, or a single day with tasks missing. */

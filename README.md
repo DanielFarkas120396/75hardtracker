@@ -19,11 +19,12 @@ No backend: all data (including photos) lives in the browser via IndexedDB (Dexi
   | Missed day | back to Day 1 | back to Day 1 | 1 joker | 3 jokers |
 - **The duck** — your companion is a knife-holding duck, drawn in code and animated: he breathes, blinks, watches what you touch and answers pokes. He only gets menacing when what's left no longer fits before your bedtime (Settings → Companion), and backs off once you tell him your plan ("I've got a plan" on Today). With "reduce motion" on, he holds still.
 - **Strict rules** — a day only completes with all five tasks. On 75 Hard and 75 Strong, a missed day ends the attempt: the app shows what was missed and restarts from Day 1 once you confirm. 75 Medium forgives one missed day and 75 Soft forgives three, each with a joker, before ending the attempt the same way. The start date can be today or later, and it's locked from Day 2.
+- **Giving up** — Settings → Danger zone → Give up this challenge ends the running attempt for good (from Day 1), after four confirmations: what it means, what you built, a five-second last warning, and typing GIVE UP. The attempt stays in the history as Abandoned, and you pick your next challenge and when it starts.
 - **Journey** — all 75 days on a winding path; future days are locked, and 🃏 marks a day a joker forgave.
 - **XP, streaks and badges** — 10 XP per task, +25 for a perfect day, +100 at streaks of 7, 14, 21, 30, 50 and 75. A full-screen celebration for each completed day, and a victory screen after Day 75.
 - **Stats** — totals for the attempt, plus weight and body measurements with a weight chart.
 - **Gallery** — every progress photo across all attempts.
-- **Settings** — Challenge (the challenge and its start date), books, badges, attempt history (days and photos of every past attempt), sound and haptics, light/dark/system theme, installing the app, and backup & storage.
+- **Settings** — Challenge (the challenge and its start date), books, badges, attempt history (days and photos of every past attempt), sound and haptics, light/dark/system theme, installing the app, backup & storage, and the danger zone (giving up the attempt, or erasing everything).
 - **Installable and offline** — a PWA with a precached service worker; after the first visit it loads without a network.
 - **Accessible** — text and state colours meet WCAG contrast (4.5:1 for text) in both themes, and the app honours the "reduce motion" setting.
 
@@ -64,6 +65,7 @@ await s.seedDay75Pending()
 | `seedMediumJoker()` | 75 Medium on Day 5 with Day 3 missed: opens on the joker screen. |
 | `seedSoftRestDay()` | 75 Soft on Day 2, taking its recovery day: diet, water and reading done, only the photo left. |
 | `seedDay77Complete()` | A Hard attempt with all 75 days perfect, opened on Day 77: opens on Victory. |
+| `seedGaveUp()` | A 75 Hard attempt given up today on Day 12, after 11 perfect days: opens on the "You gave up" screen. |
 
 `?now=HH:mm` freezes the duck's clock in development (production ignores it), so each menace level can be checked, e.g. `?db=duck&now=22:45`.
 

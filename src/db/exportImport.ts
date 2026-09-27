@@ -1,4 +1,4 @@
-import { todayISO } from '../lib/dates'
+import { isValidISODate, todayISO } from '../lib/dates'
 import { CHALLENGE_LENGTH } from '../logic/constants'
 import { TASK_IDS } from '../logic/dayCompletion'
 import { parseHHmm } from '../logic/menace'
@@ -123,10 +123,11 @@ const ROW_CHECKS: Record<Exclude<keyof ExportPayload, 'version' | 'exportedAt'>,
     id: isNumber,
     startDate: isString,
     attemptNumber: isNumber,
-    status: (v) => v === 'active' || v === 'failed' || v === 'completed',
+    status: (v) => v === 'active' || v === 'failed' || v === 'completed' || v === 'abandoned',
     variant: isOptional(isChallengeVariant),
     socialDays: isOptional(isDayNumberList),
     jokersAcknowledged: isOptional(isNonNegativeInteger),
+    abandonedOn: isOptional((v) => isString(v) && isValidISODate(v)),
   },
   dayEntries: {
     id: isNumber,

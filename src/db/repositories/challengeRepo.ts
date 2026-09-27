@@ -1,5 +1,6 @@
 import { dayNumberForDate } from '../../lib/dates'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
+import { isChallengeDay } from '../../logic/days'
 import { buildNextChallenge } from '../../logic/restart'
 import { RULESETS, challengeWeek, cleanSocialDays, rulesFor, variantOf, type ChallengeVariant } from '../../logic/rulesets'
 import { isStartDateEditable, validateStartDateChange, type StartDateChangeResult } from '../../logic/startDate'
@@ -11,6 +12,7 @@ export type SocialDayResult =
   | { ok: true }
   | { ok: false; reason: 'not-allowed' | 'too-late' | 'out-of-range' | 'week-taken'; dayNumber?: number }
 export type VariantChangeResult = { ok: true } | { ok: false; reason: 'locked' }
+export type GiveUpResult = { ok: true } | { ok: false; reason: 'locked' }
 
 /** Returns the active challenge's id, or creates the next attempt. Must run inside a rw transaction on challenges. */
 async function activeOrNextAttempt(startDate: string, variant: ChallengeVariant): Promise<number> {
@@ -25,7 +27,7 @@ export const challengeRepo = {
     return db.challenges.where('status').equals('active').first()
   },
 
-  /** The active challenge or, when none is active, the most recent attempt (completed or failed). */
+  /** The active challenge or, when none is active, the most recent attempt (completed, failed or given up). */
   async getCurrent(): Promise<Challenge | undefined> {
     const active = await db.challenges.where('status').equals('active').first()
     return active ?? db.challenges.orderBy('attemptNumber').last()
@@ -68,7 +70,7 @@ export const challengeRepo = {
     })
   },
 
-  /** Starts a fresh attempt after a completed one. Reuses the active attempt if one already exists. */
+  /** Starts a fresh attempt after a completed or given-up one. Reuses the active attempt if one already exists. */
   async startNew(startDate: string, variant: ChallengeVariant): Promise<number> {
     return db.transaction('rw', db.challenges, () => activeOrNextAttempt(startDate, variant))
   },
@@ -81,6 +83,24 @@ export const challengeRepo = {
       .modify((challenge) => {
         if (challenge.status === 'active') challenge.status = 'completed'
       })
+  },
+
+  /**
+   * Gives up the active attempt for good (Settings → Danger zone, after four
+   * confirmations). Only from Day 1 to Day 75: before Day 1 its challenge and
+   * start date can still be changed instead. Only `status` and `abandonedOn`
+   * change, so the attempt keeps its days, photos and badges, and an attempt
+   * made before variants existed still gets no `variant`. The app then shows
+   * the "You gave up" screen, which starts the next attempt with startNew.
+   */
+  async giveUp(id: number, today: string): Promise<GiveUpResult> {
+    return db.transaction('rw', db.challenges, async () => {
+      const challenge = await db.challenges.get(id)
+      if (!challenge || challenge.status !== 'active') return { ok: false, reason: 'locked' } as const
+      if (!isChallengeDay(dayNumberForDate(challenge.startDate, today))) return { ok: false, reason: 'locked' } as const
+      await db.challenges.update(id, { status: 'abandoned', abandonedOn: today })
+      return { ok: true } as const
+    })
   },
 
   /**

@@ -29,7 +29,7 @@ export interface ChallengeDayData {
   data: DayTaskData
 }
 
-export type ChallengeStatus = 'active' | 'failed' | 'completed'
+export type ChallengeStatus = 'active' | 'failed' | 'completed' | 'abandoned'
 
 export interface DayCompletionSummary {
   dayNumber: number

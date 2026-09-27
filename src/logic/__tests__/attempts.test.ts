@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { attemptDayRows, summarizeAttempt } from '../attempts'
+import { attemptDayRows, givenUpDay, summarizeAttempt } from '../attempts'
 import { TASK_IDS } from '../dayCompletion'
 import { RULESETS } from '../rulesets'
 import type { ChallengeDayData, DayTaskData } from '../types'
@@ -93,6 +93,71 @@ describe('summarizeAttempt', () => {
     const params = { startDate: '2026-09-01', status: 'failed' as const, days, todayDayNumber: 8 }
     expect(summarizeAttempt({ ...params, rules: RULESETS.medium }).reachedDay).toBe(6)
     expect(summarizeAttempt({ ...params, rules: RULESETS.hard }).reachedDay).toBe(3)
+  })
+
+  it('reaches the day a given-up attempt ended on, and ends that day', () => {
+    // Day 6 is missing (a joker), so the failed fallback (missed[jokers] with
+    // 3 jokers) would land on missed[3]: [6, 12, 13, 14, …][3] = Day 14. Only
+    // the abandoned branch reaches Day 12, the actual give-up day.
+    const summary = summarizeAttempt({
+      startDate: '2026-09-01',
+      status: 'abandoned',
+      abandonedOn: '2026-09-12',
+      days: [...perfectDays(1, 5), ...perfectDays(7, 11)],
+      todayDayNumber: 20,
+      rules: RULESETS.soft,
+    })
+    expect(summary).toMatchObject({ reachedDay: 12, completedDays: 10, endDate: '2026-09-12' })
+  })
+
+  it('falls back to the last logged day when a given-up attempt has no give-up date', () => {
+    // Day 5 was never opened and Day 6 is only partly logged (incomplete), so
+    // the failed fallback (missed[0], no jokers under Hard) would land on the
+    // first miss, Day 5. Only the abandoned branch reaches Day 6, the last day
+    // with an entry at all.
+    const summary = summarizeAttempt({
+      startDate: '2026-09-01',
+      status: 'abandoned',
+      days: [...perfectDays(1, 4), { dayNumber: 6, data: waterAndReadingOnly }],
+      todayDayNumber: 20,
+      rules: RULESETS.hard,
+    })
+    expect(summary).toMatchObject({ reachedDay: 6, completedDays: 4, endDate: '2026-09-06' })
+  })
+
+  it('has reached no day when a given-up attempt has neither a give-up date nor a logged day', () => {
+    const summary = summarizeAttempt({
+      startDate: '2026-09-01',
+      status: 'abandoned',
+      days: [],
+      todayDayNumber: 20,
+      rules: RULESETS.hard,
+    })
+    expect(summary).toMatchObject({ reachedDay: 0, endDate: undefined })
+  })
+
+  it('ignores a logged day without a day number when a given-up attempt has no give-up date', () => {
+    const summary = summarizeAttempt({
+      startDate: '2026-09-01',
+      status: 'abandoned',
+      days: [...perfectDays(1, 3), { dayNumber: undefined as unknown as number, data: waterAndReadingOnly }],
+      todayDayNumber: 20,
+      rules: RULESETS.hard,
+    })
+    expect(summary).toMatchObject({ reachedDay: 3, endDate: '2026-09-03' })
+  })
+})
+
+describe('givenUpDay', () => {
+  it('turns the give-up date into its day number', () => {
+    expect(givenUpDay('2026-09-01', '2026-09-12')).toBe(12)
+  })
+
+  it('is undefined without a date, with a broken one, or outside Days 1–75', () => {
+    expect(givenUpDay('2026-09-01', undefined)).toBeUndefined()
+    expect(givenUpDay('2026-09-01', 'not-a-date')).toBeUndefined()
+    expect(givenUpDay('2026-09-01', '2026-08-31')).toBeUndefined()
+    expect(givenUpDay('2026-09-01', '2026-11-15')).toBeUndefined() // Day 76
   })
 })
 

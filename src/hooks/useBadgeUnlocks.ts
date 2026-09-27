@@ -12,7 +12,8 @@ import type { ChallengeGate } from './useChallengeGate'
  * attempt (Day 75, when Today unmounts) still unlock.
  */
 export function useBadgeUnlocks(gate: ChallengeGate | undefined) {
-  const challenge = gate && gate.kind !== 'needsRestart' ? gate.challenge : undefined
+  // A failed or given-up attempt isn't evaluated: its day number keeps growing after it ended.
+  const challenge = gate && gate.kind !== 'needsRestart' && gate.kind !== 'abandoned' ? gate.challenge : undefined
   const todayDayNumber = gate?.todayDayNumber
 
   // The challenge row only matters by id and start date, so those are the deps

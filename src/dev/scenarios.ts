@@ -299,3 +299,22 @@ export async function seedDay77Complete(): Promise<void> {
     { challenge: { startDate: addDaysISO(todayISO(), -76), attemptNumber: 1, status: 'active' }, days },
   ])
 }
+
+/** A 75 Hard attempt with Days 1–11 perfect, given up today on Day 12: opens on the "You gave up" screen. */
+export async function seedGaveUp(): Promise<void> {
+  const days: SeedDay[] = []
+  for (let day = 1; day <= 11; day++) days.push(await perfectDay(day))
+
+  await replaceDatabase([
+    {
+      challenge: {
+        startDate: addDaysISO(todayISO(), -11),
+        attemptNumber: 1,
+        status: 'abandoned',
+        variant: 'hard',
+        abandonedOn: todayISO(),
+      },
+      days,
+    },
+  ])
+}

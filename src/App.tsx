@@ -2,7 +2,7 @@ import { lazy, Suspense, useState } from 'react'
 import { BadgeUnlockToast } from './components/BadgeUnlockToast'
 import { BottomNav, type ScreenId } from './components/ui/BottomNav'
 import { useBadgeUnlocks } from './hooks/useBadgeUnlocks'
-import { useChallengeGate } from './hooks/useChallengeGate'
+import { canGiveUp, useChallengeGate } from './hooks/useChallengeGate'
 import { useDayCompleteCelebration } from './hooks/useDayCompleteCelebration'
 import { useApplyTheme } from './hooks/useThemePreference'
 import { useToday } from './hooks/useToday'
@@ -23,6 +23,7 @@ const DayFailedScreen = lazy(() =>
 const JokerUsedScreen = lazy(() =>
   import('./screens/RestartFlow/JokerUsedScreen').then((m) => ({ default: m.JokerUsedScreen })),
 )
+const GaveUpScreen = lazy(() => import('./screens/RestartFlow/GaveUpScreen').then((m) => ({ default: m.GaveUpScreen })))
 const VictoryScreen = lazy(() => import('./screens/Victory/VictoryScreen').then((m) => ({ default: m.VictoryScreen })))
 
 function LoadingScreen() {
@@ -40,6 +41,9 @@ function App() {
   const gate = useChallengeGate(today)
   const { celebration, dismiss: dismissCelebration } = useDayCompleteCelebration(gate)
   const { toasts, dismiss: dismissToast } = useBadgeUnlocks(gate)
+
+  // Giving up happens from Settings: the next attempt should open on Today, not back there.
+  if (gate?.kind === 'abandoned' && screen !== 'today') setScreen('today')
 
   if (!gate) return <LoadingScreen />
 
@@ -60,6 +64,14 @@ function App() {
           missedCount={gate.missedDays.length}
           jokersLeft={gate.jokersLeft}
         />
+      </Suspense>
+    )
+  }
+
+  if (gate.kind === 'abandoned') {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <GaveUpScreen challenge={gate.challenge} today={today} />
       </Suspense>
     )
   }
@@ -101,7 +113,13 @@ function App() {
           {screen === 'stats' && <StatsScreen challenge={gate.challenge} streak={gate.streak} today={today} />}
           {screen === 'gallery' && <GalleryScreen />}
           {screen === 'settings' && (
-            <SettingsScreen challenge={gate.challenge} today={today} todayDayNumber={gate.todayDayNumber} />
+            <SettingsScreen
+              challenge={gate.challenge}
+              today={today}
+              todayDayNumber={gate.todayDayNumber}
+              streak={gate.streak}
+              canGiveUp={canGiveUp(gate)}
+            />
           )}
         </Suspense>
       </div>
