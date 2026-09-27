@@ -1,8 +1,8 @@
-import { formatLiters } from './variants'
 import { TASK_IDS } from '../logic/dayCompletion'
 import { formatHHmm, type Menace } from '../logic/menace'
 import type { Ruleset } from '../logic/rulesets'
 import type { TaskId } from '../logic/types'
+import { formatLiters } from './variants'
 
 /** Short task names for lists, e.g. "missed Water, Photo". */
 export const TASK_NAMES: Record<TaskId, string> = {
@@ -47,9 +47,10 @@ function taskCheers(task: TaskId, rules: Ruleset): readonly string[] {
         ? ['Both workouts done! 💪', 'Two sessions in the bank', 'Sweat logged. Beast mode.']
         : ['Workout done! 💪', 'Session in the bank', 'Sweat logged. Beast mode.']
     case 'diet':
-      return rules.dietKind === 'strict'
-        ? ['Clean eating, locked in 🥗', 'Diet on point today', 'No cheats, no drinks. Solid.']
-        : ['Clean eating, locked in 🥗', 'Diet on point today', 'Ate well. Solid.']
+      if (rules.dietKind !== 'strict') return ['Clean eating, locked in 🥗', 'Diet on point today', 'Ate well. Solid.']
+      return rules.socialDaysPerWeek > 0
+        ? ['Clean eating, locked in 🥗', 'Diet on point today', 'No cheats. Solid.']
+        : ['Clean eating, locked in 🥗', 'Diet on point today', 'No cheats, no drinks. Solid.']
     case 'water':
       return ['Fully hydrated! 💧', `All ${formatLiters(rules.waterTargetMl)} L down`, 'Water goal crushed']
     case 'reading':

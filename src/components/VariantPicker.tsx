@@ -25,8 +25,8 @@ export function VariantPicker({ value, onChange, disabled = false }: VariantPick
               checked ? 'ring-2 ring-green-ink bg-green-light' : 'bg-canvas'
             }`}
           >
-            <p className="font-rounded font-extrabold text-ink">{VARIANT_NAMES[variant]}</p>
-            <p className="text-sm text-ink-muted">{VARIANT_SUMMARIES[variant]}</p>
+            <span className="block font-rounded font-extrabold text-ink">{VARIANT_NAMES[variant]}</span>
+            <span className="block text-sm text-ink-muted">{VARIANT_SUMMARIES[variant]}</span>
           </button>
         )
       })}

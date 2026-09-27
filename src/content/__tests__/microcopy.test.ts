@@ -19,6 +19,10 @@ describe('taskCheer', () => {
       }
     }
   })
+
+  it("words Strong's diet cheer without mentioning drinks, since a declared occasion allows one", () => {
+    expect(taskCheer('diet', 3, RULESETS.strong)).toBe('No cheats. Solid.')
+  })
 })
 
 const threat = (level: MenaceLevel, reason: MenaceReason, extra: Partial<Menace> = {}): Menace => ({

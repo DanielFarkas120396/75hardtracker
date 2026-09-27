@@ -52,6 +52,7 @@ export function StartDateSection({ challenge, today, todayDayNumber }: StartDate
   const editable = isStartDateEditable(todayDayNumber)
 
   const changeVariant = async (variant: ChallengeVariant) => {
+    if (variant === variantOf(challenge)) return
     setSwitching(true)
     try {
       const result = await challengeRepo.changeVariant(challenge.id, variant, today)
