@@ -14,7 +14,7 @@ import { dateForDayNumber, formatWeekday } from '../../lib/dates'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { TASK_IDS } from '../../logic/dayCompletion'
 import { isChallengeDay } from '../../logic/days'
-import { rulesFor } from '../../logic/rulesets'
+import { challengeWeek, rulesFor } from '../../logic/rulesets'
 import { isStartDateEditable } from '../../logic/startDate'
 import { DayNotesCard } from './DayNotesCard'
 import { DietCard } from './DietCard'
@@ -68,6 +68,9 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak, joke
 
   const completedCount = Object.values(completion.completion).filter(Boolean).length
   const socialToday = rules.socialDaysPerWeek > 0 && (challenge.socialDays?.includes(todayDayNumber) ?? false)
+  const weekRestDay = dayEntries.find(
+    (e) => e.restDay && e.dayNumber !== todayDayNumber && challengeWeek(e.dayNumber) === challengeWeek(todayDayNumber),
+  )?.dayNumber
 
   return (
     <div className="min-h-dvh bg-canvas pb-24">
@@ -131,6 +134,7 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak, joke
             cheer={taskCheer('workouts', todayDayNumber, rules)}
             rules={rules}
             restDay={entry.restDay === true}
+            weekRestDay={weekRestDay}
           />
           <DietCard
             entry={entry}

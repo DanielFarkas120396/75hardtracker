@@ -20,9 +20,11 @@ interface WorkoutCardProps {
   rules: Ruleset
   /** Whether this attempt's weekly recovery day (75 Soft) was taken on this entry. */
   restDay: boolean
+  /** The day number of another entry in this challenge week that already took the recovery day, if any. */
+  weekRestDay: number | undefined
 }
 
-export function WorkoutCard({ dayEntryId, workouts, complete, cheer, rules, restDay }: WorkoutCardProps) {
+export function WorkoutCard({ dayEntryId, workouts, complete, cheer, rules, restDay, weekRestDay }: WorkoutCardProps) {
   const [restDayError, setRestDayError] = useState<string | null>(null)
 
   const addWorkout = () => {
@@ -70,17 +72,21 @@ export function WorkoutCard({ dayEntryId, workouts, complete, cheer, rules, rest
                 Undo
               </Button>
             </div>
+          ) : weekRestDay !== undefined ? (
+            <p className="mt-3 font-rounded text-sm text-ink-muted">Day {weekRestDay} was this week's recovery day.</p>
           ) : (
-            <>
-              <Button variant="secondary" className="w-full" onClick={() => void takeRestDay()}>
-                Take my recovery day
-              </Button>
-              {restDayError && (
-                <p role="alert" className="mt-2 text-sm font-semibold text-danger-ink">
-                  {restDayError}
-                </p>
-              )}
-            </>
+            !complete && (
+              <>
+                <Button variant="secondary" className="w-full" onClick={() => void takeRestDay()}>
+                  Take my recovery day
+                </Button>
+                {restDayError && (
+                  <p role="alert" className="mt-2 text-sm font-semibold text-danger-ink">
+                    {restDayError}
+                  </p>
+                )}
+              </>
+            )
           )}
         </div>
       )}
