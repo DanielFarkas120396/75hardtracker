@@ -1,16 +1,9 @@
-import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Mascot } from '../../components/mascot/Mascot'
-import { TASK_RULES } from '../../content/microcopy'
-import { toDayTaskData } from '../../db/mappers'
 import { challengeRepo } from '../../db/repositories/challengeRepo'
-import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
-import { workoutRepo } from '../../db/repositories/workoutRepo'
 import type { Challenge } from '../../db/types'
-import { TASK_IDS, missingTasks } from '../../logic/dayCompletion'
-import { rulesFor } from '../../logic/rulesets'
-import type { TaskId } from '../../logic/types'
+import { MissedTasksList } from './MissedTasksList'
 
 interface DayFailedScreenProps {
   challenge: Challenge
@@ -21,15 +14,6 @@ interface DayFailedScreenProps {
 /** Blocks the app after a missed day: shows what was missed, then restarts from Day 1 on confirmation. */
 export function DayFailedScreen({ challenge, failedDayNumber, today }: DayFailedScreenProps) {
   const [restarting, setRestarting] = useState(false)
-
-  const missing = useLiveQuery(async (): Promise<TaskId[]> => {
-    const entry = await dayEntryRepo.getByChallengeAndDayNumber(challenge.id, failedDayNumber)
-    if (!entry) return [...TASK_IDS]
-    return missingTasks(
-      toDayTaskData(entry, await workoutRepo.getForDayEntry(entry.id), challenge.socialDays),
-      rulesFor(challenge),
-    )
-  }, [challenge.id, failedDayNumber])
 
   const confirmRestart = async () => {
     setRestarting(true)
@@ -49,18 +33,7 @@ export function DayFailedScreen({ challenge, failedDayNumber, today }: DayFailed
         but every photo and stat you logged is saved for good.
       </p>
 
-      {missing && missing.length > 0 && (
-        <ul className="mt-2 flex w-full max-w-xs flex-col gap-2 text-left">
-          {missing.map((task) => (
-            <li
-              key={task}
-              className="rounded-xl bg-danger/10 px-4 py-2 font-rounded text-sm font-bold text-danger-ink"
-            >
-              ✕ {TASK_RULES[task]}
-            </li>
-          ))}
-        </ul>
-      )}
+      <MissedTasksList challenge={challenge} dayNumber={failedDayNumber} />
 
       <p className="mt-2 font-rounded font-bold text-ink">Again. From Day 1. I'm watching.</p>
 

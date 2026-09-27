@@ -20,6 +20,9 @@ const SettingsScreen = lazy(() =>
 const DayFailedScreen = lazy(() =>
   import('./screens/RestartFlow/DayFailedScreen').then((m) => ({ default: m.DayFailedScreen })),
 )
+const JokerUsedScreen = lazy(() =>
+  import('./screens/RestartFlow/JokerUsedScreen').then((m) => ({ default: m.JokerUsedScreen })),
+)
 const VictoryScreen = lazy(() => import('./screens/Victory/VictoryScreen').then((m) => ({ default: m.VictoryScreen })))
 
 function LoadingScreen() {
@@ -48,6 +51,19 @@ function App() {
     )
   }
 
+  if (gate.kind === 'jokerUsed') {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <JokerUsedScreen
+          challenge={gate.challenge}
+          newlyMissed={gate.newlyMissed}
+          missedCount={gate.missedDays.length}
+          jokersLeft={gate.jokersLeft}
+        />
+      </Suspense>
+    )
+  }
+
   return (
     <>
       {/* A phone-width column: on a wide screen the app stays readable instead of stretching. */}
@@ -72,6 +88,7 @@ function App() {
               todayDayNumber={gate.todayDayNumber}
               streak={gate.streak}
               completed={gate.kind === 'completed'}
+              missedDays={gate.missedDays}
             />
           )}
           {screen === 'stats' && <StatsScreen challenge={gate.challenge} streak={gate.streak} today={today} />}

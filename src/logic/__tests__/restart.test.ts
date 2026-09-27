@@ -139,13 +139,31 @@ describe('resolveChallengeGate', () => {
       resolveChallengeGate({ currentStatus: 'active', dayEntries: completeDays(2), todayDayNumber: 3, jokers: 0 }),
     ).toEqual({
       kind: 'active',
+      missed: [],
     })
   })
 
   it('is active before the challenge has started', () => {
     expect(resolveChallengeGate({ currentStatus: 'active', dayEntries: [], todayDayNumber: -2, jokers: 0 })).toEqual({
       kind: 'active',
+      missed: [],
     })
+  })
+
+  it('forgives a missed day within the joker allowance, keeping the attempt active', () => {
+    expect(
+      resolveChallengeGate({
+        currentStatus: 'active',
+        dayEntries: [
+          ...completeDays(2),
+          { dayNumber: 3, completed: false },
+          { dayNumber: 4, completed: true },
+          { dayNumber: 5, completed: true },
+        ],
+        todayDayNumber: 6,
+        jokers: 1,
+      }),
+    ).toEqual({ kind: 'active', missed: [3] })
   })
 
   it('needs a restart, naming the first missed day, once a day was missed', () => {
@@ -156,7 +174,7 @@ describe('resolveChallengeGate', () => {
         todayDayNumber: 5,
         jokers: 0,
       }),
-    ).toEqual({ kind: 'needsRestart', failedDayNumber: 3 })
+    ).toEqual({ kind: 'needsRestart', failedDayNumber: 3, missed: [3, 4] })
   })
 
   it('needs a restart for an attempt that is already archived as failed', () => {
@@ -167,7 +185,7 @@ describe('resolveChallengeGate', () => {
         todayDayNumber: 40,
         jokers: 0,
       }),
-    ).toEqual({ kind: 'needsRestart', failedDayNumber: 1 })
+    ).toEqual({ kind: 'needsRestart', failedDayNumber: 1, missed: Array.from({ length: 39 }, (_, i) => i + 1) })
   })
 
   it('finds the first incomplete day for an archived failed attempt even when the start date is broken', () => {
@@ -181,7 +199,7 @@ describe('resolveChallengeGate', () => {
         todayDayNumber: Number.NaN,
         jokers: 0,
       }),
-    ).toEqual({ kind: 'needsRestart', failedDayNumber: 2 })
+    ).toEqual({ kind: 'needsRestart', failedDayNumber: 2, missed: Array.from({ length: 74 }, (_, i) => i + 2) })
   })
 
   it('is completed once Day 75 is complete, on Day 75 itself and afterwards', () => {

@@ -12,6 +12,7 @@ interface JourneyScreenProps {
   todayDayNumber: number
   streak: number
   completed: boolean
+  missedDays: number[]
 }
 
 function journeyTitle(todayDayNumber: number, completed: boolean): string {
@@ -22,7 +23,7 @@ function journeyTitle(todayDayNumber: number, completed: boolean): string {
   return 'Journey'
 }
 
-export function JourneyScreen({ challenge, dayEntries, todayDayNumber, streak, completed }: JourneyScreenProps) {
+export function JourneyScreen({ challenge, dayEntries, todayDayNumber, streak, completed, missedDays }: JourneyScreenProps) {
   const { xp } = useChallengeStats(challenge.id)
 
   const completedDayNumbers = useMemo(
@@ -44,6 +45,7 @@ export function JourneyScreen({ challenge, dayEntries, todayDayNumber, streak, c
       <main className="max-h-[calc(100dvh-9rem)] overflow-y-auto px-4">
         <JourneyPath
           completedDayNumbers={completedDayNumbers}
+          missedDayNumbers={new Set(missedDays)}
           todayDayNumber={completed ? Number.NaN : todayDayNumber}
         />
       </main>

@@ -53,7 +53,7 @@ describe('a pre-variants 75 Hard attempt', () => {
       todayDayNumber: 12,
       jokers: rulesFor(challengeRow).jokers,
     })
-    expect(gate).toEqual({ kind: 'active' })
+    expect(gate).toEqual({ kind: 'active', missed: [] })
 
     expect(calculateStreak(allEntries, 12)).toBe(11)
 

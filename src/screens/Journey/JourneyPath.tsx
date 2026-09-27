@@ -12,6 +12,7 @@ const WAVE_PERIOD = 4 // nodes per full left-right swing
 
 interface JourneyPathProps {
   completedDayNumbers: Set<number>
+  missedDayNumbers: Set<number>
   todayDayNumber: number
 }
 
@@ -23,7 +24,7 @@ function yForIndex(index: number): number {
   return TOP_PADDING + index * NODE_SPACING
 }
 
-export function JourneyPath({ completedDayNumbers, todayDayNumber }: JourneyPathProps) {
+export function JourneyPath({ completedDayNumbers, missedDayNumbers, todayDayNumber }: JourneyPathProps) {
   const todayRef = useRef<SVGGElement>(null)
 
   useEffect(() => {
@@ -40,7 +41,13 @@ export function JourneyPath({ completedDayNumbers, todayDayNumber }: JourneyPath
       <polyline points={linePoints} fill="none" stroke="var(--color-green-light)" strokeWidth={8} strokeLinecap="round" />
       {days.map((dayNumber, i) => {
         const state: NodeState =
-          dayNumber === todayDayNumber ? 'today' : completedDayNumbers.has(dayNumber) ? 'completed' : 'locked'
+          dayNumber === todayDayNumber
+            ? 'today'
+            : completedDayNumbers.has(dayNumber)
+              ? 'completed'
+              : missedDayNumbers.has(dayNumber)
+                ? 'missed'
+                : 'locked'
         const isMilestone = (MILESTONES as readonly number[]).includes(dayNumber)
 
         return (

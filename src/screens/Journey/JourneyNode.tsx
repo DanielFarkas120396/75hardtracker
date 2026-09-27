@@ -1,6 +1,6 @@
 import { motion, useReducedMotion } from 'framer-motion'
 
-export type NodeState = 'completed' | 'today' | 'locked'
+export type NodeState = 'completed' | 'today' | 'locked' | 'missed'
 
 interface JourneyNodeProps {
   x: number
@@ -14,8 +14,16 @@ const RADIUS = 22
 
 export function JourneyNode({ x, y, dayNumber, state, isMilestone }: JourneyNodeProps) {
   const reduceMotion = useReducedMotion()
-  const fill = state === 'locked' ? 'var(--color-ink-muted)' : isMilestone ? 'var(--color-yellow)' : 'var(--color-green)'
+  const fill =
+    state === 'locked'
+      ? 'var(--color-ink-muted)'
+      : state === 'missed'
+        ? 'var(--color-orange-light)'
+        : isMilestone
+          ? 'var(--color-yellow)'
+          : 'var(--color-green)'
   const opacity = state === 'locked' ? 0.35 : 1
+  const stroke = state === 'missed' ? 'var(--color-orange)' : isMilestone ? 'var(--color-yellow-dark)' : 'transparent'
 
   return (
     <g transform={`translate(${x} ${y})`}>
@@ -33,15 +41,14 @@ export function JourneyNode({ x, y, dayNumber, state, isMilestone }: JourneyNode
               transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
             />
           ))}
-        <circle
-          r={RADIUS}
-          fill={fill}
-          stroke={isMilestone ? 'var(--color-yellow-dark)' : 'transparent'}
-          strokeWidth={3}
-        />
+        <circle r={RADIUS} fill={fill} stroke={stroke} strokeWidth={3} />
         {state === 'completed' ? (
           <text textAnchor="middle" dominantBaseline="central" fontSize={20} fill="var(--color-on-accent)">
             ✓
+          </text>
+        ) : state === 'missed' ? (
+          <text textAnchor="middle" dominantBaseline="central" fontSize={18}>
+            🃏
           </text>
         ) : (
           <text
