@@ -1,7 +1,7 @@
 import { dayNumberForDate, isValidISODate } from '../lib/dates'
 import { isDayComplete } from '../logic/dayCompletion'
 import { isChallengeDay } from '../logic/days'
-import { challengeWeek, RULESETS, rulesFor, type Ruleset } from '../logic/rulesets'
+import { challengeWeek, cleanSocialDays, RULESETS, rulesFor, type Ruleset } from '../logic/rulesets'
 import { toDayTaskData } from './mappers'
 import type { Badge, Challenge, DayEntry, Workout } from './types'
 
@@ -71,7 +71,7 @@ export function normalizeRecords(
     return { ...entry, dayNumber }
   })
 
-  const { challenges, removedSocialDaysByChallenge } = cleanSocialDays(normalizedChallenges, rulesByChallenge, report)
+  const { challenges, removedSocialDaysByChallenge } = cleanChallengesSocialDays(normalizedChallenges, rulesByChallenge, report)
   const socialDaysByChallenge = new Map(challenges.map((c) => [c.id, c.socialDays]))
 
   const { dayEntries: restDaysCleaned, changedEntryIds } = cleanRestDays(dayNumberRepaired, rulesByChallenge, report)
@@ -98,7 +98,7 @@ export function normalizeRecords(
  * Returns which day numbers were dropped per challenge, so their entries'
  * `completed` can be recomputed.
  */
-function cleanSocialDays(
+function cleanChallengesSocialDays(
   challenges: Challenge[],
   rulesByChallenge: Map<number, Ruleset>,
   report: NormalizationReport,
@@ -109,7 +109,7 @@ function cleanSocialDays(
     if (!challenge.socialDays || challenge.socialDays.length === 0) return challenge
 
     const rules = rulesByChallenge.get(challenge.id)
-    const kept = rules ? keepEarliestPerWeek(challenge.socialDays, rules.socialDaysPerWeek) : []
+    const kept = rules && rules.socialDaysPerWeek > 0 ? cleanSocialDays(challenge.socialDays) : []
     const keptSet = new Set(kept)
     const removed = [...new Set(challenge.socialDays)].filter((d) => !keptSet.has(d))
 
@@ -124,20 +124,6 @@ function cleanSocialDays(
   })
 
   return { challenges: cleaned, removedSocialDaysByChallenge }
-}
-
-/** The sorted, de-duplicated days, keeping only the earliest in each challenge week. Empty when `perWeek` is 0. */
-function keepEarliestPerWeek(days: number[], perWeek: number): number[] {
-  if (perWeek === 0) return []
-  const seenWeeks = new Set<number>()
-  const kept: number[] = []
-  for (const dayNumber of [...new Set(days)].sort((a, b) => a - b)) {
-    const week = challengeWeek(dayNumber)
-    if (seenWeeks.has(week)) continue
-    seenWeeks.add(week)
-    kept.push(dayNumber)
-  }
-  return kept
 }
 
 /**

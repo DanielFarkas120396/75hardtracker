@@ -214,6 +214,36 @@ describe('challengeRepo.changeStartDate', () => {
     expect(await challengeRepo.changeStartDate(challengeId, '', today)).toEqual({ ok: false, reason: 'empty' })
     expect(await db.challenges.get(challengeId)).toMatchObject({ startDate: today })
   })
+
+  it('shifts a declared social day so it keeps its calendar date when the start moves later', async () => {
+    const challengeId = await addChallenge({
+      startDate: today,
+      attemptNumber: 1,
+      status: 'active',
+      variant: 'medium',
+      socialDays: [6],
+    })
+    const tomorrow = addDaysISO(today, 1)
+
+    expect(await challengeRepo.changeStartDate(challengeId, tomorrow, today)).toEqual({ ok: true })
+
+    expect((await db.challenges.get(challengeId))?.socialDays).toEqual([5])
+  })
+
+  it('drops a declared day that would land before Day 1 once the start moves', async () => {
+    const challengeId = await addChallenge({
+      startDate: today,
+      attemptNumber: 1,
+      status: 'active',
+      variant: 'medium',
+      socialDays: [2],
+    })
+    const later = addDaysISO(today, 3)
+
+    expect(await challengeRepo.changeStartDate(challengeId, later, today)).toEqual({ ok: true })
+
+    expect(await db.challenges.get(challengeId)).not.toHaveProperty('socialDays')
+  })
 })
 
 describe('photoRepo.replaceForEntry', () => {

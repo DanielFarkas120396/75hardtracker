@@ -74,4 +74,38 @@ describe('NewChallengeSheet', () => {
     expect(onClose).not.toHaveBeenCalled()
     expect(screen.getByRole('button', { name: 'Start' })).toBeEnabled()
   })
+
+  it('clearing the picked date shows "Pick a start date." and disables Start', async () => {
+    await setup()
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Pick a date' }))
+    fireEvent.change(screen.getByLabelText('Start date'), { target: { value: '' } })
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Pick a start date.')
+    expect(screen.getByRole('button', { name: 'Start' })).toBeDisabled()
+    expect(screen.queryByText(/A new attempt starts on/)).not.toBeInTheDocument()
+  })
+
+  it('picking a past date shows "The start can\'t be in the past." and disables Start', async () => {
+    const { today } = await setup()
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Pick a date' }))
+    fireEvent.change(screen.getByLabelText('Start date'), { target: { value: addDaysISO(today, -1) } })
+
+    expect(await screen.findByRole('alert')).toHaveTextContent("The start can't be in the past.")
+    expect(screen.getByRole('button', { name: 'Start' })).toBeDisabled()
+  })
+
+  it('starts the attempt with a valid picked date once one is chosen', async () => {
+    const { today, onClose } = await setup()
+    const future = addDaysISO(today, 5)
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Pick a date' }))
+    fireEvent.change(screen.getByLabelText('Start date'), { target: { value: future } })
+    fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+
+    await waitFor(() => expect(onClose).toHaveBeenCalled())
+    const created = await db.challenges.where('status').equals('active').first()
+    expect(created?.startDate).toBe(future)
+  })
 })

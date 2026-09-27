@@ -3,7 +3,7 @@ import { VariantPicker } from '../../components/VariantPicker'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
 import { challengeRepo } from '../../db/repositories/challengeRepo'
-import { addDaysISO, formatDisplayDate } from '../../lib/dates'
+import { addDaysISO, formatDisplayDate, isValidISODate } from '../../lib/dates'
 import type { ChallengeVariant } from '../../logic/rulesets'
 
 interface NewChallengeSheetProps {
@@ -40,7 +40,15 @@ function NewChallengeForm({ defaultVariant, today, onClose }: NewChallengeSheetP
 
   const startDate = choice === 'today' ? today : choice === 'tomorrow' ? addDaysISO(today, 1) : pickedDate
 
+  // ISO strings compare chronologically.
+  const dateError = !isValidISODate(startDate)
+    ? 'Pick a start date.'
+    : startDate < today
+      ? "The start can't be in the past."
+      : null
+
   const start = async () => {
+    if (dateError) return
     setBusy(true)
     setError(null)
     try {
@@ -92,18 +100,20 @@ function NewChallengeForm({ defaultVariant, today, onClose }: NewChallengeSheetP
         />
       )}
 
-      <p className="mt-3 text-sm text-ink-muted">
-        A new attempt starts on {formatDisplayDate(startDate)}. Every photo and stat from this one stays saved.
-      </p>
+      {!dateError && (
+        <p className="mt-3 text-sm text-ink-muted">
+          A new attempt starts on {formatDisplayDate(startDate)}. Every photo and stat from this one stays saved.
+        </p>
+      )}
 
-      {error && (
+      {(dateError ?? error) && (
         <p role="alert" className="mt-2 text-sm font-semibold text-danger-ink">
-          {error}
+          {dateError ?? error}
         </p>
       )}
 
       <div className="mt-4 flex gap-2">
-        <Button className="flex-1" onClick={() => void start()} disabled={busy}>
+        <Button className="flex-1" onClick={() => void start()} disabled={busy || dateError !== null}>
           {busy ? 'Starting…' : 'Start'}
         </Button>
         <Button variant="secondary" className="flex-1" onClick={onClose} disabled={busy}>

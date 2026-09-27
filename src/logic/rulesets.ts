@@ -1,3 +1,5 @@
+import { CHALLENGE_LENGTH } from './constants'
+
 /** The four challenges an attempt can be, hardest first. */
 export type ChallengeVariant = 'hard' | 'strong' | 'medium' | 'soft'
 
@@ -79,4 +81,21 @@ export function rulesFor(challenge: { variant?: unknown }): Ruleset {
 /** The challenge week of a day: days 1–7 are week 1, …, days 71–75 week 11. */
 export function challengeWeek(dayNumber: number): number {
   return Math.ceil(dayNumber / 7)
+}
+
+/** Declared social days, sorted and de-duplicated, only Days 1–75, the earliest in each challenge week. */
+export function cleanSocialDays(days: readonly number[]): number[] {
+  const validSorted = [...new Set(days)]
+    .filter((d) => Number.isInteger(d) && d >= 1 && d <= CHALLENGE_LENGTH)
+    .sort((a, b) => a - b)
+
+  const seenWeeks = new Set<number>()
+  const kept: number[] = []
+  for (const dayNumber of validSorted) {
+    const week = challengeWeek(dayNumber)
+    if (seenWeeks.has(week)) continue
+    seenWeeks.add(week)
+    kept.push(dayNumber)
+  }
+  return kept
 }

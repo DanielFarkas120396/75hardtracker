@@ -1,7 +1,7 @@
 import { dayNumberForDate } from '../../lib/dates'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { buildNextChallenge } from '../../logic/restart'
-import { RULESETS, challengeWeek, rulesFor, variantOf, type ChallengeVariant } from '../../logic/rulesets'
+import { RULESETS, challengeWeek, cleanSocialDays, rulesFor, variantOf, type ChallengeVariant } from '../../logic/rulesets'
 import { isStartDateEditable, validateStartDateChange, type StartDateChangeResult } from '../../logic/startDate'
 import { COMPLETION_TABLES, syncDayCompletion } from '../completion'
 import { db } from '../db'
@@ -89,6 +89,9 @@ export const challengeRepo = {
    * the old start no longer belongs to the attempt, so its day entries,
    * workouts, photos and badges are removed in the same transaction; the UI
    * asks for confirmation first whenever that includes real progress.
+   * Declared social days keep their calendar dates: they're shifted by
+   * however many days the start moved, and any that would then fall before
+   * Day 1 are dropped.
    */
   async changeStartDate(id: number, newStartDate: string, today: string): Promise<StartDateChangeResult> {
     return db.transaction('rw', [db.challenges, db.dayEntries, db.workouts, db.photos, db.badges], async () => {
@@ -110,7 +113,13 @@ export const challengeRepo = {
       await db.photos.bulkDelete(entries.flatMap((e) => (e.photoId != null ? [e.photoId] : [])))
       await db.dayEntries.bulkDelete(entryIds)
       await db.badges.where('challengeId').equals(id).delete()
-      await db.challenges.update(id, { startDate: newStartDate })
+
+      const shift = dayNumberForDate(challenge.startDate, newStartDate) - 1
+      const shiftedDays = cleanSocialDays((challenge.socialDays ?? []).map((d) => d - shift))
+      await db.challenges.update(id, {
+        startDate: newStartDate,
+        socialDays: shiftedDays.length > 0 ? shiftedDays : undefined,
+      })
       return result
     })
   },

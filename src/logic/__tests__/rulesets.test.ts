@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { challengeWeek, isChallengeVariant, RULESETS, rulesFor, variantOf, VARIANTS } from '../rulesets'
+import { challengeWeek, cleanSocialDays, isChallengeVariant, RULESETS, rulesFor, variantOf, VARIANTS } from '../rulesets'
 
 describe('rulesets', () => {
   it('keeps 75 Hard exactly as it was', () => {
@@ -69,5 +69,9 @@ describe('rulesets', () => {
     expect(challengeWeek(70)).toBe(10)
     expect(challengeWeek(71)).toBe(11)
     expect(challengeWeek(75)).toBe(11)
+  })
+
+  it('cleanSocialDays sorts, de-duplicates, drops days outside 1–75 and keeps the earliest per week', () => {
+    expect(cleanSocialDays([9, 0, 2, 3, 76, 2])).toEqual([2, 9])
   })
 })
