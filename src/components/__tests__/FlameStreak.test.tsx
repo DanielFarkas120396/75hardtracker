@@ -77,6 +77,17 @@ describe('FlameStreak', () => {
     expect(flame.destroy).toHaveBeenCalled()
   })
 
+  it('keeps the emoji when the player fails to load', async () => {
+    loadAnimation.mockImplementationOnce(() => {
+      throw new Error('No canvas')
+    })
+    render(<FlameStreak streak={12} />)
+    await waitFor(() => expect(loadAnimation).toHaveBeenCalled())
+    // A failed load must not surface as an unhandled rejection: Vitest fails the whole run on one.
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(screen.getByText('🔥')).toBeInTheDocument()
+  })
+
   it('never builds the animation when it unmounts before the player has loaded', async () => {
     const { unmount } = render(<FlameStreak streak={12} />)
     unmount()

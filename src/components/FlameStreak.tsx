@@ -33,11 +33,14 @@ export function FlameStreak({ streak }: FlameStreakProps) {
   useEffect(() => {
     let cancelled = false
     let item: AnimationItem | undefined
-    void loadFlame().then(([{ default: lottie }, { default: animationData }]) => {
-      if (cancelled || !box.current) return
-      item = lottie.loadAnimation({ container: box.current, renderer: 'svg', loop: true, autoplay: false, animationData })
-      setFlame(item)
-    })
+    void loadFlame()
+      .then(([{ default: lottie }, { default: animationData }]) => {
+        if (cancelled || !box.current) return
+        item = lottie.loadAnimation({ container: box.current, renderer: 'svg', loop: true, autoplay: false, animationData })
+        setFlame(item)
+      })
+      // No player (a chunk that didn't download, or no canvas, as in jsdom): the emoji stays.
+      .catch(() => {})
     return () => {
       cancelled = true
       item?.destroy()
