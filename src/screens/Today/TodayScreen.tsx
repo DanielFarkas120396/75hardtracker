@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { FlameStreak } from '../../components/FlameStreak'
+import { Greeting, WhyQuote } from '../../components/ProfileLines'
 import { ProgressRing } from '../../components/ui/ProgressRing'
 import { planSavedLine, taskCheer } from '../../content/microcopy'
 import { VARIANT_NAMES } from '../../content/variants'
@@ -8,6 +9,7 @@ import { useChallengeStats } from '../../hooks/useChallengeStats'
 import { useDayCompletion } from '../../hooks/useDayCompletion'
 import { useMenace } from '../../hooks/useMenace'
 import { useNow } from '../../hooks/useNow'
+import { useProfile } from '../../hooks/useProfile'
 import { useTodayEntry } from '../../hooks/useTodayEntry'
 import { useWorkoutsForEntry } from '../../hooks/useWorkoutsForEntry'
 import { dateForDayNumber, formatWeekday } from '../../lib/dates'
@@ -53,6 +55,7 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak, joke
   const nowMin = useNow()
   const menace = useMenace(completion?.data, entry, nowMin, rules)
   const { xp } = useChallengeStats(challenge.id)
+  const profile = useProfile()
   const [lunges, setLunges] = useState(0)
   const [planOpen, setPlanOpen] = useState(false)
   const [socialOpen, setSocialOpen] = useState(false)
@@ -78,6 +81,7 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak, joke
       <div className="relative z-10">
         <header className="flex items-center justify-between px-4 pt-6 pb-4">
           <div>
+            <Greeting />
             <p className="font-rounded text-sm font-bold text-ink-muted">
               {VARIANT_NAMES[rules.variant]} · Attempt #{challenge.attemptNumber}
             </p>
@@ -100,6 +104,7 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak, joke
             </ProgressRing>
           </div>
         </header>
+        <WhyQuote className="px-4 pb-3" />
 
         {isStartDateEditable(todayDayNumber) && (
           <p className="px-4 pb-2 font-rounded text-xs text-ink-muted">
@@ -113,6 +118,7 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak, joke
           completion={completion.completion}
           dayNumber={todayDayNumber}
           announcement={announcement}
+          name={profile?.name}
           onLunge={() => setLunges((count) => count + 1)}
         >
           {completion.missing.length > 0 && (

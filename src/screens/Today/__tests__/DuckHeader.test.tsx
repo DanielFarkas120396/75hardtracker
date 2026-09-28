@@ -74,6 +74,20 @@ describe('DuckHeader', () => {
     expect(await screen.findByText("Tick. Tock. You're cutting it close.", undefined, { timeout: 3000 })).toBeInTheDocument()
   })
 
+  it("says the player's name when the day starts", () => {
+    render(
+      <DuckHeader
+        menace={{ level: 'watching', reason: 'plenty' }}
+        missing={[...TASK_IDS]}
+        completion={completionOf([...TASK_IDS])}
+        dayNumber={3}
+        name="Daniel"
+        onLunge={vi.fn()}
+      />,
+    )
+    expect(screen.getByText("New day, Daniel. I'm watching.")).toBeInTheDocument()
+  })
+
   it('shows an announcement pushed from outside', async () => {
     const props = { menace: TAPPING, missing: ['reading'] as TaskId[], completion: completionOf(['reading']), dayNumber: 3, onLunge: vi.fn() }
     const { rerender } = render(<DuckHeader {...props} />)

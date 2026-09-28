@@ -2,10 +2,12 @@ import { render, screen } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { db } from '../../../db/db'
-import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
+import { addChallenge, freshDatabase, TEST_PROFILE } from '../../../db/__tests__/fixtures'
 import { dayEntryRepo } from '../../../db/repositories/dayEntryRepo'
 import type { Challenge } from '../../../db/types'
+import { ProfileContext } from '../../../hooks/useProfile'
 import { addDaysISO, todayISO } from '../../../lib/dates'
+import type { Profile } from '../../../logic/profile'
 import type { ChallengeVariant } from '../../../logic/rulesets'
 import { TodayScreen } from '../TodayScreen'
 
@@ -15,11 +17,13 @@ async function setup({
   todayDayNumber = 3,
   jokersLeft = 0,
   socialDays,
+  profile,
 }: {
   variant?: ChallengeVariant
   todayDayNumber?: number
   jokersLeft?: number
   socialDays?: number[]
+  profile?: Profile
 } = {}) {
   const today = todayISO()
   const startDate = addDaysISO(today, -(todayDayNumber - 1))
@@ -35,14 +39,16 @@ async function setup({
   const dayEntries = await dayEntryRepo.getAllForChallenge(challengeId)
 
   render(
-    <TodayScreen
-      challenge={challenge}
-      dayEntries={dayEntries}
-      today={today}
-      todayDayNumber={todayDayNumber}
-      streak={0}
-      jokersLeft={jokersLeft}
-    />,
+    <ProfileContext.Provider value={profile}>
+      <TodayScreen
+        challenge={challenge}
+        dayEntries={dayEntries}
+        today={today}
+        todayDayNumber={todayDayNumber}
+        streak={0}
+        jokersLeft={jokersLeft}
+      />
+    </ProfileContext.Provider>,
   )
   return { challenge, today }
 }
@@ -85,5 +91,20 @@ describe('TodayScreen', () => {
     await setup({ variant: 'strong', todayDayNumber: 3, socialDays: [3] })
 
     expect(await screen.findByText('🥂 Social occasion today — a drink is allowed.')).toBeInTheDocument()
+  })
+
+  it('greets the player by name and keeps their reason in view', async () => {
+    await setup({ todayDayNumber: 3, profile: TEST_PROFILE })
+
+    expect(await screen.findByText('Hey Daniel')).toBeInTheDocument()
+    expect(screen.getByText('“A fresh start”')).toBeInTheDocument()
+  })
+
+  it('shows no greeting or reason without a profile', async () => {
+    await setup({ todayDayNumber: 3 })
+
+    expect(await screen.findByText('75 Hard · Attempt #1')).toBeInTheDocument()
+    expect(screen.queryByText(/^Hey /)).not.toBeInTheDocument()
+    expect(screen.queryByText('“A fresh start”')).not.toBeInTheDocument()
   })
 })

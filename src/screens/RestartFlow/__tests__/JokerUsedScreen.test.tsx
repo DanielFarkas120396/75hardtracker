@@ -2,9 +2,10 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../../db/db'
-import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
+import { addChallenge, freshDatabase, TEST_PROFILE } from '../../../db/__tests__/fixtures'
 import { challengeRepo } from '../../../db/repositories/challengeRepo'
 import type { Challenge } from '../../../db/types'
+import { ProfileContext } from '../../../hooks/useProfile'
 import { todayISO } from '../../../lib/dates'
 import { JokerUsedScreen } from '../JokerUsedScreen'
 
@@ -82,5 +83,18 @@ describe('JokerUsedScreen', () => {
     expect(await screen.findByText("Couldn't save that — try again.")).toBeInTheDocument()
     expect(screen.getByRole('alert')).toHaveTextContent("Couldn't save that — try again.")
     expect(screen.getByRole('button', { name: 'Keep going' })).toBeEnabled()
+  })
+
+  it('quotes the reason back when a joker is spent', async () => {
+    const challengeId = await addChallenge({ startDate: todayISO(), attemptNumber: 1, status: 'active', variant: 'medium' })
+    const challenge = (await db.challenges.get(challengeId)) as Challenge
+    render(
+      <ProfileContext.Provider value={TEST_PROFILE}>
+        <JokerUsedScreen challenge={challenge} newlyMissed={[3]} missedCount={1} jokersLeft={0} />
+      </ProfileContext.Provider>,
+    )
+    await screen.findAllByRole('listitem')
+
+    expect(screen.getByText('You said: “A fresh start”')).toBeInTheDocument()
   })
 })

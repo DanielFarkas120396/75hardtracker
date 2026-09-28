@@ -2,9 +2,10 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../../db/db'
-import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
+import { addChallenge, freshDatabase, TEST_PROFILE } from '../../../db/__tests__/fixtures'
 import { challengeRepo, type GiveUpResult } from '../../../db/repositories/challengeRepo'
 import type { Challenge } from '../../../db/types'
+import { ProfileContext } from '../../../hooks/useProfile'
 import { addDaysISO, todayISO } from '../../../lib/dates'
 import { GiveUpFlow } from '../GiveUpFlow'
 
@@ -240,5 +241,23 @@ describe('GiveUpFlow', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent("Couldn't give up — try again.")
     expect(screen.getByRole('button', { name: 'Give up for good' })).toBeEnabled()
+  })
+
+  it('quotes the reason back on step 2', async () => {
+    const challengeId = await addChallenge({
+      startDate: addDaysISO(today, -11),
+      attemptNumber: 1,
+      status: 'active',
+      variant: 'hard',
+    })
+    const challenge = (await db.challenges.get(challengeId)) as Challenge
+    render(
+      <ProfileContext.Provider value={TEST_PROFILE}>
+        <GiveUpFlow open onClose={vi.fn()} challenge={challenge} today={today} todayDayNumber={12} streak={11} />
+      </ProfileContext.Provider>,
+    )
+    click('Give up')
+
+    expect(screen.getByText('You said: “A fresh start”')).toBeInTheDocument()
   })
 })

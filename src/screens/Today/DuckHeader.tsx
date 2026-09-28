@@ -31,6 +31,8 @@ interface DuckHeaderProps {
   completion: Record<TaskId, boolean>
   dayNumber: number
   announcement?: DuckAnnouncement
+  /** The player's name, for the line that starts the day. */
+  name?: string
   /** Three quick pokes make him lunge; the screen flashes red once. */
   onLunge: () => void
   /** Shown under the speech bubble: the plan button. */
@@ -42,7 +44,7 @@ interface DuckHeaderProps {
  * (the third quick one makes him lunge), nods when a task is ticked, and
  * glares when one is unticked.
  */
-export function DuckHeader({ menace, missing, completion, dayNumber, announcement, onLunge, children }: DuckHeaderProps) {
+export function DuckHeader({ menace, missing, completion, dayNumber, announcement, name, onLunge, children }: DuckHeaderProps) {
   const playShing = useKnifeSound()
   const [reaction, setReaction] = useState<{ kind: DuckReaction; id: number }>()
   const [override, setOverride] = useState<{ text: string; id: number }>()
@@ -86,7 +88,7 @@ export function DuckHeader({ menace, missing, completion, dayNumber, announcemen
     }
   }
 
-  const line = override?.text ?? duckLine({ menace, missing, dayNumber })
+  const line = override?.text ?? duckLine({ menace, missing, dayNumber, name })
 
   return (
     <div className="flex items-center gap-3 px-4 pb-4">

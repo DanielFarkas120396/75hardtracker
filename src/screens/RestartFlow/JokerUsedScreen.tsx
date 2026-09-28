@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Mascot } from '../../components/mascot/Mascot'
+import { YouSaid } from '../../components/ProfileLines'
 import { challengeRepo } from '../../db/repositories/challengeRepo'
 import type { Challenge } from '../../db/types'
 import { GateHeading } from './GateHeading'
@@ -64,6 +65,7 @@ export function JokerUsedScreen({ challenge, newlyMissed, missedCount, jokersLef
 
       <p className="mt-2 font-rounded text-ink-muted">{jokerLine}</p>
       <p className="font-rounded text-ink-muted">Your streak starts over. Your challenge doesn't.</p>
+      <YouSaid className="max-w-xs" />
       <p className="mt-2 font-rounded font-bold text-ink">{duckLine}</p>
 
       {error && (

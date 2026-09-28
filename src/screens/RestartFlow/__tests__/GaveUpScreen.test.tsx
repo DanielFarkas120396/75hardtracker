@@ -2,8 +2,9 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { db } from '../../../db/db'
-import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
+import { addChallenge, freshDatabase, TEST_PROFILE } from '../../../db/__tests__/fixtures'
 import type { Challenge } from '../../../db/types'
+import { ProfileContext } from '../../../hooks/useProfile'
 import { addDaysISO, todayISO } from '../../../lib/dates'
 import { GaveUpScreen } from '../GaveUpScreen'
 
@@ -63,5 +64,23 @@ describe('GaveUpScreen', () => {
         { attemptNumber: 3, variant: 'medium', startDate: today },
       ]),
     )
+  })
+
+  it('calls the player by name', async () => {
+    const challengeId = await addChallenge({
+      startDate: addDaysISO(today, -11),
+      attemptNumber: 1,
+      status: 'abandoned',
+      variant: 'hard',
+      abandonedOn: today,
+    })
+    const challenge = (await db.challenges.get(challengeId)) as Challenge
+    render(
+      <ProfileContext.Provider value={TEST_PROFILE}>
+        <GaveUpScreen challenge={challenge} today={today} />
+      </ProfileContext.Provider>,
+    )
+
+    expect(screen.getByText("Fine, Daniel. Pick something. I'm still watching.")).toBeInTheDocument()
   })
 })

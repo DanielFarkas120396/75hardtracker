@@ -2,8 +2,9 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { db } from '../../../db/db'
-import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
+import { addChallenge, freshDatabase, TEST_PROFILE } from '../../../db/__tests__/fixtures'
 import type { Challenge } from '../../../db/types'
+import { ProfileContext } from '../../../hooks/useProfile'
 import { addDaysISO, todayISO } from '../../../lib/dates'
 import { PreStartView } from '../PreStartView'
 
@@ -42,5 +43,20 @@ describe('PreStartView', () => {
 
     expect(screen.getByText('75 Hard · Attempt #1')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '🥂 Plan a social occasion' })).not.toBeInTheDocument()
+  })
+
+  it('greets the player by name and quotes their reason before Day 1 too', async () => {
+    const today = todayISO()
+    const challengeId = await addChallenge({ startDate: addDaysISO(today, 3), attemptNumber: 1, status: 'active' })
+    const challenge = (await db.challenges.get(challengeId)) as Challenge
+
+    render(
+      <ProfileContext.Provider value={TEST_PROFILE}>
+        <PreStartView challenge={challenge} todayDayNumber={-2} today={today} />
+      </ProfileContext.Provider>,
+    )
+
+    expect(screen.getByText('Hey Daniel')).toBeInTheDocument()
+    expect(screen.getByText('“A fresh start”')).toBeInTheDocument()
   })
 })

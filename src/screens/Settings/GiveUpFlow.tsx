@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
 import { Mascot } from '../../components/mascot/Mascot'
+import { YouSaid } from '../../components/ProfileLines'
 import { VARIANT_NAMES } from '../../content/variants'
 import { challengeRepo } from '../../db/repositories/challengeRepo'
 import type { Challenge } from '../../db/types'
@@ -82,6 +83,7 @@ function GiveUpSteps({ onClose, challenge, today, todayDayNumber, streak }: Omit
         <p className="mt-3 rounded-xl bg-canvas px-3 py-2 font-rounded text-sm font-bold text-ink">
           🔥 {streak}-day streak · {perfectDays} perfect {perfectDays === 1 ? 'day' : 'days'} · ⭐ {xp} XP
         </p>
+        <YouSaid className="mt-3" />
         <p className="mt-3 font-rounded font-bold text-ink">{perfectDaysLine(perfectDays)}</p>
         <StepButtons stay="I'll stay" onStay={onClose}>
           <Button variant="secondary" className="flex-1" onClick={() => setStep(3)}>
