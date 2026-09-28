@@ -6,6 +6,7 @@ import { canGiveUp, useChallengeGate } from './hooks/useChallengeGate'
 import { useDayCompleteCelebration } from './hooks/useDayCompleteCelebration'
 import { useApplyTheme } from './hooks/useThemePreference'
 import { useToday } from './hooks/useToday'
+import { OnboardingGate } from './screens/Onboarding/OnboardingGate'
 import { DayCompleteCelebration } from './screens/Today/DayCompleteCelebration'
 import { TodayScreen } from './screens/Today/TodayScreen'
 
@@ -36,8 +37,18 @@ function LoadingScreen() {
 
 function App() {
   useApplyTheme()
-  const [screen, setScreen] = useState<ScreenId>('today')
   const today = useToday()
+
+  return (
+    <OnboardingGate today={today} loading={<LoadingScreen />}>
+      <MainApp today={today} />
+    </OnboardingGate>
+  )
+}
+
+/** The app once the player has a profile: the challenge gate, the screens and the bottom nav. */
+function MainApp({ today }: { today: string }) {
+  const [screen, setScreen] = useState<ScreenId>('today')
   const gate = useChallengeGate(today)
   const { celebration, dismiss: dismissCelebration } = useDayCompleteCelebration(gate)
   const { toasts, dismiss: dismissToast } = useBadgeUnlocks(gate)
