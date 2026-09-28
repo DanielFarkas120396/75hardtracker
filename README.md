@@ -6,6 +6,7 @@ No backend: all data (including photos) lives in the browser via IndexedDB (Dexi
 
 ## Features
 
+- **Welcome** — on first launch, one question per screen: your name, your challenge, why you're doing it, and when you start. The duck then greets you by name on Today, keeps your reason in view, and quotes it back when it gets hard (a missed day, a joker, giving up). Settings → Profile edits both.
 - **Today** — the five daily tasks, worded for whichever challenge you're doing: workouts, diet and alcohol, water, reading, and a progress photo. Each card celebrates when it's done, and the mascot counts the day down. Mood and notes are optional and don't affect completion.
 - **Four challenges** — pick yours when you start, or until the end of Day 1 (Settings → Challenge):
 
@@ -24,7 +25,7 @@ No backend: all data (including photos) lives in the browser via IndexedDB (Dexi
 - **XP, streaks and badges** — 10 XP per task, +25 for a perfect day, +100 at streaks of 7, 14, 21, 30, 50 and 75. A full-screen celebration for each completed day, and a victory screen after Day 75.
 - **Stats** — totals for the attempt, plus weight and body measurements with a weight chart.
 - **Gallery** — every progress photo across all attempts.
-- **Settings** — Challenge (the challenge and its start date), books, badges, attempt history (days and photos of every past attempt), sound and haptics, light/dark/system theme, installing the app, backup & storage, and the danger zone (giving up the attempt, or erasing everything).
+- **Settings** — Profile (your name and your reason), Challenge (the challenge and its start date), books, badges, attempt history (days and photos of every past attempt), sound and haptics, light/dark/system theme, installing the app, backup & storage, and the danger zone (giving up the attempt, or erasing everything).
 - **Installable and offline** — a PWA with a precached service worker; after the first visit it loads without a network.
 - **Accessible** — text and state colours meet WCAG contrast (4.5:1 for text) in both themes, and the app honours the "reduce motion" setting.
 
@@ -66,8 +67,12 @@ await s.seedDay75Pending()
 | `seedSoftRestDay()` | 75 Soft on Day 2, taking its recovery day: diet, water and reading done, only the photo left. |
 | `seedDay77Complete()` | A Hard attempt with all 75 days perfect, opened on Day 77: opens on Victory. |
 | `seedGaveUp()` | A 75 Hard attempt given up today on Day 12, after 11 perfect days: opens on the "You gave up" screen. |
+| `seedFreshInstall()` | An empty database with no profile: opens on the welcome flow for a new player. |
+| `seedReturningWithoutProfile()` | 75 Hard on Day 4 (Days 1–3 done) with no profile yet: opens on the returning welcome flow (name and reason only). |
 
 `?now=HH:mm` freezes the duck's clock in development (production ignores it), so each menace level can be checked, e.g. `?db=duck&now=22:45`.
+
+Every other scenario also writes a default profile (Sam), so it opens straight on the app.
 
 Every scenario refuses to run against the default database.
 

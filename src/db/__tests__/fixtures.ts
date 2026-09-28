@@ -1,7 +1,11 @@
 import { db } from '../db'
 import type { Challenge, DayEntry, Photo, Workout } from '../types'
 import { addDaysISO } from '../../lib/dates'
+import type { Profile } from '../../logic/profile'
 import { RULESETS } from '../../logic/rulesets'
+
+/** A finished welcome flow, for tests that render screens with a profile. */
+export const TEST_PROFILE: Profile = { name: 'Daniel', why: 'A fresh start', onboardedAt: '2026-09-28T08:00:00.000Z' }
 
 /** Wipes the test database and reopens it on the latest schema. */
 export async function freshDatabase(): Promise<void> {

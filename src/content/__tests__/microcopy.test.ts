@@ -72,6 +72,12 @@ describe('duckLine', () => {
     )
   })
 
+  it("starts an untouched day with the player's name, when known", () => {
+    expect(duckLine({ menace: threat('watching', 'plenty'), missing: TASK_IDS, dayNumber: 1, name: 'Daniel' })).toBe(
+      "New day, Daniel. I'm watching.",
+    )
+  })
+
   it('escalates as time runs out', () => {
     const missing = ['reading'] as const
     expect(duckLine({ menace: threat('tapping', 'close'), missing, dayNumber: 1 })).toBe(

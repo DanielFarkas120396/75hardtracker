@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Mascot } from '../../components/mascot/Mascot'
+import { Greeting, WhyQuote } from '../../components/ProfileLines'
 import { Button } from '../../components/ui/Button'
 import { preStartPlanLine, VARIANT_NAMES } from '../../content/variants'
 import type { Challenge } from '../../db/types'
@@ -25,9 +26,11 @@ export function PreStartView({ challenge, todayDayNumber, today }: PreStartViewP
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-canvas px-6 pb-24 text-center">
       <Mascot mood="waiting" size={120} />
+      <Greeting />
       <p className="font-rounded text-sm font-bold text-ink-muted">
         {VARIANT_NAMES[rules.variant]} · Attempt #{challenge.attemptNumber}
       </p>
+      <WhyQuote className="max-w-xs" />
       {brokenStartDate ? (
         <>
           <h1 className="font-rounded text-2xl font-extrabold text-ink">Pick a start date</h1>

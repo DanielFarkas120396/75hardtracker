@@ -13,6 +13,7 @@ import { CompanionSection } from './CompanionSection'
 import { ExportImportSection } from './ExportImportSection'
 import { GiveUpFlow } from './GiveUpFlow'
 import { InstallSection } from './InstallSection'
+import { ProfileSection } from './ProfileSection'
 import { StartDateSection } from './StartDateSection'
 
 interface SettingsScreenProps {
@@ -44,6 +45,8 @@ export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGi
       </header>
 
       <main className="flex flex-col gap-4 px-4">
+        <ProfileSection />
+
         {challenge.status === 'active' && (
           // Keyed by the saved date so the draft resets whenever it changes.
           <StartDateSection

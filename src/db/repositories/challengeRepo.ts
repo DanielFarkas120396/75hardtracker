@@ -1,12 +1,14 @@
 import { dayNumberForDate } from '../../lib/dates'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { isChallengeDay } from '../../logic/days'
+import { parseProfile } from '../../logic/profile'
 import { buildNextChallenge } from '../../logic/restart'
 import { RULESETS, challengeWeek, cleanSocialDays, rulesFor, variantOf, type ChallengeVariant } from '../../logic/rulesets'
 import { isStartDateEditable, validateStartDateChange, type StartDateChangeResult } from '../../logic/startDate'
 import { COMPLETION_TABLES, syncDayCompletion } from '../completion'
 import { db } from '../db'
 import type { Challenge } from '../types'
+import { SETTING_KEYS } from './settingsRepo'
 
 export type SocialDayResult =
   | { ok: true }
@@ -42,13 +44,17 @@ export const challengeRepo = {
   },
 
   /**
-   * Creates attempt #1 on first launch — only when there are no challenges
-   * at all. The emptiness check and the insert share one transaction, so
-   * concurrent calls (StrictMode, two tabs) can't create two.
+   * Creates attempt #1 when there are no challenges at all — but only once the
+   * player has a profile. Without one the welcome flow is due, and it creates
+   * attempt #1 itself (this also covers the moment right after "Reset
+   * everything", while the main app is still mounted). The checks and the
+   * insert share one transaction, so concurrent calls (StrictMode, two tabs)
+   * can't create two.
    */
   async bootstrapIfEmpty(startDate: string): Promise<void> {
-    await db.transaction('rw', db.challenges, async () => {
+    await db.transaction('rw', [db.challenges, db.settings], async () => {
       if ((await db.challenges.count()) > 0) return
+      if (!parseProfile((await db.settings.get(SETTING_KEYS.profile))?.value)) return
       await db.challenges.add(buildNextChallenge([], startDate, 'hard') as Challenge)
     })
   },

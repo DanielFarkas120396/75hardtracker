@@ -11,6 +11,7 @@ import { COMPLETION_TABLES, syncDayCompletion } from '../completion'
 import { db } from '../db'
 import { challengeRepo } from '../repositories/challengeRepo'
 import { dayEntryRepo } from '../repositories/dayEntryRepo'
+import { profileRepo } from '../repositories/profileRepo'
 import { addChallenge, addPerfectDays, freshDatabase } from './fixtures'
 
 beforeEach(freshDatabase)
@@ -102,5 +103,24 @@ describe('a pre-variants 75 Hard attempt', () => {
     const allEntries = await dayEntryRepo.getAllForChallenge(challengeId)
     const gate = resolveGate(challengeRow, allEntries, today)
     expect(gate).toMatchObject({ kind: 'active', missedDays: [], jokersLeft: 0 })
+  })
+
+  it('comes through the returning welcome flow untouched', async () => {
+    const today = todayISO()
+    const startDate = addDaysISO(today, -11) // today is Day 12
+    const challengeId = await addChallenge({ startDate, attemptNumber: 1, status: 'active' })
+    await addPerfectDays(challengeId, startDate, 1, 11)
+
+    const challengesSnapshot = await db.challenges.toArray()
+    const dayEntriesSnapshot = await db.dayEntries.toArray()
+    const workoutsSnapshot = await db.workouts.toArray()
+
+    // The returning flow passes no first attempt: only the profile is written.
+    expect(await profileRepo.completeOnboarding({ name: 'Daniel', why: 'A fresh start' })).toEqual({ ok: true })
+
+    expect(await db.challenges.toArray()).toEqual(challengesSnapshot)
+    expect(await db.challenges.get(challengeId)).not.toHaveProperty('variant')
+    expect(await db.dayEntries.toArray()).toEqual(dayEntriesSnapshot)
+    expect(await db.workouts.toArray()).toEqual(workoutsSnapshot)
   })
 })

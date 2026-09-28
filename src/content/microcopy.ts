@@ -96,28 +96,38 @@ export function planSavedLine(at: number): string {
   return `${formatHHmm(at)}. Not a minute later.`
 }
 
-function watchingLine(missing: readonly TaskId[]): string {
+function watchingLine(missing: readonly TaskId[], name?: string): string {
   const done = TASK_IDS.length - missing.length
   if (missing.length === 1) return ONE_LEFT_LINES[missing[0]]
-  if (done === 0) return "New day. I'm watching."
+  if (done === 0) return name ? `New day, ${name}. I'm watching.` : "New day. I'm watching."
   return `${done} down, ${missing.length} to go. I'm watching.`
 }
 
-/** The duck's speech bubble on Today, from his menace and the tasks still missing. */
-export function duckLine({ menace, missing, dayNumber }: { menace: Menace; missing: readonly TaskId[]; dayNumber: number }): string {
+/** The duck's speech bubble on Today, from his menace and the tasks still missing; the player's name starts the day. */
+export function duckLine({
+  menace,
+  missing,
+  dayNumber,
+  name,
+}: {
+  menace: Menace
+  missing: readonly TaskId[]
+  dayNumber: number
+  name?: string
+}): string {
   switch (menace.reason) {
     case 'done':
       return CONTENT_LINES[(dayNumber - 1) % CONTENT_LINES.length]
     case 'plenty':
-      return watchingLine(missing)
+      return watchingLine(missing, name)
     case 'plan-pending':
       return menace.next
         ? `${TASK_NAMES[menace.next.task]} at ${formatHHmm(menace.next.at)}. I'll be there.`
-        : watchingLine(missing)
+        : watchingLine(missing, name)
     case 'plan-due':
       return menace.next
         ? `It's ${formatHHmm(menace.next.at)}. ${TASK_NAMES[menace.next.task]}. I'm watching.`
-        : watchingLine(missing)
+        : watchingLine(missing, name)
     case 'close':
       return "Tick. Tock. You're cutting it close."
     case 'plan-broken':

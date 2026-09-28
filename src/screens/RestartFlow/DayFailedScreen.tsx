@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Mascot } from '../../components/mascot/Mascot'
+import { YouSaid } from '../../components/ProfileLines'
 import { missedDayExplanation } from '../../content/variants'
 import { challengeRepo } from '../../db/repositories/challengeRepo'
 import type { Challenge } from '../../db/types'
+import { useProfile } from '../../hooks/useProfile'
 import { rulesFor } from '../../logic/rulesets'
 import { GateHeading } from './GateHeading'
 import { MissedTasksList } from './MissedTasksList'
@@ -17,6 +19,7 @@ interface DayFailedScreenProps {
 /** Blocks the app after a missed day: shows what was missed, then restarts from Day 1 on confirmation. */
 export function DayFailedScreen({ challenge, failedDayNumber, today }: DayFailedScreenProps) {
   const [restarting, setRestarting] = useState(false)
+  const profile = useProfile()
 
   const confirmRestart = async () => {
     setRestarting(true)
@@ -34,10 +37,13 @@ export function DayFailedScreen({ challenge, failedDayNumber, today }: DayFailed
       <p className="max-w-xs font-rounded text-ink-muted">
         {missedDayExplanation(rulesFor(challenge), challenge.attemptNumber)}
       </p>
+      <YouSaid className="max-w-xs" />
 
       <MissedTasksList challenge={challenge} dayNumber={failedDayNumber} />
 
-      <p className="mt-2 font-rounded font-bold text-ink">Again. From Day 1. I'm watching.</p>
+      <p className="mt-2 font-rounded font-bold text-ink">
+        {profile ? `Again, ${profile.name}. From Day 1. I'm watching.` : "Again. From Day 1. I'm watching."}
+      </p>
 
       <Button variant="primary" className="mt-2" onClick={() => void confirmRestart()} disabled={restarting}>
         {restarting ? 'Restarting…' : 'Restart from Day 1'}
