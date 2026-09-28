@@ -14,6 +14,8 @@ import { GateHeading } from '../RestartFlow/GateHeading'
 function enterMovesOn(valid: boolean, onNext: () => void) {
   return (event: KeyboardEvent) => {
     if (event.key !== 'Enter') return
+    // An IME (Japanese, Chinese…) uses Enter to confirm the composed word, not to submit.
+    if (event.nativeEvent.isComposing) return
     event.preventDefault()
     if (valid) onNext()
   }
@@ -185,6 +187,7 @@ interface ReadyStepProps {
 
 export function ReadyStep({ mode, name, why, variant, startDate, today, dateError, busy, error, onFinish }: ReadyStepProps) {
   const alert = dateError ?? error
+  const valid = isValidName(name) && isValidWhy(why)
   return (
     <>
       <StepTitle>{mode === 'new' ? `Deal, ${cleanText(name)}.` : `Welcome back, ${cleanText(name)}.`}</StepTitle>
@@ -200,7 +203,7 @@ export function ReadyStep({ mode, name, why, variant, startDate, today, dateErro
           {alert}
         </p>
       )}
-      <Button className="mt-6 w-full" onClick={onFinish} disabled={busy || dateError !== null}>
+      <Button className="mt-6 w-full" onClick={onFinish} disabled={busy || dateError !== null || !valid}>
         {busy ? 'Starting…' : "Let's go"}
       </Button>
     </>

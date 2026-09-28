@@ -99,6 +99,37 @@ describe('OnboardingFlow', () => {
     expect(await heading('Pick your challenge')).toBeInTheDocument()
   })
 
+  it('ignores a second tap while the step is still leaving', async () => {
+    render(<OnboardingFlow mode="new" today={today} />)
+    const getStarted = screen.getByRole('button', { name: 'Get started' })
+    fireEvent.click(getStarted)
+    fireEvent.click(getStarted) // a second tap, still on the welcome step's (leaving) button
+
+    expect(await heading('What should the duck call you?')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Pick your challenge' })).not.toBeInTheDocument()
+
+    const field = nameField()
+    fireEvent.change(field, { target: { value: 'Daniel' } })
+    fireEvent.keyDown(field, { key: 'Enter' })
+    fireEvent.keyDown(field, { key: 'Enter' }) // a second Enter, still on the name step's (leaving) field
+
+    expect(await heading('Pick your challenge')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Why are you doing this?' })).not.toBeInTheDocument()
+  })
+
+  it('leaves the step in place when Enter confirms an IME composition', async () => {
+    render(<OnboardingFlow mode="new" today={today} />)
+    click('Get started')
+    await heading('What should the duck call you?')
+
+    fireEvent.change(nameField(), { target: { value: 'Daniel' } })
+    fireEvent.keyDown(nameField(), { key: 'Enter', isComposing: true })
+
+    // Give a wrongly triggered transition a chance to finish before checking it never started.
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'What should the duck call you?' })).toBeInTheDocument())
+    expect(screen.queryByRole('heading', { name: 'Pick your challenge' })).not.toBeInTheDocument()
+  })
+
   it('keeps what was entered when going back', async () => {
     render(<OnboardingFlow mode="new" today={today} />)
     await passWelcomeAndName()
@@ -145,6 +176,26 @@ describe('OnboardingFlow', () => {
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled()
   })
 
+  it('flags the ready step once a picked start date has slipped into the past', async () => {
+    const { rerender } = render(<OnboardingFlow mode="new" today={today} />)
+    await passWelcomeAndName()
+    await heading('Pick your challenge')
+    click('Continue')
+    await heading('Why are you doing this?')
+    click('A fresh start')
+    click('Continue')
+    await heading('When do you start?')
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Pick a date' })) // keeps the default picked date: today
+    click('Continue')
+
+    await heading('Deal, Daniel.')
+    rerender(<OnboardingFlow mode="new" today={addDaysISO(today, 1)} />)
+
+    expect(screen.getByRole('alert')).toHaveTextContent("The start can't be in the past.")
+    expect(screen.getByRole('button', { name: "Let's go" })).toBeDisabled()
+  })
+
   it('says so, and lets the player try again, when saving fails', async () => {
     vi.spyOn(profileRepo, 'completeOnboarding').mockRejectedValueOnce(new Error('quota'))
     render(<OnboardingFlow mode="returning" today={today} />)
@@ -171,5 +222,23 @@ describe('OnboardingFlow', () => {
     await heading('What should the duck call you?')
     expect(progress()).toHaveAttribute('aria-valuetext', 'Step 2 of 6')
     expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument()
+  })
+
+  it('keeps rendering a step, without crashing, when the mode flips mid-flow (e.g. another tab)', async () => {
+    const { rerender } = render(<OnboardingFlow mode="new" today={today} />)
+    await passWelcomeAndName()
+    await heading('Pick your challenge')
+    click('Continue')
+    await heading('Why are you doing this?')
+    click('A fresh start')
+    click('Continue')
+    await heading('When do you start?')
+    click('Continue')
+    await heading('Deal, Daniel.')
+
+    // An attempt appeared (another tab): the gate would now render this flow in 'returning' mode.
+    rerender(<OnboardingFlow mode="returning" today={today} />)
+
+    expect(await heading('Welcome back, Daniel.')).toBeInTheDocument()
   })
 })

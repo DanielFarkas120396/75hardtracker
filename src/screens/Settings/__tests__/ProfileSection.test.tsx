@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { freshDatabase, TEST_PROFILE } from '../../../db/__tests__/fixtures'
 import { profileRepo } from '../../../db/repositories/profileRepo'
 import { ProfileContext } from '../../../hooks/useProfile'
@@ -17,6 +17,10 @@ async function setup() {
 
 describe('ProfileSection', () => {
   beforeEach(freshDatabase)
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
 
   it('shows the name and the reason, ready to edit', async () => {
     await setup()
@@ -44,6 +48,16 @@ describe('ProfileSection', () => {
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: '  ' } })
 
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
+  })
+
+  it('says so, and lets the player try again, when saving fails', async () => {
+    await setup()
+    vi.spyOn(profileRepo, 'save').mockRejectedValueOnce(new Error('quota'))
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Dan' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent("Couldn't save that — try again.")
   })
 
   it('renders nothing without a profile', () => {

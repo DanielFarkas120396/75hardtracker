@@ -61,7 +61,7 @@ Once the flow is done it never shows again, unless the profile goes away ("Reset
   - with no profile, it shows `OnboardingFlow` (a lazy, precached chunk), in `'returning'` mode when attempts exist and `'new'` mode otherwise;
   - with a profile, it wraps the main app in `ProfileContext.Provider`.
 - The main app is the current `App` body, moved into `MainApp`.
-- `useChallengeGate`, and with it the automatic bootstrap of attempt #1, only mounts inside the main app, so it can never race the flow.
+- `useChallengeGate`, and with it the automatic bootstrap of attempt #1, only mounts inside the main app, and the bootstrap itself does nothing without a usable profile (checked in the same transaction). So it never races the flow — not even right after "Reset everything", while the main app is still mounted for a moment.
 - `useProfile()` reads the context and returns `Profile | undefined`. It returns undefined in a screen's own tests, which provide no context. Every consumer then falls back to today's text.
 
 ## 5. The flow (`src/screens/Onboarding/`)

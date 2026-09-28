@@ -36,9 +36,11 @@ export function OnboardingFlow({ mode, today }: OnboardingFlowProps) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const step = steps[index]
-  const next = () => setIndex((i) => Math.min(i + 1, steps.length - 1))
-  const back = () => setIndex((i) => Math.max(i - 1, 0))
+  const clamp = (i: number) => Math.min(i, steps.length - 1)
+  const step = steps[clamp(index)]
+  // Moving is tied to the step that asks for it: a second tap while that step is still leaving does nothing.
+  const next = (from: OnboardingStep) => setIndex((i) => (steps[clamp(i)] === from ? clamp(i) + 1 : clamp(i)))
+  const back = (from: OnboardingStep) => setIndex((i) => (steps[clamp(i)] === from ? Math.max(clamp(i) - 1, 0) : clamp(i)))
 
   const finish = async () => {
     setBusy(true)
@@ -61,7 +63,7 @@ export function OnboardingFlow({ mode, today }: OnboardingFlowProps) {
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-surface px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-      <TopBar index={index} total={steps.length} onBack={back} />
+      <TopBar index={clamp(index)} total={steps.length} onBack={() => back(step)} />
 
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
@@ -73,11 +75,13 @@ export function OnboardingFlow({ mode, today }: OnboardingFlowProps) {
           className="flex flex-1 flex-col items-center pt-6 text-center"
         >
           <Mascot mood={STEP_MOODS[step]} size={96} />
-          {step === 'welcome' && <WelcomeStep onNext={next} />}
-          {step === 'name' && <NameStep name={name} onChange={setName} onNext={next} />}
-          {step === 'challenge' && <ChallengeStep variant={variant} onChange={setVariant} onNext={next} />}
-          {step === 'why' && <WhyStep why={why} onChange={setWhy} onNext={next} />}
-          {step === 'start' && <StartStep start={start} today={today} onNext={next} />}
+          {step === 'welcome' && <WelcomeStep onNext={() => next('welcome')} />}
+          {step === 'name' && <NameStep name={name} onChange={setName} onNext={() => next('name')} />}
+          {step === 'challenge' && (
+            <ChallengeStep variant={variant} onChange={setVariant} onNext={() => next('challenge')} />
+          )}
+          {step === 'why' && <WhyStep why={why} onChange={setWhy} onNext={() => next('why')} />}
+          {step === 'start' && <StartStep start={start} today={today} onNext={() => next('start')} />}
           {step === 'ready' && (
             <ReadyStep
               mode={mode}

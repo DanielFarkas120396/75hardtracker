@@ -25,6 +25,7 @@ beforeEach(freshDatabase)
 
 describe('challengeRepo.bootstrapIfEmpty', () => {
   it('creates attempt #1 once, even when called concurrently', async () => {
+    await profileRepo.completeOnboarding({ name: 'Daniel', why: 'A fresh start' })
     await Promise.all([
       challengeRepo.bootstrapIfEmpty(today),
       challengeRepo.bootstrapIfEmpty(today),
@@ -39,6 +40,11 @@ describe('challengeRepo.bootstrapIfEmpty', () => {
     await addChallenge({ startDate: '2026-01-01', attemptNumber: 1, status: 'completed' })
     await challengeRepo.bootstrapIfEmpty(today)
     expect(await db.challenges.count()).toBe(1)
+  })
+
+  it('does nothing without a profile: the welcome flow creates attempt #1 itself', async () => {
+    await challengeRepo.bootstrapIfEmpty(today)
+    expect(await db.challenges.count()).toBe(0)
   })
 })
 
@@ -129,6 +135,7 @@ describe('the completion flow', () => {
     expect(gate.kind).toBe('completed')
 
     await challengeRepo.markCompleted(challengeId)
+    await profileRepo.completeOnboarding({ name: 'Daniel', why: 'A fresh start' })
     await challengeRepo.bootstrapIfEmpty(today) // what the app does when nothing is active
     expect(await db.challenges.toArray()).toEqual([
       expect.objectContaining({ id: challengeId, attemptNumber: 1, status: 'completed' }),
@@ -649,6 +656,7 @@ describe('changing the variant', () => {
 
 describe('starting attempts', () => {
   it('bootstrapIfEmpty writes variant hard', async () => {
+    await profileRepo.completeOnboarding({ name: 'Daniel', why: 'A fresh start' })
     await challengeRepo.bootstrapIfEmpty(today)
     const [challenge] = await db.challenges.toArray()
     expect(challenge.variant).toBe('hard')
