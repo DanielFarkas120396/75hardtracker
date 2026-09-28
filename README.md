@@ -66,8 +66,12 @@ await s.seedDay75Pending()
 | `seedSoftRestDay()` | 75 Soft on Day 2, taking its recovery day: diet, water and reading done, only the photo left. |
 | `seedDay77Complete()` | A Hard attempt with all 75 days perfect, opened on Day 77: opens on Victory. |
 | `seedGaveUp()` | A 75 Hard attempt given up today on Day 12, after 11 perfect days: opens on the "You gave up" screen. |
+| `seedFreshInstall()` | An empty database with no profile: opens on the welcome flow for a new player. |
+| `seedReturningWithoutProfile()` | 75 Hard on Day 4 (Days 1–3 done) with no profile yet: opens on the returning welcome flow (name and reason only). |
 
 `?now=HH:mm` freezes the duck's clock in development (production ignores it), so each menace level can be checked, e.g. `?db=duck&now=22:45`.
+
+Every other scenario also writes a default profile (Sam), so it opens straight on the app.
 
 Every scenario refuses to run against the default database.
 

@@ -12,6 +12,7 @@ import { challengeRepo } from '../repositories/challengeRepo'
 import { dayEntryRepo } from '../repositories/dayEntryRepo'
 import { measurementRepo } from '../repositories/measurementRepo'
 import { photoRepo } from '../repositories/photoRepo'
+import { profileRepo } from '../repositories/profileRepo'
 import { SETTING_KEYS, settingsRepo } from '../repositories/settingsRepo'
 import { workoutRepo } from '../repositories/workoutRepo'
 import type { DayEntry, Photo, Workout } from '../types'
@@ -746,5 +747,72 @@ describe('acknowledging jokers', () => {
 
     await challengeRepo.acknowledgeJokers(challengeId, 0)
     expect((await db.challenges.get(challengeId))?.jokersAcknowledged).toBe(1)
+  })
+})
+
+describe('the profile', () => {
+  const now = new Date('2026-09-28T08:00:00.000Z')
+
+  it('is undefined until the welcome flow is done', async () => {
+    expect(await profileRepo.get()).toBeUndefined()
+  })
+
+  it('completes the flow for a new player: attempt #1 with the chosen challenge and start, then the profile', async () => {
+    const result = await profileRepo.completeOnboarding(
+      { name: ' Daniel ', why: 'A fresh start' },
+      { startDate: addDaysISO(today, 1), variant: 'medium' },
+      now,
+    )
+
+    expect(result).toEqual({ ok: true })
+    expect(await db.challenges.toArray()).toMatchObject([
+      { attemptNumber: 1, status: 'active', variant: 'medium', startDate: addDaysISO(today, 1) },
+    ])
+    expect(await profileRepo.get()).toEqual({ name: 'Daniel', why: 'A fresh start', onboardedAt: now.toISOString() })
+  })
+
+  it('never adds an attempt when one exists already, and never touches it', async () => {
+    const challengeId = await addChallenge({ startDate: addDaysISO(today, -3), attemptNumber: 1, status: 'active' })
+    const before = await db.challenges.get(challengeId)
+
+    await profileRepo.completeOnboarding({ name: 'Daniel', why: 'A fresh start' }, { startDate: today, variant: 'soft' }, now)
+
+    expect(await db.challenges.toArray()).toEqual([before])
+  })
+
+  it('saves only the profile for a returning player', async () => {
+    const challengeId = await addChallenge({ startDate: addDaysISO(today, -3), attemptNumber: 1, status: 'active' })
+    const before = await db.challenges.get(challengeId)
+
+    await profileRepo.completeOnboarding({ name: 'Daniel', why: 'A fresh start' }, undefined, now)
+
+    expect(await db.challenges.toArray()).toEqual([before])
+    expect(await profileRepo.get()).toMatchObject({ name: 'Daniel', why: 'A fresh start' })
+  })
+
+  it('writes nothing when the name or the reason is unusable', async () => {
+    const firstAttempt = { startDate: today, variant: 'hard' as const }
+    expect(await profileRepo.completeOnboarding({ name: '  ', why: 'A fresh start' }, firstAttempt)).toEqual({
+      ok: false,
+      reason: 'invalid',
+    })
+    expect(await profileRepo.completeOnboarding({ name: 'Daniel', why: '' }, firstAttempt)).toEqual({
+      ok: false,
+      reason: 'invalid',
+    })
+    expect(await db.challenges.count()).toBe(0)
+    expect(await profileRepo.get()).toBeUndefined()
+  })
+
+  it('updates the name and the reason, keeping when the flow was done', async () => {
+    await profileRepo.completeOnboarding({ name: 'Daniel', why: 'A fresh start' }, undefined, now)
+
+    expect(await profileRepo.save({ name: 'Dan', why: 'Clear my head' }, new Date('2026-10-01T08:00:00.000Z'))).toEqual({
+      ok: true,
+    })
+    expect(await profileRepo.get()).toEqual({ name: 'Dan', why: 'Clear my head', onboardedAt: now.toISOString() })
+
+    expect(await profileRepo.save({ name: 'x'.repeat(21), why: 'Clear my head' })).toEqual({ ok: false, reason: 'invalid' })
+    expect(await profileRepo.get()).toMatchObject({ name: 'Dan' })
   })
 })

@@ -13,6 +13,8 @@ export const SETTING_KEYS = {
   theme: 'theme',
   /** "HH:mm", 18:00–23:59 — the duck only turns menacing when what's left no longer fits before it. */
   bedtime: 'bedtime',
+  /** The player's profile from the welcome flow — { name, why, onboardedAt }; read and write it with profileRepo. */
+  profile: 'profile',
 } as const
 
 export const settingsRepo = {

@@ -11,11 +11,16 @@
  * Every function refuses to run against the default database, and replaces
  * the scratch database's contents in a single transaction — so the running
  * app never sees an empty moment and bootstraps its own attempt.
+ *
+ * Every scenario also writes a default profile (Sam), so it opens straight on
+ * the app — except the two that are about the welcome flow.
  */
 import { db, DEFAULT_DB_NAME } from '../db/db'
+import { SETTING_KEYS } from '../db/repositories/settingsRepo'
 import type { Challenge, DayEntry, Photo, Workout } from '../db/types'
 import { addDaysISO, todayISO } from '../lib/dates'
 import { CHALLENGE_LENGTH } from '../logic/constants'
+import type { Profile } from '../logic/profile'
 import { RULESETS } from '../logic/rulesets'
 
 interface SeedChallenge {
@@ -71,14 +76,20 @@ async function perfectDay(dayNumber: number): Promise<SeedDay> {
   }
 }
 
+/** The profile every scenario gets unless it's about the welcome flow, so it opens straight on the app. */
+function scenarioProfile(): Profile {
+  return { name: 'Sam', why: 'Prove I can finish what I start.', onboardedAt: new Date().toISOString() }
+}
+
 /** Replaces everything in the scratch database with the given challenges, atomically. */
-async function replaceDatabase(seeds: SeedChallenge[]): Promise<void> {
+async function replaceDatabase(seeds: SeedChallenge[], { withProfile = true }: { withProfile?: boolean } = {}): Promise<void> {
   if (db.name === DEFAULT_DB_NAME) {
     throw new Error('Open the app with ?db=<scenario> first — scenarios never touch your real data.')
   }
 
   await db.transaction('rw', db.tables, async () => {
     await Promise.all(db.tables.map((table) => table.clear()))
+    if (withProfile) await db.settings.put({ key: SETTING_KEYS.profile, value: scenarioProfile() })
 
     for (const seed of seeds) {
       const challengeId = await db.challenges.add(seed.challenge as Challenge)
@@ -317,4 +328,24 @@ export async function seedGaveUp(): Promise<void> {
       days,
     },
   ])
+}
+
+/** An empty database with no profile: opens on the welcome flow for a new player. */
+export async function seedFreshInstall(): Promise<void> {
+  await replaceDatabase([], { withProfile: false })
+}
+
+/**
+ * 75 Hard on Day 4 with Days 1–3 done, but no profile yet — like the owner's
+ * phone right after the welcome flow shipped: opens on the returning flow
+ * (name and reason only).
+ */
+export async function seedReturningWithoutProfile(): Promise<void> {
+  const days: SeedDay[] = []
+  for (let day = 1; day <= 3; day++) days.push(await perfectDay(day))
+
+  await replaceDatabase(
+    [{ challenge: { startDate: addDaysISO(todayISO(), -3), attemptNumber: 1, status: 'active' }, days }],
+    { withProfile: false },
+  )
 }
