@@ -7,6 +7,8 @@ export const SETTING_KEYS = {
   currentBookId: 'currentBookId',
   /** ISO datetime of the last successful backup export (or of the backup that was imported). */
   lastExportAt: 'lastExportAt',
+  /** ISO datetime until which the weekly "export a backup" reminder is snoozed ("Later"). */
+  backupReminderSnoozedUntil: 'backupReminderSnoozedUntil',
   /** Whether persistent storage has been requested once already (first launch). */
   persistRequested: 'persistRequested',
   /** 'system' | 'light' | 'dark' — mirrored to localStorage for the no-flash script in index.html. */

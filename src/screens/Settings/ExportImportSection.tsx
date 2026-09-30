@@ -3,13 +3,11 @@ import { useEffect, useRef, useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
 import { SETTING_KEYS, settingsRepo } from '../../db/repositories/settingsRepo'
-import { exportAll, importAll, markExported, validateExportPayload, type ExportPayload } from '../../db/exportImport'
-import { saveBackupFile } from '../../lib/backupFile'
+import { importAll, validateExportPayload, type ExportPayload } from '../../db/exportImport'
+import { useBackupExport } from '../../hooks/useBackupExport'
 import { dayNumberForDate, todayISO } from '../../lib/dates'
+import { STALE_BACKUP_DAYS } from '../../logic/backupReminder'
 import { formatBytes, getStorageStatus, requestPersistence, type StorageStatus } from '../../lib/storage'
-
-/** A backup older than this gets a gentle nudge. */
-const STALE_BACKUP_DAYS = 7
 
 interface ExportImportSectionProps {
   today: string
@@ -31,11 +29,11 @@ function lastBackupLabel(lastExportAt: string | null, today: string): { text: st
  */
 export function ExportImportSection({ today }: ExportImportSectionProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
+  const backupExport = useBackupExport()
+  const [importBusy, setImportBusy] = useState(false)
+  const [localError, setLocalError] = useState<string | null>(null)
+  const [localNotice, setLocalNotice] = useState<string | null>(null)
   const [pendingImport, setPendingImport] = useState<ExportPayload | null>(null)
-  const [pendingShare, setPendingShare] = useState<File | null>(null)
   const [storage, setStorage] = useState<StorageStatus | null>(null)
 
   const lastExportAt = useLiveQuery(() => settingsRepo.get<string | null>(SETTING_KEYS.lastExportAt, null), [])
@@ -51,61 +49,42 @@ export function ExportImportSection({ today }: ExportImportSectionProps) {
     }
   }, [lastExportAt])
 
-  const finishSave = async (file: File, fromFreshTap: boolean) => {
-    const outcome = await saveBackupFile(file, { fromFreshTap })
-    if (outcome === 'needsGesture') {
-      setPendingShare(file)
-      return
-    }
-    setPendingShare(null)
-    if (outcome === 'shared' || outcome === 'downloaded') {
-      await markExported()
-      setNotice(outcome === 'shared' ? 'Backup shared.' : 'Backup downloaded.')
-    }
-  }
+  const busy = importBusy || backupExport.busy
+  const error = localError ?? backupExport.error
+  const notice = localNotice ?? backupExport.notice
+  const { pendingShare } = backupExport
 
-  const handleExport = async () => {
-    setBusy(true)
-    setError(null)
-    setNotice(null)
-    try {
-      const payload = await exportAll()
-      const file = new File([JSON.stringify(payload, null, 2)], `75hard-backup-${todayISO()}.json`, {
-        type: 'application/json',
-      })
-      await finishSave(file, false)
-    } catch {
-      setError('Export failed. Please try again.')
-    } finally {
-      setBusy(false)
-    }
+  const handleExport = () => {
+    setLocalError(null)
+    setLocalNotice(null)
+    return backupExport.exportNow()
   }
 
   const handleFileSelected = async (file: File) => {
-    setError(null)
-    setNotice(null)
+    setLocalError(null)
+    setLocalNotice(null)
     try {
       const parsed: unknown = JSON.parse(await file.text())
       const result = validateExportPayload(parsed)
       if (!result.ok) {
-        setError(result.error)
+        setLocalError(result.error)
         return
       }
       setPendingImport(result.payload)
     } catch {
-      setError('Could not read that file. Make sure it’s a backup exported from this app.')
+      setLocalError('Could not read that file. Make sure it’s a backup exported from this app.')
     }
   }
 
   const confirmImport = async () => {
     if (!pendingImport) return
-    setBusy(true)
+    setImportBusy(true)
     try {
       await importAll(pendingImport)
       window.location.reload()
     } catch {
-      setError('Import failed. Your existing data was not changed.')
-      setBusy(false)
+      setLocalError('Import failed. Your existing data was not changed.')
+      setImportBusy(false)
       setPendingImport(null)
     }
   }
@@ -113,7 +92,7 @@ export function ExportImportSection({ today }: ExportImportSectionProps) {
   const protectStorage = async () => {
     const persisted = await requestPersistence()
     setStorage((current) => ({ ...current, persisted }))
-    if (!persisted) setNotice('The browser declined for now. Installing the app to your home screen usually helps.')
+    if (!persisted) setLocalNotice('The browser declined for now. Installing the app to your home screen usually helps.')
   }
 
   return (
@@ -150,10 +129,10 @@ export function ExportImportSection({ today }: ExportImportSectionProps) {
 
       <div className="mt-3 flex flex-col gap-2">
         <Button variant="secondary" onClick={() => void handleExport()} disabled={busy}>
-          {busy && !pendingImport ? 'Preparing backup…' : 'Export backup'}
+          {backupExport.busy ? 'Preparing backup…' : 'Export backup'}
         </Button>
         {pendingShare && (
-          <Button variant="primary" onClick={() => void finishSave(pendingShare, true)}>
+          <Button variant="primary" onClick={() => void backupExport.shareNow(pendingShare)}>
             Share backup file
           </Button>
         )}
