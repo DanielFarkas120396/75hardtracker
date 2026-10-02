@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Exported backups hold personal data (weight, photos) - never commit them
+backups/

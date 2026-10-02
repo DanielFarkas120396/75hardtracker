@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { BackupReminderBanner } from '../../components/BackupReminderBanner'
 import { FlameStreak } from '../../components/FlameStreak'
 import { Greeting, WhyQuote } from '../../components/ProfileLines'
 import { ProgressRing } from '../../components/ui/ProgressRing'
@@ -105,6 +106,7 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak, joke
           </div>
         </header>
         <WhyQuote className="px-4 pb-3" />
+        <BackupReminderBanner />
 
         {isStartDateEditable(todayDayNumber) && (
           <p className="px-4 pb-2 font-rounded text-xs text-ink-muted">
