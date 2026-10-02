@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { InlineCamera, SAVED_LINGER_MS } from '../InlineCamera'
+import { CameraSheet, SAVED_LINGER_MS } from '../CameraSheet'
 
 const camera = vi.hoisted(() => ({
   startCamera: vi.fn(),
@@ -21,17 +21,17 @@ const shot = new Blob(['shot'], { type: 'image/jpeg' })
 /** Lets the startCamera / captureFrame promises settle. */
 const flush = () => act(async () => {})
 
-function renderCamera(props: Partial<Parameters<typeof InlineCamera>[0]> = {}) {
+function renderCamera(props: Partial<Parameters<typeof CameraSheet>[0]> = {}) {
   const handlers = {
     onCapture: vi.fn().mockResolvedValue(undefined),
     onClose: vi.fn(),
     onUnavailable: vi.fn(),
   }
-  render(<InlineCamera {...handlers} {...props} />)
+  render(<CameraSheet {...handlers} {...props} />)
   return handlers
 }
 
-describe('InlineCamera', () => {
+describe('CameraSheet', () => {
   beforeAll(() => {
     MotionGlobalConfig.skipAnimations = true
     vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue()
@@ -146,6 +146,7 @@ describe('InlineCamera', () => {
     renderCamera({ ghost: new Blob(['yesterday']) })
     await flush()
     expect(screen.getByTestId('camera-ghost')).toHaveClass('opacity-30')
+    expect(screen.getByRole('button', { name: 'Show last photo as a guide' })).toHaveAttribute('aria-pressed', 'true')
 
     fireEvent.click(screen.getByRole('button', { name: 'Show last photo as a guide' }))
 
@@ -161,11 +162,24 @@ describe('InlineCamera', () => {
 
   it('releases the camera when it unmounts', async () => {
     const { unmount } = render(
-      <InlineCamera onCapture={vi.fn()} onClose={vi.fn()} onUnavailable={vi.fn()} />,
+      <CameraSheet onCapture={vi.fn()} onClose={vi.fn()} onUnavailable={vi.fn()} />,
     )
     await flush()
     unmount()
     expect(camera.stop).toHaveBeenCalled()
+  })
+
+  it('hides the ghost button when there is no earlier photo', async () => {
+    renderCamera()
+    await flush()
+    expect(screen.queryByRole('button', { name: 'Show last photo as a guide' })).not.toBeInTheDocument()
+  })
+
+  it('closes on Escape', async () => {
+    const { onClose } = renderCamera()
+    await flush()
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(onClose).toHaveBeenCalled()
   })
 
   it('closes when the app goes to the background', async () => {

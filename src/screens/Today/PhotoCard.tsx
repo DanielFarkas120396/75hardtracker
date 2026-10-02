@@ -1,5 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { AnimatePresence } from 'framer-motion'
 import { useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { BlobImage } from '../../components/BlobImage'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
@@ -7,7 +9,7 @@ import { photoRepo } from '../../db/repositories/photoRepo'
 import type { DayEntry } from '../../db/types'
 import { isCameraSupported } from '../../lib/camera'
 import { compressImage } from '../../lib/imageCompression'
-import { InlineCamera } from './InlineCamera'
+import { CameraSheet } from './CameraSheet'
 
 interface PhotoCardProps {
   entry: DayEntry
@@ -71,14 +73,7 @@ export function PhotoCard({ entry, complete, cheer }: PhotoCardProps) {
       <p className="mt-1 text-sm text-ink-muted">One progress photo a day.</p>
 
       <div className="mt-4">
-        {cameraOpen ? (
-          <InlineCamera
-            ghost={ghost?.blob}
-            onCapture={savePhoto}
-            onClose={() => setCameraOpen(false)}
-            onUnavailable={onCameraUnavailable}
-          />
-        ) : photo ? (
+        {photo ? (
           <BlobImage blob={photo.blob} alt="Today's progress" className="w-full rounded-2xl object-cover" />
         ) : (
           <div className="flex h-40 items-center justify-center rounded-2xl bg-canvas text-ink-muted">
@@ -109,16 +104,14 @@ export function PhotoCard({ entry, complete, cheer }: PhotoCardProps) {
           </p>
         )}
 
-        {!cameraOpen && (
-          <div className="mt-3 flex flex-col gap-2">
-            <Button variant="secondary" onClick={openCamera} disabled={busy}>
-              {busy ? 'Saving…' : photo ? '📷 Retake photo' : '📷 Take photo'}
-            </Button>
-            <Button variant="secondary" onClick={() => libraryInputRef.current?.click()} disabled={busy}>
-              🖼️ Choose from library
-            </Button>
-          </div>
-        )}
+        <div className="mt-3 flex flex-col gap-2">
+          <Button variant="secondary" onClick={openCamera} disabled={busy}>
+            {busy ? 'Saving…' : photo ? '📷 Retake photo' : '📷 Take photo'}
+          </Button>
+          <Button variant="secondary" onClick={() => libraryInputRef.current?.click()} disabled={busy}>
+            🖼️ Choose from library
+          </Button>
+        </div>
 
         {error && (
           <p role="alert" className="mt-2 text-sm font-semibold text-danger-ink">
@@ -126,6 +119,21 @@ export function PhotoCard({ entry, complete, cheer }: PhotoCardProps) {
           </p>
         )}
       </div>
+
+      {/* Portalled: the card's own stacking context would otherwise trap the sheet under the bottom nav. */}
+      {createPortal(
+        <AnimatePresence>
+          {cameraOpen && (
+            <CameraSheet
+              ghost={ghost?.blob}
+              onCapture={savePhoto}
+              onClose={() => setCameraOpen(false)}
+              onUnavailable={onCameraUnavailable}
+            />
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
     </Card>
   )
 }

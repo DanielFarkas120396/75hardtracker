@@ -1,13 +1,14 @@
 /**
  * Thin wrappers around getUserMedia for the in-app progress-photo camera.
- * The viewfinder is a 3:4 portrait box with `object-fit: cover`, so a capture
- * crops the frame the same way: the saved photo is exactly what was on screen.
+ * The viewfinder shows the stream with `object-fit: cover`, so a capture
+ * crops the frame to the viewfinder's shape: the saved photo is exactly what
+ * was on screen.
  */
 
 export type CameraFacing = 'environment' | 'user'
 
-/** Portrait 3:4, matching the viewfinder. */
-export const CAPTURE_ASPECT = 3 / 4
+/** Portrait 3:4, used when the viewfinder's shape can't be measured. */
+export const FALLBACK_ASPECT = 3 / 4
 
 const FACING_STORAGE_KEY = '75hard.cameraFacing'
 
@@ -36,12 +37,13 @@ export function coverCrop(srcWidth: number, srcHeight: number, aspect: number) {
   return { sx: 0, sy: Math.round((srcHeight - sh) / 2), sw: srcWidth, sh }
 }
 
-/** Grabs the current frame, cropped to the viewfinder and mirrored when the preview is. */
+/** Grabs the current frame, cropped to the video element's on-screen shape and mirrored when the preview is. */
 export function captureFrame(video: HTMLVideoElement, mirror: boolean): Promise<Blob> {
-  const { videoWidth, videoHeight } = video
+  const { videoWidth, videoHeight, clientWidth, clientHeight } = video
   if (!videoWidth || !videoHeight) return Promise.reject(new Error('Camera not ready'))
 
-  const { sx, sy, sw, sh } = coverCrop(videoWidth, videoHeight, CAPTURE_ASPECT)
+  const aspect = clientWidth && clientHeight ? clientWidth / clientHeight : FALLBACK_ASPECT
+  const { sx, sy, sw, sh } = coverCrop(videoWidth, videoHeight, aspect)
   const canvas = document.createElement('canvas')
   canvas.width = sw
   canvas.height = sh

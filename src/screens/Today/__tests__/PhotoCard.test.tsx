@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
@@ -36,7 +36,7 @@ describe('PhotoCard camera', () => {
     camera.startCamera.mockReset().mockResolvedValue({ getTracks: () => [] })
   })
 
-  it('opens the camera inside the card', async () => {
+  it('opens the camera sheet, and closes it', async () => {
     const { fileClick } = await renderCard()
 
     fireEvent.click(screen.getByRole('button', { name: '📷 Take photo' }))
@@ -44,7 +44,7 @@ describe('PhotoCard camera', () => {
     expect(await screen.findByTestId('camera-preview')).toBeInTheDocument()
     expect(fileClick).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: 'Close camera' }))
-    expect(screen.queryByTestId('camera-preview')).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByTestId('camera-preview')).not.toBeInTheDocument())
   })
 
   it("falls back to the phone's camera app when the browser has no in-app camera", async () => {
