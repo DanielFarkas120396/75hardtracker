@@ -71,9 +71,9 @@ export function seeded(dayNumber: number, salt = 0): number {
 }
 
 /** How far a world reaches into its neighbour, where the two cross-fade. */
-export const BLEND = DAY_SPACING * 0.8
-/** The share of an image's height that fades at its top and bottom, overlapping the next copy. */
-export const TILE_FADE = 0.1
+export const BLEND = DAY_SPACING * 2.4
+/** The share of an image's height that overlaps the copy above it, where the lower copy fades in. */
+export const TILE_FADE = 0.25
 
 export interface TilePlacement {
   tile: WorldTile
@@ -104,4 +104,16 @@ export function tilePlacements(worldIndex: number): TilePlacement[] {
     y += height * (1 - TILE_FADE)
   }
   return placements
+}
+
+/**
+ * Gradient stops for a smooth fade from transparent to opaque between two
+ * offsets, following an eased curve (smoothstep) so the fade has no visible
+ * start or end.
+ */
+export function easedFade(from: number, to: number, steps = 10): { offset: number; opacity: number }[] {
+  return Array.from({ length: steps + 1 }, (_, i) => {
+    const t = i / steps
+    return { offset: from + (to - from) * t, opacity: t * t * (3 - 2 * t) }
+  })
 }
