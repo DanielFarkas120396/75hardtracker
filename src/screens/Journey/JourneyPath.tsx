@@ -1,14 +1,10 @@
-import { useEffect, useRef } from 'react'
+import { Mascot } from '../../components/mascot/Mascot'
 import { CHALLENGE_LENGTH, MILESTONES } from '../../logic/constants'
-import { JourneyNode, type NodeState } from './JourneyNode'
-
-const WIDTH = 320
-const CENTER_X = WIDTH / 2
-const AMPLITUDE = 90
-const NODE_SPACING = 90
-const TOP_PADDING = 60
-const BOTTOM_PADDING = 60
-const WAVE_PERIOD = 4 // nodes per full left-right swing
+import { JourneyGates, JourneyScenery } from './JourneyScenery'
+import { JourneySign } from './JourneySign'
+import { JourneyStone, type NodeState } from './JourneyStone'
+import { MAP_HEIGHT, MAP_WIDTH, roadPath, scenerySide, xForDay, yForDay } from './layout'
+import { WORLDS, worldForDay } from './worlds'
 
 interface JourneyPathProps {
   completedDayNumbers: Set<number>
@@ -16,46 +12,71 @@ interface JourneyPathProps {
   todayDayNumber: number
 }
 
-function xForIndex(index: number): number {
-  return CENTER_X + AMPLITUDE * Math.sin((index / WAVE_PERIOD) * Math.PI * 2)
+const ROAD = roadPath()
+const DUCK_SIZE = 46
+
+function stateFor(dayNumber: number, props: JourneyPathProps): NodeState {
+  if (dayNumber === props.todayDayNumber) return 'today'
+  if (props.completedDayNumbers.has(dayNumber)) return 'completed'
+  if (props.missedDayNumbers.has(dayNumber)) return 'missed'
+  return 'locked'
 }
 
-function yForIndex(index: number): number {
-  return TOP_PADDING + index * NODE_SPACING
-}
-
-export function JourneyPath({ completedDayNumbers, missedDayNumbers, todayDayNumber }: JourneyPathProps) {
-  const todayRef = useRef<SVGGElement>(null)
-
-  useEffect(() => {
-    todayRef.current?.scrollIntoView({ block: 'center' })
-  }, [])
-
+/** The climb from hell (Day 1, at the bottom) to heaven (Day 75, at the top). */
+export function JourneyPath(props: JourneyPathProps) {
+  const { todayDayNumber } = props
   const days = Array.from({ length: CHALLENGE_LENGTH }, (_, i) => i + 1)
-  const height = TOP_PADDING + (CHALLENGE_LENGTH - 1) * NODE_SPACING + BOTTOM_PADDING
-
-  const linePoints = days.map((_, i) => `${xForIndex(i)},${yForIndex(i)}`).join(' ')
+  const showDuck = Number.isInteger(todayDayNumber) && todayDayNumber >= 1 && todayDayNumber <= CHALLENGE_LENGTH
 
   return (
-    <svg viewBox={`0 0 ${WIDTH} ${height}`} width="100%" style={{ display: 'block' }}>
-      <polyline points={linePoints} fill="none" stroke="var(--color-green-light)" strokeWidth={8} strokeLinecap="round" />
-      {days.map((dayNumber, i) => {
-        const state: NodeState =
-          dayNumber === todayDayNumber
-            ? 'today'
-            : completedDayNumbers.has(dayNumber)
-              ? 'completed'
-              : missedDayNumbers.has(dayNumber)
-                ? 'missed'
-                : 'locked'
-        const isMilestone = (MILESTONES as readonly number[]).includes(dayNumber)
+    <svg
+      viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
+      width="100%"
+      style={{ display: 'block' }}
+      role="group"
+      aria-label="Your journey, from Day 1 at the bottom to Day 75 at the top"
+    >
+      <JourneyScenery />
 
-        return (
-          <g key={dayNumber} ref={dayNumber === todayDayNumber ? todayRef : undefined}>
-            <JourneyNode x={xForIndex(i)} y={yForIndex(i)} dayNumber={dayNumber} state={state} isMilestone={isMilestone} />
-          </g>
-        )
+      <g aria-hidden="true" fill="none" strokeLinecap="round">
+        <path d={ROAD} stroke="#000000" strokeOpacity={0.18} strokeWidth={26} />
+        <path d={ROAD} stroke="#e9d9b0" strokeWidth={20} />
+        <path d={ROAD} stroke="#f6ead0" strokeWidth={4} strokeDasharray="2 14" />
+      </g>
+
+      <g aria-hidden="true">
+        <JourneyGates />
+      </g>
+
+      {WORLDS.map((world) => {
+        const side = scenerySide(world.firstDay)
+        const width = Math.max(64, world.name.length * 7.2 + 18)
+        const x = side === 'left' ? width / 2 + 6 : MAP_WIDTH - width / 2 - 6
+        return <JourneySign key={world.id} x={x} y={yForDay(world.firstDay) + 36} name={world.name} />
       })}
+
+      {days.map((dayNumber) => (
+        <JourneyStone
+          key={dayNumber}
+          x={xForDay(dayNumber)}
+          y={yForDay(dayNumber)}
+          dayNumber={dayNumber}
+          state={stateFor(dayNumber, props)}
+          world={worldForDay(dayNumber)}
+          isMilestone={(MILESTONES as readonly number[]).includes(dayNumber)}
+          flagWaves={props.completedDayNumbers.has(dayNumber) || dayNumber < todayDayNumber}
+        />
+      ))}
+
+      {showDuck && (
+        <g
+          transform={`translate(${(xForDay(todayDayNumber) + (scenerySide(todayDayNumber) === 'left' ? -34 - DUCK_SIZE : 34)).toFixed(1)} ${(
+            yForDay(todayDayNumber) - DUCK_SIZE + 6
+          ).toFixed(1)})`}
+        >
+          <Mascot mood="content" size={DUCK_SIZE} decorative />
+        </g>
+      )}
     </svg>
   )
 }
