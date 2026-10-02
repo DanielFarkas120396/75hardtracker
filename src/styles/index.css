@@ -103,52 +103,49 @@
   }
 }
 
-/* The Journey map's living world. Only a few small elements move, and nothing does under reduce motion. */
+/* The Journey map's living world: small particles over the images, and milestone flags. Nothing moves under reduce motion. */
+.journey-particles {
+  display: none;
+}
 @media (prefers-reduced-motion: no-preference) {
-  .journey-flicker {
-    transform-box: fill-box;
-    transform-origin: 50% 100%;
-    animation: journey-flicker 1.3s ease-in-out infinite;
+  .journey-particles {
+    display: inline;
   }
-  .journey-bubble {
+  .journey-rise,
+  .journey-fall,
+  .journey-twinkle {
     transform-box: fill-box;
     transform-origin: center;
-    animation: journey-bubble 2.6s ease-in infinite;
   }
-  .journey-sway {
-    transform-box: fill-box;
-    transform-origin: 50% 100%;
-    animation: journey-sway 3.6s ease-in-out infinite;
+  .journey-rise {
+    animation: journey-rise 4s ease-out infinite;
   }
-  .journey-drift {
-    animation: journey-drift 16s ease-in-out infinite alternate;
+  .journey-fall {
+    animation: journey-fall 5s linear infinite;
+  }
+  .journey-twinkle {
+    animation: journey-twinkle 2.6s ease-in-out infinite;
   }
   .journey-wave {
     transform-box: fill-box;
     transform-origin: 0% 50%;
     animation: journey-wave 1.4s ease-in-out infinite;
   }
-  .journey-still * {
-    animation: none;
-  }
 }
 
-@keyframes journey-flicker {
-  0%, 100% { transform: scale(1, 1); }
-  50% { transform: scale(0.9, 1.12); }
+@keyframes journey-rise {
+  0% { transform: translate(0, 0); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translate(6px, -46px); opacity: 0; }
 }
-@keyframes journey-bubble {
-  0% { transform: translateY(0) scale(0.4); opacity: 0; }
-  30% { opacity: 1; }
-  100% { transform: translateY(-14px) scale(1); opacity: 0; }
+@keyframes journey-fall {
+  0% { transform: translate(0, 0); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translate(-8px, 46px); opacity: 0; }
 }
-@keyframes journey-sway {
-  0%, 100% { transform: rotate(-3deg); }
-  50% { transform: rotate(3deg); }
-}
-@keyframes journey-drift {
-  from { transform: translateX(-12px); }
-  to { transform: translateX(12px); }
+@keyframes journey-twinkle {
+  0%, 100% { transform: scale(0.6); opacity: 0.25; }
+  50% { transform: scale(1.2); opacity: 1; }
 }
 @keyframes journey-wave {
   0%, 100% { transform: skewY(0deg) scaleX(1); }

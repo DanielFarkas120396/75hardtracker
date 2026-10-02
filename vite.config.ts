@@ -37,7 +37,8 @@ export default defineConfig({
         // Icons are precached via includeAssets and the manifest. Only the latin font subsets in
         // woff2 are precached: the others are for scripts the app doesn't use, and every browser
         // that can install a PWA reads woff2.
-        globPatterns: ['**/*.{js,css,html}', '**/nunito-latin-*.woff2', '**/nunito-latin-ext-*.woff2'],
+        // The Journey's background images (about 100 KB in all) are precached too, so the map works offline.
+        globPatterns: ['**/*.{js,css,html}', '**/nunito-latin-*.woff2', '**/nunito-latin-ext-*.woff2', 'journey/*.webp'],
         navigateFallback: '/index.html',
       },
     }),

@@ -1,6 +1,6 @@
 import { Mascot } from '../../components/mascot/Mascot'
 import { CHALLENGE_LENGTH, MILESTONES } from '../../logic/constants'
-import { JourneyGates, JourneyScenery } from './JourneyScenery'
+import { JourneyScenery } from './JourneyScenery'
 import { JourneySign } from './JourneySign'
 import { JourneyStone, type NodeState } from './JourneyStone'
 import { MAP_HEIGHT, MAP_WIDTH, roadPath, scenerySide, xForDay, yForDay } from './layout'
@@ -42,10 +42,6 @@ export function JourneyPath(props: JourneyPathProps) {
         <path d={ROAD} stroke="#000000" strokeOpacity={0.18} strokeWidth={26} />
         <path d={ROAD} stroke="#e9d9b0" strokeWidth={20} />
         <path d={ROAD} stroke="#f6ead0" strokeWidth={4} strokeDasharray="2 14" />
-      </g>
-
-      <g aria-hidden="true">
-        <JourneyGates />
       </g>
 
       {WORLDS.map((world) => {

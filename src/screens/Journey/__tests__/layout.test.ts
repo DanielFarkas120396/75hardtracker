@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { CHALLENGE_LENGTH } from '../../../logic/constants'
-import { MAP_HEIGHT, MAP_WIDTH, roadPath, scenerySide, seeded, worldBand, xForDay, yForDay } from '../layout'
+import { MAP_HEIGHT, MAP_WIDTH, roadPath, scenerySide, seeded, tilePlacements, worldBand, worldSpan, xForDay, yForDay } from '../layout'
 import { WORLDS } from '../worlds'
 
 describe('Journey layout', () => {
@@ -39,5 +39,26 @@ describe('Journey layout', () => {
     expect(seeded(12, 3)).toBe(seeded(12, 3))
     expect(seeded(12, 3)).toBeGreaterThanOrEqual(0)
     expect(seeded(12, 3)).toBeLessThan(1)
+  })
+
+  it("covers each world's span with its images, top to bottom", () => {
+    WORLDS.forEach((_, i) => {
+      const placements = tilePlacements(i)
+      const { start, end } = worldSpan(i)
+      expect(placements[0].y).toBe(start)
+      const last = placements[placements.length - 1]
+      expect(last.y + last.height).toBeGreaterThanOrEqual(end)
+      // Each copy overlaps the one above it, so the fades meet.
+      for (let k = 1; k < placements.length; k++) {
+        expect(placements[k].y).toBeLessThan(placements[k - 1].y + placements[k - 1].height)
+      }
+    })
+  })
+
+  it("shows heaven's gates once, at the top of the map, then only clouds", () => {
+    const heaven = tilePlacements(WORLDS.length - 1)
+    expect(heaven[0].y).toBe(0)
+    expect(heaven[0].tile.src).toContain('heaven-gates')
+    expect(heaven.slice(1).every((p) => p.tile.src.includes('heaven-clouds'))).toBe(true)
   })
 })

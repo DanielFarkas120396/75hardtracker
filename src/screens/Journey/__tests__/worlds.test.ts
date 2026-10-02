@@ -11,6 +11,17 @@ describe('WORLDS', () => {
     }
   })
 
+  it('gives every world at least one background image, with its size', () => {
+    for (const world of WORLDS) {
+      expect(world.tiles.length).toBeGreaterThan(0)
+      for (const tile of world.tiles) {
+        expect(tile.src).toMatch(/^\/journey\/.+\.webp$/)
+        expect(tile.width).toBeGreaterThan(0)
+        expect(tile.height).toBeGreaterThan(0)
+      }
+    }
+  })
+
   it('climbs from hell to heaven', () => {
     expect(WORLDS.map((w) => w.id)).toEqual(['hell', 'wasteland', 'forest', 'meadow', 'mountains', 'heaven'])
   })

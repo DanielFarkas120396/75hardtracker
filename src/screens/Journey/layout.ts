@@ -1,5 +1,5 @@
 import { CHALLENGE_LENGTH } from '../../logic/constants'
-import { WORLDS } from './worlds'
+import { WORLDS, type WorldTile } from './worlds'
 
 /**
  * Geometry of the Journey map, in SVG units. The map climbs: Day 1 sits at
@@ -10,12 +10,12 @@ export const MAP_WIDTH = 320
 export const CENTER_X = MAP_WIDTH / 2
 const AMPLITUDE = 78
 export const DAY_SPACING = 92
-/** Room above Day 75 for the gates, and below Day 1 for the road's start. */
-const TOP_PADDING = 150
+/** Room above Day 75 for heaven's gates, and below Day 1 for the road's start. */
+const TOP_PADDING = 190
 const BOTTOM_PADDING = 90
 const WAVE_PERIOD = 4 // days per full left-right swing
-/** How far above Day 75 heaven's gates stand; the road ends at their threshold. */
-export const GATES_RISE = 96
+/** Where the threshold of heaven's gates (in the heaven image, at the top of the map) sits; the road ends there. */
+const GATES_THRESHOLD_Y = 112
 
 export const MAP_HEIGHT = TOP_PADDING + (CHALLENGE_LENGTH - 1) * DAY_SPACING + BOTTOM_PADDING
 
@@ -47,7 +47,7 @@ export function worldBand(index: number): { top: number; bottom: number } {
 export function roadPath(): string {
   const points: [number, number][] = [[xForDay(0), MAP_HEIGHT + 20]]
   for (let day = 1; day <= CHALLENGE_LENGTH; day++) points.push([xForDay(day), yForDay(day)])
-  points.push([CENTER_X, yForDay(CHALLENGE_LENGTH) - GATES_RISE + 26])
+  points.push([CENTER_X, GATES_THRESHOLD_Y])
 
   let d = `M${points[0][0].toFixed(1)} ${points[0][1].toFixed(1)}`
   for (let i = 0; i < points.length - 1; i++) {
@@ -68,4 +68,40 @@ export function roadPath(): string {
 export function seeded(dayNumber: number, salt = 0): number {
   const s = Math.sin(dayNumber * 127.1 + salt * 311.7) * 43758.5453
   return s - Math.floor(s)
+}
+
+/** How far a world reaches into its neighbour, where the two cross-fade. */
+export const BLEND = DAY_SPACING * 0.8
+/** The share of an image's height that fades at its top and bottom, overlapping the next copy. */
+export const TILE_FADE = 0.1
+
+export interface TilePlacement {
+  tile: WorldTile
+  y: number
+  height: number
+}
+
+/** A world's span on the map, including where it reaches into its neighbours (not past the map's ends). */
+export function worldSpan(index: number): { start: number; end: number } {
+  const { top, bottom } = worldBand(index)
+  return {
+    start: index === WORLDS.length - 1 ? top : top - BLEND / 2,
+    end: index === 0 ? bottom : bottom + BLEND / 2,
+  }
+}
+
+/** The images to draw for a world, top to bottom, until they cover its span. */
+export function tilePlacements(worldIndex: number): TilePlacement[] {
+  const { tiles } = WORLDS[worldIndex]
+  const { start, end } = worldSpan(worldIndex)
+
+  const placements: TilePlacement[] = []
+  for (let y = start, i = 0; y < end; i++) {
+    // The first image is shown once; after the list runs out, the rest repeat.
+    const tile = i < tiles.length ? tiles[i] : tiles.length > 1 ? tiles[1 + ((i - 1) % (tiles.length - 1))] : tiles[0]
+    const height = (MAP_WIDTH * tile.height) / tile.width
+    placements.push({ tile, y, height })
+    y += height * (1 - TILE_FADE)
+  }
+  return placements
 }
