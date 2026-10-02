@@ -86,7 +86,7 @@ export function ChallengeStep({ variant, onChange, onNext }: ChallengeStepProps)
   return (
     <>
       <StepTitle>Pick your challenge</StepTitle>
-      <p className="mt-2 text-ink-muted">You can switch until the end of Day 1.</p>
+      <p className="mt-2 text-ink-muted">You can still switch in Settings until the end of Day 1. After that, it's locked.</p>
       <div className="mt-4 w-full text-left">
         <VariantPicker value={variant} onChange={onChange} />
       </div>

@@ -7,7 +7,7 @@ import { VARIANT_NAMES } from '../../content/variants'
 import { challengeRepo } from '../../db/repositories/challengeRepo'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import type { Challenge } from '../../db/types'
-import { formatDisplayDate } from '../../lib/dates'
+import { formatDisplayDate, formatShortDay, isValidISODate } from '../../lib/dates'
 import { daysUntilStart, isChallengeDay } from '../../logic/days'
 import { variantOf, type ChallengeVariant } from '../../logic/rulesets'
 import { isStartDateEditable, validateStartDateChange, type StartDateChangeResult } from '../../logic/startDate'
@@ -33,6 +33,13 @@ function statusLine(challenge: Challenge, todayDayNumber: number): string {
   if (todayDayNumber === 1) return `Day 1 is today — ${formatDisplayDate(challenge.startDate)}.`
   if (isChallengeDay(todayDayNumber)) return `Day 1 was ${formatDisplayDate(challenge.startDate)}.`
   return "Your start date isn't valid — pick a new one."
+}
+
+/** When the challenge and start date stop being editable, in words. */
+function lockDeadline(challenge: Challenge, todayDayNumber: number): string {
+  if (todayDayNumber === 1) return 'midnight tonight, the end of Day 1'
+  if (isValidISODate(challenge.startDate)) return `the end of Day 1 (${formatShortDay(challenge.startDate)})`
+  return 'the end of Day 1'
 }
 
 /**
@@ -95,10 +102,13 @@ export function StartDateSection({ challenge, today, todayDayNumber }: StartDate
 
       {editable ? (
         <>
+          <p className="mt-3 rounded-xl bg-yellow-light px-3 py-2 text-sm font-semibold text-yellow-ink">
+            ⏳ You can change your challenge and start date until {lockDeadline(challenge, todayDayNumber)}. After
+            that, both are locked for this attempt.
+          </p>
           <div className="mt-3">
             <VariantPicker value={variantOf(challenge)} onChange={(v) => void changeVariant(v)} disabled={switching} />
           </div>
-          <p className="mt-2 text-xs text-ink-muted">You can switch until the end of Day 1.</p>
 
           <div className="mt-3 flex gap-2">
             <input
@@ -121,17 +131,19 @@ export function StartDateSection({ challenge, today, todayDayNumber }: StartDate
               {saving ? 'Saving…' : 'Save'}
             </Button>
           </div>
-          <p className="mt-2 text-xs text-ink-muted">Today or later. It locks once Day 2 begins.</p>
+          <p className="mt-2 text-xs text-ink-muted">Today or later.</p>
         </>
       ) : (
-        <>
-          <p className="mt-3 rounded-xl bg-canvas px-3 py-2 text-sm font-semibold text-ink-muted">
-            🔒 Locked — your attempt is past Day 1, so its days are set.
+        <div className="mt-3 rounded-xl bg-canvas px-3 py-2 text-sm text-ink-muted">
+          <p className="font-semibold text-ink">
+            🔒 {VARIANT_NAMES[variantOf(challenge)]} — locked for this attempt.
           </p>
-          <p className="mt-3 text-sm font-semibold text-ink-muted">
-            {VARIANT_NAMES[variantOf(challenge)]} — locked for this attempt.
+          <p className="mt-1">
+            The challenge and start date can only be changed until the end of Day 1
+            {isValidISODate(challenge.startDate) ? ` (${formatShortDay(challenge.startDate)})` : ''}. To switch now,
+            give up this attempt (Danger zone, below) and start a new one.
           </p>
-        </>
+        </div>
       )}
 
       {error && (
