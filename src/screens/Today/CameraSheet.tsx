@@ -60,7 +60,7 @@ function GlassButton({
 }
 
 /**
- * The progress-photo camera: a panel that slides up over the bottom 60% of
+ * The progress-photo camera: a panel that slides up over the bottom 65% of
  * the app, with the controls floating on the picture and the duck perched on
  * the panel's top edge. The page above stays visible and scrollable. The stream is stopped whenever the sheet closes, unmounts, or the
  * app goes to the background.
@@ -112,7 +112,7 @@ export function CameraSheet({ ghost, onCapture, onClose, onUnavailable }: Camera
     }
     // Extra room at the bottom of the page, so everything can still be scrolled up above the sheet.
     const previousPadding = document.body.style.paddingBottom
-    document.body.style.paddingBottom = '60dvh'
+    document.body.style.paddingBottom = '65dvh'
     document.addEventListener('visibilitychange', onVisibility)
     document.addEventListener('keydown', onKeyDown)
     return () => {
@@ -194,7 +194,7 @@ export function CameraSheet({ ghost, onCapture, onClose, onUnavailable }: Camera
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       // A light tint that lets touches through, so the Today screen stays scrollable behind the sheet.
-      className="pointer-events-none fixed inset-0 z-50 flex flex-col justify-end bg-black/10"
+      className="pointer-events-none fixed inset-0 z-50 flex flex-col justify-end bg-black/25"
     >
       <motion.div
         role="dialog"
@@ -203,7 +203,7 @@ export function CameraSheet({ ghost, onCapture, onClose, onUnavailable }: Camera
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-        className="pointer-events-auto relative mx-auto h-[60dvh] w-full max-w-md rounded-t-[2.5rem] bg-surface shadow-[0_-8px_30px_rgba(0,0,0,0.25)] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+        className="pointer-events-auto relative mx-auto h-[65dvh] w-full max-w-md rounded-t-[2.5rem] bg-surface shadow-[0_-8px_30px_rgba(0,0,0,0.25)] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
       >
         <div className="pointer-events-none absolute -top-[106px] left-5 z-10">
           <Mascot mood={MOOD_BY_PHASE[phase]} reaction={reaction} size={120} decorative />
