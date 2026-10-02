@@ -65,6 +65,7 @@ export function JourneyScreen({ challenge, dayEntries, todayDayNumber, streak, c
           completedDayNumbers={completedDayNumbers}
           missedDayNumbers={new Set(missedDays)}
           todayDayNumber={completed ? Number.NaN : todayDayNumber}
+          scrollRef={mapRef}
         />
       </main>
     </div>

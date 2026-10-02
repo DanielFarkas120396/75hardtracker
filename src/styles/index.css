@@ -103,29 +103,8 @@
   }
 }
 
-/* The Journey map's living world: small particles over the images, and milestone flags. Nothing moves under reduce motion. */
-.journey-particles {
-  display: none;
-}
+/* The Journey's milestone flags wave once passed; still under reduce motion. (The map's particles are drawn with three.js.) */
 @media (prefers-reduced-motion: no-preference) {
-  .journey-particles {
-    display: inline;
-  }
-  .journey-rise,
-  .journey-fall,
-  .journey-twinkle {
-    transform-box: fill-box;
-    transform-origin: center;
-  }
-  .journey-rise {
-    animation: journey-rise 4s ease-out infinite;
-  }
-  .journey-fall {
-    animation: journey-fall 5s linear infinite;
-  }
-  .journey-twinkle {
-    animation: journey-twinkle 2.6s ease-in-out infinite;
-  }
   .journey-wave {
     transform-box: fill-box;
     transform-origin: 0% 50%;
@@ -133,20 +112,6 @@
   }
 }
 
-@keyframes journey-rise {
-  0% { transform: translate(0, 0); opacity: 0; }
-  20% { opacity: 1; }
-  100% { transform: translate(6px, -46px); opacity: 0; }
-}
-@keyframes journey-fall {
-  0% { transform: translate(0, 0); opacity: 0; }
-  15% { opacity: 1; }
-  100% { transform: translate(-8px, 46px); opacity: 0; }
-}
-@keyframes journey-twinkle {
-  0%, 100% { transform: scale(0.6); opacity: 0.25; }
-  50% { transform: scale(1.2); opacity: 1; }
-}
 @keyframes journey-wave {
   0%, 100% { transform: skewY(0deg) scaleX(1); }
   50% { transform: skewY(-8deg) scaleX(0.9); }

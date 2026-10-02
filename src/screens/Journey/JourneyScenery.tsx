@@ -1,11 +1,10 @@
-import { CHALLENGE_LENGTH } from '../../logic/constants'
-import { BLEND, DAY_SPACING, easedFade, MAP_HEIGHT, MAP_WIDTH, seeded, TILE_FADE, tilePlacements, worldBand, worldSpan, yForDay } from './layout'
-import { WORLDS, worldForDay, type ParticleKind } from './worlds'
+import { BLEND, easedFade, MAP_HEIGHT, MAP_WIDTH, TILE_FADE, tilePlacements, worldBand, worldSpan } from './layout'
+import { WORLDS } from './worlds'
 
 /**
  * Everything behind the road: each world's background images, repeated down
- * its band, over a backdrop in the worlds' colours, plus a few small moving
- * touches.
+ * its band, over a backdrop in the worlds' colours. (The moving particles are
+ * drawn over it by effects/JourneyEffects.)
  *
  * Transitions are true cross-fades: worlds are drawn from the bottom (hell)
  * up, and each one fades out at its bottom over the world below, which stays
@@ -67,43 +66,6 @@ function mixColors(a: string, b: string, t: number): string {
     .join('')}`
 }
 
-// --- Moving touches ------------------------------------------------------
-
-const PARTICLE_STYLE: Record<ParticleKind, { className: string; fill: string; r: number }> = {
-  ember: { className: 'journey-rise', fill: '#ffb347', r: 2.4 },
-  ash: { className: 'journey-rise', fill: '#e6dfd8', r: 1.8 },
-  firefly: { className: 'journey-twinkle', fill: '#e8ff8a', r: 2.2 },
-  petal: { className: 'journey-fall', fill: '#ff8fb8', r: 2.2 },
-  snow: { className: 'journey-fall', fill: '#ffffff', r: 2.4 },
-  sparkle: { className: 'journey-twinkle', fill: '#e8b730', r: 2.6 },
-}
-
-/** One small moving touch near each day, along the edges where the images have their scenery. Hidden under reduce motion. */
-function Particles() {
-  const days = Array.from({ length: CHALLENGE_LENGTH }, (_, i) => i + 1)
-  return (
-    <g className="journey-particles">
-      {days.map((day) => {
-        const { className, fill, r } = PARTICLE_STYLE[worldForDay(day).particle]
-        const left = seeded(day, 11) < 0.5
-        const x = left ? 12 + seeded(day, 12) * 56 : MAP_WIDTH - 12 - seeded(day, 12) * 56
-        const y = yForDay(day) + (seeded(day, 13) - 0.5) * DAY_SPACING
-        return (
-          <circle
-            key={day}
-            cx={x.toFixed(1)}
-            cy={y.toFixed(1)}
-            r={r}
-            fill={fill}
-            className={className}
-            style={{ animationDelay: `${(seeded(day, 14) * 4).toFixed(2)}s` }}
-          />
-        )
-      })}
-    </g>
-  )
-}
-
 export function JourneyScenery() {
   return (
     <g aria-hidden="true">
@@ -143,7 +105,6 @@ export function JourneyScenery() {
         </g>
       ))}
 
-      <Particles />
     </g>
   )
 }

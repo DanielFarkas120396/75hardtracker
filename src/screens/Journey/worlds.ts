@@ -15,9 +15,6 @@ export interface WorldTile {
   height: number
 }
 
-/** The small moving things drawn over a world's images. */
-export type ParticleKind = 'ember' | 'ash' | 'firefly' | 'petal' | 'snow' | 'sparkle'
-
 export interface World {
   id: WorldId
   /** Shown on the roadside sign where the world begins. */
@@ -34,7 +31,6 @@ export interface World {
    * lone image repeats itself) — heaven's gates stay a one-off at the top.
    */
   tiles: readonly WorldTile[]
-  particle: ParticleKind
 }
 
 const tile = (name: string, height: number): WorldTile => ({ src: `/journey/${name}.webp`, width: 572, height })
@@ -48,7 +44,6 @@ export const WORLDS: readonly World[] = [
     backdrop: '#4e1914',
     stone: { face: '#ff7a2f', rim: '#8a1e0c', ink: '#3b0f0b' },
     tiles: [tile('hell', 766)],
-    particle: 'ember',
   },
   {
     id: 'wasteland',
@@ -58,7 +53,6 @@ export const WORLDS: readonly World[] = [
     backdrop: '#8f857c',
     stone: { face: '#b3a598', rim: '#5e5048', ink: '#2e2520' },
     tiles: [tile('wasteland', 873)],
-    particle: 'ash',
   },
   {
     id: 'forest',
@@ -68,7 +62,6 @@ export const WORLDS: readonly World[] = [
     backdrop: '#4f7a63',
     stone: { face: '#b07a47', rim: '#5b3a1e', ink: '#2b1a0b' },
     tiles: [tile('forest', 870)],
-    particle: 'firefly',
   },
   {
     id: 'meadow',
@@ -78,7 +71,6 @@ export const WORLDS: readonly World[] = [
     backdrop: '#cfe3bd',
     stone: { face: '#fff7fb', rim: '#e86aa0', ink: '#8c2556' },
     tiles: [tile('meadow', 864)],
-    particle: 'petal',
   },
   {
     id: 'mountains',
@@ -88,7 +80,6 @@ export const WORLDS: readonly World[] = [
     backdrop: '#cfdde9',
     stone: { face: '#e4f5ff', rim: '#6fa9cf', ink: '#1d4f73' },
     tiles: [tile('mountains', 849)],
-    particle: 'snow',
   },
   {
     id: 'heaven',
@@ -98,7 +89,6 @@ export const WORLDS: readonly World[] = [
     backdrop: '#f9efd8',
     stone: { face: '#ffffff', rim: '#e0b84a', ink: '#6b4e00' },
     tiles: [tile('heaven-gates', 871), tile('heaven-clouds', 629)],
-    particle: 'sparkle',
   },
 ]
 
