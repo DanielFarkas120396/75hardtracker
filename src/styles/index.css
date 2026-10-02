@@ -102,3 +102,17 @@
     color: var(--color-ink-muted);
   }
 }
+
+/* The Journey's milestone flags wave once passed; still under reduce motion. (The map's particles are drawn with three.js.) */
+@media (prefers-reduced-motion: no-preference) {
+  .journey-wave {
+    transform-box: fill-box;
+    transform-origin: 0% 50%;
+    animation: journey-wave 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes journey-wave {
+  0%, 100% { transform: skewY(0deg) scaleX(1); }
+  50% { transform: skewY(-8deg) scaleX(0.9); }
+}
