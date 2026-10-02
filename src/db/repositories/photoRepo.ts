@@ -15,6 +15,11 @@ export const photoRepo = {
     return db.photos.orderBy('date').toArray()
   },
 
+  /** The most recent photo dated strictly before `date` — the camera's alignment ghost. */
+  async getLatestBefore(date: string): Promise<Photo | undefined> {
+    return db.photos.where('date').below(date).last()
+  },
+
   /**
    * Stores `blob` as the day's progress photo. A retake deletes the photo it
    * replaces in the same transaction (so no orphaned blob is left behind),

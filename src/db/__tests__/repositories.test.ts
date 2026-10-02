@@ -268,6 +268,19 @@ describe('photoRepo.replaceForEntry', () => {
   })
 })
 
+describe('photoRepo.getLatestBefore', () => {
+  it('returns the most recent photo dated before the given day, ignoring that day itself', async () => {
+    await db.photos.bulkAdd([
+      { date: addDaysISO(today, -3), blob: photoBlob(1) },
+      { date: addDaysISO(today, -1), blob: photoBlob(2) },
+      { date: today, blob: photoBlob(3) },
+    ] as Photo[])
+
+    expect((await photoRepo.getLatestBefore(today))?.date).toBe(addDaysISO(today, -1))
+    expect((await photoRepo.getLatestBefore(addDaysISO(today, -3)))).toBeUndefined()
+  })
+})
+
 describe('badgeRepo.unlockMissing', () => {
   it('unlocks each badge once and reports only what it added, even concurrently', async () => {
     const challengeId = await addChallenge({ startDate: today, attemptNumber: 1, status: 'active' })

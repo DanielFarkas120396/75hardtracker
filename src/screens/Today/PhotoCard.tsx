@@ -1,11 +1,15 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { AnimatePresence } from 'framer-motion'
 import { useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { BlobImage } from '../../components/BlobImage'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { photoRepo } from '../../db/repositories/photoRepo'
 import type { DayEntry } from '../../db/types'
+import { isCameraSupported } from '../../lib/camera'
 import { compressImage } from '../../lib/imageCompression'
+import { CameraSheet } from './CameraSheet'
 
 interface PhotoCardProps {
   entry: DayEntry
@@ -18,23 +22,43 @@ export function PhotoCard({ entry, complete, cheer }: PhotoCardProps) {
   const libraryInputRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [cameraOpen, setCameraOpen] = useState(false)
+  const [cameraFailed, setCameraFailed] = useState(false)
 
   const photo = useLiveQuery(async () => {
     if (entry.photoId == null) return undefined
     return photoRepo.getById(entry.photoId)
   }, [entry.photoId])
 
+  const ghost = useLiveQuery(() => photoRepo.getLatestBefore(entry.date), [entry.date])
+
+  const savePhoto = async (image: Blob) => {
+    const compressed = await compressImage(image)
+    await photoRepo.replaceForEntry(entry.id, compressed)
+  }
+
   const handleFile = async (file: File) => {
     setBusy(true)
     setError(null)
     try {
-      const compressed = await compressImage(file)
-      await photoRepo.replaceForEntry(entry.id, compressed)
+      await savePhoto(file)
     } catch {
       setError("Couldn't save that photo — try another one.")
     } finally {
       setBusy(false)
     }
+  }
+
+  const openCamera = () => {
+    setError(null)
+    // Without in-app camera support, the file input's `capture` opens the phone's camera app instead.
+    if (cameraFailed || !isCameraSupported()) return cameraInputRef.current?.click()
+    setCameraOpen(true)
+  }
+
+  const onCameraUnavailable = () => {
+    setCameraOpen(false)
+    setCameraFailed(true)
   }
 
   const onFileChosen = (input: HTMLInputElement) => {
@@ -74,8 +98,14 @@ export function PhotoCard({ entry, complete, cheer }: PhotoCardProps) {
           onChange={(e) => onFileChosen(e.target)}
         />
 
+        {cameraFailed && (
+          <p className="mt-2 text-sm text-ink-muted">
+            The in-app camera isn't available — 📷 will open your phone's camera instead.
+          </p>
+        )}
+
         <div className="mt-3 flex flex-col gap-2">
-          <Button variant="secondary" onClick={() => cameraInputRef.current?.click()} disabled={busy}>
+          <Button variant="secondary" onClick={openCamera} disabled={busy}>
             {busy ? 'Saving…' : photo ? '📷 Retake photo' : '📷 Take photo'}
           </Button>
           <Button variant="secondary" onClick={() => libraryInputRef.current?.click()} disabled={busy}>
@@ -89,6 +119,21 @@ export function PhotoCard({ entry, complete, cheer }: PhotoCardProps) {
           </p>
         )}
       </div>
+
+      {/* Portalled: the card's own stacking context would otherwise trap the sheet under the bottom nav. */}
+      {createPortal(
+        <AnimatePresence>
+          {cameraOpen && (
+            <CameraSheet
+              ghost={ghost?.blob}
+              onCapture={savePhoto}
+              onClose={() => setCameraOpen(false)}
+              onUnavailable={onCameraUnavailable}
+            />
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
     </Card>
   )
 }
