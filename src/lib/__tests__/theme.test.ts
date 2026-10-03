@@ -30,6 +30,7 @@ beforeEach(() => {
     <meta name="theme-color" content="#fbfbf8" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#14181a" media="(prefers-color-scheme: dark)">`
   document.documentElement.className = ''
+  document.documentElement.removeAttribute('data-world')
   localStorage.clear()
 })
 
@@ -54,7 +55,7 @@ describe('applyTheme', () => {
     applyTheme('dark')
     expect(document.documentElement.classList.contains('dark')).toBe(true)
     expect(document.documentElement.style.colorScheme).toBe('dark')
-    expect(metaColors()).toEqual(['#14181a', '#14181a'])
+    expect(metaColors()).toEqual(['#1a1211', '#1a1211'])
   })
 
   it('restores each meta to its own media query when back on system', () => {
@@ -62,7 +63,7 @@ describe('applyTheme', () => {
     applyTheme('dark')
     applyTheme('system')
     expect(document.documentElement.classList.contains('dark')).toBe(false)
-    expect(metaColors()).toEqual(['#fbfbf8', '#14181a'])
+    expect(metaColors()).toEqual(['#fdf6f3', '#1a1211'])
   })
 })
 

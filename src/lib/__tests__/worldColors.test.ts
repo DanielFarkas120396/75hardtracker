@@ -1,3 +1,5 @@
+/// <reference types="node" />
+// Reads a source file from disk (vitest empties CSS, even ?raw imports).
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
