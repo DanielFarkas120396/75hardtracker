@@ -27,7 +27,7 @@ Follows the Journey redesign (PR #14): the climb from hell to heaven now shapes 
 4. **Gallery**: grid by world, empty state.
 5. **Settings**: grouped list.
 
-Each part is testable on the phone through the PR's Vercel preview before merging. Parts 2–5 get their own short plan when they start; their outline is at the end.
+This redesign is **v2**: each part is a pull request into the long-lived `v2` branch, not `main`, which stays the current app until v2 is merged in one go. Vercel is paused, so each part is tried on the phone over the local network (the `dev-lan` dev server) before merging. Parts 2–5 get their own short plan when they start; their outline is at the end.
 
 ## Part 1 — Foundation
 
