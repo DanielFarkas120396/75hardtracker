@@ -77,6 +77,12 @@ export const ICONS = {
       <path d="M8 10.5V8a4 4 0 0 1 8 0v2.5M12 14.5v2" />
     </>
   ),
+  notes: (
+    <>
+      <path d="M4.5 19.5l1-4.2L16.3 4.5a2.1 2.1 0 0 1 3 3L8.5 18.4z" {...SOFT} />
+      <path d="M14.3 6.5l3 3" />
+    </>
+  ),
   plus: <path d="M12 5v14M5 12h14" />,
   minus: <path d="M5 12h14" />,
   close: <path d="M6 6l12 12M18 6L6 18" />,

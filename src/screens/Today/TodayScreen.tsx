@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { BackupReminderBanner } from '../../components/BackupReminderBanner'
-import { FlameStreak } from '../../components/FlameStreak'
-import { Greeting, WhyQuote } from '../../components/ProfileLines'
-import { ProgressRing } from '../../components/ui/ProgressRing'
+import { WhyQuote } from '../../components/ProfileLines'
 import { planSavedLine, taskCheer } from '../../content/microcopy'
 import { VARIANT_NAMES } from '../../content/variants'
 import type { Challenge, DayEntry } from '../../db/types'
@@ -28,6 +26,7 @@ import { PlanSheet } from './PlanSheet'
 import { PreStartView } from './PreStartView'
 import { ReadingCard } from './ReadingCard'
 import { SocialOccasionSheet } from './SocialOccasionSheet'
+import { TodayHero } from './TodayHero'
 import { WaterCard } from './WaterCard'
 import { WorkoutCard } from './WorkoutCard'
 
@@ -80,32 +79,15 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak, joke
     <div className="min-h-dvh bg-canvas pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
       <MenaceAtmosphere level={menace.level} flashes={lunges} />
       <div className="relative z-10">
-        <header className="flex items-center justify-between px-4 pt-6 pb-4">
-          <div>
-            <Greeting />
-            <p className="font-rounded text-sm font-bold text-ink-muted">
-              {VARIANT_NAMES[rules.variant]} · Attempt #{challenge.attemptNumber}
-            </p>
-            <h1 className="font-display text-2xl tracking-wide text-ink">
-              Day {todayDayNumber} / {CHALLENGE_LENGTH}
-            </h1>
-            <p className="mt-1 font-rounded text-sm font-extrabold text-yellow-ink">⭐ {xp} XP</p>
-            {rules.jokers > 0 && (
-              <p className="mt-1 font-rounded text-sm font-extrabold text-orange-ink">
-                🃏 {jokersLeft} {jokersLeft === 1 ? 'joker' : 'jokers'} left
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
-            <FlameStreak streak={streak} />
-            <ProgressRing value={completedCount} max={TASK_IDS.length}>
-              <span className="font-rounded text-sm font-extrabold text-ink">
-                {completedCount}/{TASK_IDS.length}
-              </span>
-            </ProgressRing>
-          </div>
-        </header>
-        <WhyQuote className="px-4 pb-3" />
+        <TodayHero
+          attemptLine={`${VARIANT_NAMES[rules.variant]} · Attempt #${challenge.attemptNumber}`}
+          dayNumber={todayDayNumber}
+          completedCount={completedCount}
+          taskCount={TASK_IDS.length}
+          streak={streak}
+          xp={xp}
+          jokersLeft={rules.jokers > 0 ? jokersLeft : undefined}
+        />
         <BackupReminderBanner />
 
         {isStartDateEditable(todayDayNumber) && (
@@ -133,6 +115,7 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak, joke
             </button>
           )}
         </DuckHeader>
+        <WhyQuote className="px-4 pb-4" />
 
         <main className="flex flex-col gap-4 px-4">
           <WorkoutCard

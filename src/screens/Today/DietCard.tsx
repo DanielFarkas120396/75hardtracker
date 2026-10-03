@@ -20,8 +20,13 @@ interface DietCardProps {
 
 export function DietCard({ entry, complete, cheer, rules, socialToday, canPlanSocial, onPlanSocial }: DietCardProps) {
   return (
-    <Card complete={complete} cheer={cheer}>
-      <h2 className="font-rounded text-lg font-extrabold text-ink">🥗 Diet</h2>
+    <Card
+      complete={complete}
+      cheer={cheer}
+      title="Diet"
+      icon="diet"
+      summary={socialToday ? 'Followed · social occasion' : 'Followed · no alcohol'}
+    >
       <p className="mt-1 text-sm text-ink-muted">{dietRuleLine(rules)}</p>
 
       <div className="mt-4 flex flex-col gap-2">
