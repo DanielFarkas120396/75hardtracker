@@ -77,7 +77,7 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak, joke
   )?.dayNumber
 
   return (
-    <div className="min-h-dvh bg-canvas pb-24">
+    <div className="min-h-dvh bg-canvas pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
       <MenaceAtmosphere level={menace.level} flashes={lunges} />
       <div className="relative z-10">
         <header className="flex items-center justify-between px-4 pt-6 pb-4">

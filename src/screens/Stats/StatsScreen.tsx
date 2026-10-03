@@ -22,7 +22,7 @@ export function StatsScreen({ challenge, streak, today }: StatsScreenProps) {
   const stats = useChallengeStats(challenge.id)
 
   return (
-    <div className="min-h-dvh bg-canvas pb-24">
+    <div className="min-h-dvh bg-canvas pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
       <header className="flex items-center justify-between px-4 pt-6 pb-4">
         <div>
           <p className="font-rounded text-sm font-bold text-ink-muted">Attempt #{challenge.attemptNumber}</p>

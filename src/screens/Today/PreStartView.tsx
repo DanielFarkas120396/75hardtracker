@@ -24,7 +24,7 @@ export function PreStartView({ challenge, todayDayNumber, today }: PreStartViewP
   const [socialOpen, setSocialOpen] = useState(false)
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-canvas px-6 pb-24 text-center">
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-canvas px-6 pb-[calc(6.5rem+env(safe-area-inset-bottom))] text-center">
       <Mascot mood="waiting" size={120} />
       <Greeting />
       <p className="font-rounded text-sm font-bold text-ink-muted">

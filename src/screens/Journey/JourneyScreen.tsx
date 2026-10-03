@@ -50,7 +50,7 @@ export function JourneyScreen({ challenge, dayEntries, todayDayNumber, streak, c
   )
 
   return (
-    <div className="flex h-dvh flex-col bg-canvas pb-[calc(4rem+env(safe-area-inset-bottom))]">
+    <div className="flex h-dvh flex-col bg-canvas pb-[calc(5.25rem+env(safe-area-inset-bottom))]">
       <header className="flex items-center justify-between px-4 pt-6 pb-2">
         <div>
           <p className="font-rounded text-sm font-bold text-ink-muted">Attempt #{challenge.attemptNumber}</p>
