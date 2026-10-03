@@ -80,7 +80,7 @@ describe('TodayScreen', () => {
   it('Medium on Day 1: shows the joker chip, the switch-challenge hint and the plan-a-social-occasion button', async () => {
     await setup({ variant: 'medium', todayDayNumber: 1, jokersLeft: 1 })
 
-    expect(await screen.findByText('🃏 1 joker left')).toBeInTheDocument()
+    expect(await screen.findByText('1 joker left')).toBeInTheDocument()
     expect(
       screen.getByText('Doing 75 Medium. You can switch challenge in Settings until the end of Day 1.'),
     ).toBeInTheDocument()

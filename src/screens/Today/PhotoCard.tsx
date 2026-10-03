@@ -68,8 +68,7 @@ export function PhotoCard({ entry, complete, cheer }: PhotoCardProps) {
   }
 
   return (
-    <Card complete={complete} cheer={cheer}>
-      <h2 className="font-rounded text-lg font-extrabold text-ink">📸 Photo</h2>
+    <Card complete={complete} cheer={cheer} title="Photo" icon="photo" summary="Taken">
       <p className="mt-1 text-sm text-ink-muted">One progress photo a day.</p>
 
       <div className="mt-4">

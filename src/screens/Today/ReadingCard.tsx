@@ -32,8 +32,13 @@ export function ReadingCard({ entry, complete, cheer, rules }: ReadingCardProps)
   const pagesLeft = Math.max(0, rules.pagesTarget - entry.pages_read)
 
   return (
-    <Card complete={complete} cheer={cheer}>
-      <h2 className="font-rounded text-lg font-extrabold text-ink">📖 Reading</h2>
+    <Card
+      complete={complete}
+      cheer={cheer}
+      title="Reading"
+      icon="reading"
+      summary={`${entry.pages_read} pages${currentBook ? ` · ${currentBook.title}` : ''}`}
+    >
       <p className="mt-1 text-sm text-ink-muted">{readingRuleLine(rules)}</p>
 
       <div className="mt-4">

@@ -32,8 +32,7 @@ export function WaterCard({ entry, complete, cheer, rules }: WaterCardProps) {
   const targetLiters = formatLiters(rules.waterTargetMl)
 
   return (
-    <Card complete={complete} cheer={cheer}>
-      <h2 className="font-rounded text-lg font-extrabold text-ink">💧 Water</h2>
+    <Card complete={complete} cheer={cheer} title="Water" icon="water" summary={`${formatLiters(entry.water_ml)} L`}>
       <p className="mt-1 text-sm text-ink-muted">Goal: {targetLiters} L a day.</p>
 
       <div className="mt-4 flex items-center gap-4">
