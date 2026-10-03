@@ -51,6 +51,12 @@ function App() {
 /** The app once the player has a profile: the challenge gate, the screens and the bottom nav. */
 function MainApp({ today }: { today: string }) {
   const [screen, setScreen] = useState<ScreenId>('today')
+  // Set by the Gallery's "take a photo": Today opens its camera once, then clears it.
+  const [cameraRequested, setCameraRequested] = useState(false)
+  const goTo = (id: ScreenId) => {
+    setCameraRequested(false)
+    setScreen(id)
+  }
   const gate = useChallengeGate(today)
   const { celebration, dismiss: dismissCelebration } = useDayCompleteCelebration(gate)
   const { toasts, dismiss: dismissToast } = useBadgeUnlocks(gate)
@@ -113,6 +119,8 @@ function MainApp({ today }: { today: string }) {
                 todayDayNumber={gate.todayDayNumber}
                 streak={gate.streak}
                 jokersLeft={gate.jokersLeft}
+                openCamera={cameraRequested}
+                onCameraOpened={() => setCameraRequested(false)}
               />
             ))}
           {screen === 'journey' && (
@@ -134,7 +142,14 @@ function MainApp({ today }: { today: string }) {
               completed={gate.kind === 'completed'}
             />
           )}
-          {screen === 'gallery' && <GalleryScreen />}
+          {screen === 'gallery' && (
+            <GalleryScreen
+              onTakePhoto={() => {
+                setScreen('today')
+                setCameraRequested(true)
+              }}
+            />
+          )}
           {screen === 'settings' && (
             <SettingsScreen
               challenge={gate.challenge}
@@ -147,7 +162,7 @@ function MainApp({ today }: { today: string }) {
         </Suspense>
       </div>
 
-      <BottomNav active={screen} onChange={setScreen} />
+      <BottomNav active={screen} onChange={goTo} />
 
       <DayCompleteCelebration celebration={celebration} onDismiss={dismissCelebration} />
       <BadgeUnlockToast badges={toasts} onDismiss={dismissToast} />
