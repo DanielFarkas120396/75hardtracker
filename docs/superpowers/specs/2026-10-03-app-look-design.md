@@ -40,24 +40,33 @@ This redesign is **v2**: each part is a pull request into the long-lived `v2` br
 
 **Mechanism:** a small hook in `App` sets `data-world="hell" | … | "heaven"` on `<html>`, next to the existing `.dark` class. `src/styles/index.css` defines the world tokens per `[data-world]`, with a light block and a `.dark[data-world]` block. Screens only use the token names, so a new world recolours the app without any screen changing.
 
-**Tokens** (Tailwind theme names; starting values below, tuned until the contrast test passes):
+**Tokens** (Tailwind theme names):
 
 | Token | Use |
 |---|---|
 | `--color-world` | accent fill: progress rings, active nav pill, primary buttons, done ticks |
+| `--color-world-edge` | the darker "pressed" edge under world-coloured buttons |
 | `--color-world-ink` | text and icons in the world colour (≥ 4.5:1 on `surface`, `canvas` and `world-soft`) |
 | `--color-world-soft` | tint: hero background, active and done states, chips |
 | `--color-on-world` | text on a `world` fill (≥ 4.5:1) |
 | `--color-canvas` | the page background, overridden per world with a faint tint of it |
 
-| World | Light: world / ink / soft / canvas | Dark: world / ink / soft / canvas |
-|---|---|---|
-| Hell | #e2531f / #b33a12 / #fde6dc / #fdf6f3 | #ff6a2a / #ff8a5a / #3a1812 / #1a1211 |
-| Wasteland | #8a7b6e / #6b5d52 / #efe9e3 / #f8f6f3 | #b3a598 / #cbbfb3 / #2e2824 / #171513 |
-| Dark Forest | #2f7d4f / #22643c / #dcefe2 / #f4f9f5 | #4fae74 / #6fd093 / #16301f / #111815 |
-| Meadows | #3f9a3a / #2f7a2b / #e1f2d6 / #f6fbf1 | #6cc35e / #8fdc80 / #1e3418 / #121811 |
-| Mountains | #3a8cc9 / #1f6aa3 / #dfeefa / #f4f8fc | #7cc0f0 / #9fd2f7 / #1c2a38 / #10161c |
-| Heaven | #d9a521 / #8a6100 / #fbf0cf / #fdfaf0 | #f3c23a / #ffd76a / #3a3017 / #17150e |
+Values (checked against the 4.5:1 rule; four light-mode fills were darkened to pass):
+
+| World | Mode | world | edge | ink | soft | canvas | on-world |
+|---|---|---|---|---|---|---|---|
+| Hell | light | #cb4a1b | #9e3915 | #b33a12 | #fde6dc | #fdf6f3 | #ffffff |
+| Hell | dark | #ff6a2a | #c65220 | #ff8a5a | #3a1812 | #1a1211 | #1f2426 |
+| Wasteland | light | #807266 | #63584f | #6b5d52 | #efe9e3 | #f8f6f3 | #ffffff |
+| Wasteland | dark | #b3a598 | #8b8076 | #cbbfb3 | #2e2824 | #171513 | #1f2426 |
+| Dark Forest | light | #2f7d4f | #24613d | #22643c | #dcefe2 | #f4f9f5 | #ffffff |
+| Dark Forest | dark | #4fae74 | #3d875a | #6fd093 | #16301f | #111815 | #1f2426 |
+| Meadows | light | #368532 | #2a6727 | #2f7a2b | #e1f2d6 | #f6fbf1 | #ffffff |
+| Meadows | dark | #6cc35e | #549849 | #8fdc80 | #1e3418 | #121811 | #1f2426 |
+| Mountains | light | #3279ae | #275e87 | #1f6aa3 | #dfeefa | #f4f8fc | #ffffff |
+| Mountains | dark | #7cc0f0 | #6095bb | #9fd2f7 | #1c2a38 | #10161c | #1f2426 |
+| Heaven | light | #d9a521 | #a98019 | #8a6100 | #fbf0cf | #fdfaf0 | #1f2426 |
+| Heaven | dark | #f3c23a | #bd972d | #ffd76a | #3a3017 | #17150e | #1f2426 |
 
 - The existing brand colours (green, orange, blue, yellow, danger) stay for **meaning**: water is blue, the streak is orange, XP is yellow, danger is red. The world colour carries **identity** and progress.
 - The theme-colour meta tag (the iPhone status bar) follows `canvas`.
