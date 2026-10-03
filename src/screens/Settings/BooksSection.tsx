@@ -20,8 +20,8 @@ export function BooksSection() {
   }
 
   return (
-    <section className="rounded-card bg-surface p-4 shadow-sm">
-      <h2 className="font-rounded text-lg font-extrabold text-ink">📚 Books</h2>
+    <section className="rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0">
+      <h2 className="font-rounded text-lg font-extrabold text-ink">Books</h2>
 
       {books.length > 0 ? (
         <ul className="mt-3 flex flex-col gap-2">
