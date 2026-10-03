@@ -39,7 +39,8 @@ const TOKENS = {
 } as const
 
 describe('index.css', () => {
-  const css = readFileSync(resolve(process.cwd(), 'src/styles/index.css'), 'utf8')
+  // Git may check the file out with Windows line endings.
+  const css = readFileSync(resolve(process.cwd(), 'src/styles/index.css'), 'utf8').replace(/\r\n/g, '\n')
   const block = (selector: string) => {
     const start = css.indexOf(`${selector} {`)
     expect(start, selector).toBeGreaterThanOrEqual(0)
@@ -48,7 +49,7 @@ describe('index.css', () => {
 
   it.each(WORLDS.map((w) => w.id))('defines the %s tokens in both themes, matching WORLD_COLORS', (id) => {
     for (const mode of ['light', 'dark'] as const) {
-      const body = block(`${mode === 'dark' ? '.dark' : ''}[data-world='${id}']`)
+      const body = block(mode === 'dark' ? `.dark[data-world='${id}'],\n.dark [data-world='${id}']` : `[data-world='${id}']`)
       for (const [key, token] of Object.entries(TOKENS)) {
         expect(body).toContain(`--color-${token}: ${WORLD_COLORS[id][mode][key as keyof typeof TOKENS]};`)
       }

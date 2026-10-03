@@ -37,6 +37,9 @@ interface TodayScreenProps {
   todayDayNumber: number
   streak: number
   jokersLeft: number
+  /** Open the photo card's camera on arrival (from the Gallery), then call onCameraOpened. */
+  openCamera?: boolean
+  onCameraOpened?: () => void
 }
 
 export function TodayScreen(props: TodayScreenProps) {
@@ -47,7 +50,16 @@ export function TodayScreen(props: TodayScreenProps) {
   return <TodayTasks key={props.todayDayNumber} {...props} />
 }
 
-function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak, jokersLeft }: TodayScreenProps) {
+function TodayTasks({
+  challenge,
+  dayEntries,
+  today,
+  todayDayNumber,
+  streak,
+  jokersLeft,
+  openCamera,
+  onCameraOpened,
+}: TodayScreenProps) {
   const rules = rulesFor(challenge)
   const entry = useTodayEntry({ challengeId: challenge.id, dayNumber: todayDayNumber, today, dayEntries })
   const workouts = useWorkoutsForEntry(entry?.id)
@@ -148,7 +160,13 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak, joke
             cheer={taskCheer('reading', todayDayNumber, rules)}
             rules={rules}
           />
-          <PhotoCard entry={entry} complete={completion.completion.photo} cheer={taskCheer('photo', todayDayNumber, rules)} />
+          <PhotoCard
+            entry={entry}
+            complete={completion.completion.photo}
+            cheer={taskCheer('photo', todayDayNumber, rules)}
+            openCameraNow={openCamera}
+            onCameraOpened={onCameraOpened}
+          />
           <DayNotesCard entry={entry} />
         </main>
       </div>

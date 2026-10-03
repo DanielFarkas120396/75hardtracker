@@ -102,7 +102,8 @@
   --color-chart-grid: #30383b;
 }
 
-/* The world you're in (data-world on <html>, set by useWorldTheme) colours the app.
+/* The world you're in (data-world on <html>, set by useWorldTheme) colours the app. An element can
+   set its own data-world to wear another world's colours (the Gallery's groups).
    Mirrors WORLD_COLORS in src/lib/worldColors.ts; a test keeps them in sync. */
 [data-world='hell'] {
   --color-world: #cb4a1b;
@@ -112,7 +113,8 @@
   --color-canvas: #fdf6f3;
   --color-on-world: #ffffff;
 }
-.dark[data-world='hell'] {
+.dark[data-world='hell'],
+.dark [data-world='hell'] {
   --color-world: #ff6a2a;
   --color-world-edge: #c65220;
   --color-world-ink: #ff8a5a;
@@ -128,7 +130,8 @@
   --color-canvas: #f8f6f3;
   --color-on-world: #ffffff;
 }
-.dark[data-world='wasteland'] {
+.dark[data-world='wasteland'],
+.dark [data-world='wasteland'] {
   --color-world: #b3a598;
   --color-world-edge: #8b8076;
   --color-world-ink: #cbbfb3;
@@ -144,7 +147,8 @@
   --color-canvas: #f4f9f5;
   --color-on-world: #ffffff;
 }
-.dark[data-world='forest'] {
+.dark[data-world='forest'],
+.dark [data-world='forest'] {
   --color-world: #4fae74;
   --color-world-edge: #3d875a;
   --color-world-ink: #6fd093;
@@ -160,7 +164,8 @@
   --color-canvas: #f6fbf1;
   --color-on-world: #ffffff;
 }
-.dark[data-world='meadow'] {
+.dark[data-world='meadow'],
+.dark [data-world='meadow'] {
   --color-world: #6cc35e;
   --color-world-edge: #549849;
   --color-world-ink: #8fdc80;
@@ -176,7 +181,8 @@
   --color-canvas: #f4f8fc;
   --color-on-world: #ffffff;
 }
-.dark[data-world='mountains'] {
+.dark[data-world='mountains'],
+.dark [data-world='mountains'] {
   --color-world: #7cc0f0;
   --color-world-edge: #6095bb;
   --color-world-ink: #9fd2f7;
@@ -192,7 +198,8 @@
   --color-canvas: #fdfaf0;
   --color-on-world: #1f2426;
 }
-.dark[data-world='heaven'] {
+.dark[data-world='heaven'],
+.dark [data-world='heaven'] {
   --color-world: #f3c23a;
   --color-world-edge: #bd972d;
   --color-world-ink: #ffd76a;

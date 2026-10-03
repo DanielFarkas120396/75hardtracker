@@ -10,6 +10,7 @@ interface CardProps {
   /** Short microcopy flashed next to the check badge when the card switches to complete. */
   cheer?: string
   className?: string
+  id?: string
   /** The card's title, shown with its icon. */
   title?: string
   icon?: IconName
@@ -35,7 +36,7 @@ const BURST_DISTANCE_PX = 28
  * and gives a short vibration. With a summary, a done card folds into one
  * line: at once if it opens done, after the cheer if it's just been done.
  */
-export function Card({ children, complete = false, cheer, className = '', title, icon, summary }: CardProps) {
+export function Card({ children, complete = false, cheer, className = '', id, title, icon, summary }: CardProps) {
   const vibrate = useHaptics()
   const reduceMotion = useReducedMotion()
 
@@ -68,6 +69,7 @@ export function Card({ children, complete = false, cheer, className = '', title,
 
   return (
     <div
+      id={id}
       className={`relative rounded-card border-2 shadow-sm motion-safe:transition-colors ${folded ? 'border-transparent bg-world-soft px-4 py-1' : `bg-surface p-4 ${complete ? 'border-world' : title ? 'border-world/30' : 'border-transparent ring-1 ring-ink/10 dark:ring-0'}`} ${className}`}
     >
       {cheering && !reduceMotion && <Burst key={completions} />}
