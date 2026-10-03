@@ -58,9 +58,9 @@
      Deliberately the same in both themes: those fills don't change. */
   --color-on-accent: #1f2426;
 
-  /* Charts: the data line (validated >= 3:1 on the card surface in both themes)
+  /* Charts: the data line, in the world's text colour (>= 4.5:1 on the card surface in both themes)
      and a hairline grid one step off the surface. */
-  --color-chart-line: #2ba857;
+  --color-chart-line: var(--color-world-ink);
   --color-chart-grid: #e7eae7;
 
   --font-rounded:
