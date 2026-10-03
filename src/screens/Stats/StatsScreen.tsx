@@ -26,7 +26,7 @@ export function StatsScreen({ challenge, streak, today }: StatsScreenProps) {
       <header className="flex items-center justify-between px-4 pt-6 pb-4">
         <div>
           <p className="font-rounded text-sm font-bold text-ink-muted">Attempt #{challenge.attemptNumber}</p>
-          <h1 className="font-rounded text-2xl font-extrabold text-ink">📊 Stats</h1>
+          <h1 className="font-display text-2xl tracking-wide text-ink">📊 Stats</h1>
         </div>
         <FlameStreak streak={streak} />
       </header>

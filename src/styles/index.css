@@ -2,6 +2,7 @@
 @import "@fontsource/nunito/600.css";
 @import "@fontsource/nunito/700.css";
 @import "@fontsource/nunito/800.css";
+@import "@fontsource/lilita-one/400.css";
 
 /* Enable class-based dark mode: toggling `.dark` on <html> flips all dark: variants */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -64,6 +65,9 @@
 
   --font-rounded:
     "Nunito", ui-rounded, system-ui, -apple-system, sans-serif;
+  /* Screen titles and big numbers only, never body text. One weight (400): no faux bold. */
+  --font-display:
+    "Lilita One", "Nunito", ui-rounded, system-ui, -apple-system, sans-serif;
 
   --radius-xl2: 1.25rem;
   --radius-card: 1.5rem;

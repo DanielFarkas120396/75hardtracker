@@ -33,14 +33,14 @@ export function PreStartView({ challenge, todayDayNumber, today }: PreStartViewP
       <WhyQuote className="max-w-xs" />
       {brokenStartDate ? (
         <>
-          <h1 className="font-rounded text-2xl font-extrabold text-ink">Pick a start date</h1>
+          <h1 className="font-display text-2xl tracking-wide text-ink">Pick a start date</h1>
           <p className="max-w-xs font-rounded text-ink-muted">
             Your challenge doesn't have a valid start date. Set one in Settings to begin.
           </p>
         </>
       ) : (
         <>
-          <h1 className="font-rounded text-2xl font-extrabold text-ink">
+          <h1 className="font-display text-2xl tracking-wide text-ink">
             {days === 1 ? 'Day 1 starts tomorrow' : `Day 1 starts in ${days} days`}
           </h1>
           <p className="max-w-xs font-rounded text-ink-muted">

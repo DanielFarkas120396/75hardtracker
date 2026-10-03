@@ -10,7 +10,7 @@ export function GalleryScreen() {
   return (
     <div className="min-h-dvh bg-canvas pb-24">
       <header className="px-4 pt-6 pb-4">
-        <h1 className="font-rounded text-2xl font-extrabold text-ink">📸 Gallery</h1>
+        <h1 className="font-display text-2xl tracking-wide text-ink">📸 Gallery</h1>
         <p className="font-rounded text-sm text-ink-muted">Every progress photo, across every attempt.</p>
       </header>
 

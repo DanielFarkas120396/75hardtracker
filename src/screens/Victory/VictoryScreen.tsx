@@ -59,7 +59,7 @@ export function VictoryScreen({ challenge, today, revealed, streak, missedDays }
 
       <div>
         <p className="font-rounded text-sm font-bold text-ink-muted">Attempt #{challenge.attemptNumber}</p>
-        <h1 className="font-rounded text-3xl font-extrabold text-ink">{victoryTitle(rules)}</h1>
+        <h1 className="font-display text-3xl tracking-wide text-ink">{victoryTitle(rules)}</h1>
         <p className="mt-1 font-rounded text-sm font-semibold text-ink-muted">
           {formatDisplayDate(challenge.startDate)} – {formatDisplayDate(endDate)}
         </p>

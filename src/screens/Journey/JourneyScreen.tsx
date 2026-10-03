@@ -54,7 +54,7 @@ export function JourneyScreen({ challenge, dayEntries, todayDayNumber, streak, c
       <header className="flex items-center justify-between px-4 pt-6 pb-2">
         <div>
           <p className="font-rounded text-sm font-bold text-ink-muted">Attempt #{challenge.attemptNumber}</p>
-          <h1 className="font-rounded text-2xl font-extrabold text-ink">{journeyTitle(todayDayNumber, completed)}</h1>
+          <h1 className="font-display text-2xl tracking-wide text-ink">{journeyTitle(todayDayNumber, completed)}</h1>
           <p className="mt-1 font-rounded text-sm font-extrabold text-yellow-ink">⭐ {xp} XP</p>
         </div>
         <FlameStreak streak={streak} />

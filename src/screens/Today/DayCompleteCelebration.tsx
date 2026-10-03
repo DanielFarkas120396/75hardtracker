@@ -42,7 +42,7 @@ export function DayCompleteCelebration({ celebration, onDismiss }: DayCompleteCe
           className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-green-deep p-6 text-center text-white"
         >
           <Mascot mood="celebrating" size={140} />
-          <h1 id="day-complete-title" className="font-rounded text-3xl font-extrabold">
+          <h1 id="day-complete-title" className="font-display text-3xl tracking-wide">
             Day {celebration.dayNumber} complete!
           </h1>
           <p className="max-w-xs font-rounded font-semibold text-white/90">

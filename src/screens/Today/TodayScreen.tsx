@@ -86,7 +86,7 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak, joke
             <p className="font-rounded text-sm font-bold text-ink-muted">
               {VARIANT_NAMES[rules.variant]} · Attempt #{challenge.attemptNumber}
             </p>
-            <h1 className="font-rounded text-2xl font-extrabold text-ink">
+            <h1 className="font-display text-2xl tracking-wide text-ink">
               Day {todayDayNumber} / {CHALLENGE_LENGTH}
             </h1>
             <p className="mt-1 font-rounded text-sm font-extrabold text-yellow-ink">⭐ {xp} XP</p>

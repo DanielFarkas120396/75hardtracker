@@ -41,7 +41,7 @@ export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGi
   return (
     <div className="min-h-dvh bg-canvas pb-24">
       <header className="px-4 pt-6 pb-4">
-        <h1 className="font-rounded text-2xl font-extrabold text-ink">⚙️ Settings</h1>
+        <h1 className="font-display text-2xl tracking-wide text-ink">⚙️ Settings</h1>
       </header>
 
       <main className="flex flex-col gap-4 px-4">
