@@ -1,10 +1,18 @@
-import { useState } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { useState, useSyncExternalStore } from 'react'
+import { Icon } from '../../components/icons/Icon'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
 import { Toggle } from '../../components/ui/Toggle'
+import { VARIANT_NAMES } from '../../content/variants'
+import { bookRepo } from '../../db/repositories/bookRepo'
 import type { Challenge } from '../../db/types'
 import { resetAll } from '../../db/exportImport'
+import { useProfile } from '../../hooks/useProfile'
 import { useSettings } from '../../hooks/useSettings'
+import { useThemeSetting } from '../../hooks/useThemePreference'
+import { getInstallState, subscribeToInstallState } from '../../lib/installPrompt'
+import { rulesFor } from '../../logic/rulesets'
 import { AppearanceSection } from './AppearanceSection'
 import { AttemptHistorySection } from './AttemptHistorySection'
 import { BadgesSection } from './BadgesSection'
@@ -14,6 +22,7 @@ import { ExportImportSection } from './ExportImportSection'
 import { GiveUpFlow } from './GiveUpFlow'
 import { InstallSection } from './InstallSection'
 import { ProfileSection } from './ProfileSection'
+import { SettingsGroup, SettingsPage, SettingsRow } from './SettingsRows'
 import { StartDateSection } from './StartDateSection'
 
 interface SettingsScreenProps {
@@ -26,11 +35,42 @@ interface SettingsScreenProps {
   canGiveUp: boolean
 }
 
+type PageId = 'profile' | 'badges' | 'challenge' | 'books' | 'history' | 'appearance' | 'sound' | 'companion' | 'install' | 'backup'
+
+const PAGE_TITLES: Record<PageId, string> = {
+  profile: 'Profile',
+  badges: 'Badges',
+  challenge: 'Challenge',
+  books: 'Books',
+  history: 'Attempt history',
+  appearance: 'Appearance',
+  sound: 'Sound & haptics',
+  companion: 'Companion',
+  install: 'Install the app',
+  backup: 'Backup & storage',
+}
+
+const THEME_LABELS = { system: 'System', light: 'Light', dark: 'Dark' } as const
+
+/**
+ * Settings as a grouped list, like iPhone Settings: compact rows in sections,
+ * each opening its own page with the controls. The danger zone acts at once.
+ */
 export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGiveUp }: SettingsScreenProps) {
-  const { soundEnabled, hapticsEnabled, bedtime, setSoundEnabled, setHapticsEnabled, setBedtime } = useSettings()
+  const settings = useSettings()
+  const profile = useProfile()
+  const { preference } = useThemeSetting()
+  const bookCount = useLiveQuery(() => bookRepo.getAll().then((books) => books.length), [])
+  const installState = useSyncExternalStore(subscribeToInstallState, getInstallState)
+  const [page, setPage] = useState<PageId | null>(null)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [showGiveUp, setShowGiveUp] = useState(false)
   const [resetting, setResetting] = useState(false)
+
+  const open = (id: PageId) => {
+    setPage(id)
+    window.scrollTo(0, 0)
+  }
 
   const confirmReset = async () => {
     setResetting(true)
@@ -38,65 +78,113 @@ export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGi
     window.location.reload()
   }
 
+  const soundValue =
+    settings.soundEnabled && settings.hapticsEnabled
+      ? 'On'
+      : settings.soundEnabled
+        ? 'Sound only'
+        : settings.hapticsEnabled
+          ? 'Haptics only'
+          : 'Off'
+
   return (
     <div className="min-h-dvh bg-canvas pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
-      <header className="px-4 pt-6 pb-4">
-        <h1 className="font-display text-2xl tracking-wide text-ink">⚙️ Settings</h1>
-      </header>
-
-      <main className="flex flex-col gap-4 px-4">
-        <ProfileSection />
-
-        {challenge.status === 'active' && (
-          // Keyed by the saved date so the draft resets whenever it changes.
-          <StartDateSection
-            key={`${challenge.id}:${challenge.startDate}`}
-            challenge={challenge}
-            today={today}
-            todayDayNumber={todayDayNumber}
-          />
-        )}
-
-        <InstallSection />
-
-        <AppearanceSection />
-
-        <BooksSection />
-
-        <BadgesSection challengeId={challenge.id} />
-
-        <section className="rounded-card bg-surface p-4 shadow-sm">
-          <h2 className="font-rounded text-lg font-extrabold text-ink">Sound & haptics</h2>
-          <div className="mt-3 flex flex-col gap-2">
-            <Toggle checked={soundEnabled} onChange={setSoundEnabled} label="Sound effects" />
-            <Toggle checked={hapticsEnabled} onChange={setHapticsEnabled} label="Haptic feedback" />
-          </div>
-        </section>
-
-        <CompanionSection bedtime={bedtime} onBedtimeChange={setBedtime} />
-
-        <ExportImportSection today={today} />
-
-        <AttemptHistorySection today={today} />
-
-        <section className="rounded-card bg-surface p-4 shadow-sm">
-          <h2 className="font-rounded text-lg font-extrabold text-ink">Danger zone</h2>
-          {canGiveUp && (
-            <>
-              <p className="mt-1 text-sm text-ink-muted">Stop this attempt for good. It stays in your history.</p>
-              <Button variant="danger" className="mt-3 w-full" onClick={() => setShowGiveUp(true)}>
-                Give up this challenge
-              </Button>
-            </>
+      {page ? (
+        <SettingsPage title={PAGE_TITLES[page]} onBack={() => setPage(null)}>
+          {page === 'profile' && <ProfileSection />}
+          {page === 'badges' && <BadgesSection challengeId={challenge.id} />}
+          {page === 'challenge' && challenge.status === 'active' && (
+            // Keyed by the saved date so the draft resets whenever it changes.
+            <StartDateSection
+              key={`${challenge.id}:${challenge.startDate}`}
+              challenge={challenge}
+              today={today}
+              todayDayNumber={todayDayNumber}
+            />
           )}
-          <p className={`${canGiveUp ? 'mt-4' : 'mt-1'} text-sm text-ink-muted`}>
-            Permanently erase all attempts, photos, and badges.
-          </p>
-          <Button variant="danger" className="mt-3 w-full" onClick={() => setShowResetConfirm(true)}>
-            Reset everything
-          </Button>
-        </section>
-      </main>
+          {page === 'books' && <BooksSection />}
+          {page === 'history' && <AttemptHistorySection today={today} />}
+          {page === 'appearance' && <AppearanceSection />}
+          {page === 'sound' && (
+            <section className="flex flex-col gap-2 rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0">
+              <Toggle checked={settings.soundEnabled} onChange={settings.setSoundEnabled} label="Sound effects" />
+              <Toggle checked={settings.hapticsEnabled} onChange={settings.setHapticsEnabled} label="Haptic feedback" />
+            </section>
+          )}
+          {page === 'companion' && <CompanionSection bedtime={settings.bedtime} onBedtimeChange={settings.setBedtime} />}
+          {page === 'install' && <InstallSection />}
+          {page === 'backup' && <ExportImportSection today={today} />}
+        </SettingsPage>
+      ) : (
+        <>
+          <header className="px-4 pt-6 pb-4">
+            <h1 className="flex items-center gap-2 font-display text-2xl tracking-wide text-ink">
+              <Icon name="settings" className="text-world-ink" />
+              Settings
+            </h1>
+          </header>
+
+          <main className="flex flex-col gap-5 px-4">
+            <SettingsGroup title="You">
+              <SettingsRow icon="profile" label="Profile" value={profile?.name} onClick={() => open('profile')} />
+              <SettingsRow icon="badge" label="Badges" onClick={() => open('badges')} />
+            </SettingsGroup>
+
+            <SettingsGroup title="Challenge">
+              {challenge.status === 'active' && (
+                <SettingsRow
+                  icon="journey"
+                  label="Challenge"
+                  value={VARIANT_NAMES[rulesFor(challenge).variant]}
+                  onClick={() => open('challenge')}
+                />
+              )}
+              <SettingsRow
+                icon="reading"
+                label="Books"
+                value={bookCount ? `${bookCount}` : undefined}
+                onClick={() => open('books')}
+              />
+              <SettingsRow icon="history" label="Attempt history" onClick={() => open('history')} />
+            </SettingsGroup>
+
+            <SettingsGroup title="App">
+              <SettingsRow
+                icon="appearance"
+                label="Appearance"
+                value={preference ? THEME_LABELS[preference] : undefined}
+                onClick={() => open('appearance')}
+              />
+              <SettingsRow icon="sound" label="Sound & haptics" value={soundValue} onClick={() => open('sound')} />
+              <SettingsRow icon="companion" label="Companion" value={`Bedtime ${settings.bedtime}`} onClick={() => open('companion')} />
+              <SettingsRow
+                icon="install"
+                label="Install the app"
+                value={installState === 'installed' ? 'Installed' : undefined}
+                onClick={() => open('install')}
+              />
+            </SettingsGroup>
+
+            <SettingsGroup title="Data">
+              <SettingsRow icon="backup" label="Backup & storage" onClick={() => open('backup')} />
+            </SettingsGroup>
+
+            <SettingsGroup
+              title="Danger zone"
+              footer={
+                canGiveUp
+                  ? 'Giving up stops this attempt for good; it stays in your history. Resetting erases every attempt, photo and badge.'
+                  : 'Resetting erases every attempt, photo and badge.'
+              }
+            >
+              {canGiveUp && (
+                <SettingsRow icon="close" label="Give up this challenge" danger onClick={() => setShowGiveUp(true)} />
+              )}
+              <SettingsRow icon="warning" label="Reset everything" danger onClick={() => setShowResetConfirm(true)} />
+            </SettingsGroup>
+          </main>
+        </>
+      )}
 
       <GiveUpFlow
         open={showGiveUp && canGiveUp}

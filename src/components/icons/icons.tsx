@@ -89,6 +89,61 @@ export const ICONS = {
       <path d="M8 10a5.5 5.5 0 0 1 8 0M12 10l1.5-2.2" />
     </>
   ),
+  profile: (
+    <>
+      <circle cx="12" cy="8.5" r="4" {...SOFT} />
+      <path d="M4.5 20.5c1-4 4-6 7.5-6s6.5 2 7.5 6" />
+    </>
+  ),
+  badge: (
+    <>
+      <circle cx="12" cy="9.5" r="6" {...SOFT} />
+      <path d="M8.5 14.5L7 21l5-2.5 5 2.5-1.5-6.5" />
+    </>
+  ),
+  history: (
+    <>
+      <circle cx="12" cy="12" r="8.5" {...SOFT} />
+      <path d="M12 7.5V12l3 2" />
+    </>
+  ),
+  appearance: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" />
+    </>
+  ),
+  sound: (
+    <>
+      <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" {...SOFT} />
+      <path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" />
+    </>
+  ),
+  companion: (
+    <>
+      <path d="M6 12a6 6 0 1 1 12 0v3a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z" {...SOFT} />
+      <path d="M10 13.5h4l-2 2z" fill="currentColor" />
+      <path d="M9.5 10.5h.01M14.5 10.5h.01" strokeWidth="2.8" />
+    </>
+  ),
+  install: (
+    <>
+      <rect x="6.5" y="2.5" width="11" height="19" rx="2.5" {...SOFT} />
+      <path d="M12 7v7M9 11.5l3 3 3-3" />
+    </>
+  ),
+  backup: (
+    <>
+      <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5V9H4z" {...SOFT} />
+      <path d="M5 9h14v8.5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2zM10 13h4" />
+    </>
+  ),
+  warning: (
+    <>
+      <path d="M12 3.5l9 16H3z" {...SOFT} />
+      <path d="M12 10v4.5M12 17.5h.01" />
+    </>
+  ),
   plus: <path d="M12 5v14M5 12h14" />,
   minus: <path d="M5 12h14" />,
   close: <path d="M6 6l12 12M18 6L6 18" />,
