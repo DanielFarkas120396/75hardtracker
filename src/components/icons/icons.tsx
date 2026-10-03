@@ -83,6 +83,12 @@ export const ICONS = {
       <path d="M14.3 6.5l3 3" />
     </>
   ),
+  scale: (
+    <>
+      <rect x="3.5" y="3.5" width="17" height="17" rx="4" {...SOFT} />
+      <path d="M8 10a5.5 5.5 0 0 1 8 0M12 10l1.5-2.2" />
+    </>
+  ),
   plus: <path d="M12 5v14M5 12h14" />,
   minus: <path d="M5 12h14" />,
   close: <path d="M6 6l12 12M18 6L6 18" />,

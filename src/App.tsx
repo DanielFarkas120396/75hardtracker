@@ -125,7 +125,15 @@ function MainApp({ today }: { today: string }) {
               missedDays={gate.missedDays}
             />
           )}
-          {screen === 'stats' && <StatsScreen challenge={gate.challenge} streak={gate.streak} today={today} />}
+          {screen === 'stats' && (
+            <StatsScreen
+              challenge={gate.challenge}
+              streak={gate.streak}
+              today={today}
+              todayDayNumber={gate.todayDayNumber}
+              completed={gate.kind === 'completed'}
+            />
+          )}
           {screen === 'gallery' && <GalleryScreen />}
           {screen === 'settings' && (
             <SettingsScreen
