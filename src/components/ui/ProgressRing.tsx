@@ -10,14 +10,14 @@ interface ProgressRingProps {
   children?: ReactNode
 }
 
-/** A simple circular progress indicator, used for the day's task-completion count. */
+/** A circular progress indicator in the world's colour, used for the day's task-completion count. */
 export function ProgressRing({
   value,
   max,
   size = 72,
-  strokeWidth = 8,
-  color = 'var(--color-green)',
-  trackColor = 'var(--color-green-light)',
+  strokeWidth = 10,
+  color = 'var(--color-world)',
+  trackColor = 'var(--color-world-soft)',
   children,
 }: ProgressRingProps) {
   const radius = (size - strokeWidth) / 2

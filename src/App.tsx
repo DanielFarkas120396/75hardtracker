@@ -6,6 +6,8 @@ import { canGiveUp, useChallengeGate } from './hooks/useChallengeGate'
 import { useDayCompleteCelebration } from './hooks/useDayCompleteCelebration'
 import { useApplyTheme } from './hooks/useThemePreference'
 import { useToday } from './hooks/useToday'
+import { useWorldTheme } from './hooks/useWorldTheme'
+import { worldForProgress } from './lib/worldTheme'
 import { OnboardingGate } from './screens/Onboarding/OnboardingGate'
 import { DayCompleteCelebration } from './screens/Today/DayCompleteCelebration'
 import { TodayScreen } from './screens/Today/TodayScreen'
@@ -52,6 +54,8 @@ function MainApp({ today }: { today: string }) {
   const gate = useChallengeGate(today)
   const { celebration, dismiss: dismissCelebration } = useDayCompleteCelebration(gate)
   const { toasts, dismiss: dismissToast } = useBadgeUnlocks(gate)
+  // The app wears the colours of the Journey world you're in.
+  useWorldTheme(gate ? worldForProgress(gate.todayDayNumber, gate.kind === 'completed') : undefined)
 
   // Giving up happens from Settings: the next attempt should open on Today, not back there.
   if (gate?.kind === 'abandoned' && screen !== 'today') setScreen('today')

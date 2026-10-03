@@ -13,7 +13,7 @@ interface CardProps {
 /** How long the cheer stays up after the card completes. */
 const CHEER_VISIBLE_MS = 2500
 
-const BURST_COLORS = ['var(--color-green)', 'var(--color-yellow)', 'var(--color-blue)', 'var(--color-orange)']
+const BURST_COLORS = ['var(--color-world)', 'var(--color-yellow)', 'var(--color-blue)', 'var(--color-orange)']
 const BURST_PARTICLES = 8
 const BURST_DISTANCE_PX = 28
 
@@ -49,7 +49,7 @@ export function Card({ children, complete = false, cheer, className = '' }: Card
 
   return (
     <div
-      className={`relative rounded-card border-2 bg-surface p-4 shadow-sm motion-safe:transition-colors ${complete ? 'border-green' : 'border-transparent dark:border-white/5'} ${className}`}
+      className={`relative rounded-card border-2 bg-surface p-4 shadow-sm motion-safe:transition-colors ${complete ? 'border-world' : 'border-transparent ring-1 ring-ink/10 dark:ring-0'} ${className}`}
     >
       {cheering && !reduceMotion && <Burst key={completions} />}
       {complete && (
@@ -57,7 +57,7 @@ export function Card({ children, complete = false, cheer, className = '' }: Card
           initial={completions > 0 && !reduceMotion ? { scale: 0 } : false}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', stiffness: 500, damping: 14 }}
-          className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-green text-sm text-on-accent shadow-sm"
+          className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-world text-sm text-on-world shadow-sm"
         >
           ✓
         </motion.span>
@@ -70,7 +70,7 @@ export function Card({ children, complete = false, cheer, className = '' }: Card
               initial={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="block whitespace-nowrap rounded-full bg-green px-3 py-1 font-rounded text-xs font-extrabold text-on-accent shadow-sm"
+              className="block whitespace-nowrap rounded-full bg-world px-3 py-1 font-rounded text-xs font-extrabold text-on-world shadow-sm"
             >
               {cheer}
             </motion.span>

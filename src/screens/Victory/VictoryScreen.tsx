@@ -48,7 +48,7 @@ export function VictoryScreen({ challenge, today, revealed, streak, missedDays }
   const endDate = dateForDayNumber(challenge.startDate, CHALLENGE_LENGTH)
 
   return (
-    <div className="flex min-h-dvh flex-col items-center gap-4 bg-canvas px-6 pt-10 pb-28 text-center">
+    <div className="flex min-h-dvh flex-col items-center gap-4 bg-canvas px-6 pt-10 pb-[calc(6.5rem+env(safe-area-inset-bottom))] text-center">
       <motion.div
         initial={{ scale: 0.6, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -59,7 +59,7 @@ export function VictoryScreen({ challenge, today, revealed, streak, missedDays }
 
       <div>
         <p className="font-rounded text-sm font-bold text-ink-muted">Attempt #{challenge.attemptNumber}</p>
-        <h1 className="font-rounded text-3xl font-extrabold text-ink">{victoryTitle(rules)}</h1>
+        <h1 className="font-display text-3xl tracking-wide text-ink">{victoryTitle(rules)}</h1>
         <p className="mt-1 font-rounded text-sm font-semibold text-ink-muted">
           {formatDisplayDate(challenge.startDate)} – {formatDisplayDate(endDate)}
         </p>
