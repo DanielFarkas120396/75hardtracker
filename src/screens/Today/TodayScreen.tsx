@@ -5,7 +5,6 @@ import { WhyQuote } from '../../components/ProfileLines'
 import { planSavedLine, taskCheer } from '../../content/microcopy'
 import { VARIANT_NAMES } from '../../content/variants'
 import type { Challenge, DayEntry } from '../../db/types'
-import { useChallengeStats } from '../../hooks/useChallengeStats'
 import { useDayCompletion } from '../../hooks/useDayCompletion'
 import { useMenace } from '../../hooks/useMenace'
 import { useNow } from '../../hooks/useNow'
@@ -88,7 +87,6 @@ function TodayTasks({
   const completion = useDayCompletion(entry, workouts, rules, challenge.socialDays)
   const nowMin = useNow()
   const menace = useMenace(completion?.data, entry, nowMin, rules)
-  const { xp } = useChallengeStats(challenge.id)
   const profile = useProfile()
   const [lunges, setLunges] = useState(0)
   const [planOpen, setPlanOpen] = useState(false)
@@ -119,7 +117,6 @@ function TodayTasks({
           completedCount={completedCount}
           taskCount={TASK_IDS.length}
           streak={streak}
-          xp={xp}
           jokersLeft={rules.jokers > 0 ? jokersLeft : undefined}
         />
         {pendingLateDay != null && <LateDayCard dayNumber={pendingLateDay} onOpen={onOpenLateDay} />}

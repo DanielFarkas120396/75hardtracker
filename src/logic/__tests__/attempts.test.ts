@@ -38,8 +38,6 @@ describe('summarizeAttempt', () => {
       completedDays: 11,
       startDate: '2026-09-01',
       endDate: '2026-09-12',
-      // 11 perfect days at 75 XP, the 7-day streak bonus, and two tasks on Day 12.
-      xp: 11 * 75 + 100 + 20,
     })
   })
 
@@ -63,7 +61,7 @@ describe('summarizeAttempt', () => {
       rules: RULESETS.hard,
     })
     // 75 perfect days plus the 7/14/21/30/50/75 streak bonuses.
-    expect(summary).toMatchObject({ reachedDay: 75, completedDays: 75, endDate: '2026-03-16', xp: 75 * 75 + 600 })
+    expect(summary).toMatchObject({ reachedDay: 75, completedDays: 75, endDate: '2026-03-16' })
   })
 
   it('is still running while active: today is the day reached and there is no end date', () => {
@@ -85,7 +83,7 @@ describe('summarizeAttempt', () => {
       todayDayNumber: -2,
       rules: RULESETS.hard,
     })
-    expect(summary).toEqual({ reachedDay: 0, completedDays: 0, startDate: '2026-10-01', endDate: undefined, xp: 0 })
+    expect(summary).toEqual({ reachedDay: 0, completedDays: 0, startDate: '2026-10-01', endDate: undefined })
   })
 
   it('reaches the day the jokers ran out on: a failed Medium attempt that missed Days 3 and 6 reached Day 6, Hard reached Day 3', () => {

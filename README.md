@@ -1,6 +1,6 @@
 # 75 Hard Companion
 
-A mobile-first, installable, local-first PWA for tracking the 75 Hard challenge — workouts, diet, water, reading and progress photos — with a Duolingo-style Journey map, XP, streaks and badges.
+A mobile-first, installable, local-first PWA for tracking the 75 Hard challenge — workouts, diet, water, reading and progress photos — with a Duolingo-style Journey map, streaks and badges.
 
 No backend: all data (including photos) lives in the browser via IndexedDB (Dexie), and can be exported/imported as a single JSON file.
 
@@ -22,7 +22,7 @@ No backend: all data (including photos) lives in the browser via IndexedDB (Dexi
 - **Strict rules** — a day only completes with all five tasks. Forgot to log? Yesterday stays open until noon: Today shows "Day N isn't finished" and opens that day's tasks (the photo from the library), so a logging slip doesn't cost the attempt. On 75 Hard and 75 Strong, a missed day ends the attempt: the app shows what was missed and restarts from Day 1 once you confirm. 75 Medium forgives one missed day and 75 Soft forgives three, each with a joker, before ending the attempt the same way. The start date can be today or later, and it's locked from Day 2.
 - **Giving up** — Settings → Danger zone → Give up this challenge ends the running attempt for good (from Day 1), after four confirmations: what it means, what you built, a five-second last warning, and typing GIVE UP. The attempt stays in the history as Abandoned, and you pick your next challenge and when it starts.
 - **Journey** — all 75 days on a winding path; future days are locked, and 🃏 marks a day a joker forgave.
-- **XP, streaks and badges** — 10 XP per task, +25 for a perfect day, +100 at streaks of 7, 14, 21, 30, 50 and 75. A full-screen celebration for each completed day, and a victory screen after Day 75.
+- **Streaks and badges** — a flame for the streak, badges at 7, 14, 21, 30, 50 and 75 days in a row and for firsts. A full-screen celebration for each completed day, and a victory screen after Day 75.
 - **Stats** — totals for the attempt, plus weight and body measurements with a weight chart.
 - **Gallery** — every progress photo across all attempts.
 - **Settings** — Profile (your name and your reason), Challenge (the challenge and its start date), books, badges, attempt history (days and photos of every past attempt), sound and haptics, light/dark/system theme, installing the app, backup & storage, and the danger zone (giving up the attempt, or erasing everything).
@@ -96,7 +96,7 @@ Everything is stored only on the device, in this browser. Nothing is sent anywhe
 
 ## Project structure
 
-- `src/logic/` — pure challenge-rules module (the rulesets for each challenge in `rulesets.ts`, day completion, streak, XP, badges, restart, attempts, stats, validation). No UI or persistence dependencies; fully unit tested.
+- `src/logic/` — pure challenge-rules module (the rulesets for each challenge in `rulesets.ts`, day completion, streak, badges, restart, attempts, stats, validation). No UI or persistence dependencies; fully unit tested.
 - `src/db/` — Dexie schema, types, repositories (the only place persistence lives), migrations and export/import.
 - `src/hooks/` — bridges Dexie live queries and the logic module into React.
 - `src/content/` — user-facing copy: task names and rules, cheers and the mascot's lines.

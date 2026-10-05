@@ -52,7 +52,7 @@ export function AttemptHistorySection({ today }: AttemptHistorySectionProps) {
                   Attempt #{challenge.attemptNumber} · {progressLabel(challenge.status, summary)}
                 </span>
                 <span className="block text-xs text-ink-muted">
-                  {dateRangeLabel(summary)} · {summary.xp} XP
+                  {dateRangeLabel(summary)}
                 </span>
               </span>
               <StatusChip status={challenge.status} />
@@ -113,7 +113,7 @@ function AttemptDetail({ attempt, open, onClose }: { attempt: AttemptRecord; ope
 
         <p className="mt-3 font-rounded font-bold text-ink">
           {progressLabel(challenge.status, summary)} · {summary.completedDays} perfect{' '}
-          {summary.completedDays === 1 ? 'day' : 'days'} · {summary.xp} XP
+          {summary.completedDays === 1 ? 'day' : 'days'}
         </p>
 
         <h4 className="mt-4 font-rounded font-extrabold text-ink">Days</h4>

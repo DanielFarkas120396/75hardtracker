@@ -54,7 +54,7 @@ export function GiveUpFlow({ open, onClose, ...rest }: GiveUpFlowProps) {
 function GiveUpSteps({ onClose, challenge, today, todayDayNumber, streak }: Omit<GiveUpFlowProps, 'open'>) {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
   // Loaded as the flow opens, so step 2 has its numbers by the time it shows.
-  const { perfectDays, xp } = useChallengeStats(challenge.id)
+  const { perfectDays } = useChallengeStats(challenge.id)
 
   if (step === 1) {
     return (
@@ -81,7 +81,7 @@ function GiveUpSteps({ onClose, challenge, today, todayDayNumber, streak }: Omit
         </div>
         <StepHeading>Look at what you built.</StepHeading>
         <p className="mt-3 rounded-xl bg-canvas px-3 py-2 font-rounded text-sm font-bold text-ink">
-          🔥 {streak}-day streak · {perfectDays} perfect {perfectDays === 1 ? 'day' : 'days'} · ⭐ {xp} XP
+          🔥 {streak}-day streak · {perfectDays} perfect {perfectDays === 1 ? 'day' : 'days'}
         </p>
         <YouSaid className="mt-3" />
         <p className="mt-3 font-rounded font-bold text-ink">{perfectDaysLine(perfectDays)}</p>

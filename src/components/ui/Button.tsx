@@ -1,12 +1,11 @@
 import type { ButtonHTMLAttributes } from 'react'
 
-type Variant = 'primary' | 'streak' | 'water' | 'xp' | 'danger' | 'secondary'
+type Variant = 'primary' | 'streak' | 'water' | 'danger' | 'secondary'
 
 const VARIANT_CLASSES: Record<Variant, string> = {
   primary: 'bg-world border-world-edge text-on-world',
   streak: 'bg-orange border-orange-dark text-on-accent',
   water: 'bg-blue border-blue-dark text-on-accent',
-  xp: 'bg-yellow border-yellow-dark text-on-accent',
   danger: 'bg-danger-dark border-danger-deep text-white',
   secondary: 'bg-surface border-ink/15 text-ink',
 }

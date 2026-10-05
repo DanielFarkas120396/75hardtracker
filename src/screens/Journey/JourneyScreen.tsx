@@ -1,7 +1,6 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { FlameStreak } from '../../components/FlameStreak'
 import type { Challenge, DayEntry } from '../../db/types'
-import { useChallengeStats } from '../../hooks/useChallengeStats'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { daysUntilStart, isChallengeDay } from '../../logic/days'
 import { JourneyPath } from './JourneyPath'
@@ -32,7 +31,6 @@ function focusDay(todayDayNumber: number, completed: boolean): number {
 }
 
 export function JourneyScreen({ challenge, dayEntries, todayDayNumber, streak, completed, missedDays }: JourneyScreenProps) {
-  const { xp } = useChallengeStats(challenge.id)
   const mapRef = useRef<HTMLElement>(null)
   // Fixed on arrival: later changes to today shouldn't yank the map around.
   const [arrivalDay] = useState(() => focusDay(todayDayNumber, completed))
@@ -55,7 +53,6 @@ export function JourneyScreen({ challenge, dayEntries, todayDayNumber, streak, c
         <div>
           <p className="font-rounded text-sm font-bold text-ink-muted">Attempt #{challenge.attemptNumber}</p>
           <h1 className="font-display text-2xl tracking-wide text-ink">{journeyTitle(todayDayNumber, completed)}</h1>
-          <p className="mt-1 font-rounded text-sm font-extrabold text-yellow-ink">⭐ {xp} XP</p>
         </div>
         <FlameStreak streak={streak} />
       </header>

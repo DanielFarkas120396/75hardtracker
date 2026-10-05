@@ -68,7 +68,6 @@ export function VictoryScreen({ challenge, today, revealed, streak, missedDays }
       <p className="max-w-xs font-rounded text-ink-muted">{victoryLine(rules)}</p>
 
       <div className="grid w-full max-w-sm grid-cols-2 gap-3">
-        <VictoryStat label="Total XP" value={`⭐ ${stats.xp}`} />
         <VictoryStat label="Perfect days" value={`${stats.perfectDays}`} />
         <VictoryStat label="Water" value={`${(stats.water_ml / 1000).toFixed(1)} L`} />
         <VictoryStat label="Pages read" value={`${stats.pages}`} />

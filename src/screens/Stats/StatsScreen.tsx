@@ -57,7 +57,6 @@ export function StatsScreen({ challenge, streak, today, todayDayNumber, complete
             tone="text-world-ink"
           />
           <StatTile art={<Icon name="today" size={40} />} value={`${stats.perfectDays}`} label="Perfect days" tone="text-world-ink" />
-          <StatTile art={<Icon name="xp" size={40} />} value={`${stats.xp}`} label="Total XP" tone="text-yellow-ink" />
           <StatTile
             art={<Icon name="streak" size={40} />}
             value={`${streak} ${streak === 1 ? 'day' : 'days'}`}

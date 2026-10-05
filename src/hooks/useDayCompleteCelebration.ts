@@ -1,12 +1,10 @@
 import { useCallback, useState } from 'react'
 import { CHALLENGE_LENGTH } from '../logic/constants'
 import { streakEndingAt } from '../logic/streak'
-import { completedDayXp } from '../logic/xp'
 import type { ChallengeGate } from './useChallengeGate'
 
 export interface DayCelebration {
   dayNumber: number
-  xpEarned: number
   streak: number
   isFinalDay: boolean
   /** Finished the morning after (late logging), not on the day itself. */
@@ -42,7 +40,6 @@ export function useDayCompleteCelebration(gate: ChallengeGate | undefined) {
       const streak = streakEndingAt(gate.dayEntries, dayNumber)
       setCelebration({
         dayNumber,
-        xpEarned: completedDayXp(streak),
         streak,
         isFinalDay: dayNumber === CHALLENGE_LENGTH,
         late: dayNumber !== gate.todayDayNumber,

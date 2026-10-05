@@ -62,7 +62,7 @@ describe('a pre-variants 75 Hard attempt', () => {
     const { rules, days } = await loadChallengeDays(challengeId)
     // 11 perfect days x 75, plus the Day-7 streak-milestone bonus of 100, plus Day 12's reading (10);
     // under Medium or Soft its 3 L would also count (945).
-    expect(calculateChallengeStats(days, rules)).toMatchObject({ xp: 935, perfectDays: 11 })
+    expect(calculateChallengeStats(days, rules)).toMatchObject({ perfectDays: 11 })
 
     expect('variant' in challengeRow).toBe(false)
   })

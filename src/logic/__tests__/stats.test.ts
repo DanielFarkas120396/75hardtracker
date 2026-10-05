@@ -20,7 +20,7 @@ describe('calculateChallengeStats', () => {
     expect(calculateChallengeStats([], RULESETS.hard)).toEqual(EMPTY_CHALLENGE_STATS)
   })
 
-  it('adds up water, pages, workout minutes, perfect days and XP', () => {
+  it('adds up water, pages, workout minutes and perfect days', () => {
     const halfDay: DayTaskData = {
       ...perfectDay,
       pages_read: 4,
@@ -36,7 +36,6 @@ describe('calculateChallengeStats', () => {
         RULESETS.hard,
       ),
     ).toEqual({
-      xp: 75 + 20, // a perfect day, then diet and water on Day 2
       perfectDays: 1,
       water_ml: 7600,
       pages: 16,
@@ -56,11 +55,9 @@ describe('calculateChallengeStats', () => {
       workouts: [{ durationMin: 45, isOutdoor: false }],
     }
     expect(calculateChallengeStats([{ dayNumber: 1, data: mediumPerfectDay }], RULESETS.medium)).toMatchObject({
-      xp: 75,
       perfectDays: 1,
     })
     expect(calculateChallengeStats([{ dayNumber: 1, data: mediumPerfectDay }], RULESETS.hard)).toMatchObject({
-      xp: 30,
       perfectDays: 0,
     })
   })
