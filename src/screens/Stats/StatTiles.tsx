@@ -1,23 +1,13 @@
 import type { ReactNode } from 'react'
-import { Icon } from '../../components/icons/Icon'
 
-const TILE = 'flex flex-col gap-2 rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0'
-
-/** A stats tile: a small illustration, the number, and what it counts. With `onClick`, it opens more. */
-export function StatTile({ art, value, label, tone, onClick }: { art: ReactNode; value: string; label: string; tone: string; onClick?: () => void }) {
-  const body = (
-    <>
-      <span className={`flex h-12 items-end ${tone}`}>{art}</span>
-      <span className={`block font-display text-2xl leading-none tracking-wide ${tone}`}>{value}</span>
-      <span className="block font-rounded text-xs font-bold text-ink-muted">{label}</span>
-    </>
-  )
-  if (!onClick) return <div className={TILE}>{body}</div>
+/** A stats tile: a small illustration, the number, and what it counts. Three sit side by side. */
+export function StatTile({ art, value, label, tone }: { art: ReactNode; value: string; label: string; tone: string }) {
   return (
-    <button type="button" onClick={onClick} className={`relative text-left motion-safe:transition-transform active:scale-[0.98] ${TILE}`}>
-      {body}
-      <Icon name="chevron" size={18} className="absolute top-4 right-4 text-ink-muted" />
-    </button>
+    <div className="flex flex-col gap-2 rounded-card bg-surface p-3 shadow-sm ring-1 ring-ink/10 dark:ring-0">
+      <div className={`flex h-12 items-end ${tone}`}>{art}</div>
+      <p className={`font-display text-xl leading-none tracking-wide ${tone}`}>{value}</p>
+      <p className="font-rounded text-xs font-bold text-ink-muted">{label}</p>
+    </div>
   )
 }
 
