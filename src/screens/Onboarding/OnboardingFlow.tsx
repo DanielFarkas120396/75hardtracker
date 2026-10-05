@@ -75,7 +75,7 @@ export function OnboardingFlow({ mode, today }: OnboardingFlowProps) {
           className="flex flex-1 flex-col items-center pt-6 text-center"
         >
           <Mascot mood={STEP_MOODS[step]} size={96} />
-          {step === 'welcome' && <WelcomeStep onNext={() => next('welcome')} />}
+          {step === 'welcome' && <WelcomeStep mode={mode} onNext={() => next('welcome')} />}
           {step === 'name' && <NameStep name={name} onChange={setName} onNext={() => next('name')} />}
           {step === 'challenge' && (
             <ChallengeStep variant={variant} onChange={setVariant} onNext={() => next('challenge')} />

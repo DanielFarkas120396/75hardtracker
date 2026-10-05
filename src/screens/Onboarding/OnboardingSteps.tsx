@@ -1,4 +1,5 @@
 import type { KeyboardEvent, ReactNode } from 'react'
+import { BackupRestore } from '../../components/BackupRestore'
 import { StartDateChoice } from '../../components/StartDateChoice'
 import { Button } from '../../components/ui/Button'
 import { VariantPicker } from '../../components/VariantPicker'
@@ -30,7 +31,8 @@ function StepTitle({ children }: { children: ReactNode }) {
   )
 }
 
-export function WelcomeStep({ onNext }: { onNext: () => void }) {
+/** The first screen. "Restore it" brings back a backup — on a new phone, or after installing the app. */
+export function WelcomeStep({ mode, onNext }: { mode: OnboardingMode; onNext: () => void }) {
   return (
     <>
       <StepTitle>75 days. 5 tasks. One duck with a knife.</StepTitle>
@@ -40,6 +42,9 @@ export function WelcomeStep({ onNext }: { onNext: () => void }) {
       <Button className="mt-8 w-full" onClick={onNext}>
         Get started
       </Button>
+      <div className="mt-4">
+        <BackupRestore look="link" label="Already have a backup? Restore it" confirmReplace={mode === 'returning'} />
+      </div>
     </>
   )
 }

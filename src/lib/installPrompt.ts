@@ -30,13 +30,21 @@ export function listenForInstallPrompt(): void {
 
 function isStandalone(): boolean {
   return (
-    window.matchMedia('(display-mode: standalone)').matches ||
+    window.matchMedia?.('(display-mode: standalone)').matches === true ||
     (navigator as Navigator & { standalone?: boolean }).standalone === true
   )
 }
 
 function isIos(): boolean {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+}
+
+/** Remembers "Continue in the browser anyway" on the install-first screen, so a reload doesn't ask again. */
+export const INSTALL_SKIPPED_KEY = '75hard-install-skipped'
+
+/** Whether to show the install screen before the welcome flow: a phone browser that can install the app. */
+export function shouldOfferInstallFirst(state: InstallState, skipped: boolean): boolean {
+  return !skipped && (state === 'ios' || state === 'available')
 }
 
 export function getInstallState(): InstallState {
