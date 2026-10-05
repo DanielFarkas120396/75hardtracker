@@ -1,14 +1,18 @@
 /// <reference types="vitest/config" />
+import basicSsl from '@vitejs/plugin-basic-ssl'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     tailwindcss(),
+    // `npm run dev:phone`: HTTPS with a self-signed certificate, so a phone on the Wi-Fi gets a secure
+    // page — browsers only allow the in-app camera (getUserMedia) on HTTPS or localhost.
+    mode === 'phone' && basicSsl(),
     VitePWA({
       registerType: 'autoUpdate',
       // Icons are generated from public/mascot.svg by `npm run generate-pwa-assets` (pwa-assets.config.ts).
@@ -50,4 +54,4 @@ export default defineConfig({
     // The IndexedDB tests do real (in-memory) IO; leave headroom for a busy machine.
     testTimeout: 15_000,
   },
-})
+}))
