@@ -1,5 +1,6 @@
 import { FlameStreak } from '../../components/FlameStreak'
 import { Icon } from '../../components/icons/Icon'
+import { formatMinutes } from '../../content/activities'
 import type { Challenge } from '../../db/types'
 import { useChallengeStats } from '../../hooks/useChallengeStats'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
@@ -20,8 +21,6 @@ interface StatsScreenProps {
 export function StatsScreen({ challenge, streak, today, todayDayNumber, completed }: StatsScreenProps) {
   const stats = useChallengeStats(challenge.id)
   const rules = rulesFor(challenge)
-  const hours = Math.floor(stats.workoutMinutes / 60)
-  const minutes = stats.workoutMinutes % 60
   const dayReached = completed ? CHALLENGE_LENGTH : todayDayNumber
   // The bottle fills against the water owed so far, so it means something from Day 1.
   const daysSoFar = Math.min(CHALLENGE_LENGTH, Math.max(1, Number.isFinite(dayReached) ? dayReached : 1))
@@ -52,7 +51,7 @@ export function StatsScreen({ challenge, streak, today, todayDayNumber, complete
           <StatTile art={<BookStackArt pages={stats.pages} />} value={`${stats.pages}`} label="Pages read" tone="text-world-ink" />
           <StatTile
             art={<Icon name="workout" size={40} />}
-            value={hours > 0 ? `${hours}h ${minutes}m` : `${minutes} min`}
+            value={formatMinutes(stats.workoutMinutes)}
             label="Training"
             tone="text-world-ink"
           />
