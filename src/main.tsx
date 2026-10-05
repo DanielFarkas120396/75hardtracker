@@ -18,7 +18,12 @@ unlockAudioOnUserGesture()
 const root = createRoot(document.getElementById('root')!)
 let opened = false
 
-openDatabase({
+// Dev only: `?travel=<day>` seeds the time-travel database before the app opens it.
+const timeTravel = import.meta.env.DEV
+  ? import('./dev/timeTravel').then((m) => m.applyPendingTimeTravel()).catch((error: unknown) => console.error(error))
+  : Promise.resolve()
+
+void timeTravel.then(() => openDatabase({
   onBlocked: () => {
     if (!opened) root.render(<StorageErrorScreen problem="blocked" />)
   },
@@ -42,4 +47,4 @@ openDatabase({
   })
   .catch((error: unknown) => {
     root.render(<StorageErrorScreen problem="failed" error={error} />)
-  })
+  }))
