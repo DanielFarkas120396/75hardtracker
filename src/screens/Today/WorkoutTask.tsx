@@ -1,16 +1,15 @@
 import { useState } from 'react'
-import { Icon } from '../../components/icons/Icon'
 import { MoodPicker } from '../../components/MoodPicker'
 import { Button } from '../../components/ui/Button'
 import { Stepper } from '../../components/ui/Stepper'
 import { Toggle } from '../../components/ui/Toggle'
-import { ACTIVITY_ICONS } from '../../content/activities'
 import type { Mood } from '../../content/moods'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import { workoutRepo } from '../../db/repositories/workoutRepo'
-import type { Workout, WorkoutType } from '../../db/types'
-import { MAX_WORKOUTS, WORKOUT_TYPES } from '../../logic/constants'
+import type { Workout } from '../../db/types'
+import { MAX_WORKOUTS } from '../../logic/constants'
 import type { Ruleset } from '../../logic/rulesets'
+import { ActivityPicker } from './ActivityPicker'
 
 interface WorkoutTaskProps {
   dayEntryId: number
@@ -110,7 +109,11 @@ function WorkoutRow({ workout }: { workout: Workout }) {
         </button>
       </div>
 
-      <ActivityPicker value={workout.type} onPick={(type) => void workoutRepo.update(workout.id, { type })} />
+      <ActivityPicker
+        value={workout.type}
+        onPick={(type) => void workoutRepo.update(workout.id, { type })}
+        idleClassName="bg-surface"
+      />
 
       <Stepper
         value={workout.durationMin}
@@ -139,31 +142,6 @@ function WorkoutRow({ workout }: { workout: Workout }) {
         selectedClassName="bg-orange-light ring-2 ring-orange-ink"
         idleClassName="bg-surface"
       />
-    </div>
-  )
-}
-
-/** The seven activities as logos; the chosen one is ringed in the workouts' orange. */
-function ActivityPicker({ value, onPick }: { value: WorkoutType; onPick: (type: WorkoutType) => void }) {
-  return (
-    <div role="group" aria-label="Activity" className="grid grid-cols-7 gap-0.5">
-      {WORKOUT_TYPES.map((type) => {
-        const selected = type === value
-        return (
-          <button
-            key={type}
-            type="button"
-            aria-label={type}
-            aria-pressed={selected}
-            onClick={() => onPick(type)}
-            className={`flex h-11 items-center justify-center rounded-xl motion-safe:transition-colors ${
-              selected ? 'bg-orange-light text-orange-ink ring-2 ring-orange-ink' : 'bg-surface text-ink-muted'
-            }`}
-          >
-            <Icon name={ACTIVITY_ICONS[type]} size={26} strokeWidth={1.8} />
-          </button>
-        )
-      })}
     </div>
   )
 }

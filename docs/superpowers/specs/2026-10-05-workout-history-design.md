@@ -57,7 +57,7 @@ A card's shade is `color-mix(in srgb, stack-from, stack-to p%)`, with *p* spread
 - the minutes stepper and the outdoor toggle, unchanged;
 - **"How did it feel?"** and the five moods. The mood buttons of `DayNotesTask` move to a shared `MoodPicker` (group label, value, `onPick`, selected style), used by both: yellow for the day's mood as now, orange for a workout.
 
-Late days use the same sheet, so they get both.
+Late days use the same sheet, so they get both. The Workouts tile's quick-add sheet (`AddWorkoutSheet`, from PR #34) uses the same logo row (`ActivityPicker`, in its own file) and asks the feel too.
 
 ## Data and logic
 
