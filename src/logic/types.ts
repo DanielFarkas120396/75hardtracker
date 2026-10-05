@@ -5,6 +5,9 @@
 
 export type TaskId = 'workouts' | 'diet' | 'water' | 'reading' | 'photo'
 
+/** What a workout was; the names double as the English labels. */
+export type WorkoutType = 'Running' | 'Walking' | 'Weights' | 'Yoga' | 'Cycling' | 'Swimming' | 'Other'
+
 export interface WorkoutTaskData {
   durationMin: number
   isOutdoor: boolean

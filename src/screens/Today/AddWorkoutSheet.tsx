@@ -5,7 +5,8 @@ import { Modal } from '../../components/ui/Modal'
 import { Stepper } from '../../components/ui/Stepper'
 import { Toggle } from '../../components/ui/Toggle'
 import { workoutRepo } from '../../db/repositories/workoutRepo'
-import { WORKOUT_TYPES, type WorkoutType } from '../../db/types'
+import type { WorkoutType } from '../../db/types'
+import { WORKOUT_TYPES } from '../../logic/constants'
 import type { Ruleset } from '../../logic/rulesets'
 
 const MAX_MIN = 300

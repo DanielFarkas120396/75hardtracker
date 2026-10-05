@@ -1,5 +1,7 @@
 import type { ChallengeVariant } from '../logic/rulesets'
-import type { TaskId } from '../logic/types'
+import type { TaskId, WorkoutType } from '../logic/types'
+
+export type { WorkoutType }
 
 export type ChallengeStatus = 'active' | 'failed' | 'completed' | 'abandoned'
 
@@ -39,15 +41,14 @@ export interface DayEntry {
   completed: boolean
 }
 
-export const WORKOUT_TYPES = ['Running', 'Walking', 'Weights', 'Yoga', 'Cycling', 'Swimming', 'Other'] as const
-export type WorkoutType = (typeof WORKOUT_TYPES)[number]
-
 export interface Workout {
   id: number
   dayEntryId: number
   type: WorkoutType
   durationMin: number
   isOutdoor: boolean
+  /** How the session felt, on the five moods of "How was today?" (1 Rough … 5 Great). Unset when not given. */
+  feel?: 1 | 2 | 3 | 4 | 5
 }
 
 export interface Book {

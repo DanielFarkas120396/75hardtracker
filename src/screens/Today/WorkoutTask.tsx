@@ -4,8 +4,8 @@ import { Stepper } from '../../components/ui/Stepper'
 import { Toggle } from '../../components/ui/Toggle'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import { workoutRepo } from '../../db/repositories/workoutRepo'
-import { WORKOUT_TYPES, type Workout, type WorkoutType } from '../../db/types'
-import { MAX_WORKOUTS } from '../../logic/constants'
+import type { Workout, WorkoutType } from '../../db/types'
+import { MAX_WORKOUTS, WORKOUT_TYPES } from '../../logic/constants'
 import type { Ruleset } from '../../logic/rulesets'
 
 interface WorkoutTaskProps {
