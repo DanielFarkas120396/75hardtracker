@@ -13,7 +13,7 @@ The owner wants to follow the sport sessions done during the challenge, with a l
 | Where | Stats: a **Workouts** section right under Weight (it was first a page behind the Training tile). No new tab. |
 | Which sessions | The running attempt's, from Day 1 (late-logged days included). Past attempts are out of scope. |
 | Grouping | One card per activity practised, most sessions first; ties keep the app's list order. Activities never practised sit under the stack as small chips, "Not tried yet". |
-| Look | The screenshot's stack: rounded cards overlapping like folders, in shades of the workouts orange from the strongest (top) to the softest. The open card turns sky blue, its logo big and faint behind it. One card open at a time; the top one is open when the page opens, and tapping the open one closes it. |
+| Look | The screenshot's stack: rounded cards overlapping like folders, in shades of the workouts orange from the strongest (top) to the softest. The open card turns sky blue, its logo big and faint behind it. One card open at a time; all start closed (the top one first opened by itself, until the owner asked otherwise), and tapping the open one closes it. |
 | Open card | The feels (emoji and count, only those used, best first); the sessions (big number), the time and how many were outdoors; then every session, newest first: "Day 6 · Mon 5 Oct", "45 min · Outdoor", the feel's emoji. |
 | Summary | Three tiles above the stack: sessions, time of training, outdoors. |
 | Logos | Seven new icons in the app's set (24 px grid, 2 px round strokes, soft fills): `running` (a runner), `walking` (footprints), `weights` (a kettlebell), `yoga` (a lotus), `cycling` (a bike), `swimming` (a swimmer over waves), `stopwatch` (for Other). |
@@ -80,7 +80,7 @@ Late days use the same sheet, so they get both. The Workouts tile's quick-add sh
 ## Testing
 
 - `workoutHistory.test.ts`: grouping, the order (sessions, then list order), newest first within an activity (day, then id), totals, outdoors, feel counts (only those used, Great first), untried activities, no sessions.
-- `WorkoutsSection.test.tsx`: from a seeded database, the summary, the first card open with its sessions, opening another closes the first (`aria-expanded`), tapping the open one closes it, the untried chips, the empty state.
+- `WorkoutsSection.test.tsx`: from a seeded database, the summary with every card closed, a tapped card open on its sessions, opening another closes the first (`aria-expanded`), tapping the open one closes it, the untried chips, the empty state.
 - `StatsScreen`: Weight starts folded and opens on tap; Workouts comes right after it; no streak or perfect-days tile.
 - `WorkoutTask.test.tsx`: picking a logo stores the type; picking a feel stores it, tapping it again clears it.
 - `exportImport.test.ts`: a workout's feel survives a backup round trip; an unknown activity or a feel of 9 is refused.
@@ -94,6 +94,8 @@ The owner asked for three changes to Stats:
 - **Weight starts folded.** Its header (scale icon, "Weight", the latest weight while folded, a chevron) is a button that opens the summary, the chart and the list. "+ Log" stays in the header and works while folded.
 - **Workouts moves into Stats**, right under Weight, as a section instead of a page. The Training tile is a plain tile again.
 - **The streak and perfect-days tiles go.** The three left (water, pages, training) sit in one row of three.
+
+Then (PR #38) the owner removed the Training tile too, since the Workouts summary shows the same time: water and pages sit side by side. And every workout card now starts closed.
 
 ## Out of scope
 

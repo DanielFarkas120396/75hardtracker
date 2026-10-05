@@ -40,11 +40,13 @@ describe('StatsScreen', () => {
     expect(await screen.findByRole('heading', { name: 'No workouts yet' })).toBeInTheDocument()
   })
 
-  it('has no streak or perfect-days tile', async () => {
+  it('keeps only the water and pages tiles', async () => {
     await renderStats()
 
-    expect(screen.getByText('Training')).toBeInTheDocument()
-    expect(screen.queryByText('Current streak')).not.toBeInTheDocument()
-    expect(screen.queryByText('Perfect days')).not.toBeInTheDocument()
+    expect(screen.getByText('Water drunk')).toBeInTheDocument()
+    expect(screen.getByText('Pages read')).toBeInTheDocument()
+    for (const gone of ['Training', 'Current streak', 'Perfect days']) {
+      expect(screen.queryByText(gone), gone).not.toBeInTheDocument()
+    }
   })
 })
