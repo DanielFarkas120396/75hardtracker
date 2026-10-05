@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../../db/db'
+import { challengeRepo } from '../../../db/repositories/challengeRepo'
 import { addChallenge, freshDatabase, TEST_PROFILE } from '../../../db/__tests__/fixtures'
 import type { Challenge } from '../../../db/types'
 import { ProfileContext } from '../../../hooks/useProfile'
@@ -27,6 +28,19 @@ describe('DayFailedScreen', () => {
     expect(screen.getByRole('heading', { name: "Day 1 wasn't completed" })).toHaveFocus()
     expect(screen.getByText("Again. From Day 1. I'm watching.")).toBeInTheDocument()
     expect(screen.queryByText(/You said/)).not.toBeInTheDocument()
+  })
+
+  it('shows an error and re-enables the button when restarting fails', async () => {
+    vi.spyOn(challengeRepo, 'restart').mockRejectedValueOnce(new Error('quota'))
+    const today = todayISO()
+    const challengeId = await addChallenge({ startDate: addDaysISO(today, -3), attemptNumber: 1, status: 'active' })
+    const challenge = (await db.challenges.get(challengeId)) as Challenge
+    render(<DayFailedScreen challenge={challenge} failedDayNumber={1} today={today} />)
+    await screen.findAllByRole('listitem')
+    fireEvent.click(screen.getByRole('button', { name: 'Restart from Day 1' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent("Couldn't save that — try again.")
+    expect(screen.getByRole('button', { name: 'Restart from Day 1' })).toBeEnabled()
   })
 
   it("calls the player by name and quotes their reason back", async () => {

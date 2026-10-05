@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import { Button } from '../../components/ui/Button'
+import { SAVE_FAILED_LINE } from '../../content/microcopy'
 import { profileRepo } from '../../db/repositories/profileRepo'
 import { useProfile } from '../../hooks/useProfile'
 import { cleanText, isValidName, isValidWhy, NAME_MAX_LENGTH, WHY_MAX_LENGTH, type Profile } from '../../logic/profile'
@@ -25,9 +26,9 @@ function ProfileForm({ profile }: { profile: Profile }) {
     setSaving(true)
     try {
       const result = await profileRepo.save({ name, why })
-      setStatus(result.ok ? 'Saved.' : "Couldn't save that — try again.")
+      setStatus(result.ok ? 'Saved.' : SAVE_FAILED_LINE)
     } catch {
-      setStatus("Couldn't save that — try again.")
+      setStatus(SAVE_FAILED_LINE)
     } finally {
       setSaving(false)
     }

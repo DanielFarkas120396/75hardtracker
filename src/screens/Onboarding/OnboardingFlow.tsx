@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useState } from 'react'
 import { Mascot, type DuckMood } from '../../components/mascot/Mascot'
+import { SAVE_FAILED_LINE } from '../../content/microcopy'
 import { profileRepo } from '../../db/repositories/profileRepo'
 import { useStartDateChoice } from '../../hooks/useStartDateChoice'
 import { onboardingSteps, type OnboardingMode, type OnboardingStep } from '../../logic/onboarding'
@@ -52,11 +53,11 @@ export function OnboardingFlow({ mode, today }: OnboardingFlowProps) {
       )
       // On success the profile appears, and the app takes over from this flow.
       if (!result.ok) {
-        setError("Couldn't save that — try again.")
+        setError(SAVE_FAILED_LINE)
         setBusy(false)
       }
     } catch {
-      setError("Couldn't save that — try again.")
+      setError(SAVE_FAILED_LINE)
       setBusy(false)
     }
   }
