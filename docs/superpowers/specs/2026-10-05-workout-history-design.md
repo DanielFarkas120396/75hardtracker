@@ -1,6 +1,6 @@
 # Workout history — design
 
-Date: 2026-10-05 · Status: **approved**, being built on `feat/workout-history` (one PR into `main`).
+Date: 2026-10-05 · Status: **built** (PR into `main`).
 
 ## Why
 

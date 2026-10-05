@@ -58,8 +58,11 @@ async function fakePhoto(label: string, hue: number): Promise<Blob> {
   return new Blob([bytes], { type: 'image/jpeg' })
 }
 
-/** Every task done: two qualifying workouts (one outdoor), diet, water, pages and a photo. */
+/** Every task done: two qualifying workouts (one outdoor), diet, water, pages and a photo. The workouts vary by day, so time travel shows a lively history. */
 async function perfectDay(dayNumber: number): Promise<SeedDay> {
+  const outdoor = (['Running', 'Walking', 'Cycling'] as const)[dayNumber % 3]
+  const indoor = (['Weights', 'Yoga', 'Weights', 'Swimming'] as const)[dayNumber % 4]
+  const feel = (offset: number) => (((dayNumber + offset) % 5) + 1) as NonNullable<Workout['feel']>
   return {
     dayNumber,
     entry: {
@@ -71,8 +74,8 @@ async function perfectDay(dayNumber: number): Promise<SeedDay> {
     },
     photo: await fakePhoto(`Day ${dayNumber}`, (dayNumber * 37) % 360),
     workouts: [
-      { type: 'Running', durationMin: RULESETS.hard.minWorkoutMin, isOutdoor: true },
-      { type: 'Weights', durationMin: 60, isOutdoor: false },
+      { type: outdoor, durationMin: RULESETS.hard.minWorkoutMin + (dayNumber % 3) * 5, isOutdoor: true, feel: feel(0) },
+      { type: indoor, durationMin: 60, isOutdoor: false, feel: feel(2) },
     ],
   }
 }
