@@ -23,6 +23,7 @@ export function DietTask({ entry, rules, socialToday, canPlanSocial, onPlanSocia
         checked={entry.dietFollowed}
         onChange={(checked) => void dayEntryRepo.update(entry.id, { dietFollowed: checked })}
         label={dietToggleLabel(rules)}
+        icon="🍽️"
       />
       {socialToday ? (
         <p className="rounded-xl bg-canvas px-3 py-2 font-rounded text-sm font-bold text-ink">
@@ -33,6 +34,7 @@ export function DietTask({ entry, rules, socialToday, canPlanSocial, onPlanSocia
           checked={entry.noAlcohol}
           onChange={(checked) => void dayEntryRepo.update(entry.id, { noAlcohol: checked })}
           label="No alcohol"
+          icon={<NoDrinkEmoji />}
         />
       )}
       {canPlanSocial && (
@@ -41,5 +43,15 @@ export function DietTask({ entry, rules, socialToday, canPlanSocial, onPlanSocia
         </Button>
       )}
     </div>
+  )
+}
+
+/** A glass with the "no" sign over it: there's no such emoji, so two are stacked. */
+function NoDrinkEmoji() {
+  return (
+    <span className="relative inline-block">
+      🍷
+      <span className="absolute inset-0">🚫</span>
+    </span>
   )
 }

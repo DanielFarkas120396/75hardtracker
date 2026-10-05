@@ -17,6 +17,8 @@ interface DayBoardProps {
   rules: Ruleset
   currentBook?: Book
   photo?: Blob
+  /** Opens "Plan a social occasion" from the diet tile; none when the rules don't allow one. */
+  onPlanSocial?: () => void
   onOpen: (task: BoardTask) => void
 }
 
@@ -25,10 +27,11 @@ interface DayBoardProps {
  * and the camera (or the library, when only that's allowed). Lives under
  * PhotoCapture, which owns the camera.
  */
-export function DayBoard({ entry, data, completion, rules, currentBook, photo, onOpen }: DayBoardProps) {
+export function DayBoard({ entry, data, completion, rules, currentBook, photo, onPlanSocial, onOpen }: DayBoardProps) {
   const capture = usePhotoCapture()
 
   const quickActions: Partial<Record<BoardTask, QuickAction>> = {
+    diet: onPlanSocial && { label: 'Plan a social occasion', icon: 'social', onPress: onPlanSocial },
     water: {
       label: `Add ${QUICK_WATER_ML} ml`,
       icon: 'plus',

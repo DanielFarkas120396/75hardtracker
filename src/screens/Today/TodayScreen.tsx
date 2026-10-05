@@ -178,6 +178,7 @@ function TodayTasks({
               rules={rules}
               currentBook={currentBook}
               photo={photo?.blob}
+              onPlanSocial={sheetContext.canPlanSocial ? sheetContext.onPlanSocial : undefined}
               onOpen={setOpenTask}
             />
           </main>
