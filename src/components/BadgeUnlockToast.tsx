@@ -9,8 +9,10 @@ interface BadgeUnlockToastProps {
 }
 
 const AUTO_DISMISS_MS = 4500
+/** Beyond this, toasts wait their turn: a backup restore or a catch-up can unlock many badges at once. */
+const MAX_VISIBLE = 2
 
-/** Stacked "Badge unlocked" toasts; each dismisses itself after a few seconds. Sits above the celebration overlay. */
+/** Stacked "Badge unlocked" toasts, a couple at a time; each dismisses itself after a few seconds. Sits above the celebration overlay. */
 export function BadgeUnlockToast({ badges, onDismiss }: BadgeUnlockToastProps) {
   return (
     <div
@@ -19,7 +21,7 @@ export function BadgeUnlockToast({ badges, onDismiss }: BadgeUnlockToastProps) {
       className="pointer-events-none fixed inset-x-0 top-4 z-[60] flex flex-col items-center gap-2 px-4"
     >
       <AnimatePresence>
-        {badges.map((badge) => (
+        {badges.slice(0, MAX_VISIBLE).map((badge) => (
           <ToastItem key={badge.id} badge={badge} onDismiss={onDismiss} />
         ))}
       </AnimatePresence>

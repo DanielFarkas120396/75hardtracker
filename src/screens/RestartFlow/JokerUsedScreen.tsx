@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Mascot } from '../../components/mascot/Mascot'
 import { YouSaid } from '../../components/ProfileLines'
+import { SAVE_FAILED_LINE } from '../../content/microcopy'
 import { challengeRepo } from '../../db/repositories/challengeRepo'
 import type { Challenge } from '../../db/types'
 import { GateHeading } from './GateHeading'
@@ -35,7 +36,7 @@ export function JokerUsedScreen({ challenge, newlyMissed, missedCount, jokersLef
       await challengeRepo.acknowledgeJokers(challenge.id, missedCount)
     } catch {
       setSaving(false)
-      setError("Couldn't save that — try again.")
+      setError(SAVE_FAILED_LINE)
     }
   }
 

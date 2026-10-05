@@ -84,6 +84,9 @@ export const POKE_LINES = [
   'That tickles. The knife does not.',
 ] as const
 export const LUNGE_LINE = "That's it."
+
+/** Shown when a save to the database fails, wherever a screen has nothing more specific to say. */
+export const SAVE_FAILED_LINE = "Couldn't save that — try again."
 export const GLARE_LINE = 'I saw that.'
 
 /** The poke line for the `count`th poke (0-based), cycling. */

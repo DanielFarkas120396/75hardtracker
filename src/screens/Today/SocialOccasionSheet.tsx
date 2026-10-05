@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Field } from '../../components/ui/Field'
 import { Modal } from '../../components/ui/Modal'
+import { SAVE_FAILED_LINE } from '../../content/microcopy'
 import { challengeRepo } from '../../db/repositories/challengeRepo'
 import type { Challenge } from '../../db/types'
 import { addDaysISO, dateForDayNumber, dayNumberForDate, formatShortDay } from '../../lib/dates'
@@ -66,7 +67,7 @@ function SocialForm({ challenge, today, todayDayNumber, onClose, onDeclared }: S
           break
       }
     } catch {
-      setError("Couldn't save that — try again.")
+      setError(SAVE_FAILED_LINE)
     } finally {
       setSaving(false)
     }
@@ -152,7 +153,7 @@ function DeclaredRow({ challenge, today, dayNumber, isToday }: DeclaredRowProps)
     try {
       await challengeRepo.setSocialDay(challenge.id, dayNumber, false, today)
     } catch {
-      setError("Couldn't save that — try again.")
+      setError(SAVE_FAILED_LINE)
     } finally {
       setBusy(false)
     }

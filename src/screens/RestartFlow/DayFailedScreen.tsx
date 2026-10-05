@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Mascot } from '../../components/mascot/Mascot'
 import { YouSaid } from '../../components/ProfileLines'
+import { SAVE_FAILED_LINE } from '../../content/microcopy'
 import { missedDayExplanation } from '../../content/variants'
 import { challengeRepo } from '../../db/repositories/challengeRepo'
 import type { Challenge } from '../../db/types'
@@ -19,14 +20,17 @@ interface DayFailedScreenProps {
 /** Blocks the app after a missed day: shows what was missed, then restarts from Day 1 on confirmation. */
 export function DayFailedScreen({ challenge, failedDayNumber, today }: DayFailedScreenProps) {
   const [restarting, setRestarting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const profile = useProfile()
 
   const confirmRestart = async () => {
     setRestarting(true)
+    setError(null)
     try {
       await challengeRepo.restart(challenge.id, today)
     } catch {
       setRestarting(false)
+      setError(SAVE_FAILED_LINE)
     }
   }
 
@@ -44,6 +48,12 @@ export function DayFailedScreen({ challenge, failedDayNumber, today }: DayFailed
       <p className="mt-2 font-rounded font-bold text-ink">
         {profile ? `Again, ${profile.name}. From Day 1. I'm watching.` : "Again. From Day 1. I'm watching."}
       </p>
+
+      {error && (
+        <p role="alert" className="text-sm font-semibold text-danger-ink">
+          {error}
+        </p>
+      )}
 
       <Button variant="primary" className="mt-2" onClick={() => void confirmRestart()} disabled={restarting}>
         {restarting ? 'Restarting…' : 'Restart from Day 1'}
