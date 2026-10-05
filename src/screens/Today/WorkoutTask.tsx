@@ -4,11 +4,9 @@ import { Stepper } from '../../components/ui/Stepper'
 import { Toggle } from '../../components/ui/Toggle'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import { workoutRepo } from '../../db/repositories/workoutRepo'
-import type { Workout, WorkoutType } from '../../db/types'
+import { WORKOUT_TYPES, type Workout, type WorkoutType } from '../../db/types'
 import { MAX_WORKOUTS } from '../../logic/constants'
 import type { Ruleset } from '../../logic/rulesets'
-
-const WORKOUT_TYPES: WorkoutType[] = ['Running', 'Walking', 'Weights', 'Yoga', 'Cycling', 'Swimming', 'Other']
 
 interface WorkoutTaskProps {
   dayEntryId: number

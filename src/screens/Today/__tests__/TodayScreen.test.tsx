@@ -153,8 +153,10 @@ describe('TodayScreen', () => {
     await waitFor(async () => expect((await entry()).pages_read).toBe(1))
 
     expect(screen.getByRole('button', { name: 'Take photo' })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Add a 45 min workout' }))
-    await waitFor(async () => expect(await workoutRepo.getForDayEntry((await entry()).id)).toHaveLength(1))
+    fireEvent.click(screen.getByRole('button', { name: 'Add workout' }))
+    fireEvent.change(await screen.findByRole('combobox', { name: 'Activity' }), { target: { value: 'Yoga' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(async () => expect(await workoutRepo.getForDayEntry((await entry()).id)).toMatchObject([{ type: 'Yoga', durationMin: 45 }]))
   })
 
   it("offers to finish yesterday in the morning, on yesterday's own tasks, and back", async () => {

@@ -39,14 +39,8 @@ export interface DayEntry {
   completed: boolean
 }
 
-export type WorkoutType =
-  | 'Running'
-  | 'Walking'
-  | 'Weights'
-  | 'Yoga'
-  | 'Cycling'
-  | 'Swimming'
-  | 'Other'
+export const WORKOUT_TYPES = ['Running', 'Walking', 'Weights', 'Yoga', 'Cycling', 'Swimming', 'Other'] as const
+export type WorkoutType = (typeof WORKOUT_TYPES)[number]
 
 export interface Workout {
   id: number
