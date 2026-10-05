@@ -19,7 +19,7 @@ The owner wants to follow the sport sessions done during the challenge, with a l
 | Logos | Seven new icons in the app's set (24 px grid, 2 px round strokes, soft fills): `running` (a runner), `walking` (footprints), `weights` (a kettlebell), `yoga` (a lotus), `cycling` (a bike), `swimming` (a swimmer over waves), `stopwatch` (for Other). |
 | Today | A workout's activity is picked from a row of the seven logos instead of the drop-down; the chosen activity's name heads the workout. |
 | Feel | "How did it feel?" under each workout: the five moods of "How was today?" (😫 Rough, 😕 Meh, 😐 Okay, 🙂 Good, 😄 Great). Optional; tapping the chosen one clears it. It never affects completion. |
-| Data | `Workout.feel?: 1 \| 2 \| 3 \| 4 \| 5`, optional and unindexed: no Dexie version bump, and older workouts simply have no feel. Backups carry it; import checks it's 1–5. |
+| Data | `Workout.feel?: 1 \| 2 \| 3 \| 4 \| 5`, optional and unindexed: no Dexie version bump, and older workouts simply have no feel. Backups carry it; import checks it's 1–5, and that a workout's activity is one of the seven (they've never changed). |
 | Empty | No session yet: "No workouts yet", "Log your first one from Today.", and the seven logos under "Not tried yet". |
 
 ## The Workouts page
@@ -62,7 +62,7 @@ Late days use the same sheet, so they get both.
 ## Data and logic
 
 - `src/logic/types.ts` gets `WorkoutType` (moved from `db/types.ts`, which re-exports it), and `src/logic/constants.ts` gets `WORKOUT_TYPES`, the list in the app's order (moved from `WorkoutTask`).
-- `Workout.feel?: Mood` (1–5) in `db/types.ts`. `exportImport`'s row checks gain `feel: isOptional(1–5)`. Export version unchanged.
+- `Workout.feel?: 1 | 2 | 3 | 4 | 5` in `db/types.ts`. `exportImport`'s workout checks gain `feel` (optional, 1–5) and check `type` against `WORKOUT_TYPES`. Export version unchanged.
 - `src/logic/workoutHistory.ts`, pure: from the attempt's sessions (`id`, `dayNumber`, `date`, `type`, `durationMin`, `isOutdoor`, `feel?`) it returns the totals (sessions, minutes, outdoors), the activities practised (sorted as above, each with its sessions newest first — by day, then by id —, minutes, outdoors and feel counts), and the untried activities in list order.
 - `src/hooks/useWorkoutHistory.ts`: a live query over the attempt's day entries and their workouts (the two repository calls `loadChallengeDays` already uses), mapped to sessions and passed to `workoutHistory`. `undefined` while loading.
 - `src/content/activities.ts`: each activity's icon, and `formatMinutes` (shared with the Stats tile).
@@ -83,7 +83,7 @@ Late days use the same sheet, so they get both.
 - `WorkoutsPage.test.tsx`: from a seeded database, the summary, the first card open with its sessions, opening another closes the first (`aria-expanded`), tapping the open one closes it, the untried chips, the empty state, the back button.
 - `StatsScreen`: the Training tile opens the page, and back returns.
 - `WorkoutTask.test.tsx`: picking a logo stores the type; picking a feel stores it, tapping it again clears it.
-- `exportImport.test.ts`: a workout's feel survives a backup round trip; a feel of 9 is refused.
+- `exportImport.test.ts`: a workout's feel survives a backup round trip; an unknown activity or a feel of 9 is refused.
 - Contrast: the new tokens (above). Icons: the seven new ones through the existing `Icon` test.
 - On the phone: the page in light and dark, with the stack and the open card; the Today sheet's logos and feel; reduce motion.
 
