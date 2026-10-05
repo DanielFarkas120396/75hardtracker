@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { db } from '../../../db/db'
@@ -127,6 +127,21 @@ describe('TodayScreen', () => {
     expect(screen.queryByText('“A fresh start”')).not.toBeInTheDocument()
   })
 
+  it('logs a glass of water and a page straight from the tiles', async () => {
+    // The entries are a static prop here (the gate's live query feeds them in the app), so the stores are checked.
+    const { challenge, today } = await setup({ variant: 'hard', todayDayNumber: 3 })
+    const entry = () => dayEntryRepo.getOrCreate({ challengeId: challenge.id, dayNumber: 3, date: today })
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Add 250 ml' }))
+    await waitFor(async () => expect((await entry()).water_ml).toBe(250))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add 1 page' }))
+    await waitFor(async () => expect((await entry()).pages_read).toBe(1))
+
+    expect(screen.getByRole('button', { name: 'Take photo' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Add .*workout/i })).not.toBeInTheDocument()
+  })
+
   it("offers to finish yesterday in the morning, on yesterday's own tasks, and back", async () => {
     await setup({ variant: 'hard', todayDayNumber: 3, pendingLateDay: 2 })
 
@@ -134,6 +149,8 @@ describe('TodayScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Finish it' }))
 
     expect(await screen.findByRole('heading', { name: 'Finish Day 2' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Choose from library' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Take photo' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /^Photo,/ }))
     expect(await screen.findByText("Yesterday's photo, from your library.")).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '🖼️ Choose from library' })).toBeInTheDocument()

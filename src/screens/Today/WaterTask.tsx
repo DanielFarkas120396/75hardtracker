@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { formatLiters } from '../../content/variants'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
@@ -12,17 +11,8 @@ interface WaterTaskProps {
 
 /** The water sheet's body: the bottle, and the pours. */
 export function WaterTask({ entry, rules }: WaterTaskProps) {
-  const [lastDelta, setLastDelta] = useState<number | null>(null)
-
   const addWater = (deltaMl: number) => {
     void dayEntryRepo.adjustWater(entry.id, deltaMl)
-    setLastDelta(deltaMl)
-  }
-
-  const undo = () => {
-    if (lastDelta === null) return
-    void dayEntryRepo.adjustWater(entry.id, -lastDelta)
-    setLastDelta(null)
   }
 
   const fillPercent = Math.min(100, (entry.water_ml / rules.waterTargetMl) * 100)
@@ -51,8 +41,8 @@ export function WaterTask({ entry, rules }: WaterTaskProps) {
         <Button variant="water" onClick={() => addWater(500)}>
           + 500 ml
         </Button>
-        <Button variant="secondary" onClick={undo} disabled={lastDelta === null}>
-          Undo
+        <Button variant="secondary" onClick={() => addWater(-250)} disabled={entry.water_ml === 0}>
+          − 250 ml
         </Button>
       </div>
     </div>

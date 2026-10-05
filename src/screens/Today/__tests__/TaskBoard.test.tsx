@@ -92,6 +92,26 @@ describe('TaskBoard', () => {
     expect(onOpen).toHaveBeenCalledWith('notes')
   })
 
+  it('shows a shortcut on the tiles that have one, and hides it once the task is done', () => {
+    const onPress = vi.fn()
+    const quickActions = {
+      water: { label: 'Add 250 ml', icon: 'plus' as const, text: '250 ml', onPress },
+      photo: { label: 'Take photo', icon: 'photo' as const, onPress: () => {} },
+    }
+    const { rerender } = render(board(empty, { quickActions }))
+
+    expect(screen.getByRole('button', { name: 'Add 250 ml' })).toHaveTextContent('250 ml')
+    expect(screen.getByRole('button', { name: 'Take photo' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Add 1 page/ })).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add 250 ml' }))
+    expect(onPress).toHaveBeenCalledTimes(1)
+
+    rerender(board({ ...empty, water_ml: 3800 }, { quickActions }))
+    expect(screen.queryByRole('button', { name: 'Add 250 ml' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Water, 3.8 L, done' })).toBeInTheDocument()
+  })
+
   it('bursts when a task turns done after mount, not when it mounts done', () => {
     const { rerender } = render(board({ ...empty, water_ml: 3800 }))
     expect(screen.queryByTestId('burst')).not.toBeInTheDocument()

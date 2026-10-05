@@ -8,8 +8,8 @@ import { useEntryPhoto } from '../../hooks/useEntryPhoto'
 import { useTodayEntry } from '../../hooks/useTodayEntry'
 import { useWorkoutsForEntry } from '../../hooks/useWorkoutsForEntry'
 import { challengeWeek, rulesFor } from '../../logic/rulesets'
+import { DayBoard } from './DayBoard'
 import { PhotoCapture } from './PhotoCapture'
-import { TaskBoard } from './TaskBoard'
 import { TaskSheet } from './TaskSheet'
 import { describeTask } from './taskSheets'
 
@@ -106,13 +106,13 @@ export function LateDayView({ challenge, dayEntries, dayNumber, date, onBack }: 
         </header>
 
         <main className="px-4">
-          <TaskBoard
+          <DayBoard
             entry={entry}
             data={completion.data}
             completion={completion.completion}
             missing={completion.missing}
             rules={rules}
-            bookTitle={currentBook?.title}
+            currentBook={currentBook}
             photo={photo?.blob}
             onOpen={setOpenTask}
           />

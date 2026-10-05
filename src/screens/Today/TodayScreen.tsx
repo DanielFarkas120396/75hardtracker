@@ -20,6 +20,7 @@ import { TASK_IDS } from '../../logic/dayCompletion'
 import { isChallengeDay } from '../../logic/days'
 import { challengeWeek, rulesFor } from '../../logic/rulesets'
 import { isStartDateEditable } from '../../logic/startDate'
+import { DayBoard } from './DayBoard'
 import { DuckHeader, type DuckAnnouncement } from './DuckHeader'
 import { LateDayCard, LateDayView } from './LateDay'
 import { MenaceAtmosphere } from './MenaceAtmosphere'
@@ -27,7 +28,6 @@ import { PhotoCapture } from './PhotoCapture'
 import { PlanSheet } from './PlanSheet'
 import { PreStartView } from './PreStartView'
 import { SocialOccasionSheet } from './SocialOccasionSheet'
-import { TaskBoard } from './TaskBoard'
 import { TaskSheet } from './TaskSheet'
 import { describeTask } from './taskSheets'
 import { TodayHero } from './TodayHero'
@@ -177,13 +177,13 @@ function TodayTasks({
           <WhyQuote className="px-4 pb-4" />
 
           <main className="px-4">
-            <TaskBoard
+            <DayBoard
               entry={entry}
               data={completion.data}
               completion={completion.completion}
               missing={completion.missing}
               rules={rules}
-              bookTitle={currentBook?.title}
+              currentBook={currentBook}
               photo={photo?.blob}
               onOpen={setOpenTask}
             />
