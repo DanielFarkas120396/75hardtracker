@@ -13,62 +13,44 @@ const moodFor = (feel: Mood) => MOODS.find((mood) => mood.value === feel)!
 /** The translucent wash for chips and the session list on the open card. */
 const WASH = 'bg-white/55 dark:bg-black/25'
 
-interface WorkoutsPageProps {
-  challengeId: number
-  onBack: () => void
-}
-
-/** Every workout of the attempt: a card per activity, stacked, one open on its sessions. */
-export function WorkoutsPage({ challengeId, onBack }: WorkoutsPageProps) {
+/** Every workout of the attempt, on Stats under Weight: a card per activity, stacked, one open on its sessions. */
+export function WorkoutsSection({ challengeId }: { challengeId: number }) {
   const history = useWorkoutHistory(challengeId)
+  const headingId = useId()
   // undefined: the top card is open (the default); null: the player closed them all.
   const [chosen, setChosen] = useState<WorkoutType | null | undefined>(undefined)
   const open = chosen === undefined ? history?.activities[0]?.type : chosen
 
   return (
-    <div className="min-h-dvh bg-canvas pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
-      <header className="px-4 pt-4 pb-3">
-        <button
-          type="button"
-          onClick={onBack}
-          className="-ml-2 flex min-h-touch items-center gap-1 rounded-xl px-2 font-rounded font-bold text-world-ink"
-        >
-          <Icon name="chevron" size={18} className="rotate-180" />
-          Stats
-        </button>
-        <h1 className="flex items-center gap-2 font-display text-2xl tracking-wide text-ink">
-          <Icon name="workout" className="text-world-ink" />
-          Workouts
-        </h1>
-      </header>
-
-      {history && (
-        <main className="flex flex-col gap-5 px-4">
-          {history.sessions === 0 ? (
-            <section className="rounded-card bg-surface p-5 text-center shadow-sm ring-1 ring-ink/10 dark:ring-0">
-              <h2 className="font-display text-xl tracking-wide text-ink">No workouts yet</h2>
-              <p className="mt-1 font-rounded text-sm font-semibold text-ink-muted">Log your first one from Today.</p>
-            </section>
-          ) : (
-            <>
-              <Summary history={history} />
-              <div>
-                {history.activities.map((activity, i) => (
-                  <ActivityCard
-                    key={activity.type}
-                    activity={activity}
-                    shade={history.activities.length > 1 ? i / (history.activities.length - 1) : 0}
-                    open={activity.type === open}
-                    onToggle={() => setChosen(activity.type === open ? null : activity.type)}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-          {history.untried.length > 0 && <Untried types={history.untried} />}
-        </main>
-      )}
-    </div>
+    <section aria-labelledby={headingId} className="flex flex-col gap-4">
+      <h2 id={headingId} className="flex items-center gap-2 px-1 font-rounded text-lg font-extrabold text-ink">
+        <Icon name="workout" className="shrink-0 text-world-ink" />
+        Workouts
+      </h2>
+      {history &&
+        (history.sessions === 0 ? (
+          <div className="rounded-card bg-surface p-5 text-center shadow-sm ring-1 ring-ink/10 dark:ring-0">
+            <h3 className="font-display text-xl tracking-wide text-ink">No workouts yet</h3>
+            <p className="mt-1 font-rounded text-sm font-semibold text-ink-muted">Log your first one from Today.</p>
+          </div>
+        ) : (
+          <>
+            <Summary history={history} />
+            <div>
+              {history.activities.map((activity, i) => (
+                <ActivityCard
+                  key={activity.type}
+                  activity={activity}
+                  shade={history.activities.length > 1 ? i / (history.activities.length - 1) : 0}
+                  open={activity.type === open}
+                  onToggle={() => setChosen(activity.type === open ? null : activity.type)}
+                />
+              ))}
+            </div>
+          </>
+        ))}
+      {history && history.untried.length > 0 && <Untried types={history.untried} />}
+    </section>
   )
 }
 
@@ -211,7 +193,7 @@ function ActivityCard({ activity, shade, open, onToggle }: ActivityCardProps) {
 function Untried({ types }: { types: readonly WorkoutType[] }) {
   return (
     <section>
-      <h2 className="px-1 font-rounded text-xs font-extrabold tracking-wide text-ink-muted uppercase">Not tried yet</h2>
+      <h3 className="px-1 font-rounded text-xs font-extrabold tracking-wide text-ink-muted uppercase">Not tried yet</h3>
       <ul aria-label="Not tried yet" className="mt-2 flex flex-wrap gap-2">
         {types.map((type) => (
           <li

@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Icon } from '../../components/icons/Icon'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
@@ -29,13 +29,16 @@ function bodySummary(measurement: Measurement): string {
     .join(' · ')
 }
 
-/** Weigh-ins: the latest weight and its change, a weight chart, and the full editable list (the chart's table view). */
+/** Weigh-ins, folded under their header: the latest weight and its change, a weight chart, and the full editable list (the chart's table view). */
 export function BodySection({ today }: BodySectionProps) {
   const measurements = useLiveQuery(() => measurementRepo.getAll(), [])
   const [editing, setEditing] = useState<Measurement | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [deleting, setDeleting] = useState<Measurement | null>(null)
   const [showAll, setShowAll] = useState(false)
+  // Folded until the player opens it; "+ Log" works either way.
+  const [open, setOpen] = useState(false)
+  const panelId = useId()
 
   const points: WeightPoint[] = (measurements ?? [])
     .filter((m): m is Measurement & { weight_kg: number } => typeof m.weight_kg === 'number')
@@ -52,72 +55,88 @@ export function BodySection({ today }: BodySectionProps) {
   return (
     <section className="rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="flex items-center gap-2 font-rounded text-lg font-extrabold text-ink">
-          <Icon name="scale" className="shrink-0 text-world-ink" />
-          Weight
+        <h2 className="min-w-0 flex-1">
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls={open ? panelId : undefined}
+            onClick={() => setOpen((value) => !value)}
+            className="flex min-h-touch w-full items-center gap-2 text-left font-rounded text-lg font-extrabold text-ink"
+          >
+            <Icon name="scale" className="shrink-0 text-world-ink" />
+            Weight
+            {!open && summary && (
+              <span className="text-sm font-bold text-ink-muted">{summary.latest.weight_kg.toFixed(1)} kg</span>
+            )}
+            <Icon name="chevron" size={18} className={`ml-auto shrink-0 text-ink-muted ${open ? '-rotate-90' : 'rotate-90'}`} />
+          </button>
         </h2>
         <Button variant="secondary" className="px-4 py-2" onClick={() => openForm(null)}>
           + Log
         </Button>
       </div>
 
-      {summary ? (
-        <p className="mt-2 font-rounded">
-          <span className="text-3xl font-extrabold text-ink">{summary.latest.weight_kg.toFixed(1)} kg</span>
-          {summary.changeKg !== undefined && summary.since && (
-            <span className="ml-2 text-sm font-bold text-ink-muted">
-              {formatChange(summary.changeKg)} since {formatDisplayDate(summary.since)}
-            </span>
-          )}
-        </p>
-      ) : (
-        <p className="mt-2 text-sm text-ink-muted">
-          No weigh-ins yet. Log your weight — and waist, chest, hips or arms if you like — to see your trend.
-        </p>
-      )}
-
-      {points.length >= 2 ? (
-        <WeightChart points={points} />
-      ) : (
-        summary && <p className="mt-2 text-sm text-ink-muted">Log another weigh-in to see your trend.</p>
-      )}
-
-      {rows.length > 0 && (
-        <ul className="mt-3 flex flex-col gap-2">
-          {rows.map((m) => (
-            <li key={m.id} className="flex items-center gap-2 rounded-2xl bg-canvas py-1 pr-1 pl-3">
-              <button
-                type="button"
-                onClick={() => openForm(m)}
-                className="min-h-touch flex-1 text-left"
-                aria-label={`Edit weigh-in of ${formatDisplayDate(m.date)}`}
-              >
-                <span className="block font-rounded font-bold text-ink">
-                  {m.weight_kg !== undefined ? `${m.weight_kg.toFixed(1)} kg` : '—'}
-                  <span className="ml-2 text-xs font-semibold text-ink-muted">{formatDisplayDate(m.date)}</span>
+      {open && (
+        <div id={panelId}>
+          {summary ? (
+            <p className="mt-2 font-rounded">
+              <span className="text-3xl font-extrabold text-ink">{summary.latest.weight_kg.toFixed(1)} kg</span>
+              {summary.changeKg !== undefined && summary.since && (
+                <span className="ml-2 text-sm font-bold text-ink-muted">
+                  {formatChange(summary.changeKg)} since {formatDisplayDate(summary.since)}
                 </span>
-                {bodySummary(m) && <span className="block text-xs text-ink-muted">{bodySummary(m)} cm</span>}
-              </button>
-              <button
-                type="button"
-                onClick={() => setDeleting(m)}
-                aria-label={`Delete weigh-in of ${formatDisplayDate(m.date)}`}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-ink-muted"
-              >
-                ✕
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-      {newestFirst.length > COLLAPSED_ROWS && (
-        <button
-          type="button"
-          onClick={() => setShowAll((v) => !v)}
-          className="mt-2 min-h-touch w-full rounded-xl font-rounded text-sm font-bold text-ink-muted"
-        >
-          {showAll ? 'Show fewer' : `Show all ${newestFirst.length}`}
-        </button>
+              )}
+            </p>
+          ) : (
+            <p className="mt-2 text-sm text-ink-muted">
+              No weigh-ins yet. Log your weight — and waist, chest, hips or arms if you like — to see your trend.
+            </p>
+          )}
+
+          {points.length >= 2 ? (
+            <WeightChart points={points} />
+          ) : (
+            summary && <p className="mt-2 text-sm text-ink-muted">Log another weigh-in to see your trend.</p>
+          )}
+
+          {rows.length > 0 && (
+            <ul className="mt-3 flex flex-col gap-2">
+              {rows.map((m) => (
+                <li key={m.id} className="flex items-center gap-2 rounded-2xl bg-canvas py-1 pr-1 pl-3">
+                  <button
+                    type="button"
+                    onClick={() => openForm(m)}
+                    className="min-h-touch flex-1 text-left"
+                    aria-label={`Edit weigh-in of ${formatDisplayDate(m.date)}`}
+                  >
+                    <span className="block font-rounded font-bold text-ink">
+                      {m.weight_kg !== undefined ? `${m.weight_kg.toFixed(1)} kg` : '—'}
+                      <span className="ml-2 text-xs font-semibold text-ink-muted">{formatDisplayDate(m.date)}</span>
+                    </span>
+                    {bodySummary(m) && <span className="block text-xs text-ink-muted">{bodySummary(m)} cm</span>}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeleting(m)}
+                    aria-label={`Delete weigh-in of ${formatDisplayDate(m.date)}`}
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-ink-muted"
+                  >
+                    ✕
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {newestFirst.length > COLLAPSED_ROWS && (
+            <button
+              type="button"
+              onClick={() => setShowAll((v) => !v)}
+              className="mt-2 min-h-touch w-full rounded-xl font-rounded text-sm font-bold text-ink-muted"
+            >
+              {showAll ? 'Show fewer' : `Show all ${newestFirst.length}`}
+            </button>
+          )}
+        </div>
       )}
 
       <MeasurementModal measurement={editing} open={formOpen} today={today} onClose={() => setFormOpen(false)} />

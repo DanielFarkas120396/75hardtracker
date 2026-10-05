@@ -1,6 +1,6 @@
 # Workout history — design
 
-Date: 2026-10-05 · Status: **built**, phone check pending (PR into `main`).
+Date: 2026-10-05 · Status: **built**, phone check pending. First a page (PR #35); then, at the owner's request, a section of Stats under Weight (see "Follow-up").
 
 ## Why
 
@@ -10,7 +10,7 @@ The owner wants to follow the sport sessions done during the challenge, with a l
 
 | Topic | Decision |
 |---|---|
-| Where | Stats: the "Training" tile opens a **Workouts** page, with a back button to Stats. No new tab. |
+| Where | Stats: a **Workouts** section right under Weight (it was first a page behind the Training tile). No new tab. |
 | Which sessions | The running attempt's, from Day 1 (late-logged days included). Past attempts are out of scope. |
 | Grouping | One card per activity practised, most sessions first; ties keep the app's list order. Activities never practised sit under the stack as small chips, "Not tried yet". |
 | Look | The screenshot's stack: rounded cards overlapping like folders, in shades of the workouts orange from the strongest (top) to the softest. The open card turns sky blue, its logo big and faint behind it. One card open at a time; the top one is open when the page opens, and tapping the open one closes it. |
@@ -22,11 +22,11 @@ The owner wants to follow the sport sessions done during the challenge, with a l
 | Data | `Workout.feel?: 1 \| 2 \| 3 \| 4 \| 5`, optional and unindexed: no Dexie version bump, and older workouts simply have no feel. Backups carry it; import checks it's 1–5, and that a workout's activity is one of the seven (they've never changed). |
 | Empty | No session yet: "No workouts yet", "Log your first one from Today.", and the seven logos under "Not tried yet". |
 
-## The Workouts page
+## The Workouts section
 
-`src/screens/Stats/WorkoutsPage.tsx`, opened from `StatsScreen` (page state, like Settings' pages: it scrolls to the top on open). Its parts, top to bottom:
+`src/screens/Stats/WorkoutsSection.tsx`, the last section of `StatsScreen`, under Weight. Its parts, top to bottom:
 
-1. **Header**: a back button ("Stats", chevron, `world-ink`) and the title "Workouts" in Lilita One with the workout icon.
+1. **Heading**: "Workouts" with the workout icon, like the Weight card's header.
 2. **Summary**: three tiles like the Stats tiles (surface, hairline ring): "11 sessions", "8h 55m of training", "7 outdoors". The time uses the Stats format ("8h 55m", "45 min"), now one shared helper.
 3. **The stack**: one `<section>` per activity, each overlapping the one above (`-mt-8`, the next card drawn over the previous one's bottom). A card's header is a `<button aria-expanded>` whose name reads "Weights, 3 sessions".
    - **Closed**: the logo (56 px, 1.5 px strokes) on the left; the name, the big number (Lilita One) and "sessions · 2h 25m" ("session · 45 min" for one); a chevron pointing down in the corner. Background: shade *i* of *n*, mixed from `stack-from` (top) to `stack-to` (bottom); text and logo in `on-stack`.
@@ -74,18 +74,26 @@ Late days use the same sheet, so they get both. The Workouts tile's quick-add sh
 
 ## Files
 
-- New: `src/logic/workoutHistory.ts`, `src/hooks/useWorkoutHistory.ts`, `src/content/activities.ts`, `src/components/MoodPicker.tsx`, `src/screens/Stats/WorkoutsPage.tsx`.
+- New: `src/logic/workoutHistory.ts`, `src/hooks/useWorkoutHistory.ts`, `src/content/activities.ts`, `src/components/MoodPicker.tsx`, `src/screens/Stats/WorkoutsSection.tsx`.
 - Changed: `src/components/icons/icons.tsx` (seven icons), `Icon.tsx` (`strokeWidth`), `src/db/types.ts`, `src/db/exportImport.ts`, `src/logic/types.ts`, `src/logic/constants.ts`, `src/screens/Today/WorkoutTask.tsx`, `src/screens/Today/DayNotesTask.tsx`, `src/screens/Stats/StatsScreen.tsx` and `StatTiles.tsx` (the Training tile as a button), `src/styles/index.css` (tokens), `src/dev/scenarios.ts`, README features.
 
 ## Testing
 
 - `workoutHistory.test.ts`: grouping, the order (sessions, then list order), newest first within an activity (day, then id), totals, outdoors, feel counts (only those used, Great first), untried activities, no sessions.
-- `WorkoutsPage.test.tsx`: from a seeded database, the summary, the first card open with its sessions, opening another closes the first (`aria-expanded`), tapping the open one closes it, the untried chips, the empty state, the back button.
-- `StatsScreen`: the Training tile opens the page, and back returns.
+- `WorkoutsSection.test.tsx`: from a seeded database, the summary, the first card open with its sessions, opening another closes the first (`aria-expanded`), tapping the open one closes it, the untried chips, the empty state.
+- `StatsScreen`: Weight starts folded and opens on tap; Workouts comes right after it; no streak or perfect-days tile.
 - `WorkoutTask.test.tsx`: picking a logo stores the type; picking a feel stores it, tapping it again clears it.
 - `exportImport.test.ts`: a workout's feel survives a backup round trip; an unknown activity or a feel of 9 is refused.
 - Contrast: the new tokens (above). Icons: the seven new ones through the existing `Icon` test.
 - On the phone: the page in light and dark, with the stack and the open card; the Today sheet's logos and feel; reduce motion.
+
+## Follow-up (2026-10-05, after PR #35)
+
+The owner asked for three changes to Stats:
+
+- **Weight starts folded.** Its header (scale icon, "Weight", the latest weight while folded, a chevron) is a button that opens the summary, the chart and the list. "+ Log" stays in the header and works while folded.
+- **Workouts moves into Stats**, right under Weight, as a section instead of a page. The Training tile is a plain tile again.
+- **The streak and perfect-days tiles go.** The three left (water, pages, training) sit in one row of three.
 
 ## Out of scope
 

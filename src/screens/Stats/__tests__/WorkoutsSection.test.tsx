@@ -1,11 +1,11 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { db } from '../../../db/db'
 import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
 import type { DayEntry, Workout } from '../../../db/types'
 import { addDaysISO } from '../../../lib/dates'
-import { WorkoutsPage } from '../WorkoutsPage'
+import { WorkoutsSection } from '../WorkoutsSection'
 
 const START = '2026-09-30'
 
@@ -33,7 +33,7 @@ async function seedAttempt(): Promise<number> {
   return challengeId
 }
 
-describe('WorkoutsPage', () => {
+describe('WorkoutsSection', () => {
   beforeAll(() => {
     MotionGlobalConfig.skipAnimations = true
   })
@@ -41,7 +41,7 @@ describe('WorkoutsPage', () => {
   beforeEach(freshDatabase)
 
   it('adds up the attempt and opens the most practised activity on its sessions, newest first', async () => {
-    render(<WorkoutsPage challengeId={await seedAttempt()} onBack={() => {}} />)
+    render(<WorkoutsSection challengeId={await seedAttempt()} />)
 
     const running = await screen.findByRole('button', { name: 'Running, 2 sessions' })
     expect(running).toHaveAttribute('aria-expanded', 'true')
@@ -66,7 +66,7 @@ describe('WorkoutsPage', () => {
   })
 
   it('opens one card at a time, and closes the open one when tapped', async () => {
-    render(<WorkoutsPage challengeId={await seedAttempt()} onBack={() => {}} />)
+    render(<WorkoutsSection challengeId={await seedAttempt()} />)
 
     const weights = await screen.findByRole('button', { name: 'Weights, 1 session' })
     fireEvent.click(weights)
@@ -79,7 +79,7 @@ describe('WorkoutsPage', () => {
   })
 
   it('lists the activities not tried yet', async () => {
-    render(<WorkoutsPage challengeId={await seedAttempt()} onBack={() => {}} />)
+    render(<WorkoutsSection challengeId={await seedAttempt()} />)
 
     const untried = await screen.findByRole('list', { name: 'Not tried yet' })
     expect(within(untried).getAllByRole('listitem').map((chip) => chip.textContent)).toEqual([
@@ -93,17 +93,9 @@ describe('WorkoutsPage', () => {
 
   it('with no workouts yet, says so', async () => {
     const challengeId = await addChallenge({ startDate: START, attemptNumber: 1, status: 'active' })
-    render(<WorkoutsPage challengeId={challengeId} onBack={() => {}} />)
+    render(<WorkoutsSection challengeId={challengeId} />)
 
     expect(await screen.findByRole('heading', { name: 'No workouts yet' })).toBeInTheDocument()
     expect(within(screen.getByRole('list', { name: 'Not tried yet' })).getAllByRole('listitem')).toHaveLength(7)
-  })
-
-  it('goes back to Stats', async () => {
-    const onBack = vi.fn()
-    render(<WorkoutsPage challengeId={await seedAttempt()} onBack={onBack} />)
-
-    fireEvent.click(await screen.findByRole('button', { name: 'Stats' }))
-    expect(onBack).toHaveBeenCalledOnce()
   })
 })
