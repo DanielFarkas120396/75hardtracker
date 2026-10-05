@@ -1,6 +1,6 @@
 # Challenge variants: 75 Strong, 75 Medium and 75 Soft (design)
 
-Date: 2026-09-26. Status: agreed with the owner, point by point.
+Date: 2026-09-26. Status: agreed with the owner, point by point; **built** (PRs #2–#4, merged into main on 2026-09-27). Colour palettes stayed out of scope; v2's world colours ([app look](2026-10-03-app-look-design.md)) answer that point instead.
 
 ## 1. Goal
 

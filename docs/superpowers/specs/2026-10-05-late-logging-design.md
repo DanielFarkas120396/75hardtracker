@@ -1,6 +1,6 @@
 # Late logging: design
 
-Date: 2026-10-05 · Status: approved in conversation. It goes into `v2`.
+Date: 2026-10-05 · Status: **built** (PR #22, merged into `v2`).
 
 ## Problem
 

@@ -1,6 +1,6 @@
 # App look: "your world everywhere" — design
 
-Date: 2026-10-03 · Status: approved in conversation, to be reviewed as a document.
+Date: 2026-10-03 · Status: **built**: all five parts merged into `v2` on 2026-10-03 (PRs #15–#19). Not yet in `main`. Each part's short plan is in `docs/superpowers/plans/2026-10-03-app-look-*.md`.
 Follows the Journey redesign (PR #14): the climb from hell to heaven now shapes the whole app's look.
 
 ## Decisions

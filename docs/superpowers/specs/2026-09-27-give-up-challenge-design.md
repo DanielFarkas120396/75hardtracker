@@ -1,6 +1,6 @@
 # Giving up a challenge (design)
 
-Approved by the owner on 2026-09-27: four confirmations, then a "You gave up" screen that starts the next challenge.
+Approved by the owner on 2026-09-27: four confirmations, then a "You gave up" screen that starts the next challenge. Status: **built** (PR #5, merged into main on 2026-09-27). In v2, the danger zone is a group of rows at the bottom of Settings, and "Give up this challenge" opens the same flow.
 
 ## 1. Goal
 
