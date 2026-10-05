@@ -13,7 +13,7 @@ vi.mock('../../db/badgeEvaluation', () => ({ loadBadgeEvaluation }))
 function gate(kind: 'active' | 'abandoned'): ChallengeGate {
   const today = todayISO()
   const challenge: Challenge = { id: 1, startDate: addDaysISO(today, -11), attemptNumber: 1, status: 'active' }
-  const base = { dayEntries: [], today, todayDayNumber: 12, streak: 11, missedDays: [], jokersLeft: 0 }
+  const base = { dayEntries: [], today, todayDayNumber: 12, streak: 11, missedDays: [], jokersLeft: 0, lateDayNumber: null, lateDayPending: false }
   return kind === 'active'
     ? { ...base, kind, challenge }
     : { ...base, kind, challenge: { ...challenge, status: 'abandoned', abandonedOn: today } }

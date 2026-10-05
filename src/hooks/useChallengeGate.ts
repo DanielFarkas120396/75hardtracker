@@ -5,9 +5,11 @@ import { dayEntryRepo } from '../db/repositories/dayEntryRepo'
 import type { Challenge, DayEntry } from '../db/types'
 import { dayNumberForDate } from '../lib/dates'
 import { isChallengeDay } from '../logic/days'
+import { GRACE_END_MIN, lateDayNumber } from '../logic/lateDay'
 import { resolveChallengeGate } from '../logic/restart'
 import { rulesFor } from '../logic/rulesets'
 import { calculateStreak } from '../logic/streak'
+import { useNow } from './useNow'
 
 export interface GateBase {
   challenge: Challenge
@@ -20,6 +22,10 @@ export interface GateBase {
   missedDays: number[]
   /** Jokers of the ruleset's allowance not yet used by a missed day. */
   jokersLeft: number
+  /** Yesterday, while it can still be logged (until noon; see lateDayNumber), done or not. */
+  lateDayNumber: number | null
+  /** Whether the late day is still unfinished: Today offers to finish it. */
+  lateDayPending: boolean
 }
 
 /**
@@ -44,6 +50,8 @@ export type ChallengeGate =
  * Day 75 is done. Returns `undefined` while loading.
  */
 export function useChallengeGate(today: string): ChallengeGate | undefined {
+  // The clock matters too: at noon, an unfinished yesterday turns into a missed day.
+  const nowMin = useNow()
   const snapshot = useLiveQuery(async () => {
     const challenge = await challengeRepo.getCurrent()
     if (!challenge) return null
@@ -56,7 +64,7 @@ export function useChallengeGate(today: string): ChallengeGate | undefined {
     if (needsBootstrap) void challengeRepo.bootstrapIfEmpty(today)
   }, [needsBootstrap, today])
 
-  const gate = snapshot ? resolveGate(snapshot.challenge, snapshot.dayEntries, today) : undefined
+  const gate = snapshot ? resolveGate(snapshot.challenge, snapshot.dayEntries, today, nowMin) : undefined
 
   const completedChallengeId =
     gate?.kind === 'completed' && gate.challenge.status === 'active' ? gate.challenge.id : undefined
@@ -67,8 +75,15 @@ export function useChallengeGate(today: string): ChallengeGate | undefined {
   return gate
 }
 
-export function resolveGate(challenge: Challenge, dayEntries: DayEntry[], today: string): ChallengeGate {
+/** `nowMin` is minutes since local midnight; left out, it's past noon (no late day). */
+export function resolveGate(
+  challenge: Challenge,
+  dayEntries: DayEntry[],
+  today: string,
+  nowMin: number = GRACE_END_MIN,
+): ChallengeGate {
   const todayDayNumber = dayNumberForDate(challenge.startDate, today)
+  const lateDay = challenge.status === 'active' ? lateDayNumber(todayDayNumber, nowMin) : null
   const summaries = dayEntries.map((e) => ({ dayNumber: e.dayNumber, completed: e.completed }))
   const rules = rulesFor(challenge)
   const resolution = resolveChallengeGate({
@@ -76,15 +91,18 @@ export function resolveGate(challenge: Challenge, dayEntries: DayEntry[], today:
     dayEntries: summaries,
     todayDayNumber,
     jokers: rules.jokers,
+    lateDay,
   })
   const base: GateBase = {
     challenge,
     dayEntries,
     today,
     todayDayNumber,
-    streak: calculateStreak(summaries, todayDayNumber),
+    streak: calculateStreak(summaries, todayDayNumber, lateDay),
     missedDays: resolution.missed,
     jokersLeft: Math.max(0, rules.jokers - resolution.missed.length),
+    lateDayNumber: lateDay,
+    lateDayPending: lateDay !== null && !summaries.some((e) => e.dayNumber === lateDay && e.completed),
   }
 
   if (resolution.kind === 'needsRestart') {
