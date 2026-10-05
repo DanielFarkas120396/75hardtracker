@@ -11,6 +11,7 @@ export function DoneBadge({ pop, className = '' }: DoneBadgeProps) {
   const reduceMotion = useReducedMotion()
   return (
     <motion.span
+      aria-hidden="true"
       initial={pop && !reduceMotion ? { scale: 0 } : false}
       animate={{ scale: 1 }}
       transition={{ type: 'spring', stiffness: 500, damping: 14 }}
