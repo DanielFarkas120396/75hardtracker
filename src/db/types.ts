@@ -1,5 +1,5 @@
 import type { ChallengeVariant } from '../logic/rulesets'
-import type { TaskId, WorkoutType } from '../logic/types'
+import type { Mood, TaskId, WorkoutType } from '../logic/types'
 
 export type { WorkoutType }
 
@@ -31,7 +31,7 @@ export interface DayEntry {
   noAlcohol: boolean
   photoId?: number
   notes?: string
-  mood?: 1 | 2 | 3 | 4 | 5
+  mood?: Mood
   /** Today's plan: when each task will be done, as local "HH:mm". Read by the Today duck only. */
   plans?: Partial<Record<TaskId, string>>
   /** Minutes each planned task was estimated to need when its plan was saved; fixes the plan's window so later progress can't shrink it. */
@@ -47,8 +47,8 @@ export interface Workout {
   type: WorkoutType
   durationMin: number
   isOutdoor: boolean
-  /** How the session felt, on the five moods of "How was today?" (1 Rough … 5 Great). Unset when not given. */
-  feel?: 1 | 2 | 3 | 4 | 5
+  /** How the session felt, on the five moods of "How was today?". Unset when not given. */
+  feel?: Mood
 }
 
 export interface Book {

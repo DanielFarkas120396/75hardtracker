@@ -128,7 +128,10 @@ function WorkoutRow({ workout }: { workout: Workout }) {
         activeColor="blue"
       />
 
-      <p className="font-rounded text-sm font-bold text-ink-muted">How did it feel?</p>
+      {/* The picker's group carries this label for screen readers. */}
+      <p aria-hidden="true" className="font-rounded text-sm font-bold text-ink-muted">
+        How did it feel?
+      </p>
       <MoodPicker
         label="How did it feel?"
         value={workout.feel}
@@ -143,7 +146,7 @@ function WorkoutRow({ workout }: { workout: Workout }) {
 /** The seven activities as logos; the chosen one is ringed in the workouts' orange. */
 function ActivityPicker({ value, onPick }: { value: WorkoutType; onPick: (type: WorkoutType) => void }) {
   return (
-    <div role="group" aria-label="Activity" className="grid grid-cols-7 gap-1">
+    <div role="group" aria-label="Activity" className="grid grid-cols-7 gap-0.5">
       {WORKOUT_TYPES.map((type) => {
         const selected = type === value
         return (

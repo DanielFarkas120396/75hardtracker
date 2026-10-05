@@ -8,6 +8,9 @@ export type TaskId = 'workouts' | 'diet' | 'water' | 'reading' | 'photo'
 /** What a workout was; the names double as the English labels. */
 export type WorkoutType = 'Running' | 'Walking' | 'Weights' | 'Yoga' | 'Cycling' | 'Swimming' | 'Other'
 
+/** The five moods of "How was today?", 1 Rough … 5 Great. A workout's feel uses them too. */
+export type Mood = 1 | 2 | 3 | 4 | 5
+
 export interface WorkoutTaskData {
   durationMin: number
   isOutdoor: boolean

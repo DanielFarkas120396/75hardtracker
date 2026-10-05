@@ -1,6 +1,6 @@
 # Workout history — design
 
-Date: 2026-10-05 · Status: **built** (PR into `main`).
+Date: 2026-10-05 · Status: **built**, phone check pending (PR into `main`).
 
 ## Why
 

@@ -1,14 +1,14 @@
 import { useId, useState } from 'react'
 import { Icon } from '../../components/icons/Icon'
 import { ACTIVITY_ICONS, formatMinutes } from '../../content/activities'
-import { MOODS } from '../../content/moods'
+import { MOODS, type Mood } from '../../content/moods'
 import { useWorkoutHistory } from '../../hooks/useWorkoutHistory'
 import { formatShortDay } from '../../lib/dates'
 import type { WorkoutType } from '../../logic/types'
-import type { ActivityHistory, Feel, WorkoutHistory } from '../../logic/workoutHistory'
+import type { ActivityHistory, WorkoutHistory } from '../../logic/workoutHistory'
 
 const sessionsWord = (count: number) => (count === 1 ? 'session' : 'sessions')
-const moodFor = (feel: Feel) => MOODS.find((mood) => mood.value === feel)!
+const moodFor = (feel: Mood) => MOODS.find((mood) => mood.value === feel)!
 
 /** The translucent wash for chips and the session list on the open card. */
 const WASH = 'bg-white/55 dark:bg-black/25'
@@ -129,7 +129,7 @@ function ActivityCard({ activity, shade, open, onToggle }: ActivityCardProps) {
       <button
         type="button"
         aria-expanded={open}
-        aria-controls={panelId}
+        aria-controls={open ? panelId : undefined}
         aria-label={`${type}, ${count} ${sessionsWord(count)}`}
         onClick={onToggle}
         className={`relative flex w-full items-center gap-4 px-5 pt-5 text-left ${open ? 'pb-2' : 'pb-12'}`}

@@ -1,8 +1,5 @@
 import { WORKOUT_TYPES } from './constants'
-import type { WorkoutType } from './types'
-
-/** How a session felt, on the five moods of "How was today?" (1 Rough … 5 Great). */
-export type Feel = 1 | 2 | 3 | 4 | 5
+import type { Mood, WorkoutType } from './types'
 
 /** One logged workout, with the day it belongs to. */
 export interface WorkoutSession {
@@ -13,7 +10,7 @@ export interface WorkoutSession {
   type: WorkoutType
   durationMin: number
   isOutdoor: boolean
-  feel?: Feel
+  feel?: Mood
 }
 
 /** Everything done in one activity. */
@@ -24,7 +21,7 @@ export interface ActivityHistory {
   minutes: number
   outdoors: number
   /** How the sessions felt, best first; only the feels given at least once. */
-  feels: { feel: Feel; count: number }[]
+  feels: { feel: Mood; count: number }[]
 }
 
 /** An attempt's workouts, as the Workouts page shows them. */
@@ -38,7 +35,7 @@ export interface WorkoutHistory {
   untried: WorkoutType[]
 }
 
-const FEELS_BEST_FIRST: readonly Feel[] = [5, 4, 3, 2, 1]
+const FEELS_BEST_FIRST: readonly Mood[] = [5, 4, 3, 2, 1]
 
 const totalMinutes = (sessions: readonly WorkoutSession[]) => sessions.reduce((sum, s) => sum + s.durationMin, 0)
 const outdoorCount = (sessions: readonly WorkoutSession[]) => sessions.filter((s) => s.isOutdoor).length

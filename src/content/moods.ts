@@ -1,6 +1,6 @@
-import type { DayEntry } from '../db/types'
+import type { Mood } from '../logic/types'
 
-export type Mood = NonNullable<DayEntry['mood']>
+export type { Mood }
 
 /** The five moods of "How was today?", worst to best. */
 export const MOODS: { value: Mood; emoji: string; label: string }[] = [
