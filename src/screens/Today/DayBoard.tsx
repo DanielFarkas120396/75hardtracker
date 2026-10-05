@@ -1,6 +1,8 @@
 import type { BoardTask } from '../../content/taskStatus'
 import { bookRepo } from '../../db/repositories/bookRepo'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
+import { workoutRepo } from '../../db/repositories/workoutRepo'
+import { MAX_WORKOUTS } from '../../logic/constants'
 import type { Book, DayEntry } from '../../db/types'
 import type { Ruleset } from '../../logic/rulesets'
 import type { DayTaskData, TaskId } from '../../logic/types'
@@ -23,14 +25,25 @@ interface DayBoardProps {
 }
 
 /**
- * A day's TaskBoard with its shortcuts wired up: a glass of water, a page,
- * and the camera (or the library, when only that's allowed). Lives under
+ * A day's TaskBoard with its shortcuts wired up: a workout, a glass of water,
+ * a page, and the camera (or the library, when only that's allowed). Lives under
  * PhotoCapture, which owns the camera.
  */
 export function DayBoard({ entry, data, completion, rules, currentBook, photo, socialToday, onOpen }: DayBoardProps) {
   const capture = usePhotoCapture()
 
   const quickActions: Partial<Record<BoardTask, QuickAction>> = {
+    // The same default session the sheet adds; the sheet fine-tunes it.
+    workouts:
+      data.workouts.length < MAX_WORKOUTS
+        ? {
+            label: `Add a ${rules.minWorkoutMin} min workout`,
+            icon: 'plus',
+            text: `${rules.minWorkoutMin} min`,
+            onPress: () =>
+              void workoutRepo.add({ dayEntryId: entry.id, type: 'Running', durationMin: rules.minWorkoutMin, isOutdoor: false }),
+          }
+        : undefined,
     water: {
       label: `Add ${QUICK_WATER_ML} ml`,
       icon: 'plus',
