@@ -113,6 +113,7 @@ export function LateDayView({ challenge, dayEntries, dayNumber, date, onBack }: 
             rules={rules}
             currentBook={currentBook}
             photo={photo?.blob}
+            socialToday={socialThatDay}
             onOpen={setOpenTask}
           />
         </main>

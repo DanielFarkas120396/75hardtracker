@@ -4,6 +4,7 @@ import { dietToggleLabel } from '../../content/variants'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import type { DayEntry } from '../../db/types'
 import type { Ruleset } from '../../logic/rulesets'
+import { NoDrinkEmoji } from './DietSwitches'
 
 interface DietTaskProps {
   entry: DayEntry
@@ -43,15 +44,5 @@ export function DietTask({ entry, rules, socialToday, canPlanSocial, onPlanSocia
         </Button>
       )}
     </div>
-  )
-}
-
-/** A glass with the "no" sign over it: there's no such emoji, so two are stacked. */
-function NoDrinkEmoji() {
-  return (
-    <span className="relative inline-block">
-      🍷
-      <span className="absolute inset-0">🚫</span>
-    </span>
   )
 }

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { db } from '../../../db/db'
@@ -71,8 +71,10 @@ describe('TodayScreen', () => {
     await setup({ variant: 'hard', todayDayNumber: 3, socialDays: [3] })
 
     fireEvent.click(await screen.findByRole('button', { name: /^Diet,/ }))
-    expect(await screen.findByRole('switch', { name: 'No alcohol' })).toBeInTheDocument()
+    const sheet = await screen.findByRole('dialog', { name: 'Diet' })
+    expect(within(sheet).getByRole('switch', { name: 'No alcohol' })).toBeInTheDocument()
     expect(screen.queryByText('🥂 Social occasion today — a drink is allowed.')).not.toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: /Social occasion today/ })).not.toBeInTheDocument()
   })
 
   it('Hard on Day 3: names the attempt, and offers no joker, recovery or social controls', async () => {
@@ -92,7 +94,7 @@ describe('TodayScreen', () => {
     expect(screen.queryByRole('button', { name: '🥂 Plan a social occasion' })).not.toBeInTheDocument()
   })
 
-  it('Medium on Day 1: shows the joker chip, and the diet tile opens the social sheet in one tap', async () => {
+  it('Medium on Day 1: shows the joker chip, and the hero opens the social sheet in one tap', async () => {
     await setup({ variant: 'medium', todayDayNumber: 1, jokersLeft: 1 })
 
     expect(await screen.findByText('1 joker left')).toBeInTheDocument()
@@ -108,8 +110,21 @@ describe('TodayScreen', () => {
     await setup({ variant: 'strong', todayDayNumber: 3, socialDays: [3] })
 
     expect(await screen.findByRole('button', { name: 'Diet, 1 to tick' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Social occasion today — a drink is allowed' })).toBeInTheDocument()
+    expect(screen.queryByRole('switch', { name: 'No alcohol' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Diet, 1 to tick' }))
     expect(await screen.findByText('🥂 Social occasion today — a drink is allowed.')).toBeInTheDocument()
+  })
+
+  it('ticks the diet and the alcohol straight from the tile', async () => {
+    const { challenge, today } = await setup({ variant: 'hard', todayDayNumber: 3 })
+    const entry = () => dayEntryRepo.getOrCreate({ challengeId: challenge.id, dayNumber: 3, date: today })
+
+    fireEvent.click(await screen.findByRole('switch', { name: 'I followed my diet' }))
+    await waitFor(async () => expect((await entry()).dietFollowed).toBe(true))
+
+    fireEvent.click(screen.getByRole('switch', { name: 'No alcohol' }))
+    await waitFor(async () => expect((await entry()).noAlcohol).toBe(true))
   })
 
   it('keeps the reason in view', async () => {

@@ -149,12 +149,6 @@ export const ICONS = {
       <path d="M12 14V3.5M8.5 7L12 3.5 15.5 7" />
     </>
   ),
-  social: (
-    <>
-      <path d="M8.5 3h7l-.8 7.5a2.7 2.7 0 0 1-5.4 0z" {...SOFT} />
-      <path d="M12 13.2V19M8.5 19h7" />
-    </>
-  ),
   plus: <path d="M12 5v14M5 12h14" />,
   minus: <path d="M5 12h14" />,
   close: <path d="M6 6l12 12M18 6L6 18" />,

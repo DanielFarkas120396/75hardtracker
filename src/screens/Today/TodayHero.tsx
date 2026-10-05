@@ -17,6 +17,8 @@ interface TodayHeroProps {
   jokersLeft: number | undefined
   /** The duck, in the top-left corner; his bubble floats over the summary. */
   duck?: ReactNode
+  /** A small control under the duck: the social occasion button. */
+  social?: ReactNode
   /** A small control under the ring: the plan button. */
   action?: ReactNode
 }
@@ -27,13 +29,26 @@ interface TodayHeroProps {
  * jokers, where today is in its world, and the player's reason; the ring
  * of tasks done on the right.
  */
-export function TodayHero({ attemptLine, dayNumber, completedCount, taskCount, streak, jokersLeft, duck, action }: TodayHeroProps) {
+export function TodayHero({
+  attemptLine,
+  dayNumber,
+  completedCount,
+  taskCount,
+  streak,
+  jokersLeft,
+  duck,
+  social,
+  action,
+}: TodayHeroProps) {
   const profile = useProfile()
 
   return (
     <section className="relative mx-4 mt-3 mb-3 rounded-card bg-world-soft px-3 py-3">
       <div className="flex items-center gap-3">
-        {duck}
+        <div className="flex shrink-0 flex-col items-center gap-1">
+          {duck}
+          {social}
+        </div>
         <div className="min-w-0 flex-1">
           <h1 className="font-display leading-none tracking-wide">
             <span className="text-4xl text-world-ink">Day {dayNumber}</span>{' '}
