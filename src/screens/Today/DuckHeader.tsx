@@ -89,12 +89,14 @@ export function DuckHeader({ menace, missing, completion, dayNumber, announcemen
     const id = setInterval(() => setTick((n) => n + 1), LINE_EVERY_MS)
     return () => clearInterval(id)
   }, [])
-  const [visible, setVisible] = useState(true)
+  // A showing is keyed by its line and tick; the timer hides that one, and a new key shows again.
+  const showing = `${tick}:${line}`
+  const [hidden, setHidden] = useState<string>()
+  const visible = hidden !== showing
   useEffect(() => {
-    setVisible(true)
-    const timer = setTimeout(() => setVisible(false), LINE_VISIBLE_MS)
+    const timer = setTimeout(() => setHidden(showing), LINE_VISIBLE_MS)
     return () => clearTimeout(timer)
-  }, [line, tick])
+  }, [showing])
 
   const poke = () => {
     const result = registerPoke(pokes.current, performance.now())
