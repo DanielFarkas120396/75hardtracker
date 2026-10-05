@@ -11,7 +11,7 @@ import { useNow } from '../../hooks/useNow'
 import { useProfile } from '../../hooks/useProfile'
 import { useTodayEntry } from '../../hooks/useTodayEntry'
 import { useWorkoutsForEntry } from '../../hooks/useWorkoutsForEntry'
-import { dateForDayNumber, formatWeekday } from '../../lib/dates'
+import { addDaysISO, dateForDayNumber, formatWeekday } from '../../lib/dates'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { TASK_IDS } from '../../logic/dayCompletion'
 import { isChallengeDay } from '../../logic/days'
@@ -20,6 +20,7 @@ import { isStartDateEditable } from '../../logic/startDate'
 import { DayNotesCard } from './DayNotesCard'
 import { DietCard } from './DietCard'
 import { DuckHeader, type DuckAnnouncement } from './DuckHeader'
+import { LateDayCard, LateDayView } from './LateDay'
 import { MenaceAtmosphere } from './MenaceAtmosphere'
 import { PhotoCard } from './PhotoCard'
 import { PlanSheet } from './PlanSheet'
@@ -40,14 +41,32 @@ interface TodayScreenProps {
   /** Open the photo card's camera on arrival (from the Gallery), then call onCameraOpened. */
   openCamera?: boolean
   onCameraOpened?: () => void
+  /** Yesterday, while it can still be finished (until noon) and isn't yet. */
+  pendingLateDay?: number | null
 }
 
 export function TodayScreen(props: TodayScreenProps) {
+  const [lateOpen, setLateOpen] = useState(false)
+  const late = props.pendingLateDay ?? null
+
+  // The morning after Day 75 there's no today to show: only the last day to finish.
+  if (late !== null && (lateOpen || !isChallengeDay(props.todayDayNumber))) {
+    return (
+      <LateDayView
+        key={late}
+        challenge={props.challenge}
+        dayEntries={props.dayEntries}
+        dayNumber={late}
+        date={addDaysISO(props.today, -1)}
+        onBack={isChallengeDay(props.todayDayNumber) ? () => setLateOpen(false) : undefined}
+      />
+    )
+  }
   if (!isChallengeDay(props.todayDayNumber)) {
     return <PreStartView challenge={props.challenge} todayDayNumber={props.todayDayNumber} today={props.today} />
   }
   // Keyed by day: the lunges, the plan sheet and the announcement all belong to one day.
-  return <TodayTasks key={props.todayDayNumber} {...props} />
+  return <TodayTasks key={props.todayDayNumber} {...props} onOpenLateDay={() => setLateOpen(true)} />
 }
 
 function TodayTasks({
@@ -59,7 +78,9 @@ function TodayTasks({
   jokersLeft,
   openCamera,
   onCameraOpened,
-}: TodayScreenProps) {
+  pendingLateDay,
+  onOpenLateDay,
+}: TodayScreenProps & { onOpenLateDay: () => void }) {
   const rules = rulesFor(challenge)
   const entry = useTodayEntry({ challengeId: challenge.id, dayNumber: todayDayNumber, today, dayEntries })
   const workouts = useWorkoutsForEntry(entry?.id)
@@ -100,6 +121,7 @@ function TodayTasks({
           xp={xp}
           jokersLeft={rules.jokers > 0 ? jokersLeft : undefined}
         />
+        {pendingLateDay != null && <LateDayCard dayNumber={pendingLateDay} onOpen={onOpenLateDay} />}
         <BackupReminderBanner />
 
         {isStartDateEditable(todayDayNumber) && (

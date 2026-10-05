@@ -120,6 +120,7 @@ function MainApp({ today }: { today: string }) {
                 todayDayNumber={gate.todayDayNumber}
                 streak={gate.streak}
                 jokersLeft={gate.jokersLeft}
+                pendingLateDay={gate.lateDayPending ? gate.lateDayNumber : null}
                 openCamera={cameraRequested}
                 onCameraOpened={() => setCameraRequested(false)}
               />

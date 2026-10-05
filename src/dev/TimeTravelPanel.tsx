@@ -13,8 +13,8 @@ export function TimeTravelPanel() {
       <div className="mt-3 grid grid-cols-2 gap-2">
         {TIME_TRAVEL_STOPS.map((stop) => (
           <a
-            key={stop.day}
-            href={timeTravelUrl(stop.day)}
+            key={`${stop.day}${stop.late ? '-late' : ''}`}
+            href={timeTravelUrl(stop.day, stop.late)}
             className="flex min-h-touch flex-col justify-center rounded-2xl bg-world-soft px-3 py-2 font-rounded text-world-ink"
           >
             <span className="font-display text-lg leading-none tracking-wide">
