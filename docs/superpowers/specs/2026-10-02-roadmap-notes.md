@@ -31,7 +31,6 @@ The audience for now is **1–5 friends and family**. At that size, a server, ac
 
 - **Security headers on Vercel** (Content-Security-Policy and similar): cheap, to do when Vercel is back.
 - **Imported backups:** import already validates and cleans files (`src/db/exportImport.ts`, `src/db/normalize.ts`), and a protected file can't be altered without failing. A deliberately broken file hasn't been tried by hand.
-- **Component tests** for the backup sheet and the restore buttons.
 
 ## Known limit: reminders
 
