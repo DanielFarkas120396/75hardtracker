@@ -77,6 +77,13 @@
   --radius-xl2: 1.25rem;
   --radius-card: 1.5rem;
 
+  /* The Workouts page: the stack of activity cards (strongest at the top) and the open card. */
+  --color-stack-from: #ff8a3d;
+  --color-stack-to: #ffcfb0;
+  --color-on-stack: #3d1a05;
+  --color-open-card: #38b6ff;
+  --color-on-open-card: #08324f;
+
   --spacing-touch: 3rem;
 }
 
@@ -107,6 +114,12 @@
   --color-danger-ink: #ff6b70;
 
   --color-chart-grid: #30383b;
+
+  --color-stack-from: #a9461a;
+  --color-stack-to: #4f2819;
+  --color-on-stack: #fff1e6;
+  --color-open-card: #0b5d91;
+  --color-on-open-card: #e8f6ff;
 }
 
 /* The world you're in (data-world on <html>, set by useWorldTheme) colours the app. An element can
