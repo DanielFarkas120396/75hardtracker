@@ -16,4 +16,9 @@ describe('Icon', () => {
     render(<Icon name="water" label="Water" />)
     expect(screen.getByRole('img', { name: 'Water' })).toBeInTheDocument()
   })
+
+  it('draws thinner lines when asked, for the big drawings', () => {
+    const { container } = render(<Icon name="cycling" size={220} strokeWidth={1} />)
+    expect(container.querySelector('svg')).toHaveAttribute('stroke-width', '1')
+  })
 })

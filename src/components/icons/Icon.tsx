@@ -3,12 +3,14 @@ import { ICONS, type IconName } from './icons'
 interface IconProps {
   name: IconName
   size?: number
+  /** Line weight on the 24 px grid; thinner suits the big drawings. */
+  strokeWidth?: number
   /** Announced to screen readers; without one the icon is decorative and hidden. */
   label?: string
   className?: string
 }
 
-export function Icon({ name, size = 24, label, className }: IconProps) {
+export function Icon({ name, size = 24, strokeWidth = 2, label, className }: IconProps) {
   return (
     <svg
       width={size}
@@ -16,7 +18,7 @@ export function Icon({ name, size = 24, label, className }: IconProps) {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={2}
+      strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
