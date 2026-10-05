@@ -1,9 +1,11 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { db } from '../../../db/db'
 import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
 import { dayEntryRepo } from '../../../db/repositories/dayEntryRepo'
+import { workoutRepo } from '../../../db/repositories/workoutRepo'
+import type { Workout } from '../../../db/types'
 import { todayISO } from '../../../lib/dates'
 import { RULESETS } from '../../../logic/rulesets'
 import { WorkoutTask } from '../WorkoutTask'
@@ -132,5 +134,54 @@ describe('WorkoutTask', () => {
     expect(screen.queryByRole('button', { name: 'Take my recovery day' })).not.toBeInTheDocument()
     expect(screen.queryByText(/was this week's recovery day/)).not.toBeInTheDocument()
     expect(screen.queryByText('Recovery day ✓')).not.toBeInTheDocument()
+  })
+
+  async function dayWithOneWorkout(workout: Partial<Workout> = {}) {
+    const challengeId = await addChallenge({ startDate: todayISO(), attemptNumber: 1, status: 'active' })
+    const entry = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 1, date: todayISO() })
+    const id = await workoutRepo.add({ dayEntryId: entry.id, type: 'Running', durationMin: 45, isOutdoor: true, ...workout })
+    return { entryId: entry.id, id }
+  }
+
+  const renderTask = async (entryId: number, id: number) =>
+    render(
+      <WorkoutTask
+        dayEntryId={entryId}
+        workouts={[(await db.workouts.get(id))!]}
+        complete={false}
+        rules={RULESETS.hard}
+        restDay={false}
+        weekRestDay={undefined}
+      />,
+    )
+
+  it('picks the activity by its logo', async () => {
+    const { entryId, id } = await dayWithOneWorkout()
+    await renderTask(entryId, id)
+
+    expect(screen.getByRole('button', { name: 'Running' })).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(screen.getByRole('button', { name: 'Cycling' }))
+
+    await waitFor(async () => expect((await db.workouts.get(id))?.type).toBe('Cycling'))
+  })
+
+  it('notes how the session felt', async () => {
+    const { entryId, id } = await dayWithOneWorkout()
+    await renderTask(entryId, id)
+
+    fireEvent.click(within(screen.getByRole('group', { name: 'How did it feel?' })).getByRole('button', { name: 'Good' }))
+
+    await waitFor(async () => expect((await db.workouts.get(id))?.feel).toBe(4))
+  })
+
+  it('clears the feel when the chosen mood is tapped again', async () => {
+    const { entryId, id } = await dayWithOneWorkout({ feel: 4 })
+    await renderTask(entryId, id)
+
+    const good = within(screen.getByRole('group', { name: 'How did it feel?' })).getByRole('button', { name: 'Good' })
+    expect(good).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(good)
+
+    await waitFor(async () => expect((await db.workouts.get(id))?.feel).toBeUndefined())
   })
 })

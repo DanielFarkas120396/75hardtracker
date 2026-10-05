@@ -160,6 +160,16 @@ describe('export → reset → import', () => {
       abandonedOn: challenge.startDate,
     })
   })
+
+  it('keeps how a workout felt through a backup', async () => {
+    await seedEverything()
+    const [workout] = await db.workouts.toArray()
+    await db.workouts.update(workout.id, { feel: 4 })
+
+    await roundTrip()
+
+    expect((await db.workouts.get(workout.id))?.feel).toBe(4)
+  })
 })
 
 describe('the Face ID lock and backups', () => {
@@ -259,6 +269,15 @@ describe('validateExportPayload', () => {
     for (const planEstimates of [{ naps: 5 }, { reading: -1 }]) {
       const payload = structuredClone(base)
       ;(payload.dayEntries as Record<string, unknown>[])[0].planEstimates = planEstimates
+      expect(validateExportPayload(payload).ok).toBe(false)
+    }
+  })
+
+  it('rejects a workout of an unknown activity, or a feel outside the five moods', async () => {
+    const base = await validPayload()
+    for (const change of [{ type: 'Boxing' }, { feel: 9 }, { feel: 'great' }]) {
+      const payload = structuredClone(base)
+      Object.assign((payload.workouts as Record<string, unknown>[])[0], change)
       expect(validateExportPayload(payload).ok).toBe(false)
     }
   })

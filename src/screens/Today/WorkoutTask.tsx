@@ -1,12 +1,15 @@
 import { useState } from 'react'
+import { MoodPicker } from '../../components/MoodPicker'
 import { Button } from '../../components/ui/Button'
 import { Stepper } from '../../components/ui/Stepper'
 import { Toggle } from '../../components/ui/Toggle'
+import type { Mood } from '../../content/moods'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import { workoutRepo } from '../../db/repositories/workoutRepo'
-import { WORKOUT_TYPES, type Workout, type WorkoutType } from '../../db/types'
+import type { Workout } from '../../db/types'
 import { MAX_WORKOUTS } from '../../logic/constants'
 import type { Ruleset } from '../../logic/rulesets'
+import { ActivityPicker } from './ActivityPicker'
 
 interface WorkoutTaskProps {
   dayEntryId: number
@@ -88,20 +91,14 @@ export function WorkoutTask({ dayEntryId, workouts, complete, rules, restDay, we
 }
 
 function WorkoutRow({ workout }: { workout: Workout }) {
+  const setFeel = (feel: Mood) => {
+    void workoutRepo.update(workout.id, { feel: workout.feel === feel ? undefined : feel })
+  }
+
   return (
     <div className="flex flex-col gap-2 rounded-2xl bg-canvas p-3">
       <div className="flex items-center justify-between gap-2">
-        <select
-          value={workout.type}
-          onChange={(e) => void workoutRepo.update(workout.id, { type: e.target.value as WorkoutType })}
-          className="min-h-touch flex-1 rounded-xl bg-surface px-3 font-rounded font-bold text-ink"
-        >
-          {WORKOUT_TYPES.map((type) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
-        </select>
+        <p className="font-rounded text-lg font-extrabold text-ink">{workout.type}</p>
         <button
           type="button"
           onClick={() => void workoutRepo.remove(workout.id)}
@@ -111,6 +108,12 @@ function WorkoutRow({ workout }: { workout: Workout }) {
           ✕
         </button>
       </div>
+
+      <ActivityPicker
+        value={workout.type}
+        onPick={(type) => void workoutRepo.update(workout.id, { type })}
+        idleClassName="bg-surface"
+      />
 
       <Stepper
         value={workout.durationMin}
@@ -126,6 +129,18 @@ function WorkoutRow({ workout }: { workout: Workout }) {
         onChange={(checked) => void workoutRepo.update(workout.id, { isOutdoor: checked })}
         label={workout.isOutdoor ? 'Outdoor' : 'Indoor'}
         activeColor="blue"
+      />
+
+      {/* The picker's group carries this label for screen readers. */}
+      <p aria-hidden="true" className="font-rounded text-sm font-bold text-ink-muted">
+        How did it feel?
+      </p>
+      <MoodPicker
+        label="How did it feel?"
+        value={workout.feel}
+        onPick={setFeel}
+        selectedClassName="bg-orange-light ring-2 ring-orange-ink"
+        idleClassName="bg-surface"
       />
     </div>
   )

@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
+import { MoodPicker } from '../../components/MoodPicker'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
 import { Stepper } from '../../components/ui/Stepper'
 import { Toggle } from '../../components/ui/Toggle'
+import type { Mood } from '../../content/moods'
 import { workoutRepo } from '../../db/repositories/workoutRepo'
-import { WORKOUT_TYPES, type WorkoutType } from '../../db/types'
+import type { WorkoutType } from '../../db/types'
 import type { Ruleset } from '../../logic/rulesets'
+import { ActivityPicker } from './ActivityPicker'
 
 const MAX_MIN = 300
 
@@ -17,7 +20,7 @@ interface AddWorkoutSheetProps {
   onClose: () => void
 }
 
-/** The Workouts tile's shortcut: a small sheet asking the activity and the length, then saving the session. */
+/** The Workouts tile's shortcut: a small sheet asking the activity, the length and how it felt, then saving the session. */
 export function AddWorkoutSheet({ open, dayEntryId, rules, onClose }: AddWorkoutSheetProps) {
   // Portalled: the board sits in a stacking context under the tab bar, and the sheet must cover it.
   return createPortal(
@@ -33,9 +36,10 @@ function AddWorkoutForm({ dayEntryId, rules, onClose }: Omit<AddWorkoutSheetProp
   const [type, setType] = useState<WorkoutType>('Running')
   const [durationMin, setDurationMin] = useState(rules.minWorkoutMin)
   const [isOutdoor, setIsOutdoor] = useState(false)
+  const [feel, setFeel] = useState<Mood | undefined>(undefined)
 
   const save = async () => {
-    await workoutRepo.add({ dayEntryId, type, durationMin, isOutdoor })
+    await workoutRepo.add({ dayEntryId, type, durationMin, isOutdoor, ...(feel ? { feel } : {}) })
     onClose()
   }
 
@@ -45,18 +49,10 @@ function AddWorkoutForm({ dayEntryId, rules, onClose }: Omit<AddWorkoutSheetProp
         Add workout
       </h2>
       <div className="mt-3 flex flex-col gap-3">
-        <select
-          value={type}
-          onChange={(e) => setType(e.target.value as WorkoutType)}
-          aria-label="Activity"
-          className="min-h-touch w-full rounded-xl bg-canvas px-3 font-rounded font-bold text-ink"
-        >
-          {WORKOUT_TYPES.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
+        <div className="flex flex-col gap-1.5">
+          <p className="font-rounded font-extrabold text-ink">{type}</p>
+          <ActivityPicker value={type} onPick={setType} />
+        </div>
         <div className="flex justify-center">
           <Stepper
             value={durationMin}
@@ -68,6 +64,18 @@ function AddWorkoutForm({ dayEntryId, rules, onClose }: Omit<AddWorkoutSheetProp
           />
         </div>
         <Toggle checked={isOutdoor} onChange={setIsOutdoor} label={isOutdoor ? 'Outdoor' : 'Indoor'} activeColor="blue" />
+        <div className="flex flex-col gap-1.5">
+          {/* The picker's group carries this label for screen readers. */}
+          <p aria-hidden="true" className="font-rounded text-sm font-bold text-ink-muted">
+            How did it feel?
+          </p>
+          <MoodPicker
+            label="How did it feel?"
+            value={feel}
+            onPick={(mood) => setFeel(feel === mood ? undefined : mood)}
+            selectedClassName="bg-orange-light ring-2 ring-orange-ink"
+          />
+        </div>
         <Button variant="primary" className="w-full" onClick={() => void save()} disabled={durationMin === 0}>
           Save
         </Button>

@@ -1,5 +1,5 @@
 import { isValidISODate, todayISO } from '../lib/dates'
-import { CHALLENGE_LENGTH } from '../logic/constants'
+import { CHALLENGE_LENGTH, WORKOUT_TYPES } from '../logic/constants'
 import { TASK_IDS } from '../logic/dayCompletion'
 import { parseHHmm } from '../logic/menace'
 import { isChallengeVariant } from '../logic/rulesets'
@@ -104,6 +104,8 @@ const isOptional = (check: (value: unknown) => boolean) => (value: unknown) => v
 const isDayNumberList = (value: unknown): boolean =>
   Array.isArray(value) && value.every((d) => Number.isInteger(d) && d >= 1 && d <= CHALLENGE_LENGTH)
 const isNonNegativeInteger = (value: unknown): boolean => Number.isInteger(value) && (value as number) >= 0
+const isWorkoutType = (value: unknown): boolean => (WORKOUT_TYPES as readonly unknown[]).includes(value)
+const isFeel = (value: unknown): boolean => value === 1 || value === 2 || value === 3 || value === 4 || value === 5
 
 const isPlanMap = (value: unknown): boolean =>
   isRow(value) &&
@@ -146,7 +148,14 @@ const ROW_CHECKS: Record<Exclude<keyof ExportPayload, 'version' | 'exportedAt'>,
     planEstimates: isOptional(isEstimateMap),
     restDay: isOptional(isBoolean),
   },
-  workouts: { id: isNumber, dayEntryId: isNumber, type: isString, durationMin: isNumber, isOutdoor: isBoolean },
+  workouts: {
+    id: isNumber,
+    dayEntryId: isNumber,
+    type: isWorkoutType,
+    durationMin: isNumber,
+    isOutdoor: isBoolean,
+    feel: isOptional(isFeel),
+  },
   books: { id: isNumber, title: isString, totalPages: isNumber, currentPage: isNumber, finished: isBoolean },
   measurements: { id: isNumber, date: isString, weight_kg: isOptional(isNumber) },
   photos: {

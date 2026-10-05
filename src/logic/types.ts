@@ -3,7 +3,15 @@
  * src/db/types.ts (Dexie row shapes) so this module never depends on Dexie.
  */
 
+import type { WORKOUT_TYPES } from './constants'
+
 export type TaskId = 'workouts' | 'diet' | 'water' | 'reading' | 'photo'
+
+/** What a workout was; the names double as the English labels. */
+export type WorkoutType = (typeof WORKOUT_TYPES)[number]
+
+/** The five moods of "How was today?", 1 Rough … 5 Great. A workout's feel uses them too. */
+export type Mood = 1 | 2 | 3 | 4 | 5
 
 export interface WorkoutTaskData {
   durationMin: number
