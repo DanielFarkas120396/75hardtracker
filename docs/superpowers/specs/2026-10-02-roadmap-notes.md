@@ -16,11 +16,11 @@ The audience for now is **1–5 friends and family**. At that size, a server, ac
 | App lock: PIN and Face ID | v2, PRs #23–#24 ([design](2026-10-05-face-id-lock-design.md)) |
 | Install first, restore on welcome, password-protected backups | v2, PR #25 ([design](2026-10-05-backups-install-design.md)) |
 
-`main` is still v1 (tag `v1`). Merging `v2` into `main` is the owner's call.
+v2 was merged into `main` on 2026-10-05 (PR #28). The old version stays available through the tag `v1`.
 
 ## Next, in order
 
-1. **Share v2 with friends and family** and collect their feedback. That needs v2 in `main` and Vercel turned back on (both the owner's call). Then test Face ID on an iPhone.
+1. **Share the app with friends and family** and collect their feedback. That needs Vercel turned back on (the owner's call). Then test Face ID on an iPhone.
 2. **Progress photo comparison:** Day 1 next to today with a slider, or a short time-lapse. Photos are the most motivating part of 75 Hard.
 3. **Share card:** an image like "Day 32 / 75 🔥" with the duck, shared through the phone's share sheet (Web Share API). Made on the phone; nothing leaves it unless the user shares it.
 4. **Day 75 recap:** a "Wrapped"-style summary: total workouts, litres of water, pages read, before/after photos.

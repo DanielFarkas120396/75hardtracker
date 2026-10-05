@@ -4,8 +4,10 @@ A local-first PWA for the 75 Hard challenge (React 19, Vite, TypeScript, Tailwin
 
 ## Branches
 
-- `main` is **v1**, the app that works today. The tag `v1` marks it. Never merge into `main` unless the owner asks.
-- `v2` is the long-lived redesign branch. Each feature gets its own branch from `v2` and a PR with `--base v2`.
+- `main` is the current app: the v2 redesign, merged on 2026-10-05 (PR #28). Each feature gets its own branch from `main` and a PR into `main`.
+- The tag `v1` (a9f1f1b) keeps the old version forever, as a fallback. Never move or delete it.
+- The `v2` branch is kept as a record; new work doesn't go there.
+- A big redesign (a "v3") would get its own long-lived branch again, like `v2` did, so `main` keeps working.
 - Vercel deployments are paused by the owner: there are no preview links. Don't wait for Vercel checks.
 
 ## Before every commit or merge
