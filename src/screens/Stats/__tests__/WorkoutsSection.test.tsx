@@ -40,17 +40,25 @@ describe('WorkoutsSection', () => {
 
   beforeEach(freshDatabase)
 
-  it('adds up the attempt and opens the most practised activity on its sessions, newest first', async () => {
+  it('adds up the attempt, with every card closed', async () => {
     render(<WorkoutsSection challengeId={await seedAttempt()} />)
 
-    const running = await screen.findByRole('button', { name: 'Running, 2 sessions' })
-    expect(running).toHaveAttribute('aria-expanded', 'true')
+    expect(await screen.findByRole('button', { name: 'Running, 2 sessions' })).toHaveAttribute('aria-expanded', 'false')
     expect(screen.getByRole('button', { name: 'Weights, 1 session' })).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByRole('list', { name: /sessions$/ })).not.toBeInTheDocument()
 
     const summary = screen.getByRole('list', { name: 'This attempt' })
     expect(summary).toHaveTextContent('3sessions')
     expect(summary).toHaveTextContent('2h 25mof training')
     expect(summary).toHaveTextContent('2outdoors')
+  })
+
+  it('opens a card on its sessions, newest first, and how they felt', async () => {
+    render(<WorkoutsSection challengeId={await seedAttempt()} />)
+
+    const running = await screen.findByRole('button', { name: 'Running, 2 sessions' })
+    fireEvent.click(running)
+    expect(running).toHaveAttribute('aria-expanded', 'true')
 
     const rows = within(screen.getByRole('list', { name: 'Running sessions' })).getAllByRole('listitem')
     expect(rows.map((row) => row.textContent)).toEqual([
@@ -68,10 +76,12 @@ describe('WorkoutsSection', () => {
   it('opens one card at a time, and closes the open one when tapped', async () => {
     render(<WorkoutsSection challengeId={await seedAttempt()} />)
 
-    const weights = await screen.findByRole('button', { name: 'Weights, 1 session' })
+    const running = await screen.findByRole('button', { name: 'Running, 2 sessions' })
+    const weights = screen.getByRole('button', { name: 'Weights, 1 session' })
+    fireEvent.click(running)
     fireEvent.click(weights)
     expect(weights).toHaveAttribute('aria-expanded', 'true')
-    expect(screen.getByRole('button', { name: 'Running, 2 sessions' })).toHaveAttribute('aria-expanded', 'false')
+    expect(running).toHaveAttribute('aria-expanded', 'false')
 
     fireEvent.click(weights)
     expect(weights).toHaveAttribute('aria-expanded', 'false')

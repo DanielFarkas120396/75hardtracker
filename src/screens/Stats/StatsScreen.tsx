@@ -1,6 +1,5 @@
 import { FlameStreak } from '../../components/FlameStreak'
 import { Icon } from '../../components/icons/Icon'
-import { formatMinutes } from '../../content/activities'
 import type { Challenge } from '../../db/types'
 import { useChallengeStats } from '../../hooks/useChallengeStats'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
@@ -42,7 +41,7 @@ export function StatsScreen({ challenge, streak, today, todayDayNumber, complete
       <main className="flex flex-col gap-4 px-4">
         <ClimbCard dayReached={dayReached} />
 
-        <div className="grid grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-2 gap-3">
           <StatTile
             art={<BottleArt fill={stats.water_ml / (rules.waterTargetMl * daysSoFar)} />}
             value={`${(stats.water_ml / 1000).toFixed(1)} L`}
@@ -50,12 +49,6 @@ export function StatsScreen({ challenge, streak, today, todayDayNumber, complete
             tone="text-blue-ink"
           />
           <StatTile art={<BookStackArt pages={stats.pages} />} value={`${stats.pages}`} label="Pages read" tone="text-world-ink" />
-          <StatTile
-            art={<Icon name="workout" size={40} />}
-            value={formatMinutes(stats.workoutMinutes)}
-            label="Training"
-            tone="text-world-ink"
-          />
         </div>
 
         <BodySection today={today} />

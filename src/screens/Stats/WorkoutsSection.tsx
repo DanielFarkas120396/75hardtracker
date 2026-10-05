@@ -13,13 +13,11 @@ const moodFor = (feel: Mood) => MOODS.find((mood) => mood.value === feel)!
 /** The translucent wash for chips and the session list on the open card. */
 const WASH = 'bg-white/55 dark:bg-black/25'
 
-/** Every workout of the attempt, on Stats under Weight: a card per activity, stacked, one open on its sessions. */
+/** Every workout of the attempt, on Stats under Weight: a card per activity, stacked, all closed until one is tapped. */
 export function WorkoutsSection({ challengeId }: { challengeId: number }) {
   const history = useWorkoutHistory(challengeId)
   const headingId = useId()
-  // undefined: the top card is open (the default); null: the player closed them all.
-  const [chosen, setChosen] = useState<WorkoutType | null | undefined>(undefined)
-  const open = chosen === undefined ? history?.activities[0]?.type : chosen
+  const [open, setOpen] = useState<WorkoutType | null>(null)
 
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-4">
@@ -43,7 +41,7 @@ export function WorkoutsSection({ challengeId }: { challengeId: number }) {
                   activity={activity}
                   shade={history.activities.length > 1 ? i / (history.activities.length - 1) : 0}
                   open={activity.type === open}
-                  onToggle={() => setChosen(activity.type === open ? null : activity.type)}
+                  onToggle={() => setOpen(activity.type === open ? null : activity.type)}
                 />
               ))}
             </div>
