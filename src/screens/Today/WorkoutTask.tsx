@@ -1,7 +1,11 @@
 import { useState } from 'react'
+import { Icon } from '../../components/icons/Icon'
+import { MoodPicker } from '../../components/MoodPicker'
 import { Button } from '../../components/ui/Button'
 import { Stepper } from '../../components/ui/Stepper'
 import { Toggle } from '../../components/ui/Toggle'
+import { ACTIVITY_ICONS } from '../../content/activities'
+import type { Mood } from '../../content/moods'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import { workoutRepo } from '../../db/repositories/workoutRepo'
 import type { Workout, WorkoutType } from '../../db/types'
@@ -88,20 +92,14 @@ export function WorkoutTask({ dayEntryId, workouts, complete, rules, restDay, we
 }
 
 function WorkoutRow({ workout }: { workout: Workout }) {
+  const setFeel = (feel: Mood) => {
+    void workoutRepo.update(workout.id, { feel: workout.feel === feel ? undefined : feel })
+  }
+
   return (
     <div className="flex flex-col gap-2 rounded-2xl bg-canvas p-3">
       <div className="flex items-center justify-between gap-2">
-        <select
-          value={workout.type}
-          onChange={(e) => void workoutRepo.update(workout.id, { type: e.target.value as WorkoutType })}
-          className="min-h-touch flex-1 rounded-xl bg-surface px-3 font-rounded font-bold text-ink"
-        >
-          {WORKOUT_TYPES.map((type) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
-        </select>
+        <p className="font-rounded text-lg font-extrabold text-ink">{workout.type}</p>
         <button
           type="button"
           onClick={() => void workoutRepo.remove(workout.id)}
@@ -111,6 +109,8 @@ function WorkoutRow({ workout }: { workout: Workout }) {
           ✕
         </button>
       </div>
+
+      <ActivityPicker value={workout.type} onPick={(type) => void workoutRepo.update(workout.id, { type })} />
 
       <Stepper
         value={workout.durationMin}
@@ -127,6 +127,40 @@ function WorkoutRow({ workout }: { workout: Workout }) {
         label={workout.isOutdoor ? 'Outdoor' : 'Indoor'}
         activeColor="blue"
       />
+
+      <p className="font-rounded text-sm font-bold text-ink-muted">How did it feel?</p>
+      <MoodPicker
+        label="How did it feel?"
+        value={workout.feel}
+        onPick={setFeel}
+        selectedClassName="bg-orange-light ring-2 ring-orange-ink"
+        idleClassName="bg-surface"
+      />
+    </div>
+  )
+}
+
+/** The seven activities as logos; the chosen one is ringed in the workouts' orange. */
+function ActivityPicker({ value, onPick }: { value: WorkoutType; onPick: (type: WorkoutType) => void }) {
+  return (
+    <div role="group" aria-label="Activity" className="grid grid-cols-7 gap-1">
+      {WORKOUT_TYPES.map((type) => {
+        const selected = type === value
+        return (
+          <button
+            key={type}
+            type="button"
+            aria-label={type}
+            aria-pressed={selected}
+            onClick={() => onPick(type)}
+            className={`flex h-11 items-center justify-center rounded-xl motion-safe:transition-colors ${
+              selected ? 'bg-orange-light text-orange-ink ring-2 ring-orange-ink' : 'bg-surface text-ink-muted'
+            }`}
+          >
+            <Icon name={ACTIVITY_ICONS[type]} size={26} strokeWidth={1.8} />
+          </button>
+        )
+      })}
     </div>
   )
 }

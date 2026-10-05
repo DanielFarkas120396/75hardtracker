@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { MOODS, type Mood } from '../../content/moods'
+import { MoodPicker } from '../../components/MoodPicker'
+import type { Mood } from '../../content/moods'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import type { DayEntry } from '../../db/types'
 
@@ -18,27 +19,7 @@ export function DayNotesTask({ entry }: DayNotesTaskProps) {
 
   return (
     <div>
-      <div role="group" aria-label="Mood" className="grid grid-cols-5 gap-1">
-        {MOODS.map((mood) => {
-          const selected = entry.mood === mood.value
-          return (
-            <button
-              key={mood.value}
-              type="button"
-              aria-pressed={selected}
-              onClick={() => setMood(mood.value)}
-              className={`flex min-h-touch flex-col items-center justify-center rounded-2xl py-1 motion-safe:transition-transform ${
-                selected ? 'scale-105 bg-yellow-light ring-2 ring-yellow-ink' : 'bg-canvas'
-              }`}
-            >
-              <span className="text-2xl" aria-hidden="true">
-                {mood.emoji}
-              </span>
-              <span className="text-[11px] font-bold text-ink-muted">{mood.label}</span>
-            </button>
-          )
-        })}
-      </div>
+      <MoodPicker label="Mood" value={entry.mood} onPick={setMood} selectedClassName="bg-yellow-light ring-2 ring-yellow-ink" />
 
       {/* Keyed by entry so the text resets on a new day. */}
       <NotesField key={entry.id} entry={entry} />
