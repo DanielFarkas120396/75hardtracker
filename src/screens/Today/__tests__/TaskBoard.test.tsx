@@ -46,7 +46,7 @@ describe('TaskBoard', () => {
     render(board(empty))
 
     expect(screen.getByRole('button', { name: 'Workouts, 0 of 2 · 45 min each' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Diet, 2 to tick' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Diet, 0 of 2' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Water, 0 / 3.8 L' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Reading, 0 of 10 pages' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Photo, No photo yet' })).toBeInTheDocument()

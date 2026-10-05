@@ -109,10 +109,10 @@ describe('TodayScreen', () => {
   it('Strong on Day 3 with a declared occasion: shows the drink-allowed note', async () => {
     await setup({ variant: 'strong', todayDayNumber: 3, socialDays: [3] })
 
-    expect(await screen.findByRole('button', { name: 'Diet, 1 to tick' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Diet, 0 of 1' })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Social occasion today — a drink is allowed' })).toBeInTheDocument()
     expect(screen.queryByRole('switch', { name: 'No alcohol' })).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Diet, 1 to tick' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Diet, 0 of 1' }))
     expect(await screen.findByText('🥂 Social occasion today — a drink is allowed.')).toBeInTheDocument()
   })
 

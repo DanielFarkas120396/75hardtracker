@@ -81,7 +81,7 @@ interface TaskTileProps {
   progress: number | null
   photo?: Blob
   quick?: QuickAction
-  /** Controls on the tile's right (the diet switches); they stand in for the status line, and the tick moves beside the icon. */
+  /** Controls on the tile's right (the diet switches); the tick then moves beside the icon. */
   controls?: ReactNode
   onOpen: () => void
 }
@@ -122,7 +122,7 @@ function TaskTile({ task, done, status, progress, photo, quick, controls, onOpen
           <Icon name={TASK_ICONS[task]} size={20} />
         </span>
         <span className={`mt-auto pt-3 font-rounded font-extrabold leading-tight ${titleColor}`}>{TASK_TITLES[task]}</span>
-        {!controls && <span className={`mt-0.5 text-xs font-semibold leading-tight ${statusColor}`}>{status}</span>}
+        <span className={`mt-0.5 text-xs font-semibold leading-tight ${statusColor}`}>{status}</span>
       </button>
       {controls}
       {done && (

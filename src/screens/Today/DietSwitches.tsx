@@ -14,8 +14,7 @@ interface DietSwitchesProps {
 /** The diet tile's two switches, stacked on its right, each named by its emoji: the plate, and the crossed-out glass. */
 export function DietSwitches({ entry, rules, socialToday }: DietSwitchesProps) {
   return (
-    // Two rows, each centred on the tile's own rows: the icon box, and the title.
-    <div className="absolute top-2 right-3 bottom-0 flex flex-col items-end justify-between">
+    <div className="absolute inset-y-0 right-5 flex flex-col items-end justify-center">
       <MiniSwitch
         label={dietToggleLabel(rules)}
         emoji="🍽️"
@@ -53,16 +52,16 @@ function MiniSwitch({ label, emoji, checked, onChange }: MiniSwitchProps) {
       aria-checked={checked}
       aria-label={label}
       onClick={() => onChange(!checked)}
-      className="flex h-11 touch-manipulation items-center gap-1.5 rounded-full px-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink"
+      className="flex h-11 touch-manipulation items-center gap-1 rounded-full px-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink"
     >
       <span aria-hidden="true" className="text-xl leading-none">
         {emoji}
       </span>
       <span
-        className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full motion-safe:transition-colors ${checked ? 'bg-green-ink' : 'bg-ink-muted'}`}
+        className={`relative inline-flex h-5 w-8 shrink-0 items-center rounded-full motion-safe:transition-colors ${checked ? 'bg-green-ink' : 'bg-ink-muted'}`}
       >
         <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-surface shadow motion-safe:transition-transform ${checked ? 'translate-x-4' : 'translate-x-0.5'}`}
+          className={`inline-block h-4 w-4 transform rounded-full bg-surface shadow motion-safe:transition-transform ${checked ? 'translate-x-3.5' : 'translate-x-0.5'}`}
         />
       </span>
     </button>
