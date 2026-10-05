@@ -33,7 +33,7 @@ export function TodayHero({ attemptLine, dayNumber, completedCount, taskCount, s
             <span className="text-4xl text-world-ink">Day {dayNumber}</span>{' '}
             <span className="text-lg text-ink-muted">/ {CHALLENGE_LENGTH}</span>
           </h1>
-          <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-rounded text-xs font-bold text-ink-muted">
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-rounded text-xs font-bold text-ink-muted">
             <span>{attemptLine}</span>
             <FlameStreak streak={streak} />
             {jokersLeft !== undefined && (
@@ -42,7 +42,7 @@ export function TodayHero({ attemptLine, dayNumber, completedCount, taskCount, s
                 {jokersLeft} {jokersLeft === 1 ? 'joker' : 'jokers'} left
               </span>
             )}
-          </p>
+          </div>
           <p className="mt-1 flex items-center gap-1 font-rounded text-xs font-bold text-world-ink">
             <Icon name="journey" size={14} className="shrink-0" />
             {worldProgressLine(dayNumber)}
