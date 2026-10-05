@@ -1,14 +1,18 @@
 /// <reference types="vitest/config" />
+import basicSsl from '@vitejs/plugin-basic-ssl'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     tailwindcss(),
+    // `npm run dev:phone`: HTTPS with a self-signed certificate, so a phone on the Wi-Fi gets a secure
+    // page — browsers only allow the in-app camera (getUserMedia) on HTTPS or localhost.
+    mode === 'phone' && basicSsl(),
     VitePWA({
       registerType: 'autoUpdate',
       // Icons are generated from public/mascot.svg by `npm run generate-pwa-assets` (pwa-assets.config.ts).
@@ -38,7 +42,7 @@ export default defineConfig({
         // woff2 are precached: the others are for scripts the app doesn't use, and every browser
         // that can install a PWA reads woff2.
         // The Journey's background images (about 100 KB in all) are precached too, so the map works offline.
-        globPatterns: ['**/*.{js,css,html}', '**/nunito-latin-*.woff2', '**/nunito-latin-ext-*.woff2', 'journey/*.webp'],
+        globPatterns: ['**/*.{js,css,html}', '**/nunito-latin-*.woff2', '**/nunito-latin-ext-*.woff2', '**/lilita-one-latin-*.woff2', 'journey/*.webp'],
         navigateFallback: '/index.html',
       },
     }),
@@ -50,4 +54,4 @@ export default defineConfig({
     // The IndexedDB tests do real (in-memory) IO; leave headroom for a busy machine.
     testTimeout: 15_000,
   },
-})
+}))

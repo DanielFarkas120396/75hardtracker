@@ -44,9 +44,13 @@ export function WorkoutCard({ dayEntryId, workouts, complete, cheer, rules, rest
     void dayEntryRepo.setRestDay(dayEntryId, false)
   }
 
+  const minutes = workouts.reduce((sum, w) => sum + w.durationMin, 0)
+  const summary = restDay
+    ? 'Recovery day'
+    : `${workouts.length} ${workouts.length === 1 ? 'workout' : 'workouts'} · ${minutes} min`
+
   return (
-    <Card complete={complete} cheer={cheer}>
-      <h2 className="font-rounded text-lg font-extrabold text-ink">🏋️ Workouts</h2>
+    <Card complete={complete} cheer={cheer} title="Workouts" icon="workout" summary={summary}>
       <p className="mt-1 text-sm text-ink-muted">{workoutRuleLine(rules)}</p>
 
       <div className="mt-4 flex flex-col gap-3">

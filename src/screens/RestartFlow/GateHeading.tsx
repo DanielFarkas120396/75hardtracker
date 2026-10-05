@@ -13,7 +13,7 @@ export function GateHeading({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <h1 ref={heading} tabIndex={-1} className="font-rounded text-2xl font-extrabold text-ink outline-none">
+    <h1 ref={heading} tabIndex={-1} className="font-display text-2xl tracking-wide text-ink outline-none">
       {children}
     </h1>
   )

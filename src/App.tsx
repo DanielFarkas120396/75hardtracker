@@ -1,13 +1,18 @@
 import { lazy, Suspense, useState } from 'react'
 import { BadgeUnlockToast } from './components/BadgeUnlockToast'
+import { TimeTravelBadge } from './dev/TimeTravelBadge'
 import { BottomNav, type ScreenId } from './components/ui/BottomNav'
 import { useBadgeUnlocks } from './hooks/useBadgeUnlocks'
 import { canGiveUp, useChallengeGate } from './hooks/useChallengeGate'
 import { useDayCompleteCelebration } from './hooks/useDayCompleteCelebration'
+import { useAppLock } from './hooks/useAppLock'
 import { useApplyTheme } from './hooks/useThemePreference'
 import { useToday } from './hooks/useToday'
+import { useWorldTheme } from './hooks/useWorldTheme'
+import { worldForProgress } from './lib/worldTheme'
 import { OnboardingGate } from './screens/Onboarding/OnboardingGate'
 import { DayCompleteCelebration } from './screens/Today/DayCompleteCelebration'
+import { LockScreen } from './screens/Lock/LockScreen'
 import { TodayScreen } from './screens/Today/TodayScreen'
 
 // Everything but Today loads on first use, keeping the startup bundle small.
@@ -38,20 +43,46 @@ function LoadingScreen() {
 function App() {
   useApplyTheme()
   const today = useToday()
+  const lock = useAppLock()
 
+  if (lock.status === 'loading') return <LoadingScreen />
   return (
-    <OnboardingGate today={today} loading={<LoadingScreen />}>
-      <MainApp today={today} />
-    </OnboardingGate>
+    <>
+      {/* Under the app lock the app stays mounted (you come back where you were) but hidden and inert. */}
+      <div inert={lock.status === 'locked'} className={lock.status === 'locked' ? 'invisible' : undefined}>
+        <OnboardingGate today={today} loading={<LoadingScreen />}>
+          <MainApp today={today} />
+        </OnboardingGate>
+      </div>
+      {lock.status === 'locked' && (
+        <LockScreen
+          faceIdEnabled={lock.faceIdEnabled}
+          failures={lock.failures}
+          onFaceId={lock.unlockWithFaceId}
+          onPin={lock.unlockWithPin}
+          onConfirmFaceId={lock.confirmFaceId}
+          onResetPin={lock.resetPinAndUnlock}
+          onBypass={lock.bypass}
+        />
+      )}
+    </>
   )
 }
 
 /** The app once the player has a profile: the challenge gate, the screens and the bottom nav. */
 function MainApp({ today }: { today: string }) {
   const [screen, setScreen] = useState<ScreenId>('today')
+  // Set by the Gallery's "take a photo": Today opens its camera once, then clears it.
+  const [cameraRequested, setCameraRequested] = useState(false)
+  const goTo = (id: ScreenId) => {
+    setCameraRequested(false)
+    setScreen(id)
+  }
   const gate = useChallengeGate(today)
   const { celebration, dismiss: dismissCelebration } = useDayCompleteCelebration(gate)
   const { toasts, dismiss: dismissToast } = useBadgeUnlocks(gate)
+  // The app wears the colours of the Journey world you're in.
+  useWorldTheme(gate ? worldForProgress(gate.todayDayNumber, gate.kind === 'completed') : undefined)
 
   // Giving up happens from Settings: the next attempt should open on Today, not back there.
   if (gate?.kind === 'abandoned' && screen !== 'today') setScreen('today')
@@ -109,6 +140,9 @@ function MainApp({ today }: { today: string }) {
                 todayDayNumber={gate.todayDayNumber}
                 streak={gate.streak}
                 jokersLeft={gate.jokersLeft}
+                pendingLateDay={gate.lateDayPending ? gate.lateDayNumber : null}
+                openCamera={cameraRequested}
+                onCameraOpened={() => setCameraRequested(false)}
               />
             ))}
           {screen === 'journey' && (
@@ -121,8 +155,23 @@ function MainApp({ today }: { today: string }) {
               missedDays={gate.missedDays}
             />
           )}
-          {screen === 'stats' && <StatsScreen challenge={gate.challenge} streak={gate.streak} today={today} />}
-          {screen === 'gallery' && <GalleryScreen />}
+          {screen === 'stats' && (
+            <StatsScreen
+              challenge={gate.challenge}
+              streak={gate.streak}
+              today={today}
+              todayDayNumber={gate.todayDayNumber}
+              completed={gate.kind === 'completed'}
+            />
+          )}
+          {screen === 'gallery' && (
+            <GalleryScreen
+              onTakePhoto={() => {
+                setScreen('today')
+                setCameraRequested(true)
+              }}
+            />
+          )}
           {screen === 'settings' && (
             <SettingsScreen
               challenge={gate.challenge}
@@ -135,7 +184,8 @@ function MainApp({ today }: { today: string }) {
         </Suspense>
       </div>
 
-      <BottomNav active={screen} onChange={setScreen} />
+      <BottomNav active={screen} onChange={goTo} />
+      {import.meta.env.DEV && <TimeTravelBadge />}
 
       <DayCompleteCelebration celebration={celebration} onDismiss={dismissCelebration} />
       <BadgeUnlockToast badges={toasts} onDismiss={dismissToast} />

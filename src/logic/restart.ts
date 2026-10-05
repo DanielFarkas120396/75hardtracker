@@ -5,14 +5,19 @@ import type { ChallengeStatus, DayCompletionSummary } from './types'
 /**
  * Days before today, never past Day 75, that have no entry at all or an
  * entry that isn't complete. Gaps (the app wasn't opened that day) count
- * just like an explicitly incomplete day.
+ * just like an explicitly incomplete day — except the late day (see
+ * lateDayNumber), which can still be finished until noon.
  */
-export function missedDayNumbers(dayEntries: DayCompletionSummary[], todayDayNumber: number): number[] {
+export function missedDayNumbers(
+  dayEntries: DayCompletionSummary[],
+  todayDayNumber: number,
+  lateDay: number | null = null,
+): number[] {
   const completedDays = new Set(dayEntries.filter((e) => e.completed).map((e) => e.dayNumber))
   const lastDay = Math.min(todayDayNumber - 1, CHALLENGE_LENGTH)
   const missed: number[] = []
   for (let day = 1; day <= lastDay; day++) {
-    if (!completedDays.has(day)) missed.push(day)
+    if (!completedDays.has(day) && day !== lateDay) missed.push(day)
   }
   return missed
 }
@@ -29,21 +34,25 @@ export interface ChallengeEvaluation {
  * Whether an active challenge should turn `failed` or `completed`. A miss
  * uses a joker; the first miss beyond them fails the attempt. It completes
  * once Day 75 is complete, or once Day 75 has passed with every miss
- * forgiven.
+ * forgiven — but not while an unfinished Day 75 can still be logged (the
+ * late day, until noon on the day after).
  */
 export function evaluateChallenge(params: {
   currentStatus: ChallengeStatus
   dayEntries: DayCompletionSummary[]
   todayDayNumber: number
   jokers: number
+  lateDay?: number | null
 }): ChallengeEvaluation {
-  const missed = missedDayNumbers(params.dayEntries, params.todayDayNumber)
+  const lateDay = params.lateDay ?? null
+  const missed = missedDayNumbers(params.dayEntries, params.todayDayNumber, lateDay)
   if (params.currentStatus !== 'active') return { status: params.currentStatus, missed }
   if (missed.length > params.jokers) return { status: 'failed', missed, failedDayNumber: missed[params.jokers] }
 
   const finalDay = params.dayEntries.find((e) => e.dayNumber === CHALLENGE_LENGTH)
-  const pastTheEnd = params.todayDayNumber > CHALLENGE_LENGTH
-  const lastDayDone = params.todayDayNumber === CHALLENGE_LENGTH && finalDay?.completed === true
+  const finalDayOpen = lateDay === CHALLENGE_LENGTH && finalDay?.completed !== true
+  const pastTheEnd = params.todayDayNumber > CHALLENGE_LENGTH && !finalDayOpen
+  const lastDayDone = params.todayDayNumber >= CHALLENGE_LENGTH && finalDay?.completed === true
   if (pastTheEnd || lastDayDone) return { status: 'completed', missed }
   return { status: 'active', missed }
 }
@@ -70,6 +79,8 @@ export function resolveChallengeGate(params: {
   dayEntries: DayCompletionSummary[]
   todayDayNumber: number
   jokers: number
+  /** Yesterday, while it can still be logged (see lateDayNumber). */
+  lateDay?: number | null
 }): GateResolution {
   const evaluation = evaluateChallenge(params)
   if (evaluation.status === 'completed') return { kind: 'completed', missed: evaluation.missed }
@@ -77,7 +88,7 @@ export function resolveChallengeGate(params: {
   if (evaluation.status === 'abandoned') return { kind: 'abandoned', missed: evaluation.missed }
 
   const today = Number.isFinite(params.todayDayNumber) ? params.todayDayNumber : CHALLENGE_LENGTH + 1
-  const missed = missedDayNumbers(params.dayEntries, today)
+  const missed = missedDayNumbers(params.dayEntries, today, params.lateDay ?? null)
   const failedDayNumber =
     evaluation.failedDayNumber ?? missed[params.jokers] ?? missed[0] ?? Math.min(Math.max(today, 1), CHALLENGE_LENGTH)
   return { kind: 'needsRestart', failedDayNumber, missed }

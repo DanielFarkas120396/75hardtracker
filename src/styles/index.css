@@ -2,6 +2,7 @@
 @import "@fontsource/nunito/600.css";
 @import "@fontsource/nunito/700.css";
 @import "@fontsource/nunito/800.css";
+@import "@fontsource/lilita-one/400.css";
 
 /* Enable class-based dark mode: toggling `.dark` on <html> flips all dark: variants */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -41,22 +42,32 @@
   --color-danger-ink: #c0282e;
 
   /* Semantic surface tokens, redefined under .dark below for runtime theme switching */
-  --color-canvas: #fbfbf8;
+  --color-canvas: #fdf6f3;
   --color-surface: #ffffff;
   --color-ink: #1f2426;
   --color-ink-muted: #626a76;
+
+  /* The world's colours (the canvas above too), per [data-world] below; hell until one is set. */
+  --color-world: #cb4a1b;
+  --color-world-edge: #9e3915;
+  --color-world-ink: #b33a12;
+  --color-world-soft: #fde6dc;
+  --color-on-world: #ffffff;
 
   /* Text on the bright brand fills (buttons, toasts, the check badge, Journey nodes).
      Deliberately the same in both themes: those fills don't change. */
   --color-on-accent: #1f2426;
 
-  /* Charts: the data line (validated >= 3:1 on the card surface in both themes)
+  /* Charts: the data line, in the world's text colour (>= 4.5:1 on the card surface in both themes)
      and a hairline grid one step off the surface. */
-  --color-chart-line: #2ba857;
+  --color-chart-line: var(--color-world-ink);
   --color-chart-grid: #e7eae7;
 
   --font-rounded:
     "Nunito", ui-rounded, system-ui, -apple-system, sans-serif;
+  /* Screen titles and big numbers only, never body text. One weight (400): no faux bold. */
+  --font-display:
+    "Lilita One", "Nunito", ui-rounded, system-ui, -apple-system, sans-serif;
 
   --radius-xl2: 1.25rem;
   --radius-card: 1.5rem;
@@ -65,8 +76,14 @@
 }
 
 .dark {
-  --color-canvas: #14181a;
+  --color-canvas: #1a1211;
   --color-surface: #1f2426;
+
+  --color-world: #ff6a2a;
+  --color-world-edge: #c65220;
+  --color-world-ink: #ff8a5a;
+  --color-world-soft: #3a1812;
+  --color-on-world: #1f2426;
   --color-ink: #f2f4f5;
   --color-ink-muted: #9aa4a9;
 
@@ -83,6 +100,118 @@
   --color-danger-ink: #ff6b70;
 
   --color-chart-grid: #30383b;
+}
+
+/* The world you're in (data-world on <html>, set by useWorldTheme) colours the app. An element can
+   set its own data-world to wear another world's colours (the Gallery's groups).
+   Mirrors WORLD_COLORS in src/lib/worldColors.ts; a test keeps them in sync. */
+[data-world='hell'] {
+  --color-world: #cb4a1b;
+  --color-world-edge: #9e3915;
+  --color-world-ink: #b33a12;
+  --color-world-soft: #fde6dc;
+  --color-canvas: #fdf6f3;
+  --color-on-world: #ffffff;
+}
+.dark[data-world='hell'],
+.dark [data-world='hell'] {
+  --color-world: #ff6a2a;
+  --color-world-edge: #c65220;
+  --color-world-ink: #ff8a5a;
+  --color-world-soft: #3a1812;
+  --color-canvas: #1a1211;
+  --color-on-world: #1f2426;
+}
+[data-world='wasteland'] {
+  --color-world: #807266;
+  --color-world-edge: #63584f;
+  --color-world-ink: #6b5d52;
+  --color-world-soft: #efe9e3;
+  --color-canvas: #f8f6f3;
+  --color-on-world: #ffffff;
+}
+.dark[data-world='wasteland'],
+.dark [data-world='wasteland'] {
+  --color-world: #b3a598;
+  --color-world-edge: #8b8076;
+  --color-world-ink: #cbbfb3;
+  --color-world-soft: #2e2824;
+  --color-canvas: #171513;
+  --color-on-world: #1f2426;
+}
+[data-world='forest'] {
+  --color-world: #2f7d4f;
+  --color-world-edge: #24613d;
+  --color-world-ink: #22643c;
+  --color-world-soft: #dcefe2;
+  --color-canvas: #f4f9f5;
+  --color-on-world: #ffffff;
+}
+.dark[data-world='forest'],
+.dark [data-world='forest'] {
+  --color-world: #4fae74;
+  --color-world-edge: #3d875a;
+  --color-world-ink: #6fd093;
+  --color-world-soft: #16301f;
+  --color-canvas: #111815;
+  --color-on-world: #1f2426;
+}
+[data-world='meadow'] {
+  --color-world: #368532;
+  --color-world-edge: #2a6727;
+  --color-world-ink: #2f7a2b;
+  --color-world-soft: #e1f2d6;
+  --color-canvas: #f6fbf1;
+  --color-on-world: #ffffff;
+}
+.dark[data-world='meadow'],
+.dark [data-world='meadow'] {
+  --color-world: #6cc35e;
+  --color-world-edge: #549849;
+  --color-world-ink: #8fdc80;
+  --color-world-soft: #1e3418;
+  --color-canvas: #121811;
+  --color-on-world: #1f2426;
+}
+[data-world='mountains'] {
+  --color-world: #3279ae;
+  --color-world-edge: #275e87;
+  --color-world-ink: #1f6aa3;
+  --color-world-soft: #dfeefa;
+  --color-canvas: #f4f8fc;
+  --color-on-world: #ffffff;
+}
+.dark[data-world='mountains'],
+.dark [data-world='mountains'] {
+  --color-world: #7cc0f0;
+  --color-world-edge: #6095bb;
+  --color-world-ink: #9fd2f7;
+  --color-world-soft: #1c2a38;
+  --color-canvas: #10161c;
+  --color-on-world: #1f2426;
+}
+[data-world='heaven'] {
+  --color-world: #d9a521;
+  --color-world-edge: #a98019;
+  --color-world-ink: #8a6100;
+  --color-world-soft: #fbf0cf;
+  --color-canvas: #fdfaf0;
+  --color-on-world: #1f2426;
+}
+.dark[data-world='heaven'],
+.dark [data-world='heaven'] {
+  --color-world: #f3c23a;
+  --color-world-edge: #bd972d;
+  --color-world-ink: #ffd76a;
+  --color-world-soft: #3a3017;
+  --color-canvas: #17150e;
+  --color-on-world: #1f2426;
+}
+
+/* The Face ID lock covers the app while it's in the background (set by useAppLock), so the iPhone
+   app switcher's snapshot doesn't show photos or numbers. */
+html[data-covered] #root {
+  visibility: hidden;
 }
 
 @layer base {

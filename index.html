@@ -10,24 +10,37 @@
       content="A friendly offline tracker for 75 Hard, 75 Strong, 75 Medium and 75 Soft: log the day's tasks, watch the streak, keep every progress photo on your device."
     />
 
-    <meta name="theme-color" content="#fbfbf8" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#14181a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#fdf6f3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1a1211" media="(prefers-color-scheme: dark)" />
 
-    <!-- Applies the saved theme before first paint (no light flash in dark mode). Mirrors
-         applyTheme() in src/lib/theme.ts — keep the storage key and colours in sync. -->
+    <!-- Applies the saved theme and world before first paint (no light flash in dark mode, no
+         colour jump). Mirrors applyTheme() and applyWorld() in src/lib — keep the storage keys and
+         the world canvases (WORLD_COLORS in src/lib/worldColors.ts, checked by a test) in sync. -->
     <script>
       ;(function () {
         try {
+          var canvases = {
+            hell: ['#fdf6f3', '#1a1211'],
+            wasteland: ['#f8f6f3', '#171513'],
+            forest: ['#f4f9f5', '#111815'],
+            meadow: ['#f6fbf1', '#121811'],
+            mountains: ['#f4f8fc', '#10161c'],
+            heaven: ['#fdfaf0', '#17150e'],
+          }
           var preference = localStorage.getItem('75hard-theme') || 'system'
+          var world = localStorage.getItem('75hard-world')
+          if (!Object.prototype.hasOwnProperty.call(canvases, world)) world = 'hell'
           var dark =
             preference === 'dark' ||
             (preference === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
           var root = document.documentElement
           if (dark) root.classList.add('dark')
           root.style.colorScheme = dark ? 'dark' : 'light'
-          if (preference !== 'system') {
-            var metas = document.querySelectorAll('meta[name="theme-color"]')
-            for (var i = 0; i < metas.length; i++) metas[i].content = dark ? '#14181a' : '#fbfbf8'
+          root.setAttribute('data-world', world)
+          var metas = document.querySelectorAll('meta[name="theme-color"]')
+          for (var i = 0; i < metas.length; i++) {
+            var metaDark = preference === 'system' ? (metas[i].media || '').indexOf('dark') >= 0 : dark
+            metas[i].content = canvases[world][metaDark ? 1 : 0]
           }
         } catch (e) {}
       })()

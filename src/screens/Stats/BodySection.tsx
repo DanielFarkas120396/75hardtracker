@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
+import { Icon } from '../../components/icons/Icon'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
 import { measurementRepo } from '../../db/repositories/measurementRepo'
@@ -49,9 +50,12 @@ export function BodySection({ today }: BodySectionProps) {
   }
 
   return (
-    <section className="rounded-card bg-surface p-4 shadow-sm">
+    <section className="rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="font-rounded text-lg font-extrabold text-ink">⚖️ Weight</h2>
+        <h2 className="flex items-center gap-2 font-rounded text-lg font-extrabold text-ink">
+          <Icon name="scale" className="shrink-0 text-world-ink" />
+          Weight
+        </h2>
         <Button variant="secondary" className="px-4 py-2" onClick={() => openForm(null)}>
           + Log
         </Button>

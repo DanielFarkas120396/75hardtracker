@@ -1,13 +1,13 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../../db/db'
 import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
 import type { Challenge } from '../../../db/types'
 import { addDaysISO, todayISO } from '../../../lib/dates'
 import { SettingsScreen } from '../SettingsScreen'
 
-// Only the danger zone is under test; the other sections stand aside.
+// The sections are tested on their own; here they stand aside (Profile leaves a marker).
 vi.mock('../StartDateSection', () => ({ StartDateSection: () => null }))
 vi.mock('../InstallSection', () => ({ InstallSection: () => null }))
 vi.mock('../AppearanceSection', () => ({ AppearanceSection: () => null }))
@@ -16,6 +16,11 @@ vi.mock('../BadgesSection', () => ({ BadgesSection: () => null }))
 vi.mock('../CompanionSection', () => ({ CompanionSection: () => null }))
 vi.mock('../ExportImportSection', () => ({ ExportImportSection: () => null }))
 vi.mock('../AttemptHistorySection', () => ({ AttemptHistorySection: () => null }))
+vi.mock('../ProfileSection', () => ({ ProfileSection: () => <p>Profile controls</p> }))
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
 
 /** A 75 Hard attempt on Day 12, with Settings open. */
 async function setup(canGiveUp: boolean) {
@@ -28,17 +33,42 @@ async function setup(canGiveUp: boolean) {
   return { challenge, today, ...view }
 }
 
+describe('SettingsScreen list', () => {
+  beforeEach(async () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: false, media: query, addEventListener() {}, removeEventListener() {} }))
+    await freshDatabase()
+  })
+
+  it('groups the settings into rows that open their own page, and back again', async () => {
+    await setup(true)
+    for (const group of ['You', 'Challenge', 'App', 'Privacy & data', 'Danger zone']) {
+      expect(screen.getByRole('region', { name: group })).toBeInTheDocument()
+    }
+
+    fireEvent.click(screen.getByRole('button', { name: /Profile/ }))
+    expect(screen.getByRole('heading', { name: 'Profile', level: 1 })).toBeInTheDocument()
+    expect(screen.getByText('Profile controls')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }))
+    expect(screen.getByRole('heading', { name: 'Settings', level: 1 })).toBeInTheDocument()
+  })
+})
+
 describe('SettingsScreen danger zone', () => {
   beforeAll(() => {
     MotionGlobalConfig.skipAnimations = true
   })
 
-  beforeEach(freshDatabase)
+  beforeEach(async () => {
+    // jsdom has no matchMedia (the install row checks for standalone mode).
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: false, media: query, addEventListener() {}, removeEventListener() {} }))
+    await freshDatabase()
+  })
 
   it('offers giving up while the attempt can be given up, opening the flow', async () => {
     await setup(true)
 
-    expect(screen.getByText('Stop this attempt for good. It stays in your history.')).toBeInTheDocument()
+    expect(screen.getByText(/Giving up stops this attempt for good/)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Give up this challenge' }))
 
     expect(await screen.findByRole('heading', { name: 'Give up 75 Hard?' })).toBeInTheDocument()

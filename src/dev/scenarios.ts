@@ -1,6 +1,7 @@
 /**
- * Dev-only seeded scenarios for manual testing in the browser. Nothing in
- * the app imports this file, so it never reaches a production build.
+ * Dev-only seeded scenarios for manual testing in the browser. The app only
+ * reaches this file through dev-only time travel (src/dev/timeTravel.ts),
+ * behind import.meta.env.DEV, so it never reaches a production build.
  *
  * Open the app with a scratch database, then seed it from the console:
  *
@@ -348,4 +349,30 @@ export async function seedReturningWithoutProfile(): Promise<void> {
     [{ challenge: { startDate: addDaysISO(todayISO(), -3), attemptNumber: 1, status: 'active' }, days }],
     { withProfile: false },
   )
+}
+
+/**
+ * Time travel: an attempt on Day `day`, every earlier day done and today
+ * untouched. Past Day 75, all 75 days are done — the victory screen. With
+ * `yesterdayUnfinished`, yesterday is only half logged (late logging).
+ */
+export async function seedTravelDay(day: number, { yesterdayUnfinished = false } = {}): Promise<void> {
+  const today = Math.min(Math.max(1, Math.floor(day)), CHALLENGE_LENGTH)
+  const days: SeedDay[] = []
+  for (let d = 1; d < today; d++) {
+    if (yesterdayUnfinished && d === today - 1) {
+      days.push({
+        dayNumber: d,
+        entry: { water_ml: 2000, dietFollowed: true, noAlcohol: true },
+        workouts: [{ type: 'Running', durationMin: RULESETS.hard.minWorkoutMin, isOutdoor: true }],
+      })
+    } else {
+      days.push(await perfectDay(d))
+    }
+  }
+  if (day > CHALLENGE_LENGTH) days.push(await perfectDay(CHALLENGE_LENGTH))
+
+  await replaceDatabase([
+    { challenge: { startDate: addDaysISO(todayISO(), -(today - 1)), attemptNumber: 1, status: 'active' }, days },
+  ])
 }

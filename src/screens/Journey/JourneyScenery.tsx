@@ -22,10 +22,11 @@ function WorldMask({ index }: { index: number }) {
       <linearGradient id={`journey-world-fade-${index}`} gradientUnits="userSpaceOnUse" x1={0} y1={start} x2={0} y2={end}>
         <stop offset={0} stopColor="#fff" />
         {/* Gradient stops must ascend, so the fade is listed from where it starts down to the bottom edge. */}
+        {/* Hell doesn't fade: its stops all sit at the edge, so they're keyed by position in the list. */}
         {easedFade(1, fadeFrom)
           .reverse()
-          .map(({ offset, opacity }) => (
-            <stop key={offset} offset={offset.toFixed(4)} stopColor="#fff" stopOpacity={opacity.toFixed(3)} />
+          .map(({ offset, opacity }, k) => (
+            <stop key={k} offset={offset.toFixed(4)} stopColor="#fff" stopOpacity={opacity.toFixed(3)} />
           ))}
       </linearGradient>
       <rect x={0} y={start} width={MAP_WIDTH} height={span} fill={`url(#journey-world-fade-${index})`} />

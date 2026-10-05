@@ -3,6 +3,7 @@ import { lazy, Suspense, type ReactNode } from 'react'
 import { db } from '../../db/db'
 import { profileRepo } from '../../db/repositories/profileRepo'
 import { ProfileContext } from '../../hooks/useProfile'
+import { InstallFirst } from './InstallFirst'
 
 // Only shown once per install, so it loads on demand; the service worker precaches the chunk.
 const OnboardingFlow = lazy(() => import('./OnboardingFlow').then((m) => ({ default: m.OnboardingFlow })))
@@ -28,9 +29,11 @@ export function OnboardingGate({ today, loading, children }: OnboardingGateProps
   if (!state) return loading
   if (!state.profile) {
     return (
-      <Suspense fallback={loading}>
-        <OnboardingFlow mode={state.hasAttempts ? 'returning' : 'new'} today={today} />
-      </Suspense>
+      <InstallFirst>
+        <Suspense fallback={loading}>
+          <OnboardingFlow mode={state.hasAttempts ? 'returning' : 'new'} today={today} />
+        </Suspense>
+      </InstallFirst>
     )
   }
   return <ProfileContext.Provider value={state.profile}>{children}</ProfileContext.Provider>

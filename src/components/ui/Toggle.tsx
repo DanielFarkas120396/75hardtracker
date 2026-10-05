@@ -2,12 +2,13 @@ interface ToggleProps {
   checked: boolean
   onChange: (checked: boolean) => void
   label: string
-  activeColor?: 'green' | 'blue'
+  /** The world's colour by default; blue where the task is about water or the outdoors. */
+  activeColor?: 'world' | 'blue'
 }
 
 /** An accessible pill switch used for boolean tasks (diet followed, indoor/outdoor, etc.). */
-export function Toggle({ checked, onChange, label, activeColor = 'green' }: ToggleProps) {
-  const activeClasses = activeColor === 'blue' ? 'bg-blue-ink' : 'bg-green-ink'
+export function Toggle({ checked, onChange, label, activeColor = 'world' }: ToggleProps) {
+  const activeClasses = activeColor === 'blue' ? 'bg-blue-ink' : 'bg-world-ink'
 
   return (
     <button

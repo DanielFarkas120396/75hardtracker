@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { exportAll, markExported } from '../db/exportImport'
+import { encryptBackup } from '../lib/backupCrypto'
 import { todayISO } from '../lib/dates'
 import { saveBackupFile } from '../lib/backupFile'
 
 /**
  * Exports a backup file (share sheet on phones, download elsewhere) and records
- * it as the last backup. Shared by Settings and the weekly reminder.
+ * it as the last backup — protected with a password (encrypted) when one is
+ * given. Shared by Settings and the weekly reminder.
  */
 export function useBackupExport() {
   const [busy, setBusy] = useState(false)
@@ -26,15 +28,15 @@ export function useBackupExport() {
     }
   }
 
-  const exportNow = async () => {
+  const exportNow = async (password = '') => {
     setBusy(true)
     setError(null)
     setNotice(null)
     try {
-      const payload = await exportAll()
-      const file = new File([JSON.stringify(payload, null, 2)], `75hard-backup-${todayISO()}.json`, {
-        type: 'application/json',
-      })
+      const json = JSON.stringify(await exportAll())
+      const contents = password ? JSON.stringify(await encryptBackup(json, password)) : json
+      const name = `75hard-backup-${todayISO()}${password ? '-protected' : ''}.json`
+      const file = new File([contents], name, { type: 'application/json' })
       await finishSave(file, false)
     } catch {
       setError('Export failed. Please try again.')

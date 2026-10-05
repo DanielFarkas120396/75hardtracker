@@ -42,15 +42,17 @@ export function DayCompleteCelebration({ celebration, onDismiss }: DayCompleteCe
           className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-green-deep p-6 text-center text-white"
         >
           <Mascot mood="celebrating" size={140} />
-          <h1 id="day-complete-title" className="font-rounded text-3xl font-extrabold">
+          <h1 id="day-complete-title" className="font-display text-3xl tracking-wide">
             Day {celebration.dayNumber} complete!
           </h1>
           <p className="max-w-xs font-rounded font-semibold text-white/90">
             {celebration.isFinalDay
               ? `That was the last one. All ${CHALLENGE_LENGTH} days — every task, every day.`
-              : 'Every task, done. See you tomorrow — keep the streak alive.'}
+              : celebration.late
+                ? 'Logged just in time. The streak lives — now go get today.'
+                : 'Every task, done. See you tomorrow — keep the streak alive.'}
           </p>
-          <p className="font-rounded text-lg font-extrabold text-yellow">+{celebration.xpEarned} XP today</p>
+          <p className="font-rounded text-lg font-extrabold text-yellow">+{celebration.xpEarned} XP{celebration.late ? '' : ' today'}</p>
           {celebration.streak > 1 && (
             <p className="font-rounded font-bold text-white/90">🔥 {celebration.streak}-day streak</p>
           )}

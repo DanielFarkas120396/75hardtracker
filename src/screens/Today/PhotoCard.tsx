@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence } from 'framer-motion'
-import { useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BlobImage } from '../../components/BlobImage'
 import { Button } from '../../components/ui/Button'
@@ -11,18 +11,33 @@ import { isCameraSupported } from '../../lib/camera'
 import { compressImage } from '../../lib/imageCompression'
 import { CameraSheet } from './CameraSheet'
 
+const PHOTO_CARD_ID = 'today-photo'
+
 interface PhotoCardProps {
   entry: DayEntry
   complete: boolean
   cheer: string
+  /** Scroll here and open the camera on arrival (from the Gallery), then call onCameraOpened. */
+  openCameraNow?: boolean
+  /** Only a photo from the library (finishing yesterday: the camera would take today's). */
+  libraryOnly?: boolean
+  onCameraOpened?: () => void
 }
 
-export function PhotoCard({ entry, complete, cheer }: PhotoCardProps) {
+export function PhotoCard({
+  entry,
+  complete,
+  cheer,
+  openCameraNow = false,
+  onCameraOpened,
+  libraryOnly = false,
+}: PhotoCardProps) {
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const libraryInputRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [cameraOpen, setCameraOpen] = useState(false)
+  // Arriving from the Gallery's "take a photo", the in-app camera opens straight away.
+  const [cameraOpen, setCameraOpen] = useState(() => openCameraNow && isCameraSupported())
   const [cameraFailed, setCameraFailed] = useState(false)
 
   const photo = useLiveQuery(async () => {
@@ -56,6 +71,14 @@ export function PhotoCard({ entry, complete, cheer }: PhotoCardProps) {
     setCameraOpen(true)
   }
 
+  const onArrival = useEffectEvent(() => {
+    document.getElementById(PHOTO_CARD_ID)?.scrollIntoView({ block: 'center' })
+    onCameraOpened?.()
+  })
+  useEffect(() => {
+    if (openCameraNow) onArrival()
+  }, [openCameraNow])
+
   const onCameraUnavailable = () => {
     setCameraOpen(false)
     setCameraFailed(true)
@@ -68,9 +91,10 @@ export function PhotoCard({ entry, complete, cheer }: PhotoCardProps) {
   }
 
   return (
-    <Card complete={complete} cheer={cheer}>
-      <h2 className="font-rounded text-lg font-extrabold text-ink">📸 Photo</h2>
-      <p className="mt-1 text-sm text-ink-muted">One progress photo a day.</p>
+    <Card id={PHOTO_CARD_ID} complete={complete} cheer={cheer} title="Photo" icon="photo" summary="Taken">
+      <p className="mt-1 text-sm text-ink-muted">
+        {libraryOnly ? "Yesterday's photo, from your library." : 'One progress photo a day.'}
+      </p>
 
       <div className="mt-4">
         {photo ? (
@@ -105,11 +129,13 @@ export function PhotoCard({ entry, complete, cheer }: PhotoCardProps) {
         )}
 
         <div className="mt-3 flex flex-col gap-2">
-          <Button variant="secondary" onClick={openCamera} disabled={busy}>
-            {busy ? 'Saving…' : photo ? '📷 Retake photo' : '📷 Take photo'}
-          </Button>
+          {!libraryOnly && (
+            <Button variant="secondary" onClick={openCamera} disabled={busy}>
+              {busy ? 'Saving…' : photo ? '📷 Retake photo' : '📷 Take photo'}
+            </Button>
+          )}
           <Button variant="secondary" onClick={() => libraryInputRef.current?.click()} disabled={busy}>
-            🖼️ Choose from library
+            {busy && libraryOnly ? 'Saving…' : '🖼️ Choose from library'}
           </Button>
         </div>
 

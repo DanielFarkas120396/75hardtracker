@@ -1,49 +1,41 @@
-# Next steps — roadmap notes
+# Roadmap notes
 
-Status: **proposal** (2026-10-02). Nothing started. Built from [FEEDBACK.md](../../../FEEDBACK.md), the README and the decisions so far (local-only: see [backend and sign-in notes](2026-10-02-backend-and-sign-in-notes.md); duck animations on hold: see [duck animation notes](2026-10-02-duck-animations-notes.md)).
+Status: **updated 2026-10-05.** First written on 2026-10-02 from [FEEDBACK.md](../../../FEEDBACK.md), the README and the decisions so far (local-only: see [backend and sign-in notes](2026-10-02-backend-and-sign-in-notes.md); duck animations on hold: see [duck animation notes](2026-10-02-duck-animations-notes.md)).
 
-## Suggested order
+The audience for now is **1–5 friends and family**. At that size, a server, accounts, push notifications and the paywall aren't worth it yet.
 
-1. Design pass, starting with the Journey map
-2. Progress photo comparison and the share card
-3. Face ID lock and the backup warning
-4. Time-travel dev mode
-5. Paywall, then duck animations once there are Higgsfield credits
+## Done
 
-## 1. Design: the top open point
+| Item | Where |
+|---|---|
+| Journey map: the climb from hell to heaven | main, PR #14 ([design](2026-10-02-journey-map-design.md)) |
+| Design pass: "your world everywhere" (Today, Stats, Gallery, Settings) | v2, PRs #15–#19 ([design](2026-10-03-app-look-design.md)) |
+| Time-travel dev mode | v2, PR #20 (Settings → Developer, in the dev server only) |
+| HTTPS phone testing, for the in-app camera | v2, PR #21 (`npm run dev:phone`) |
+| Late logging: yesterday open until noon | v2, PR #22 ([design](2026-10-05-late-logging-design.md)) |
+| App lock: PIN and Face ID | v2, PRs #23–#24 ([design](2026-10-05-face-id-lock-design.md)) |
+| Install first, restore on welcome, password-protected backups | v2, PR #25 ([design](2026-10-05-backups-install-design.md)) |
 
-From FEEDBACK.md (2026-09-28): the look is "too basic, improve quickly".
+`main` is still v1 (tag `v1`). Merging `v2` into `main` is the owner's call.
 
-- **One overall design pass:** a clear visual identity (colours, card style, typography, small illustrations) so the app feels finished, not like a template.
-- **Journey map:** a nicer design with a proper background (FEEDBACK.md, 2026-09-28), e.g. a landscape the path winds through, with milestones along the way.
-- Do this **before** the duck animations: they'll look better in a polished app, and the design choices will guide their style.
+## Next, in order
 
-## 2. Features with the most value (no backend needed)
+1. **Share v2 with friends and family** and collect their feedback. That needs v2 in `main` and Vercel turned back on (both the owner's call). Then test Face ID on an iPhone.
+2. **Progress photo comparison:** Day 1 next to today with a slider, or a short time-lapse. Photos are the most motivating part of 75 Hard.
+3. **Share card:** an image like "Day 32 / 75 🔥" with the duck, shared through the phone's share sheet (Web Share API). Made on the phone; nothing leaves it unless the user shares it.
+4. **Day 75 recap:** a "Wrapped"-style summary: total workouts, litres of water, pages read, before/after photos.
+5. **Duck animations**, once there are Higgsfield credits.
+6. **Paywall**, only if the app grows beyond friends and family.
 
-- **Progress photo comparison:** day 1 next to today with a slider, or a short time-lapse of all photos. Photos are the most motivating part of 75 Hard; today the Gallery is just a list.
-- **Share card:** an image like "Day 32 / 75 🔥" with the duck, shared through the phone's share sheet (Web Share API). Made on the phone; nothing leaves it unless the user shares it. Free advertising for the app.
-- **Day 75 recap:** a "Wrapped"-style summary: total workouts, litres of water, pages read, before/after photos.
-- **Time-travel mode** (FEEDBACK.md, 2026-09-28): dev scenarios (`src/dev/scenarios.ts`) and `?now=` already exist for developers, but there's no in-app way to skip ahead a day. Add it to a hidden dev menu.
+## Still open from the review
 
-## 3. Reminders: a known limit
+- **Security headers on Vercel** (Content-Security-Policy and similar): cheap, to do when Vercel is back.
+- **Imported backups:** import already validates and cleans files (`src/db/exportImport.ts`, `src/db/normalize.ts`), and a protected file can't be altered without failing. A deliberately broken file hasn't been tried by hand.
 
-A real push notification on iPhone ("you haven't logged water") needs a server to send it; a web app can't schedule one on its own. With the local-only decision, the duck's in-app pressure is the reminder system for now. Don't promise notifications without revisiting the backend decision.
+## Known limit: reminders
 
-## 4. Security and privacy
+A real push notification on iPhone ("you haven't logged water") needs a server to send it; a web app can't schedule one on its own. With the local-only decision, the duck's in-app pressure is the reminder system. Don't promise notifications without revisiting the backend decision.
 
-Data never leaves the phone, so the risks are on the phone itself.
+## Before charging money
 
-- **Optional Face ID lock** when opening the app (possible in a web app via WebAuthn). Body photos are private.
-- **Backup file warning:** the exported backup contains every photo, unprotected. Add a clear warning, or an optional password that encrypts the file.
-- **Imported backups:** make sure a damaged or tampered file can't break the app. Some cleaning already exists (`src/db/normalize.ts`, `src/db/exportImport.ts`); review it.
-- **Security headers on Vercel:** standard browser protections (Content-Security-Policy and similar). Cheap and quick.
-
-## 5. Before charging money
-
-- The **paywall** slot in onboarding (`src/logic/onboarding.ts`). Checking payments needs a small server: this is the main trigger in the backend notes. Decide the model first: one-time purchase or subscription, and what stays free.
-
-## Already done from FEEDBACK.md
-
-- Change the challenge in Settings (Settings → Challenge).
-- Choose a start date in onboarding, and change it until it has passed.
-- In-app camera for progress photos (PR #9).
+The **paywall** slot in onboarding (`src/logic/onboarding.ts`). Checking payments needs a small server: the main trigger in the backend notes. Decide the model first: a one-time purchase or a subscription, and what stays free.

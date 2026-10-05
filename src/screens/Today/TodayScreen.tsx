@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { BackupReminderBanner } from '../../components/BackupReminderBanner'
-import { FlameStreak } from '../../components/FlameStreak'
-import { Greeting, WhyQuote } from '../../components/ProfileLines'
-import { ProgressRing } from '../../components/ui/ProgressRing'
+import { LockBypassBanner } from '../../components/LockBypassBanner'
+import { WhyQuote } from '../../components/ProfileLines'
 import { planSavedLine, taskCheer } from '../../content/microcopy'
 import { VARIANT_NAMES } from '../../content/variants'
 import type { Challenge, DayEntry } from '../../db/types'
@@ -13,7 +12,7 @@ import { useNow } from '../../hooks/useNow'
 import { useProfile } from '../../hooks/useProfile'
 import { useTodayEntry } from '../../hooks/useTodayEntry'
 import { useWorkoutsForEntry } from '../../hooks/useWorkoutsForEntry'
-import { dateForDayNumber, formatWeekday } from '../../lib/dates'
+import { addDaysISO, dateForDayNumber, formatWeekday } from '../../lib/dates'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { TASK_IDS } from '../../logic/dayCompletion'
 import { isChallengeDay } from '../../logic/days'
@@ -22,12 +21,14 @@ import { isStartDateEditable } from '../../logic/startDate'
 import { DayNotesCard } from './DayNotesCard'
 import { DietCard } from './DietCard'
 import { DuckHeader, type DuckAnnouncement } from './DuckHeader'
+import { LateDayCard, LateDayView } from './LateDay'
 import { MenaceAtmosphere } from './MenaceAtmosphere'
 import { PhotoCard } from './PhotoCard'
 import { PlanSheet } from './PlanSheet'
 import { PreStartView } from './PreStartView'
 import { ReadingCard } from './ReadingCard'
 import { SocialOccasionSheet } from './SocialOccasionSheet'
+import { TodayHero } from './TodayHero'
 import { WaterCard } from './WaterCard'
 import { WorkoutCard } from './WorkoutCard'
 
@@ -38,17 +39,49 @@ interface TodayScreenProps {
   todayDayNumber: number
   streak: number
   jokersLeft: number
+  /** Open the photo card's camera on arrival (from the Gallery), then call onCameraOpened. */
+  openCamera?: boolean
+  onCameraOpened?: () => void
+  /** Yesterday, while it can still be finished (until noon) and isn't yet. */
+  pendingLateDay?: number | null
 }
 
 export function TodayScreen(props: TodayScreenProps) {
+  const [lateOpen, setLateOpen] = useState(false)
+  const late = props.pendingLateDay ?? null
+
+  // The morning after Day 75 there's no today to show: only the last day to finish.
+  if (late !== null && (lateOpen || !isChallengeDay(props.todayDayNumber))) {
+    return (
+      <LateDayView
+        key={late}
+        challenge={props.challenge}
+        dayEntries={props.dayEntries}
+        dayNumber={late}
+        date={addDaysISO(props.today, -1)}
+        onBack={isChallengeDay(props.todayDayNumber) ? () => setLateOpen(false) : undefined}
+      />
+    )
+  }
   if (!isChallengeDay(props.todayDayNumber)) {
     return <PreStartView challenge={props.challenge} todayDayNumber={props.todayDayNumber} today={props.today} />
   }
   // Keyed by day: the lunges, the plan sheet and the announcement all belong to one day.
-  return <TodayTasks key={props.todayDayNumber} {...props} />
+  return <TodayTasks key={props.todayDayNumber} {...props} onOpenLateDay={() => setLateOpen(true)} />
 }
 
-function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak, jokersLeft }: TodayScreenProps) {
+function TodayTasks({
+  challenge,
+  dayEntries,
+  today,
+  todayDayNumber,
+  streak,
+  jokersLeft,
+  openCamera,
+  onCameraOpened,
+  pendingLateDay,
+  onOpenLateDay,
+}: TodayScreenProps & { onOpenLateDay: () => void }) {
   const rules = rulesFor(challenge)
   const entry = useTodayEntry({ challengeId: challenge.id, dayNumber: todayDayNumber, today, dayEntries })
   const workouts = useWorkoutsForEntry(entry?.id)
@@ -77,35 +110,20 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak, joke
   )?.dayNumber
 
   return (
-    <div className="min-h-dvh bg-canvas pb-24">
+    <div className="min-h-dvh bg-canvas pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
       <MenaceAtmosphere level={menace.level} flashes={lunges} />
       <div className="relative z-10">
-        <header className="flex items-center justify-between px-4 pt-6 pb-4">
-          <div>
-            <Greeting />
-            <p className="font-rounded text-sm font-bold text-ink-muted">
-              {VARIANT_NAMES[rules.variant]} · Attempt #{challenge.attemptNumber}
-            </p>
-            <h1 className="font-rounded text-2xl font-extrabold text-ink">
-              Day {todayDayNumber} / {CHALLENGE_LENGTH}
-            </h1>
-            <p className="mt-1 font-rounded text-sm font-extrabold text-yellow-ink">⭐ {xp} XP</p>
-            {rules.jokers > 0 && (
-              <p className="mt-1 font-rounded text-sm font-extrabold text-orange-ink">
-                🃏 {jokersLeft} {jokersLeft === 1 ? 'joker' : 'jokers'} left
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
-            <FlameStreak streak={streak} />
-            <ProgressRing value={completedCount} max={TASK_IDS.length}>
-              <span className="font-rounded text-sm font-extrabold text-ink">
-                {completedCount}/{TASK_IDS.length}
-              </span>
-            </ProgressRing>
-          </div>
-        </header>
-        <WhyQuote className="px-4 pb-3" />
+        <TodayHero
+          attemptLine={`${VARIANT_NAMES[rules.variant]} · Attempt #${challenge.attemptNumber}`}
+          dayNumber={todayDayNumber}
+          completedCount={completedCount}
+          taskCount={TASK_IDS.length}
+          streak={streak}
+          xp={xp}
+          jokersLeft={rules.jokers > 0 ? jokersLeft : undefined}
+        />
+        {pendingLateDay != null && <LateDayCard dayNumber={pendingLateDay} onOpen={onOpenLateDay} />}
+        <LockBypassBanner />
         <BackupReminderBanner />
 
         {isStartDateEditable(todayDayNumber) && (
@@ -133,6 +151,7 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak, joke
             </button>
           )}
         </DuckHeader>
+        <WhyQuote className="px-4 pb-4" />
 
         <main className="flex flex-col gap-4 px-4">
           <WorkoutCard
@@ -165,7 +184,13 @@ function TodayTasks({ challenge, dayEntries, today, todayDayNumber, streak, joke
             cheer={taskCheer('reading', todayDayNumber, rules)}
             rules={rules}
           />
-          <PhotoCard entry={entry} complete={completion.completion.photo} cheer={taskCheer('photo', todayDayNumber, rules)} />
+          <PhotoCard
+            entry={entry}
+            complete={completion.completion.photo}
+            cheer={taskCheer('photo', todayDayNumber, rules)}
+            openCameraNow={openCamera}
+            onCameraOpened={onCameraOpened}
+          />
           <DayNotesCard entry={entry} />
         </main>
       </div>
