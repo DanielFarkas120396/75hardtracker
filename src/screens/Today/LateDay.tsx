@@ -1,16 +1,17 @@
+import { useState } from 'react'
 import { Icon } from '../../components/icons/Icon'
-import { taskCheer } from '../../content/microcopy'
+import type { BoardTask } from '../../content/taskStatus'
 import type { Challenge, DayEntry } from '../../db/types'
+import { useCurrentBook } from '../../hooks/useCurrentBook'
 import { useDayCompletion } from '../../hooks/useDayCompletion'
+import { useEntryPhoto } from '../../hooks/useEntryPhoto'
 import { useTodayEntry } from '../../hooks/useTodayEntry'
 import { useWorkoutsForEntry } from '../../hooks/useWorkoutsForEntry'
 import { challengeWeek, rulesFor } from '../../logic/rulesets'
-import { DayNotesCard } from './DayNotesCard'
-import { DietCard } from './DietCard'
-import { PhotoCard } from './PhotoCard'
-import { ReadingCard } from './ReadingCard'
-import { WaterCard } from './WaterCard'
-import { WorkoutCard } from './WorkoutCard'
+import { PhotoCapture } from './PhotoCapture'
+import { TaskBoard } from './TaskBoard'
+import { TaskSheet } from './TaskSheet'
+import { describeTask } from './taskSheets'
 
 /** On Today, under the hero: yesterday isn't finished, and there's until noon to log it. */
 export function LateDayCard({ dayNumber, onOpen }: { dayNumber: number; onOpen: () => void }) {
@@ -45,7 +46,7 @@ interface LateDayViewProps {
 }
 
 /**
- * Yesterday's tasks, to finish logging them before noon: the same cards as
+ * Yesterday's tasks, to finish logging them before noon: the same board as
  * Today, without the duck or the plan, and a photo only from the library.
  */
 export function LateDayView({ challenge, dayEntries, dayNumber, date, onBack }: LateDayViewProps) {
@@ -53,6 +54,9 @@ export function LateDayView({ challenge, dayEntries, dayNumber, date, onBack }: 
   const entry = useTodayEntry({ challengeId: challenge.id, dayNumber, today: date, dayEntries })
   const workouts = useWorkoutsForEntry(entry?.id)
   const completion = useDayCompletion(entry, workouts, rules, challenge.socialDays)
+  const { currentBook } = useCurrentBook()
+  const photo = useEntryPhoto(entry?.photoId)
+  const [openTask, setOpenTask] = useState<BoardTask | null>(null)
 
   if (!entry || !workouts || !completion) {
     return (
@@ -67,55 +71,55 @@ export function LateDayView({ challenge, dayEntries, dayNumber, date, onBack }: 
     (e) => e.restDay && e.dayNumber !== dayNumber && challengeWeek(e.dayNumber) === challengeWeek(dayNumber),
   )?.dayNumber
 
-  return (
-    <div className="min-h-dvh bg-canvas pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
-      <header className="px-4 pt-4 pb-4">
-        {onBack && (
-          <button
-            type="button"
-            onClick={onBack}
-            className="-ml-2 flex min-h-touch items-center gap-1 rounded-xl px-2 font-rounded font-bold text-world-ink"
-          >
-            <Icon name="chevron" size={18} className="rotate-180" />
-            Today
-          </button>
-        )}
-        <p className={`font-rounded text-sm font-bold text-ink-muted ${onBack ? '' : 'pt-2'}`}>Yesterday</p>
-        <h1 className="font-display text-3xl tracking-wide text-world-ink">Finish Day {dayNumber}</h1>
-        <p className="mt-1 font-rounded text-sm text-ink-muted">
-          Log what you did yesterday. You have until 12:00; after that, the day counts as missed.
-        </p>
-      </header>
+  const sheetContext = {
+    entry,
+    workouts,
+    completion: completion.completion,
+    rules,
+    dayNumber,
+    socialToday: socialThatDay,
+    canPlanSocial: false,
+    onPlanSocial: () => {},
+    weekRestDay,
+    libraryOnly: true,
+  }
 
-      <main className="flex flex-col gap-4 px-4">
-        <WorkoutCard
-          dayEntryId={entry.id}
-          workouts={workouts}
-          complete={completion.completion.workouts}
-          cheer={taskCheer('workouts', dayNumber, rules)}
-          rules={rules}
-          restDay={entry.restDay === true}
-          weekRestDay={weekRestDay}
-        />
-        <DietCard
-          entry={entry}
-          complete={completion.completion.diet}
-          cheer={taskCheer('diet', dayNumber, rules)}
-          rules={rules}
-          socialToday={socialThatDay}
-          canPlanSocial={false}
-          onPlanSocial={() => {}}
-        />
-        <WaterCard entry={entry} complete={completion.completion.water} cheer={taskCheer('water', dayNumber, rules)} rules={rules} />
-        <ReadingCard
-          entry={entry}
-          complete={completion.completion.reading}
-          cheer={taskCheer('reading', dayNumber, rules)}
-          rules={rules}
-        />
-        <PhotoCard entry={entry} complete={completion.completion.photo} cheer={taskCheer('photo', dayNumber, rules)} libraryOnly />
-        <DayNotesCard entry={entry} />
-      </main>
-    </div>
+  return (
+    <PhotoCapture entry={entry} libraryOnly onCameraOpen={() => setOpenTask(null)}>
+      <div className="min-h-dvh bg-canvas pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
+        <header className="px-4 pt-4 pb-4">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="-ml-2 flex min-h-touch items-center gap-1 rounded-xl px-2 font-rounded font-bold text-world-ink"
+            >
+              <Icon name="chevron" size={18} className="rotate-180" />
+              Today
+            </button>
+          )}
+          <p className={`font-rounded text-sm font-bold text-ink-muted ${onBack ? '' : 'pt-2'}`}>Yesterday</p>
+          <h1 className="font-display text-3xl tracking-wide text-world-ink">Finish Day {dayNumber}</h1>
+          <p className="mt-1 font-rounded text-sm text-ink-muted">
+            Log what you did yesterday. You have until 12:00; after that, the day counts as missed.
+          </p>
+        </header>
+
+        <main className="px-4">
+          <TaskBoard
+            entry={entry}
+            data={completion.data}
+            completion={completion.completion}
+            missing={completion.missing}
+            rules={rules}
+            bookTitle={currentBook?.title}
+            photo={photo?.blob}
+            onOpen={setOpenTask}
+          />
+        </main>
+
+        <TaskSheet content={openTask ? describeTask(openTask, sheetContext) : null} onClose={() => setOpenTask(null)} />
+      </div>
+    </PhotoCapture>
   )
 }

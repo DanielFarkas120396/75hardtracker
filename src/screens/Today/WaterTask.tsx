@@ -1,19 +1,17 @@
 import { useState } from 'react'
 import { Button } from '../../components/ui/Button'
-import { Card } from '../../components/ui/Card'
 import { formatLiters } from '../../content/variants'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import type { DayEntry } from '../../db/types'
 import type { Ruleset } from '../../logic/rulesets'
 
-interface WaterCardProps {
+interface WaterTaskProps {
   entry: DayEntry
-  complete: boolean
-  cheer: string
   rules: Ruleset
 }
 
-export function WaterCard({ entry, complete, cheer, rules }: WaterCardProps) {
+/** The water sheet's body: the bottle, and the pours. */
+export function WaterTask({ entry, rules }: WaterTaskProps) {
   const [lastDelta, setLastDelta] = useState<number | null>(null)
 
   const addWater = (deltaMl: number) => {
@@ -32,10 +30,8 @@ export function WaterCard({ entry, complete, cheer, rules }: WaterCardProps) {
   const targetLiters = formatLiters(rules.waterTargetMl)
 
   return (
-    <Card complete={complete} cheer={cheer} title="Water" icon="water" summary={`${formatLiters(entry.water_ml)} L`}>
-      <p className="mt-1 text-sm text-ink-muted">Goal: {targetLiters} L a day.</p>
-
-      <div className="mt-4 flex items-center gap-4">
+    <div>
+      <div className="flex items-center gap-4">
         <div className="relative h-24 w-14 shrink-0 overflow-hidden rounded-2xl border-2 border-blue bg-blue-light">
           <div
             className="absolute inset-x-0 bottom-0 bg-blue motion-safe:transition-[height] motion-safe:duration-500"
@@ -59,6 +55,6 @@ export function WaterCard({ entry, complete, cheer, rules }: WaterCardProps) {
           Undo
         </Button>
       </div>
-    </Card>
+    </div>
   )
 }

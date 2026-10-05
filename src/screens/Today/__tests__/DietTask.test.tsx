@@ -3,7 +3,7 @@ import { MotionGlobalConfig } from 'framer-motion'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import type { DayEntry } from '../../../db/types'
 import { RULESETS } from '../../../logic/rulesets'
-import { DietCard } from '../DietCard'
+import { DietTask } from '../DietTask'
 
 const entry: DayEntry = {
   id: 1,
@@ -17,17 +17,15 @@ const entry: DayEntry = {
   completed: false,
 }
 
-describe('DietCard', () => {
+describe('DietTask', () => {
   beforeAll(() => {
     MotionGlobalConfig.skipAnimations = true
   })
 
   it('Hard: has no social button, and shows the alcohol toggle', () => {
     render(
-      <DietCard
+      <DietTask
         entry={entry}
-        complete={false}
-        cheer=""
         rules={RULESETS.hard}
         socialToday={false}
         canPlanSocial={false}
@@ -42,10 +40,8 @@ describe('DietCard', () => {
   it('Strong, no social occasion declared today: the button calls onPlanSocial', () => {
     const onPlanSocial = vi.fn()
     render(
-      <DietCard
+      <DietTask
         entry={entry}
-        complete={false}
-        cheer=""
         rules={RULESETS.strong}
         socialToday={false}
         canPlanSocial
@@ -59,10 +55,8 @@ describe('DietCard', () => {
 
   it('Strong, a social occasion today: shows the allowance line instead of the alcohol toggle', () => {
     render(
-      <DietCard
+      <DietTask
         entry={entry}
-        complete={false}
-        cheer=""
         rules={RULESETS.strong}
         socialToday
         canPlanSocial
@@ -76,10 +70,8 @@ describe('DietCard', () => {
 
   it('Strong, canPlanSocial false (e.g. Day 75): hides the plan button even though the rules allow it', () => {
     render(
-      <DietCard
+      <DietTask
         entry={entry}
-        complete={false}
-        cheer=""
         rules={RULESETS.strong}
         socialToday={false}
         canPlanSocial={false}

@@ -6,9 +6,9 @@ import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
 import { dayEntryRepo } from '../../../db/repositories/dayEntryRepo'
 import { todayISO } from '../../../lib/dates'
 import { RULESETS } from '../../../logic/rulesets'
-import { WorkoutCard } from '../WorkoutCard'
+import { WorkoutTask } from '../WorkoutTask'
 
-describe('WorkoutCard', () => {
+describe('WorkoutTask', () => {
   beforeAll(() => {
     MotionGlobalConfig.skipAnimations = true
   })
@@ -20,11 +20,10 @@ describe('WorkoutCard', () => {
     const entry = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 1, date: todayISO() })
 
     render(
-      <WorkoutCard
+      <WorkoutTask
         dayEntryId={entry.id}
         workouts={[]}
         complete={false}
-        cheer=""
         rules={RULESETS.hard}
         restDay={false}
         weekRestDay={undefined}
@@ -39,11 +38,10 @@ describe('WorkoutCard', () => {
     const entry = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 1, date: todayISO() })
 
     render(
-      <WorkoutCard
+      <WorkoutTask
         dayEntryId={entry.id}
         workouts={[]}
         complete={false}
-        cheer=""
         rules={RULESETS.soft}
         restDay={false}
         weekRestDay={undefined}
@@ -61,11 +59,10 @@ describe('WorkoutCard', () => {
     const day3 = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 3, date: todayISO() })
 
     render(
-      <WorkoutCard
+      <WorkoutTask
         dayEntryId={day3.id}
         workouts={[]}
         complete={false}
-        cheer=""
         rules={RULESETS.soft}
         restDay={false}
         weekRestDay={undefined}
@@ -82,11 +79,10 @@ describe('WorkoutCard', () => {
     await dayEntryRepo.setRestDay(entry.id, true)
 
     render(
-      <WorkoutCard
+      <WorkoutTask
         dayEntryId={entry.id}
         workouts={[]}
         complete={false}
-        cheer=""
         rules={RULESETS.soft}
         restDay
         weekRestDay={undefined}
@@ -104,11 +100,10 @@ describe('WorkoutCard', () => {
     const entry = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 3, date: todayISO() })
 
     render(
-      <WorkoutCard
+      <WorkoutTask
         dayEntryId={entry.id}
         workouts={[]}
         complete={false}
-        cheer=""
         rules={RULESETS.soft}
         restDay={false}
         weekRestDay={2}
@@ -124,11 +119,10 @@ describe('WorkoutCard', () => {
     const entry = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 1, date: todayISO() })
 
     render(
-      <WorkoutCard
+      <WorkoutTask
         dayEntryId={entry.id}
         workouts={[]}
         complete
-        cheer=""
         rules={RULESETS.soft}
         restDay={false}
         weekRestDay={undefined}

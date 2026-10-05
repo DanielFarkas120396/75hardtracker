@@ -5,7 +5,7 @@ import { db } from '../../../db/db'
 import { freshDatabase } from '../../../db/__tests__/fixtures'
 import type { DayEntry } from '../../../db/types'
 import { RULESETS } from '../../../logic/rulesets'
-import { ReadingCard } from '../ReadingCard'
+import { ReadingTask } from '../ReadingTask'
 
 const entry: DayEntry = {
   id: 1,
@@ -25,7 +25,7 @@ function typeKeys(input: HTMLElement, text: string) {
 }
 
 function openAddBookForm() {
-  render(<ReadingCard entry={entry} complete={false} cheer="" rules={RULESETS.hard} />)
+  render(<ReadingTask entry={entry} rules={RULESETS.hard} />)
   fireEvent.click(screen.getByRole('button', { name: '+ Add book' }))
   typeKeys(screen.getByPlaceholderText('Book title'), 'Atomic Habits')
   const pages = screen.getByLabelText('Total pages')
@@ -33,7 +33,7 @@ function openAddBookForm() {
   return pages
 }
 
-describe('ReadingCard: adding a book', () => {
+describe('ReadingTask: adding a book', () => {
   beforeAll(() => {
     MotionGlobalConfig.skipAnimations = true
   })

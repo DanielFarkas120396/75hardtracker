@@ -4,7 +4,8 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
 import { dayEntryRepo } from '../../../db/repositories/dayEntryRepo'
 import { todayISO } from '../../../lib/dates'
-import { PhotoCard } from '../PhotoCard'
+import { PhotoCapture } from '../PhotoCapture'
+import { PhotoTask } from '../PhotoTask'
 
 const camera = vi.hoisted(() => ({ supported: true, startCamera: vi.fn() }))
 
@@ -15,14 +16,19 @@ vi.mock('../../../lib/camera', async (importOriginal) => ({
 }))
 
 async function renderCard() {
+  const onCameraOpen = vi.fn()
   const challengeId = await addChallenge({ startDate: todayISO(), attemptNumber: 1, status: 'active' })
   const entry = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 1, date: todayISO() })
-  render(<PhotoCard entry={entry} complete={false} cheer="" />)
+  render(
+    <PhotoCapture entry={entry} onCameraOpen={onCameraOpen}>
+      <PhotoTask />
+    </PhotoCapture>,
+  )
   const fileClick = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {})
-  return { fileClick }
+  return { fileClick, onCameraOpen }
 }
 
-describe('PhotoCard camera', () => {
+describe('PhotoCapture', () => {
   beforeAll(() => {
     MotionGlobalConfig.skipAnimations = true
   })
@@ -37,11 +43,12 @@ describe('PhotoCard camera', () => {
   })
 
   it('opens the camera sheet, and closes it', async () => {
-    const { fileClick } = await renderCard()
+    const { fileClick, onCameraOpen } = await renderCard()
 
     fireEvent.click(screen.getByRole('button', { name: '📷 Take photo' }))
 
     expect(await screen.findByTestId('camera-preview')).toBeInTheDocument()
+    expect(onCameraOpen).toHaveBeenCalledTimes(1)
     expect(fileClick).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: 'Close camera' }))
     await waitFor(() => expect(screen.queryByTestId('camera-preview')).not.toBeInTheDocument())

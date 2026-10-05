@@ -5,9 +5,9 @@ import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
 import { dayEntryRepo } from '../../../db/repositories/dayEntryRepo'
 import { todayISO } from '../../../lib/dates'
 import { RULESETS } from '../../../logic/rulesets'
-import { WaterCard } from '../WaterCard'
+import { WaterTask } from '../WaterTask'
 
-describe('WaterCard', () => {
+describe('WaterTask', () => {
   beforeAll(() => {
     MotionGlobalConfig.skipAnimations = true
   })
@@ -18,8 +18,8 @@ describe('WaterCard', () => {
     const challengeId = await addChallenge({ startDate: todayISO(), attemptNumber: 1, status: 'active', variant: 'medium' })
     const entry = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 1, date: todayISO() })
 
-    render(<WaterCard entry={entry} complete={false} cheer="" rules={RULESETS.medium} />)
+    render(<WaterTask entry={entry} rules={RULESETS.medium} />)
 
-    expect(screen.getByText('Goal: 3 L a day.')).toBeInTheDocument()
+    expect(screen.getByText('of 3 L')).toBeInTheDocument()
   })
 })
