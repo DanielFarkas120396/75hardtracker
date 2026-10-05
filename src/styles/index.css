@@ -25,6 +25,10 @@
   --color-yellow-dark: #e6ac1b;
   --color-yellow-light: #fff6dd;
 
+  --color-purple: #a98bff;
+  --color-purple-dark: #8a66f0;
+  --color-purple-light: #efe9ff;
+
   --color-danger: #ff5a5f;
   /* The danger button's fill (white text on it), and its pressed edge. */
   --color-danger-dark: #d6383d;
@@ -39,6 +43,7 @@
   --color-orange-ink: #b4480f;
   --color-blue-ink: #0b6aa6;
   --color-yellow-ink: #8a6100;
+  --color-purple-ink: #6b3fd4;
   --color-danger-ink: #c0282e;
 
   /* Semantic surface tokens, redefined under .dark below for runtime theme switching */
@@ -92,11 +97,13 @@
   --color-orange-light: #42271a;
   --color-blue-light: #123247;
   --color-yellow-light: #3d3217;
+  --color-purple-light: #2a2347;
 
   --color-green-ink: #3dd16f;
   --color-orange-ink: #ff8a3d;
   --color-blue-ink: #38b6ff;
   --color-yellow-ink: #ffc93d;
+  --color-purple-ink: #c4b0ff;
   --color-danger-ink: #ff6b70;
 
   --color-chart-grid: #30383b;
