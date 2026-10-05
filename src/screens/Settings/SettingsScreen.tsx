@@ -52,7 +52,7 @@ const PAGE_TITLES: Record<PageId, string> = {
   companion: 'Companion',
   install: 'Install the app',
   backup: 'Backup & storage',
-  appLock: 'Face ID lock',
+  appLock: 'App lock',
   timeTravel: 'Time travel',
 }
 
@@ -67,7 +67,11 @@ export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGi
   const profile = useProfile()
   const { preference } = useThemeSetting()
   const bookCount = useLiveQuery(() => bookRepo.getAll().then((books) => books.length), [])
-  const lockOn = useLiveQuery(() => appLockRepo.get().then((config) => config !== null), [])
+  const lockValue = useLiveQuery(
+    () =>
+      appLockRepo.get().then((config) => (!config ? 'Off' : config.credentialId ? (config.pin ? 'PIN + Face ID' : 'Face ID') : 'PIN')),
+    [],
+  )
   const installState = useSyncExternalStore(subscribeToInstallState, getInstallState)
   const [page, setPage] = useState<PageId | null>(null)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
@@ -175,7 +179,7 @@ export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGi
             </SettingsGroup>
 
             <SettingsGroup title="Privacy & data">
-              <SettingsRow icon="lock" label="Face ID lock" value={lockOn ? 'On' : 'Off'} onClick={() => open('appLock')} />
+              <SettingsRow icon="lock" label="App lock" value={lockValue} onClick={() => open('appLock')} />
               <SettingsRow icon="backup" label="Backup & storage" onClick={() => open('backup')} />
             </SettingsGroup>
 

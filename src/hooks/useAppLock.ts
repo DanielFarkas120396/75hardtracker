@@ -1,19 +1,24 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { appLockRepo } from '../db/repositories/appLockRepo'
+import { appLockRepo, type PinResult } from '../db/repositories/appLockRepo'
 import { shouldRelock, verifyOwner } from '../lib/appLock'
+import { hashPin } from '../lib/pin'
 
 export type AppLockStatus = 'loading' | 'locked' | 'open'
 
+export type { PinResult }
+
 /**
- * The Face ID lock, at the app root. Locked when the app opens (if the lock
- * is on) and again after more than a minute in another app. While the app
- * is in the background its content is covered (`data-covered` on <html>,
- * set synchronously so the iPhone app switcher's snapshot doesn't show it).
- * Turning the lock on mid-session doesn't lock you out at once.
+ * The app lock, at the app root: a PIN, with Face ID as the shortcut.
+ * Locked when the app opens (if the lock is on) and again after more than a
+ * minute in another app. While the app is in the background its content is
+ * covered (`data-covered` on <html>, set synchronously so the iPhone app
+ * switcher's snapshot doesn't show it). Turning the lock on mid-session
+ * doesn't lock you out at once.
  */
 export function useAppLock() {
   const config = useLiveQuery(() => appLockRepo.get(), [])
+  const failures = useLiveQuery(() => appLockRepo.getFailures(), [])
   const enabled = config !== undefined && config !== null
   const [unlocked, setUnlocked] = useState(false)
   const hiddenAt = useRef<number | null>(null)
@@ -50,12 +55,33 @@ export function useAppLock() {
   }, [enabled])
 
   const credentialId = config?.credentialId
-  const unlock = useCallback(async (): Promise<boolean> => {
-    if (!credentialId) return true
-    const verified = await verifyOwner(credentialId)
-    if (verified) setUnlocked(true)
-    return verified
+  const storedPin = config?.pin
+
+  /** Asks for Face ID without opening the app (to reset a forgotten PIN). */
+  const confirmFaceId = useCallback(async (): Promise<boolean> => {
+    return credentialId ? verifyOwner(credentialId) : false
   }, [credentialId])
+
+  const unlockWithFaceId = useCallback(async (): Promise<boolean> => {
+    const verified = await confirmFaceId()
+    if (verified) {
+      await appLockRepo.resetFailures()
+      setUnlocked(true)
+    }
+    return verified
+  }, [confirmFaceId])
+
+  const unlockWithPin = useCallback(async (pin: string): Promise<PinResult> => {
+    const result = await appLockRepo.checkPin(pin)
+    if (result.ok) setUnlocked(true)
+    return result
+  }, [])
+
+  /** After Face ID passed ("Forgot PIN?"): saves the new PIN and opens the app. */
+  const resetPinAndUnlock = useCallback(async (pin: string): Promise<void> => {
+    await appLockRepo.setPin(await hashPin(pin))
+    setUnlocked(true)
+  }, [])
 
   const bypass = useCallback(async (): Promise<void> => {
     await appLockRepo.bypass()
@@ -63,5 +89,15 @@ export function useAppLock() {
   }, [])
 
   const status: AppLockStatus = config === undefined ? 'loading' : enabled && !unlocked ? 'locked' : 'open'
-  return { status, unlock, bypass }
+  return {
+    status,
+    faceIdEnabled: credentialId !== undefined,
+    hasPin: storedPin !== undefined,
+    failures: failures ?? { count: 0, lockedUntil: null },
+    unlockWithFaceId,
+    unlockWithPin,
+    confirmFaceId,
+    resetPinAndUnlock,
+    bypass,
+  }
 }
