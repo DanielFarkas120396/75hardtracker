@@ -44,3 +44,30 @@ Body photos, weight and notes are private, and anyone holding an unlocked phone 
 - **Screen tests:** the lock screen, the Settings explanation, and the backup keeping the lock off exports and imports.
 - **Browser:** the lock screen, the bypass path and the notice.
 - **iPhone (to do):** on a Vercel preview (a real domain), as an installed app: turning it on, unlocking with Face ID, the relock after 1 min, and the app switcher.
+
+## Addition: a PIN (2026-10-05)
+
+The owner asked for a banking-app style PIN, with Face ID first and the PIN as the backup.
+
+| Topic | Decision |
+|---|---|
+| Length | **6 digits.** Too-simple PINs (111111, 123456) are refused. |
+| When | **Face ID first, the PIN as backup.** The lock screen is a PIN pad with a Face ID key, and it asks for Face ID once on its own. The PIN is the lock's base: Face ID is the optional shortcut ("Also unlock with Face ID"), so the lock also works without Face ID, including over the Wi-Fi test link. |
+| Wrong PINs | **5 free tries,** then waits of 30 s, 1 min, 5 min, 15 min and 1 h, with a countdown. The wait is stored, so a relaunch doesn't reset it, and it applies in Settings too (`appLockRepo.checkPin`). **"Forgot PIN?"** sets a new PIN after Face ID. **"Can't unlock?"** (with its notice) stays as the last way out. |
+
+**Storage:**
+- The PIN is kept only as a PBKDF2-SHA-256 fingerprint (a random salt, 210,000 rounds), in `appLock.pin`, never as typed.
+- The wrong-PIN count is in `appLockFailures`.
+- All of it is device-only, never in backups.
+
+**Settings → Privacy & data → App lock:**
+- turn on: choose the PIN, typed twice
+- Also unlock with Face ID
+- Change PIN: the current PIN, then the new one twice
+- Turn off: asks for the PIN
+
+**Testing:**
+- **PIN unit tests:** format, too simple, hashing and salting, the waits.
+- **Hook tests:** PIN unlock, the wait surviving a relaunch, Face ID clearing the count, Forgot PIN.
+- **Lock screen and Settings tests.**
+- **In the browser:** turning it on, the lock at reopening, a wrong PIN, then the right one.

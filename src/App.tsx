@@ -48,13 +48,23 @@ function App() {
   if (lock.status === 'loading') return <LoadingScreen />
   return (
     <>
-      {/* Under the Face ID lock the app stays mounted (you come back where you were) but hidden and inert. */}
+      {/* Under the app lock the app stays mounted (you come back where you were) but hidden and inert. */}
       <div inert={lock.status === 'locked'} className={lock.status === 'locked' ? 'invisible' : undefined}>
         <OnboardingGate today={today} loading={<LoadingScreen />}>
           <MainApp today={today} />
         </OnboardingGate>
       </div>
-      {lock.status === 'locked' && <LockScreen onUnlock={lock.unlock} onBypass={lock.bypass} />}
+      {lock.status === 'locked' && (
+        <LockScreen
+          faceIdEnabled={lock.faceIdEnabled}
+          failures={lock.failures}
+          onFaceId={lock.unlockWithFaceId}
+          onPin={lock.unlockWithPin}
+          onConfirmFaceId={lock.confirmFaceId}
+          onResetPin={lock.resetPinAndUnlock}
+          onBypass={lock.bypass}
+        />
+      )}
     </>
   )
 }
