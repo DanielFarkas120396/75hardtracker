@@ -136,36 +136,39 @@ function TodayTasks({
         <MenaceAtmosphere level={menace.level} flashes={lunges} />
         <div className="relative z-10">
           <TodayHero
-            attemptLine={`${VARIANT_NAMES[rules.variant]} · Attempt #${challenge.attemptNumber}`}
+            attemptLine={`${VARIANT_NAMES[rules.variant]} · #${challenge.attemptNumber}`}
             dayNumber={todayDayNumber}
             completedCount={completedCount}
             taskCount={TASK_IDS.length}
             streak={streak}
             jokersLeft={rules.jokers > 0 ? jokersLeft : undefined}
+            duck={
+              <DuckHeader
+                menace={menace}
+                missing={completion.missing}
+                completion={completion.completion}
+                dayNumber={todayDayNumber}
+                announcement={announcement}
+                name={profile?.name}
+                onLunge={() => setLunges((count) => count + 1)}
+              />
+            }
+            action={
+              completion.missing.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setPlanOpen(true)}
+                  aria-label={completion.missing.some((task) => entry.plans?.[task]) ? 'Edit plan' : "I've got a plan"}
+                  className="flex min-h-touch min-w-touch items-center justify-center rounded-full bg-surface text-lg shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+                >
+                  <span aria-hidden="true">🗓️</span>
+                </button>
+              )
+            }
           />
           {pendingLateDay != null && <LateDayCard dayNumber={pendingLateDay} onOpen={onOpenLateDay} />}
           <LockBypassBanner />
           <BackupReminderBanner />
-
-          <DuckHeader
-            menace={menace}
-            missing={completion.missing}
-            completion={completion.completion}
-            dayNumber={todayDayNumber}
-            announcement={announcement}
-            name={profile?.name}
-            onLunge={() => setLunges((count) => count + 1)}
-          >
-            {completion.missing.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setPlanOpen(true)}
-                className="min-h-touch rounded-2xl bg-surface px-4 font-rounded text-sm font-bold text-ink shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
-              >
-                🗓️ {completion.missing.some((task) => entry.plans?.[task]) ? 'Edit plan' : "I've got a plan"}
-              </button>
-            )}
-          </DuckHeader>
 
           <main className="px-4">
             <DayBoard

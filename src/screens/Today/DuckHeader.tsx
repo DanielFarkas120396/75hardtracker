@@ -1,5 +1,5 @@
-import { AnimatePresence, motion } from 'framer-motion'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
 import { Mascot, type DuckMood, type DuckReaction } from '../../components/mascot/Mascot'
 import { registerPoke } from '../../components/mascot/rig'
 import { duckLine, GLARE_LINE, LUNGE_LINE, pokeLine } from '../../content/microcopy'
@@ -10,6 +10,10 @@ import type { TaskId } from '../../logic/types'
 
 /** How long a reaction's line stays up before his menace line returns. */
 const REACTION_LINE_MS = 2200
+/** How long the bubble stays up each time it appears. */
+export const LINE_VISIBLE_MS = 5000
+/** How often the bubble comes back on its own, between changes of line. */
+export const LINE_EVERY_MS = 45_000
 
 const LEVEL_MOODS: Record<MenaceLevel, DuckMood> = {
   content: 'content',
@@ -35,17 +39,18 @@ interface DuckHeaderProps {
   name?: string
   /** Three quick pokes make him lunge; the screen flashes red once. */
   onLunge: () => void
-  /** Shown under the speech bubble: the plan button. */
-  children?: ReactNode
 }
 
 /**
- * The Today screen's duck. His mood follows the menace; he answers pokes
- * (the third quick one makes him lunge), nods when a task is ticked, and
- * glares when one is unticked.
+ * The Today screen's duck, in the corner of the hero. His mood follows the
+ * menace; he answers pokes (the third quick one makes him lunge), nods when
+ * a task is ticked, and glares when one is unticked. His line floats over
+ * the hero in a bubble that shows for a few seconds whenever it changes,
+ * and comes back now and then in between.
  */
-export function DuckHeader({ menace, missing, completion, dayNumber, announcement, name, onLunge, children }: DuckHeaderProps) {
+export function DuckHeader({ menace, missing, completion, dayNumber, announcement, name, onLunge }: DuckHeaderProps) {
   const playShing = useKnifeSound()
+  const reduceMotion = useReducedMotion()
   const [reaction, setReaction] = useState<{ kind: DuckReaction; id: number }>()
   const [override, setOverride] = useState<{ text: string; id: number }>()
   const pokes = useRef<number[]>([])
@@ -75,6 +80,22 @@ export function DuckHeader({ menace, missing, completion, dayNumber, announcemen
     return () => clearTimeout(timer)
   }, [override])
 
+  const line = override?.text ?? duckLine({ menace, missing, dayNumber, name })
+
+  // The bubble shows for a while whenever the line changes (a new day, a
+  // reaction, an announcement), and on its own every so often in between.
+  const [tick, setTick] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setTick((n) => n + 1), LINE_EVERY_MS)
+    return () => clearInterval(id)
+  }, [])
+  const [visible, setVisible] = useState(true)
+  useEffect(() => {
+    setVisible(true)
+    const timer = setTimeout(() => setVisible(false), LINE_VISIBLE_MS)
+    return () => clearTimeout(timer)
+  }, [line, tick])
+
   const poke = () => {
     const result = registerPoke(pokes.current, performance.now())
     pokes.current = result.recent
@@ -88,36 +109,31 @@ export function DuckHeader({ menace, missing, completion, dayNumber, announcemen
     }
   }
 
-  const line = override?.text ?? duckLine({ menace, missing, dayNumber, name })
-
   return (
-    <div className="flex items-center gap-3 px-4 pb-3">
+    <div className="relative shrink-0">
       <button
         type="button"
         onClick={poke}
         aria-label="Poke the duck"
-        className="shrink-0 touch-manipulation rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        className="block touch-manipulation rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
       >
         <Mascot mood={LEVEL_MOODS[menace.level]} size={72} reaction={reaction} decorative />
       </button>
-      <div className="flex min-w-0 flex-col items-start gap-2">
-        <p className="relative rounded-2xl bg-surface px-4 py-2 font-rounded text-sm font-bold text-ink shadow-sm">
-          <span aria-hidden="true" className="absolute top-1/2 -left-1.5 h-3 w-3 -translate-y-1/2 rotate-45 bg-surface" />
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.span
-              key={line}
-              className="relative block"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.16 }}
-            >
-              {line}
-            </motion.span>
-          </AnimatePresence>
-        </p>
-        {children}
-      </div>
+      <AnimatePresence initial={false}>
+        {visible && (
+          <motion.p
+            key="bubble"
+            initial={{ opacity: 0, y: reduceMotion ? 0 : 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.16 }}
+            className="absolute top-1 left-full z-10 ml-2 w-max max-w-[13rem] rounded-2xl bg-surface px-3 py-2 font-rounded text-sm font-bold text-ink shadow-md"
+          >
+            <span aria-hidden="true" className="absolute top-4 -left-1.5 h-3 w-3 rotate-45 bg-surface" />
+            <span className="relative block">{line}</span>
+          </motion.p>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -78,7 +78,7 @@ describe('TodayScreen', () => {
   it('Hard on Day 3: names the attempt, and offers no joker, recovery or social controls', async () => {
     await setup({ variant: 'hard', todayDayNumber: 3 })
 
-    expect(await screen.findByText('75 Hard · Attempt #1')).toBeInTheDocument()
+    expect(await screen.findByText('75 Hard · #1')).toBeInTheDocument()
     expect(screen.queryByText(/joker/i)).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /^Workouts,/ }))
@@ -116,7 +116,7 @@ describe('TodayScreen', () => {
   it('shows no reason without a profile', async () => {
     await setup({ todayDayNumber: 3 })
 
-    expect(await screen.findByText('75 Hard · Attempt #1')).toBeInTheDocument()
+    expect(await screen.findByText('75 Hard · #1')).toBeInTheDocument()
     expect(screen.queryByText('“A fresh start”')).not.toBeInTheDocument()
   })
 
@@ -156,7 +156,7 @@ describe('TodayScreen', () => {
 
   it('shows nothing about yesterday once it is done or past noon', async () => {
     await setup({ variant: 'hard', todayDayNumber: 3 })
-    expect(await screen.findByText('75 Hard · Attempt #1')).toBeInTheDocument()
+    expect(await screen.findByText('75 Hard · #1')).toBeInTheDocument()
     expect(screen.queryByText(/isn't finished/)).not.toBeInTheDocument()
   })
 })

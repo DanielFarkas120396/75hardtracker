@@ -56,6 +56,20 @@
         "--strictPort"
       ],
       "port": 5180
+    },
+    {
+      "name": "dev-phone-review",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:phone",
+        "--",
+        "--port",
+        "5181",
+        "--strictPort"
+      ],
+      "port": 5181,
+      "url": "https://localhost:5181"
     }
   ]
 }
