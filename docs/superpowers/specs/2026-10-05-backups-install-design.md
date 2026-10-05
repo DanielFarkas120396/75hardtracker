@@ -43,7 +43,9 @@ From the app review (2026-10-05). The audience for now is 1–5 friends and fami
 
 - **Unit:** encryption round trip, a wrong password, an altered file, telling protected files from plain ones.
 - **Database:** reading plain, protected and invalid files; opening a protected one with its password only.
-- **UI:** the install screen (only in a phone browser, the iPhone steps, skipping remembered, never in the installed app).
+- **UI:**
+  - the install screen (only in a phone browser, the iPhone steps, skipping remembered, never in the installed app);
+  - the backup sheet (`BackupExportSheet.test.tsx`): a plain backup, a password too short or typed differently, an encrypted file only its password opens, the second tap for the share sheet, a cancelled share recording nothing, a failure, Cancel forgetting the password;
+  - restoring (`BackupRestore.test.tsx`): the confirmation and its Cancel, replacing, no confirmation on the welcome screen, a protected file and a wrong password, a file that isn't a backup, a failed restore keeping the data.
 - **In the browser:** the backup sheet.
-- **Gap:** the backup sheet and the restore buttons have no component tests yet.
 - **On a phone (to do):** the install screen only appears in a real phone browser. Open the Wi-Fi link in Safari, in a private tab.
