@@ -1,5 +1,5 @@
 import { useReducedMotion } from 'framer-motion'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { BlobImage } from '../../components/BlobImage'
 import { Icon } from '../../components/icons/Icon'
 import type { IconName } from '../../components/icons/icons'
@@ -16,6 +16,7 @@ import {
 import type { DayEntry } from '../../db/types'
 import type { Ruleset } from '../../logic/rulesets'
 import type { DayTaskData, TaskId } from '../../logic/types'
+import { DietSwitches } from './DietSwitches'
 import { TASK_ICONS, TASK_TONES } from './taskTones'
 
 /** A one-tap shortcut on a tile, next to opening its sheet ("+250 ml", the camera). */
@@ -39,11 +40,13 @@ interface TaskBoardProps {
   photo?: Blob
   /** Shortcuts on the tiles that have one; a done tile shows none. */
   quickActions?: Partial<Record<BoardTask, QuickAction>>
+  /** A declared social occasion today: the diet tile shows a toast instead of the alcohol switch. */
+  socialToday?: boolean
   onOpen: (task: BoardTask) => void
 }
 
 /** The six tiles of a day: the five tasks and the mood, each opening its sheet on tap. */
-export function TaskBoard({ entry, data, completion, rules, bookTitle, photo, quickActions, onOpen }: TaskBoardProps) {
+export function TaskBoard({ entry, data, completion, rules, bookTitle, photo, quickActions, socialToday, onOpen }: TaskBoardProps) {
   return (
     <section aria-label="Tasks">
       <div className="grid grid-cols-2 gap-3">
@@ -60,6 +63,7 @@ export function TaskBoard({ entry, data, completion, rules, bookTitle, photo, qu
               progress={progress}
               photo={task === 'photo' && done ? photo : undefined}
               quick={done ? undefined : quickActions?.[task]}
+              controls={task === 'diet' ? <DietSwitches entry={entry} rules={rules} socialToday={socialToday ?? false} /> : undefined}
               onOpen={() => onOpen(task)}
             />
           )
@@ -77,10 +81,12 @@ interface TaskTileProps {
   progress: number | null
   photo?: Blob
   quick?: QuickAction
+  /** Controls on the tile's right (the diet switches); the tick then moves beside the icon. */
+  controls?: ReactNode
   onOpen: () => void
 }
 
-function TaskTile({ task, done, status, progress, photo, quick, onOpen }: TaskTileProps) {
+function TaskTile({ task, done, status, progress, photo, quick, controls, onOpen }: TaskTileProps) {
   const reduceMotion = useReducedMotion()
   const tone = TASK_TONES[task]
 
@@ -118,8 +124,9 @@ function TaskTile({ task, done, status, progress, photo, quick, onOpen }: TaskTi
         <span className={`mt-auto pt-3 font-rounded font-extrabold leading-tight ${titleColor}`}>{TASK_TITLES[task]}</span>
         <span className={`mt-0.5 text-xs font-semibold leading-tight ${statusColor}`}>{status}</span>
       </button>
+      {controls}
       {done && (
-        <span className="absolute top-2 right-2">
+        <span className={`absolute ${controls ? 'top-4 left-[3.25rem]' : 'top-2 right-2'}`}>
           <DoneBadge pop={pops > 0} />
           {pops > 0 && !reduceMotion && <Burst key={pops} className="top-0 left-0" />}
         </span>

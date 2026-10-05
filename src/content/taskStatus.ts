@@ -43,10 +43,11 @@ export function taskStatusLine(task: TaskId, data: DayTaskData, rules: Ruleset, 
     }
     case 'diet': {
       const social = rules.socialDaysPerWeek > 0 && data.socialDay === true
-      if (complete) return social ? 'Followed · social occasion' : 'Followed · no alcohol'
+      // Short: the tile shows its switches beside this line.
+      if (complete) return 'Followed'
       const toTick = social ? 1 : 2
       const ticked = (data.dietFollowed ? 1 : 0) + (!social && data.noAlcohol ? 1 : 0)
-      return ticked === 0 ? `${toTick} to tick` : `${ticked} of ${toTick} ticked`
+      return `${ticked} of ${toTick}`
     }
     case 'water':
       return complete

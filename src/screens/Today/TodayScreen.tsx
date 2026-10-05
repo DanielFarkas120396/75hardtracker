@@ -30,6 +30,10 @@ import { TaskSheet } from './TaskSheet'
 import { describeTask } from './taskSheets'
 import { TodayHero } from './TodayHero'
 
+/** The hero's small round buttons: the social occasion under the duck, the plan under the ring. */
+const HERO_BUTTON =
+  'flex min-h-touch min-w-touch items-center justify-center rounded-full bg-surface text-lg shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink'
+
 interface TodayScreenProps {
   challenge: Challenge
   dayEntries: DayEntry[]
@@ -153,13 +157,25 @@ function TodayTasks({
                 onLunge={() => setLunges((count) => count + 1)}
               />
             }
+            social={
+              sheetContext.canPlanSocial && (
+                <button
+                  type="button"
+                  onClick={() => setSocialOpen(true)}
+                  aria-label="Plan a social occasion"
+                  className={HERO_BUTTON}
+                >
+                  <span aria-hidden="true">🥂</span>
+                </button>
+              )
+            }
             action={
               completion.missing.length > 0 && (
                 <button
                   type="button"
                   onClick={() => setPlanOpen(true)}
                   aria-label={completion.missing.some((task) => entry.plans?.[task]) ? 'Edit plan' : "I've got a plan"}
-                  className="flex min-h-touch min-w-touch items-center justify-center rounded-full bg-surface text-lg shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+                  className={HERO_BUTTON}
                 >
                   <span aria-hidden="true">🗓️</span>
                 </button>
@@ -178,6 +194,7 @@ function TodayTasks({
               rules={rules}
               currentBook={currentBook}
               photo={photo?.blob}
+              socialToday={socialToday}
               onOpen={setOpenTask}
             />
           </main>
