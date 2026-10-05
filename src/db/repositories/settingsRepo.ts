@@ -17,7 +17,14 @@ export const SETTING_KEYS = {
   bedtime: 'bedtime',
   /** The player's profile from the welcome flow — { name, why, onboardedAt }; read and write it with profileRepo. */
   profile: 'profile',
+  /** The Face ID lock on this device — { credentialId, enabledAt } or absent; read and write it with appLockRepo. */
+  appLock: 'appLock',
+  /** ISO datetime the lock was last turned off through "Can't unlock?" (the tripwire notice), until dismissed. */
+  appLockBypassedAt: 'appLockBypassedAt',
 } as const
+
+/** Settings that belong to this device, not to the data: never exported, and kept as they are on import. */
+export const DEVICE_SETTING_KEYS: readonly string[] = [SETTING_KEYS.appLock, SETTING_KEYS.appLockBypassedAt]
 
 export const settingsRepo = {
   async get<T>(key: string, defaultValue: T): Promise<T> {

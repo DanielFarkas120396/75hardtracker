@@ -41,7 +41,7 @@ describe('SettingsScreen list', () => {
 
   it('groups the settings into rows that open their own page, and back again', async () => {
     await setup(true)
-    for (const group of ['You', 'Challenge', 'App', 'Data', 'Danger zone']) {
+    for (const group of ['You', 'Challenge', 'App', 'Privacy & data', 'Danger zone']) {
       expect(screen.getByRole('region', { name: group })).toBeInTheDocument()
     }
 

@@ -5,12 +5,14 @@ import { BottomNav, type ScreenId } from './components/ui/BottomNav'
 import { useBadgeUnlocks } from './hooks/useBadgeUnlocks'
 import { canGiveUp, useChallengeGate } from './hooks/useChallengeGate'
 import { useDayCompleteCelebration } from './hooks/useDayCompleteCelebration'
+import { useAppLock } from './hooks/useAppLock'
 import { useApplyTheme } from './hooks/useThemePreference'
 import { useToday } from './hooks/useToday'
 import { useWorldTheme } from './hooks/useWorldTheme'
 import { worldForProgress } from './lib/worldTheme'
 import { OnboardingGate } from './screens/Onboarding/OnboardingGate'
 import { DayCompleteCelebration } from './screens/Today/DayCompleteCelebration'
+import { LockScreen } from './screens/Lock/LockScreen'
 import { TodayScreen } from './screens/Today/TodayScreen'
 
 // Everything but Today loads on first use, keeping the startup bundle small.
@@ -41,11 +43,19 @@ function LoadingScreen() {
 function App() {
   useApplyTheme()
   const today = useToday()
+  const lock = useAppLock()
 
+  if (lock.status === 'loading') return <LoadingScreen />
   return (
-    <OnboardingGate today={today} loading={<LoadingScreen />}>
-      <MainApp today={today} />
-    </OnboardingGate>
+    <>
+      {/* Under the Face ID lock the app stays mounted (you come back where you were) but hidden and inert. */}
+      <div inert={lock.status === 'locked'} className={lock.status === 'locked' ? 'invisible' : undefined}>
+        <OnboardingGate today={today} loading={<LoadingScreen />}>
+          <MainApp today={today} />
+        </OnboardingGate>
+      </div>
+      {lock.status === 'locked' && <LockScreen onUnlock={lock.unlock} onBypass={lock.bypass} />}
+    </>
   )
 }
 

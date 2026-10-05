@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
 import { Toggle } from '../../components/ui/Toggle'
 import { VARIANT_NAMES } from '../../content/variants'
+import { appLockRepo } from '../../db/repositories/appLockRepo'
 import { bookRepo } from '../../db/repositories/bookRepo'
 import type { Challenge } from '../../db/types'
 import { resetAll } from '../../db/exportImport'
@@ -16,6 +17,7 @@ import { TimeTravelPanel } from '../../dev/TimeTravelPanel'
 import { getInstallState, subscribeToInstallState } from '../../lib/installPrompt'
 import { rulesFor } from '../../logic/rulesets'
 import { AppearanceSection } from './AppearanceSection'
+import { AppLockSection } from './AppLockSection'
 import { AttemptHistorySection } from './AttemptHistorySection'
 import { BadgesSection } from './BadgesSection'
 import { BooksSection } from './BooksSection'
@@ -37,7 +39,7 @@ interface SettingsScreenProps {
   canGiveUp: boolean
 }
 
-type PageId = 'profile' | 'badges' | 'challenge' | 'books' | 'history' | 'appearance' | 'sound' | 'companion' | 'install' | 'backup' | 'timeTravel'
+type PageId = 'profile' | 'badges' | 'challenge' | 'books' | 'history' | 'appearance' | 'sound' | 'companion' | 'install' | 'backup' | 'appLock' | 'timeTravel'
 
 const PAGE_TITLES: Record<PageId, string> = {
   profile: 'Profile',
@@ -50,6 +52,7 @@ const PAGE_TITLES: Record<PageId, string> = {
   companion: 'Companion',
   install: 'Install the app',
   backup: 'Backup & storage',
+  appLock: 'Face ID lock',
   timeTravel: 'Time travel',
 }
 
@@ -64,6 +67,7 @@ export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGi
   const profile = useProfile()
   const { preference } = useThemeSetting()
   const bookCount = useLiveQuery(() => bookRepo.getAll().then((books) => books.length), [])
+  const lockOn = useLiveQuery(() => appLockRepo.get().then((config) => config !== null), [])
   const installState = useSyncExternalStore(subscribeToInstallState, getInstallState)
   const [page, setPage] = useState<PageId | null>(null)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
@@ -117,6 +121,7 @@ export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGi
           {page === 'companion' && <CompanionSection bedtime={settings.bedtime} onBedtimeChange={settings.setBedtime} />}
           {page === 'install' && <InstallSection />}
           {page === 'backup' && <ExportImportSection today={today} />}
+          {page === 'appLock' && <AppLockSection />}
           {import.meta.env.DEV && page === 'timeTravel' && <TimeTravelPanel />}
         </SettingsPage>
       ) : (
@@ -169,7 +174,8 @@ export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGi
               />
             </SettingsGroup>
 
-            <SettingsGroup title="Data">
+            <SettingsGroup title="Privacy & data">
+              <SettingsRow icon="lock" label="Face ID lock" value={lockOn ? 'On' : 'Off'} onClick={() => open('appLock')} />
               <SettingsRow icon="backup" label="Backup & storage" onClick={() => open('backup')} />
             </SettingsGroup>
 
