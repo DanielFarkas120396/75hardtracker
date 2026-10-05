@@ -5,7 +5,7 @@ import { parseHHmm } from '../logic/menace'
 import { isChallengeVariant } from '../logic/rulesets'
 import { db } from './db'
 import { normalizeRecords } from './normalize'
-import { SETTING_KEYS } from './repositories/settingsRepo'
+import { DEVICE_SETTING_KEYS, SETTING_KEYS } from './repositories/settingsRepo'
 import type { Badge, Book, Challenge, DayEntry, Measurement, Photo, SettingsRow, Workout } from './types'
 
 /** Version of the export file format. Bump it when the format changes incompatibly. */
@@ -78,7 +78,8 @@ export async function exportAll(): Promise<ExportPayload> {
     measurements,
     photos: exportedPhotos,
     badges,
-    settings,
+    // The Face ID lock belongs to this phone: its passkey can't work anywhere else.
+    settings: settings.filter((row) => !DEVICE_SETTING_KEYS.includes(row.key)),
   }
 }
 
@@ -231,9 +232,12 @@ export async function importAll(payload: ExportPayload): Promise<void> {
   )
 
   // The imported data is exactly this backup, so it counts as backed up then.
+  // This device's own settings (the Face ID lock) stay as they are, whatever the backup holds.
+  const deviceSettings = (await db.settings.bulkGet([...DEVICE_SETTING_KEYS])).filter((row) => row !== undefined)
   const settings = [
-    ...payload.settings.filter((row) => row.key !== SETTING_KEYS.lastExportAt),
+    ...payload.settings.filter((row) => row.key !== SETTING_KEYS.lastExportAt && !DEVICE_SETTING_KEYS.includes(row.key)),
     { key: SETTING_KEYS.lastExportAt, value: payload.exportedAt },
+    ...deviceSettings,
   ]
 
   const tables = [

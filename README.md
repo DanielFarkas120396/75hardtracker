@@ -26,6 +26,7 @@ No backend: all data (including photos) lives in the browser via IndexedDB (Dexi
 - **Stats** — totals for the attempt, plus weight and body measurements with a weight chart.
 - **Gallery** — every progress photo across all attempts.
 - **Settings** — Profile (your name and your reason), Challenge (the challenge and its start date), books, badges, attempt history (days and photos of every past attempt), sound and haptics, light/dark/system theme, installing the app, backup & storage, and the danger zone (giving up the attempt, or erasing everything).
+- **Face ID lock** — Settings → Privacy & data → Face ID lock: the app asks for Face ID when it opens and after more than a minute away, and stays covered in the app switcher (WebAuthn with the phone's own passkey; a privacy lock, not encryption). "Can't unlock?" turns it off and leaves a notice. Needs the app on its real web address, not a local test link.
 - **Installable and offline** — a PWA with a precached service worker; after the first visit it loads without a network.
 - **Accessible** — text and state colours meet WCAG contrast (4.5:1 for text) in both themes, and the app honours the "reduce motion" setting.
 

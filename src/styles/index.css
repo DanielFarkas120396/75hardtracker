@@ -208,6 +208,12 @@
   --color-on-world: #1f2426;
 }
 
+/* The Face ID lock covers the app while it's in the background (set by useAppLock), so the iPhone
+   app switcher's snapshot doesn't show photos or numbers. */
+html[data-covered] #root {
+  visibility: hidden;
+}
+
 @layer base {
   html {
     font-family: var(--font-rounded);

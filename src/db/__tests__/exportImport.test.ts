@@ -162,6 +162,21 @@ describe('export → reset → import', () => {
   })
 })
 
+describe('the Face ID lock and backups', () => {
+  it("leaves this phone's lock out of a backup, and keeps it through an import", async () => {
+    await seedEverything()
+    await db.settings.put({ key: SETTING_KEYS.appLock, value: { credentialId: 'this-phone', enabledAt: '2026-10-05T08:00:00Z' } })
+
+    const payload = await exportAll()
+    expect(payload.settings.map((row) => row.key)).not.toContain(SETTING_KEYS.appLock)
+
+    // A backup made elsewhere, holding another phone's lock, doesn't replace this one's.
+    payload.settings.push({ key: SETTING_KEYS.appLock, value: { credentialId: 'other-phone', enabledAt: '2026-01-01T00:00:00Z' } })
+    await importAll(JSON.parse(JSON.stringify(payload)))
+    expect((await db.settings.get(SETTING_KEYS.appLock))?.value).toMatchObject({ credentialId: 'this-phone' })
+  })
+})
+
 describe('validateExportPayload', () => {
   async function validPayload(): Promise<Record<string, unknown>> {
     await seedEverything()

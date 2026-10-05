@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { BackupReminderBanner } from '../../components/BackupReminderBanner'
+import { LockBypassBanner } from '../../components/LockBypassBanner'
 import { WhyQuote } from '../../components/ProfileLines'
 import { planSavedLine, taskCheer } from '../../content/microcopy'
 import { VARIANT_NAMES } from '../../content/variants'
@@ -122,6 +123,7 @@ function TodayTasks({
           jokersLeft={rules.jokers > 0 ? jokersLeft : undefined}
         />
         {pendingLateDay != null && <LateDayCard dayNumber={pendingLateDay} onOpen={onOpenLateDay} />}
+        <LockBypassBanner />
         <BackupReminderBanner />
 
         {isStartDateEditable(todayDayNumber) && (
