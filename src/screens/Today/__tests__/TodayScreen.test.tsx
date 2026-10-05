@@ -4,6 +4,7 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { db } from '../../../db/db'
 import { addChallenge, freshDatabase, TEST_PROFILE } from '../../../db/__tests__/fixtures'
 import { dayEntryRepo } from '../../../db/repositories/dayEntryRepo'
+import { workoutRepo } from '../../../db/repositories/workoutRepo'
 import type { Challenge } from '../../../db/types'
 import { ProfileContext } from '../../../hooks/useProfile'
 import { addDaysISO, todayISO } from '../../../lib/dates'
@@ -140,7 +141,7 @@ describe('TodayScreen', () => {
     expect(screen.queryByText('“A fresh start”')).not.toBeInTheDocument()
   })
 
-  it('logs a glass of water and a page straight from the tiles', async () => {
+  it('logs a glass of water, a page and a workout straight from the tiles', async () => {
     // The entries are a static prop here (the gate's live query feeds them in the app), so the stores are checked.
     const { challenge, today } = await setup({ variant: 'hard', todayDayNumber: 3 })
     const entry = () => dayEntryRepo.getOrCreate({ challengeId: challenge.id, dayNumber: 3, date: today })
@@ -152,7 +153,10 @@ describe('TodayScreen', () => {
     await waitFor(async () => expect((await entry()).pages_read).toBe(1))
 
     expect(screen.getByRole('button', { name: 'Take photo' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /^Add .*workout/i })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Add workout' }))
+    fireEvent.change(await screen.findByRole('combobox', { name: 'Activity' }), { target: { value: 'Yoga' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(async () => expect(await workoutRepo.getForDayEntry((await entry()).id)).toMatchObject([{ type: 'Yoga', durationMin: 45 }]))
   })
 
   it("offers to finish yesterday in the morning, on yesterday's own tasks, and back", async () => {
