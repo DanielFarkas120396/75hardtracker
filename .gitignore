@@ -25,3 +25,6 @@ dist-ssr
 
 # Exported backups hold personal data (weight, photos) - never commit them
 backups/
+
+# Worktrees the desktop app creates for other sessions
+.claude/worktrees/
