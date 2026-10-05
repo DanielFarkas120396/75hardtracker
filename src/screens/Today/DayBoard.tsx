@@ -14,7 +14,6 @@ interface DayBoardProps {
   entry: DayEntry
   data: DayTaskData
   completion: Record<TaskId, boolean>
-  missing: readonly TaskId[]
   rules: Ruleset
   currentBook?: Book
   photo?: Blob
@@ -26,7 +25,7 @@ interface DayBoardProps {
  * and the camera (or the library, when only that's allowed). Lives under
  * PhotoCapture, which owns the camera.
  */
-export function DayBoard({ entry, data, completion, missing, rules, currentBook, photo, onOpen }: DayBoardProps) {
+export function DayBoard({ entry, data, completion, rules, currentBook, photo, onOpen }: DayBoardProps) {
   const capture = usePhotoCapture()
 
   const quickActions: Partial<Record<BoardTask, QuickAction>> = {
@@ -55,7 +54,6 @@ export function DayBoard({ entry, data, completion, missing, rules, currentBook,
       entry={entry}
       data={data}
       completion={completion}
-      missing={missing}
       rules={rules}
       bookTitle={currentBook?.title}
       photo={photo}

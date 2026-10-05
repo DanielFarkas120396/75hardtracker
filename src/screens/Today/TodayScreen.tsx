@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { BackupReminderBanner } from '../../components/BackupReminderBanner'
 import { LockBypassBanner } from '../../components/LockBypassBanner'
-import { WhyQuote } from '../../components/ProfileLines'
 import { planSavedLine } from '../../content/microcopy'
 import type { BoardTask } from '../../content/taskStatus'
 import { VARIANT_NAMES } from '../../content/variants'
@@ -19,7 +18,6 @@ import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { TASK_IDS } from '../../logic/dayCompletion'
 import { isChallengeDay } from '../../logic/days'
 import { challengeWeek, rulesFor } from '../../logic/rulesets'
-import { isStartDateEditable } from '../../logic/startDate'
 import { DayBoard } from './DayBoard'
 import { DuckHeader, type DuckAnnouncement } from './DuckHeader'
 import { LateDayCard, LateDayView } from './LateDay'
@@ -149,12 +147,6 @@ function TodayTasks({
           <LockBypassBanner />
           <BackupReminderBanner />
 
-          {isStartDateEditable(todayDayNumber) && (
-            <p className="px-4 pb-2 font-rounded text-xs text-ink-muted">
-              Doing {VARIANT_NAMES[rules.variant]}. You can switch challenge in Settings until the end of Day 1.
-            </p>
-          )}
-
           <DuckHeader
             menace={menace}
             missing={completion.missing}
@@ -174,14 +166,12 @@ function TodayTasks({
               </button>
             )}
           </DuckHeader>
-          <WhyQuote className="px-4 pb-4" />
 
           <main className="px-4">
             <DayBoard
               entry={entry}
               data={completion.data}
               completion={completion.completion}
-              missing={completion.missing}
               rules={rules}
               currentBook={currentBook}
               photo={photo?.blob}

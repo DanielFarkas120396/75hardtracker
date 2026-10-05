@@ -110,7 +110,6 @@ export function LateDayView({ challenge, dayEntries, dayNumber, date, onBack }: 
             entry={entry}
             data={completion.data}
             completion={completion.completion}
-            missing={completion.missing}
             rules={rules}
             currentBook={currentBook}
             photo={photo?.blob}

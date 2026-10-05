@@ -11,7 +11,6 @@ import {
   TASK_TITLES,
   taskProgress,
   taskStatusLine,
-  tasksLeftLine,
   type BoardTask,
 } from '../../content/taskStatus'
 import type { DayEntry } from '../../db/types'
@@ -33,7 +32,6 @@ interface TaskBoardProps {
   entry: DayEntry
   data: DayTaskData
   completion: Record<TaskId, boolean>
-  missing: readonly TaskId[]
   rules: Ruleset
   /** The book being read, for the done reading tile. */
   bookTitle?: string
@@ -45,10 +43,9 @@ interface TaskBoardProps {
 }
 
 /** The six tiles of a day: the five tasks and the mood, each opening its sheet on tap. */
-export function TaskBoard({ entry, data, completion, missing, rules, bookTitle, photo, quickActions, onOpen }: TaskBoardProps) {
+export function TaskBoard({ entry, data, completion, rules, bookTitle, photo, quickActions, onOpen }: TaskBoardProps) {
   return (
     <section aria-label="Tasks">
-      <p className="mb-2 font-rounded text-sm font-bold text-ink-muted">{tasksLeftLine(missing.length)}</p>
       <div className="grid grid-cols-2 gap-3">
         {BOARD_TASKS.map((task) => {
           const done = task !== 'notes' && completion[task]

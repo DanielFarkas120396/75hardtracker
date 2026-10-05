@@ -80,8 +80,6 @@ describe('TodayScreen', () => {
 
     expect(await screen.findByText('75 Hard · Attempt #1')).toBeInTheDocument()
     expect(screen.queryByText(/joker/i)).not.toBeInTheDocument()
-    expect(screen.queryByText(/^Doing 75 Hard\./)).not.toBeInTheDocument()
-    expect(screen.getByText('5 tasks left')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /^Workouts,/ }))
     expect(await screen.findByRole('dialog', { name: 'Workouts' })).toBeInTheDocument()
@@ -93,13 +91,10 @@ describe('TodayScreen', () => {
     expect(screen.queryByRole('button', { name: '🥂 Plan a social occasion' })).not.toBeInTheDocument()
   })
 
-  it('Medium on Day 1: shows the joker chip, the switch-challenge hint and the plan-a-social-occasion button', async () => {
+  it('Medium on Day 1: shows the joker chip and the plan-a-social-occasion button', async () => {
     await setup({ variant: 'medium', todayDayNumber: 1, jokersLeft: 1 })
 
     expect(await screen.findByText('1 joker left')).toBeInTheDocument()
-    expect(
-      screen.getByText('Doing 75 Medium. You can switch challenge in Settings until the end of Day 1.'),
-    ).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /^Diet,/ }))
     expect(await screen.findByRole('button', { name: '🥂 Plan a social occasion' })).toBeInTheDocument()
   })
@@ -112,18 +107,16 @@ describe('TodayScreen', () => {
     expect(await screen.findByText('🥂 Social occasion today — a drink is allowed.')).toBeInTheDocument()
   })
 
-  it('greets the player by name and keeps their reason in view', async () => {
+  it('keeps the reason in view', async () => {
     await setup({ todayDayNumber: 3, profile: TEST_PROFILE })
 
-    expect(await screen.findByText('Hey Daniel')).toBeInTheDocument()
-    expect(screen.getByText('“A fresh start”')).toBeInTheDocument()
+    expect(await screen.findByText('“A fresh start”')).toBeInTheDocument()
   })
 
-  it('shows no greeting or reason without a profile', async () => {
+  it('shows no reason without a profile', async () => {
     await setup({ todayDayNumber: 3 })
 
     expect(await screen.findByText('75 Hard · Attempt #1')).toBeInTheDocument()
-    expect(screen.queryByText(/^Hey /)).not.toBeInTheDocument()
     expect(screen.queryByText('“A fresh start”')).not.toBeInTheDocument()
   })
 

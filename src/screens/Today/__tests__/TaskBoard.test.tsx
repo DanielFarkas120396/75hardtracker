@@ -4,7 +4,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest'
 import type { DayEntry } from '../../../db/types'
 import { RULESETS } from '../../../logic/rulesets'
 import type { DayTaskData } from '../../../logic/types'
-import { taskCompletionMap, missingTasks } from '../../../logic/dayCompletion'
+import { taskCompletionMap } from '../../../logic/dayCompletion'
 import { TaskBoard } from '../TaskBoard'
 
 const entry: DayEntry = {
@@ -28,7 +28,6 @@ function board(data: DayTaskData, extra: Partial<Parameters<typeof TaskBoard>[0]
       entry={{ ...entry, mood: extra.entry?.mood, notes: extra.entry?.notes }}
       data={data}
       completion={taskCompletionMap(data, rules)}
-      missing={missingTasks(data, rules)}
       rules={rules}
       onOpen={() => {}}
       {...extra}
@@ -43,10 +42,9 @@ describe('TaskBoard', () => {
     URL.revokeObjectURL = vi.fn()
   })
 
-  it('shows six tiles named by their task and status, and how many are left', () => {
+  it('shows six tiles named by their task and status', () => {
     render(board(empty))
 
-    expect(screen.getByText('5 tasks left')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Workouts, 0 of 2 · 45 min each' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Diet, 2 to tick' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Water, 0 / 3.8 L' })).toBeInTheDocument()
@@ -55,10 +53,9 @@ describe('TaskBoard', () => {
     expect(screen.getByRole('button', { name: 'Mood & notes, How was today?' })).toBeInTheDocument()
   })
 
-  it('marks done tiles with their summary, and counts them off', () => {
+  it('marks done tiles with their summary', () => {
     render(board({ ...empty, water_ml: 3800, pages_read: 12 }, { bookTitle: 'Atomic Habits' }))
 
-    expect(screen.getByText('3 tasks left')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Water, 3.8 L, done' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Reading, 12 pages · Atomic Habits, done' })).toBeInTheDocument()
     expect(screen.queryByTestId('burst')).not.toBeInTheDocument()

@@ -91,14 +91,14 @@ export function DuckHeader({ menace, missing, completion, dayNumber, announcemen
   const line = override?.text ?? duckLine({ menace, missing, dayNumber, name })
 
   return (
-    <div className="flex items-center gap-3 px-4 pb-4">
+    <div className="flex items-center gap-3 px-4 pb-3">
       <button
         type="button"
         onClick={poke}
         aria-label="Poke the duck"
         className="shrink-0 touch-manipulation rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
       >
-        <Mascot mood={LEVEL_MOODS[menace.level]} size={88} reaction={reaction} decorative />
+        <Mascot mood={LEVEL_MOODS[menace.level]} size={72} reaction={reaction} decorative />
       </button>
       <div className="flex min-w-0 flex-col items-start gap-2">
         <p className="relative rounded-2xl bg-surface px-4 py-2 font-rounded text-sm font-bold text-ink shadow-sm">

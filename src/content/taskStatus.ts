@@ -82,9 +82,3 @@ export function taskProgress(task: TaskId, data: DayTaskData, rules: Ruleset): n
       return null
   }
 }
-
-/** The line above the grid. */
-export function tasksLeftLine(missing: number): string {
-  if (missing === 0) return 'All five done'
-  return `${plural(missing, 'task')} left`
-}

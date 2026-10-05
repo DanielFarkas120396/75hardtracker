@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { RULESETS } from '../../logic/rulesets'
 import type { DayTaskData } from '../../logic/types'
-import { notesStatusLine, taskProgress, taskStatusLine, tasksLeftLine } from '../taskStatus'
+import { notesStatusLine, taskProgress, taskStatusLine } from '../taskStatus'
 
 const empty: DayTaskData = { water_ml: 0, pages_read: 0, dietFollowed: false, noAlcohol: false, hasPhoto: false, workouts: [] }
 const hard = RULESETS.hard
@@ -71,13 +71,5 @@ describe('taskProgress', () => {
     expect(taskProgress('workouts', { ...empty, restDay: true }, soft)).toBe(1)
     expect(taskProgress('diet', empty, hard)).toBeNull()
     expect(taskProgress('photo', empty, hard)).toBeNull()
-  })
-})
-
-describe('tasksLeftLine', () => {
-  it('counts down to done', () => {
-    expect(tasksLeftLine(5)).toBe('5 tasks left')
-    expect(tasksLeftLine(1)).toBe('1 task left')
-    expect(tasksLeftLine(0)).toBe('All five done')
   })
 })

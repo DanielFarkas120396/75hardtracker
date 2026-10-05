@@ -1,8 +1,8 @@
 import { FlameStreak } from '../../components/FlameStreak'
 import { Icon } from '../../components/icons/Icon'
-import { Greeting } from '../../components/ProfileLines'
 import { ProgressRing } from '../../components/ui/ProgressRing'
 import { worldProgressLine } from '../../content/worldLines'
+import { useProfile } from '../../hooks/useProfile'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 
 interface TodayHeroProps {
@@ -17,45 +17,46 @@ interface TodayHeroProps {
 }
 
 /**
- * The top of Today, in the world's colours: the big day number, the ring of
- * tasks done, the streak, and how far today is through its world.
+ * The top of Today, in the world's colours and as short as it can be: the
+ * day number with the ring of tasks done beside it, then one line with the
+ * attempt, the streak and the jokers, where today is in its world, and the
+ * player's reason. The duck below says hello.
  */
 export function TodayHero({ attemptLine, dayNumber, completedCount, taskCount, streak, jokersLeft }: TodayHeroProps) {
+  const profile = useProfile()
+
   return (
-    <section className="mx-4 mt-6 mb-4 rounded-card bg-world-soft p-4">
-      <div className="flex items-start justify-between gap-3">
+    <section className="mx-4 mt-3 mb-3 rounded-card bg-world-soft px-4 py-3">
+      <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <Greeting />
-          <p className="font-rounded text-sm font-bold text-ink-muted">{attemptLine}</p>
-          <h1 className="mt-1 font-display leading-none tracking-wide">
-            <span className="text-5xl text-world-ink">Day {dayNumber}</span>{' '}
-            <span className="text-xl text-ink-muted">/ {CHALLENGE_LENGTH}</span>
+          <h1 className="font-display leading-none tracking-wide">
+            <span className="text-4xl text-world-ink">Day {dayNumber}</span>{' '}
+            <span className="text-lg text-ink-muted">/ {CHALLENGE_LENGTH}</span>
           </h1>
-          <p className="mt-2 flex items-center gap-1 font-rounded text-sm font-bold text-world-ink">
-            <Icon name="journey" size={16} className="shrink-0" />
+          <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-rounded text-xs font-bold text-ink-muted">
+            <span>{attemptLine}</span>
+            <FlameStreak streak={streak} />
+            {jokersLeft !== undefined && (
+              <span className="flex items-center gap-1 text-orange-ink">
+                <Icon name="joker" size={16} />
+                {jokersLeft} {jokersLeft === 1 ? 'joker' : 'jokers'} left
+              </span>
+            )}
+          </p>
+          <p className="mt-1 flex items-center gap-1 font-rounded text-xs font-bold text-world-ink">
+            <Icon name="journey" size={14} className="shrink-0" />
             {worldProgressLine(dayNumber)}
           </p>
+          {profile && <p className="mt-1 truncate font-rounded text-xs italic text-ink-muted">“{profile.why}”</p>}
         </div>
-        <ProgressRing value={completedCount} max={taskCount} size={92} strokeWidth={12} trackColor="var(--color-surface)">
+        <ProgressRing value={completedCount} max={taskCount} size={68} strokeWidth={9} trackColor="var(--color-surface)">
           <span className="flex flex-col items-center leading-none">
-            <span className="font-display text-2xl tracking-wide text-ink">
+            <span className="font-display text-lg tracking-wide text-ink">
               {completedCount}/{taskCount}
             </span>
-            <span className="mt-0.5 font-rounded text-[0.625rem] font-extrabold uppercase text-ink-muted">tasks</span>
+            <span className="mt-0.5 font-rounded text-[0.5rem] font-extrabold uppercase text-ink-muted">tasks</span>
           </span>
         </ProgressRing>
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="flex h-9 items-center rounded-full bg-surface px-3">
-          <FlameStreak streak={streak} />
-        </span>
-        {jokersLeft !== undefined && (
-          <span className="flex h-9 items-center gap-1 rounded-full bg-surface px-3 font-rounded text-sm font-extrabold text-orange-ink">
-            <Icon name="joker" size={18} />
-            {jokersLeft} {jokersLeft === 1 ? 'joker' : 'jokers'} left
-          </span>
-        )}
       </div>
     </section>
   )
