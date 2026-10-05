@@ -52,11 +52,10 @@ export function DayCompleteCelebration({ celebration, onDismiss }: DayCompleteCe
                 ? 'Logged just in time. The streak lives — now go get today.'
                 : 'Every task, done. See you tomorrow — keep the streak alive.'}
           </p>
-          <p className="font-rounded text-lg font-extrabold text-yellow">+{celebration.xpEarned} XP{celebration.late ? '' : ' today'}</p>
           {celebration.streak > 1 && (
             <p className="font-rounded font-bold text-white/90">🔥 {celebration.streak}-day streak</p>
           )}
-          <Button variant="xp" className="mt-4" onClick={onDismiss}>
+          <Button variant="primary" className="mt-4" onClick={onDismiss}>
             {celebration.isFinalDay ? 'See your victory 🏆' : 'Nice!'}
           </Button>
         </motion.div>

@@ -10,7 +10,7 @@ import { addDaysISO, todayISO } from '../../../lib/dates'
 import { GiveUpFlow } from '../GiveUpFlow'
 
 // Step 2's numbers, without seeding a whole attempt's days.
-const { stats } = vi.hoisted(() => ({ stats: { xp: 935, perfectDays: 11, water_ml: 0, pages: 0, workoutMinutes: 0 } }))
+const { stats } = vi.hoisted(() => ({ stats: { perfectDays: 11, water_ml: 0, pages: 0, workoutMinutes: 0 } }))
 vi.mock('../../../hooks/useChallengeStats', () => ({ useChallengeStats: () => stats }))
 
 const today = todayISO()
@@ -69,7 +69,7 @@ describe('GiveUpFlow', () => {
 
   beforeEach(async () => {
     await freshDatabase()
-    Object.assign(stats, { xp: 935, perfectDays: 11 })
+    Object.assign(stats, { perfectDays: 11 })
   })
 
   afterEach(() => {
@@ -98,7 +98,7 @@ describe('GiveUpFlow', () => {
     click('Give up')
 
     expect(screen.getByRole('heading', { name: 'Look at what you built.' })).toHaveFocus()
-    expect(screen.getByText('🔥 11-day streak · 11 perfect days · ⭐ 935 XP')).toBeInTheDocument()
+    expect(screen.getByText('🔥 11-day streak · 11 perfect days')).toBeInTheDocument()
     expect(screen.getByText("11 perfect days. You'd throw them away?")).toBeInTheDocument()
 
     click("I'll stay")
@@ -110,7 +110,7 @@ describe('GiveUpFlow', () => {
     await setup()
     click('Give up')
 
-    expect(screen.getByText('🔥 11-day streak · 1 perfect day · ⭐ 935 XP')).toBeInTheDocument()
+    expect(screen.getByText('🔥 11-day streak · 1 perfect day')).toBeInTheDocument()
     expect(screen.getByText("1 perfect day. You'd throw it away?")).toBeInTheDocument()
   })
 

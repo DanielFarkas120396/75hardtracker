@@ -23,7 +23,7 @@ export interface DayTaskData {
   socialDay?: boolean
 }
 
-/** One logged day of an attempt, for whole-attempt calculations (XP, attempt summaries). */
+/** One logged day of an attempt, for whole-attempt calculations (stats, attempt summaries). */
 export interface ChallengeDayData {
   dayNumber: number
   data: DayTaskData

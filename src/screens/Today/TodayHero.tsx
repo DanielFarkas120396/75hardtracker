@@ -12,16 +12,15 @@ interface TodayHeroProps {
   completedCount: number
   taskCount: number
   streak: number
-  xp: number
   /** Jokers left, or undefined when the ruleset has none. */
   jokersLeft: number | undefined
 }
 
 /**
  * The top of Today, in the world's colours: the big day number, the ring of
- * tasks done, the streak and XP, and how far today is through its world.
+ * tasks done, the streak, and how far today is through its world.
  */
-export function TodayHero({ attemptLine, dayNumber, completedCount, taskCount, streak, xp, jokersLeft }: TodayHeroProps) {
+export function TodayHero({ attemptLine, dayNumber, completedCount, taskCount, streak, jokersLeft }: TodayHeroProps) {
   return (
     <section className="mx-4 mt-6 mb-4 rounded-card bg-world-soft p-4">
       <div className="flex items-start justify-between gap-3">
@@ -50,10 +49,6 @@ export function TodayHero({ attemptLine, dayNumber, completedCount, taskCount, s
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <span className="flex h-9 items-center rounded-full bg-surface px-3">
           <FlameStreak streak={streak} />
-        </span>
-        <span className="flex h-9 items-center gap-1 rounded-full bg-surface px-3 font-rounded text-sm font-extrabold text-yellow-ink">
-          <Icon name="xp" size={18} />
-          {xp} XP
         </span>
         {jokersLeft !== undefined && (
           <span className="flex h-9 items-center gap-1 rounded-full bg-surface px-3 font-rounded text-sm font-extrabold text-orange-ink">

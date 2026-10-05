@@ -5,7 +5,6 @@ import { isChallengeDay } from './days'
 import { missedDayNumbers } from './restart'
 import type { Ruleset } from './rulesets'
 import type { ChallengeDayData, ChallengeStatus, DayCompletionSummary, TaskId } from './types'
-import { calculateChallengeXp } from './xp'
 
 export interface AttemptSummary {
   /**
@@ -17,7 +16,6 @@ export interface AttemptSummary {
   startDate: string
   /** The date of the last day reached; unset while the attempt is still running. */
   endDate?: string
-  xp: number
 }
 
 /** Sums up one attempt from its challenge fields and logged days. */
@@ -39,7 +37,6 @@ export function summarizeAttempt(params: {
     completedDays: summaries.filter((s) => s.completed).length,
     startDate,
     endDate: status !== 'active' && reachedDay >= 1 ? dateForDayNumber(startDate, reachedDay) : undefined,
-    xp: calculateChallengeXp(days, rules),
   }
 }
 
