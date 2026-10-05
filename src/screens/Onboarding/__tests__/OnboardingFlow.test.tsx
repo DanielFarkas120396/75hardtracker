@@ -39,7 +39,7 @@ describe('OnboardingFlow', () => {
     expect(await heading('75 days. 5 tasks. One duck with a knife.')).toHaveFocus()
     click('Get started')
 
-    expect(await heading('What should the duck call you?')).toHaveFocus()
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'What should the duck call you?' })).toHaveFocus())
     fireEvent.change(nameField(), { target: { value: '  Daniel ' } })
     click('Continue')
 
