@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { useEffect, useEffectEvent, useId, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useEffectEvent, useId, useState, type ReactNode } from 'react'
 import { Icon } from '../../components/icons/Icon'
 import { Burst } from '../../components/ui/Burst'
 import { DoneBadge } from '../../components/ui/DoneBadge'
@@ -33,15 +33,12 @@ interface TaskSheetProps {
  * cheer, a short buzz) and the sheet closes on its own after the cheer.
  */
 export function TaskSheet({ content, onClose }: TaskSheetProps) {
-  // The last content stays for the exit animation, after the host has let go of it.
-  const last = useRef<TaskSheetContent | null>(null)
-  if (content) last.current = content
-  const shown = content ?? last.current
   const headingId = useId()
 
+  // While it slides away, AnimatePresence (inside Modal) keeps rendering the content it last had.
   return (
     <Modal open={content !== null} onClose={onClose} placement="sheet" labelledBy={headingId}>
-      {shown && <SheetContent key={shown.task} content={shown} headingId={headingId} onClose={onClose} />}
+      {content && <SheetContent key={content.task} content={content} headingId={headingId} onClose={onClose} />}
     </Modal>
   )
 }

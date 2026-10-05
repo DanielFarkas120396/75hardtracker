@@ -1,6 +1,6 @@
 import { BlobImage } from '../../components/BlobImage'
 import { Button } from '../../components/ui/Button'
-import { usePhotoCapture } from './PhotoCapture'
+import { usePhotoCapture } from './photoCaptureContext'
 
 /** The photo sheet's body: the day's photo, and the ways to take or pick one. */
 export function PhotoTask() {

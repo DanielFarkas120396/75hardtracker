@@ -1,34 +1,14 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence } from 'framer-motion'
-import { createContext, useContext, useEffect, useEffectEvent, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { photoRepo } from '../../db/repositories/photoRepo'
-import type { DayEntry, Photo } from '../../db/types'
+import type { DayEntry } from '../../db/types'
 import { useEntryPhoto } from '../../hooks/useEntryPhoto'
 import { isCameraSupported } from '../../lib/camera'
 import { compressImage } from '../../lib/imageCompression'
 import { CameraSheet } from './CameraSheet'
-
-interface PhotoCaptureApi {
-  photo: Photo | undefined
-  busy: boolean
-  error: string | null
-  /** The in-app camera couldn't start: "Take photo" opens the phone's camera app instead. */
-  cameraFailed: boolean
-  /** Only a photo from the library (finishing yesterday: the camera would take today's). */
-  libraryOnly: boolean
-  takePhoto: () => void
-  chooseFromLibrary: () => void
-}
-
-const PhotoCaptureContext = createContext<PhotoCaptureApi | null>(null)
-
-/** The day's photo and the ways to take one, from the PhotoCapture above. */
-export function usePhotoCapture(): PhotoCaptureApi {
-  const api = useContext(PhotoCaptureContext)
-  if (!api) throw new Error('usePhotoCapture needs a PhotoCapture above it')
-  return api
-}
+import { PhotoCaptureContext } from './photoCaptureContext'
 
 interface PhotoCaptureProps {
   entry: DayEntry
@@ -44,7 +24,8 @@ interface PhotoCaptureProps {
 /**
  * Owns a day's photo: the camera sheet, the file inputs and the saving. It
  * sits around the whole Today screen, so the camera outlives the photo
- * sheet that opens it; PhotoTask reads it through usePhotoCapture.
+ * sheet that opens it; PhotoTask reads it through usePhotoCapture
+ * (photoCaptureContext.ts).
  */
 export function PhotoCapture({
   entry,
