@@ -37,12 +37,15 @@ No backend: all data (including photos) lives in the browser via IndexedDB (Dexi
 ```bash
 npm install
 npm run dev        # dev server at http://localhost:5173
+npm run dev:phone  # HTTPS dev server on the Wi-Fi network, port 5174, for trying it on a phone
 npm run build      # type-check, then build to dist/
 npm run preview    # serve dist/ (the production build, with the service worker)
 npm run test       # all unit and database tests once
 npm run test:watch
 npm run lint       # oxlint
 ```
+
+`npm run dev:phone` serves the app at `https://<the computer's Wi-Fi IP>:5174` with a self-signed certificate: the phone warns once, then it works. HTTPS is needed for the in-app camera. Face ID can't be tried this way (it needs a real domain, never an IP address); the PIN can.
 
 `npm run generate-pwa-assets` regenerates the icons in `public/` (favicon, PWA, maskable and Apple touch icons) from `public/mascot.svg`, using `pwa-assets.config.ts`. Run it after changing the mascot, and commit the results.
 
@@ -73,6 +76,8 @@ await s.seedDay75Pending()
 | `seedFreshInstall()` | An empty database with no profile: opens on the welcome flow for a new player. |
 | `seedReturningWithoutProfile()` | 75 Hard on Day 4 (Days 1–3 done) with no profile yet: opens on the returning welcome flow (name and reason only). |
 
+**Time travel:** in the dev server, Settings → Developer → Time travel opens the app on the first day of any world, the last day, the victory, or a morning with yesterday unfinished (late logging). It uses its own scratch database (`/?db=time-travel&travel=<day>`, 76 = victory; add `&late=1&now=09:00` for the unfinished yesterday).
+
 `?now=HH:mm` freezes the duck's clock in development (production ignores it), so each menace level can be checked, e.g. `?db=duck&now=22:45`.
 
 Every other scenario also writes a default profile (Sam), so it opens straight on the app.
@@ -83,9 +88,11 @@ Every scenario refuses to run against the default database.
 
 Everything is stored only on the device, in this browser. Nothing is sent anywhere, so nothing can restore it for you:
 
-- **Export regularly** from Settings → Backup & storage. The file is one JSON with every attempt, log and photo inside, and the section shows how long ago your last backup was. Import restores it, replacing what's on the device.
-- **Install the app** to your home screen and allow persistent storage (the same section can ask for it). Browsers are then much less likely to clear its data when space runs low or after a long time without visits.
-- **Export before** clearing browser data, resetting the phone or switching phones.
+- **Save a backup regularly** from Settings → Backup & storage (the Sunday reminder opens the same sheet). The file is one JSON with every attempt, log and photo inside; save it to iCloud Drive so it survives losing the phone. The section shows how long ago your last backup was.
+- **Protect it with a password** if you like: the file is then encrypted (AES-256-GCM) and useless without it. A forgotten password can't be recovered.
+- **Restore a backup** from the same section, or from the welcome screen on a new phone. It replaces what's on the device. The app lock's PIN and Face ID are never in a backup.
+- **Install the app** to your Home Screen before setting it up: on iPhone, the installed app keeps its own data, apart from Safari's. Allow persistent storage too (the same section can ask for it), so the browser is much less likely to clear the data.
+- **Save a backup before** clearing browser data, resetting the phone or switching phones.
 
 ## Project structure
 
@@ -96,7 +103,8 @@ Everything is stored only on the device, in this browser. Nothing is sent anywhe
 - `src/lib/` — dates, theme, sound, confetti, storage and install helpers.
 - `src/screens/`, `src/components/` — UI.
 - `src/components/mascot/` — the duck: the traced SVG art, the pure motion rig (`rig.ts`) and the `Mascot` component. The design is in `docs/superpowers/specs/2026-09-25-knife-duck-companion-design.md`.
-- `src/dev/` — dev-only seeded scenarios (never imported by the app).
+- `src/screens/Journey/` — the climb from hell to heaven: the worlds (`worlds.ts`), the map, and the three.js particle effects (`effects/`).
+- `src/dev/` — dev-only seeded scenarios (never imported by the app) and time travel (shown only in the dev server).
 - `src/assets/animations/` — Lottie animations, loaded on demand with `lottie-web` (light SVG build).
 
 ## Credits

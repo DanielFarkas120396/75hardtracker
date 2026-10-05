@@ -2,7 +2,8 @@
 
 - **Date:** 2026-09-25
 - **Branch:** `feat/knife-duck-companion`
-- **Status:** approved in brainstorming, awaiting spec review
+- **Status:** built (PR #1, merged into main on 2026-09-26), **except section 6**: the Higgsfield missed-day clip was left out, so the missed-day screen uses the `judging` duck alone.
+- **Later changes:** the v2 redesign ([app look](2026-10-03-app-look-design.md)) replaced "No rebrand" below: the app's colours now follow the Journey world.
 - **Assets:** [`2026-09-25-knife-duck-companion/`](2026-09-25-knife-duck-companion/):
   - `duck-rig.svg`: the traced, layered drawing (source of truth for the art)
   - `prototype.html`: the approved v3 motion prototype (open it in any browser)

@@ -1,5 +1,7 @@
 # Welcome flow and profile (design)
 
+Status: **built** (PR #7, merged into main on 2026-09-28). In v2, a phone browser first sees the install screen, and the welcome screen can restore a backup: see [backups and install](2026-10-05-backups-install-design.md).
+
 The owner approved this design on 2026-09-28, with four decisions:
 - one question per screen;
 - on the owner's phone, whose attempt is already running, the flow asks only for the name and the reason;

@@ -1,73 +1,58 @@
-# Face ID lock: design
+# App lock: PIN and Face ID (design)
 
-Date: 2026-10-05 · Status: approved in conversation. It goes into `v2`. Not yet tested on an iPhone; that needs a real domain (see Testing).
+Date: 2026-10-05 · Status: **built** (PRs #23 and #24, merged into `v2`). Off by default. Not yet tested on an iPhone with Face ID, which needs a real domain (see Testing).
+
+It started as a Face ID lock (PR #23). The owner then asked for a banking-app style PIN (PR #24): the PIN is now the lock's base, and Face ID the optional shortcut. This document describes the result.
 
 ## Why
 
-Body photos, weight and notes are private, and anyone holding an unlocked phone can open the app (from the app review, 2026-10-05).
+Body photos, weight and notes are private, and anyone holding an unlocked phone can open the app (from the app review, 2026-10-05). For 1–5 friends and family it's optional, not essential: it stays off unless turned on.
 
 ## Decisions
 
 | Topic | Decision |
 |---|---|
+| Base | A **6-digit PIN**, chosen when the lock is turned on. Too-simple PINs (111111, 123456) are refused. |
+| Face ID | **Optional shortcut** ("Also unlock with Face ID"). When on, the lock screen asks for Face ID once on its own; the PIN pad is the backup. Without Face ID, the lock works with the PIN alone, including over the Wi-Fi test link. |
 | When it asks | When the app opens, and when you come back after **more than 1 minute** in another app. |
 | What it hides | **The whole app.** It's also covered while in the background, so the app switcher's snapshot doesn't show it. |
-| Way out | **"Can't unlock?"** turns the lock off after a confirmation, and leaves a **tripwire notice** on Today ("turned off on … with Can't unlock?") until dismissed. |
+| Wrong PINs | **5 free tries,** then waits of 30 s, 1 min, 5 min, 15 min and 1 h, with a countdown. The wait is stored, so a relaunch doesn't reset it, and it applies in Settings too. |
+| Forgot PIN | **"Forgot PIN?"** sets a new PIN after Face ID (when Face ID is on). |
+| Last way out | **"Can't unlock?"** turns the lock off after a confirmation, and leaves a **tripwire notice** on Today ("turned off on … with Can't unlock?") until dismissed. |
+
+## Honest limits
+
+- It's a privacy curtain, not encryption: the data itself isn't encrypted on the phone.
+- Face ID (WebAuthn) needs a secure page on a real domain or localhost, never an IP address, so it can't run over the `https://192.168…` Wi-Fi dev link.
 
 ## How it works
 
-- **WebAuthn with the phone's platform authenticator** (`src/lib/appLock.ts`):
-  - Turning the lock on creates a passkey ("75 Hard") with user verification required.
+- **PIN** (`src/lib/pin.ts`): kept only as a PBKDF2-SHA-256 fingerprint (a random salt, 210,000 rounds), never as typed. `waitAfterFailures` gives the wait for a number of wrong tries.
+- **Face ID** (`src/lib/appLock.ts`): WebAuthn with the phone's platform authenticator.
+  - Turning it on creates a passkey ("75 Hard") with user verification required.
   - Unlocking asks for it, and checks the authenticator data's user-verified flag.
   - There's no server: the phone's verified answer is the check.
-- **Honest limits:**
-  - It's a privacy curtain, not encryption.
-  - It needs a secure page on a real domain or localhost, never an IP address, so it can't run over the `https://192.168…` Wi-Fi dev link.
-- **Settings:** Privacy & data → Face ID lock. Turning it on and turning it off both ask for Face ID. Where it isn't available, the switch is replaced by an explanation.
-- **Storage:**
-  - `appLock` ({ credentialId, enabledAt }) and `appLockBypassedAt` in the settings table, through `appLockRepo`.
-  - Both are device settings (`DEVICE_SETTING_KEYS`): left out of exports, and kept as they are on import, since a passkey only works on its own phone.
+- **Storage** (`appLockRepo`, in the settings table):
+  - `appLock`: the PIN fingerprint, the passkey id when Face ID is on, and when it was turned on;
+  - `appLockFailures`: the wrong-PIN count and the wait;
+  - `appLockBypassedAt`: when "Can't unlock?" was used.
+  - All three are device settings (`DEVICE_SETTING_KEYS`): left out of exports and kept as they are on import, since a passkey only works on its own phone.
 - **App:**
-  - `useAppLock` at the root: loading, locked or open, plus the 1-minute relock, and `data-covered` on <html> while in the background.
+  - `useAppLock` at the root: loading, locked or open, the 1-minute relock, and `data-covered` on `<html>` while in the background.
   - While locked, the app stays mounted (you come back where you were) but hidden and inert, under `LockScreen`.
-  - `LockScreen` asks once on its own, then from its button.
+  - `LockScreen` is a PIN pad with a Face ID key. It asks for Face ID once on its own (once only, even under React's double effects in development).
+
+## Settings → Privacy & data → App lock
+
+- **Turn on:** choose the PIN, typed twice.
+- **Also unlock with Face ID:** asks for Face ID to turn it on. Where Face ID isn't available, an explanation replaces the switch.
+- **Change PIN:** the current PIN, then the new one twice.
+- **Turn off:** asks for the PIN.
 
 ## Testing
 
-- **Unit tests:** the relock timing, base64url, the user-verified flag, `verifyOwner` (verified, unverified, cancelled).
-- **Hook tests:**
-  - locked at open
-  - unlocking
-  - relock after more than 1 min but not after a quick switch, with the cover
-  - no lock-out when turning it on
-  - the bypass
-- **Screen tests:** the lock screen, the Settings explanation, and the backup keeping the lock off exports and imports.
-- **Browser:** the lock screen, the bypass path and the notice.
-- **iPhone (to do):** on a Vercel preview (a real domain), as an installed app: turning it on, unlocking with Face ID, the relock after 1 min, and the app switcher.
-
-## Addition: a PIN (2026-10-05)
-
-The owner asked for a banking-app style PIN, with Face ID first and the PIN as the backup.
-
-| Topic | Decision |
-|---|---|
-| Length | **6 digits.** Too-simple PINs (111111, 123456) are refused. |
-| When | **Face ID first, the PIN as backup.** The lock screen is a PIN pad with a Face ID key, and it asks for Face ID once on its own. The PIN is the lock's base: Face ID is the optional shortcut ("Also unlock with Face ID"), so the lock also works without Face ID, including over the Wi-Fi test link. |
-| Wrong PINs | **5 free tries,** then waits of 30 s, 1 min, 5 min, 15 min and 1 h, with a countdown. The wait is stored, so a relaunch doesn't reset it, and it applies in Settings too (`appLockRepo.checkPin`). **"Forgot PIN?"** sets a new PIN after Face ID. **"Can't unlock?"** (with its notice) stays as the last way out. |
-
-**Storage:**
-- The PIN is kept only as a PBKDF2-SHA-256 fingerprint (a random salt, 210,000 rounds), in `appLock.pin`, never as typed.
-- The wrong-PIN count is in `appLockFailures`.
-- All of it is device-only, never in backups.
-
-**Settings → Privacy & data → App lock:**
-- turn on: choose the PIN, typed twice
-- Also unlock with Face ID
-- Change PIN: the current PIN, then the new one twice
-- Turn off: asks for the PIN
-
-**Testing:**
-- **PIN unit tests:** format, too simple, hashing and salting, the waits.
-- **Hook tests:** PIN unlock, the wait surviving a relaunch, Face ID clearing the count, Forgot PIN.
-- **Lock screen and Settings tests.**
-- **In the browser:** turning it on, the lock at reopening, a wrong PIN, then the right one.
+- **Unit:** PIN format, too-simple PINs, hashing and salting, the waits; the relock timing, base64url, the user-verified flag, `verifyOwner` (verified, unverified, cancelled).
+- **Hook:** locked at open, PIN unlock, Face ID unlock, the wait surviving a relaunch, Face ID clearing the count, Forgot PIN, relock after more than 1 min but not after a quick switch (with the cover), no lock-out when turning it on, the bypass.
+- **Screens:** the lock screen, Settings (turn on, change, turn off, the Face ID explanation), and backups keeping the lock out of exports and imports.
+- **In the browser:** turning it on, the lock at reopening, a wrong PIN then the right one, the bypass and its notice.
+- **iPhone (to do):** on a real domain (a Vercel preview, once the owner turns Vercel back on), as an installed app: turning Face ID on, unlocking with it, the relock after 1 min, and the app switcher.
