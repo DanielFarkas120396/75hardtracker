@@ -81,7 +81,7 @@ interface TaskTileProps {
   progress: number | null
   photo?: Blob
   quick?: QuickAction
-  /** Controls under the title, on the tile itself (the diet switches); they stand in for the status line. */
+  /** Controls on the tile's right (the diet switches); they stand in for the status line, and the tick moves beside the icon. */
   controls?: ReactNode
   onOpen: () => void
 }
@@ -116,7 +116,7 @@ function TaskTile({ task, done, status, progress, photo, quick, controls, onOpen
         type="button"
         onClick={onOpen}
         aria-label={`${TASK_TITLES[task]}, ${status}${done ? ', done' : ''}`}
-        className={`relative flex w-full flex-col items-start p-3 text-left focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink ${controls ? 'pb-0' : 'min-h-[7.5rem]'}`}
+        className="relative flex min-h-[7.5rem] w-full flex-col items-start p-3 text-left focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
       >
         <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${iconBox}`}>
           <Icon name={TASK_ICONS[task]} size={20} />
@@ -126,7 +126,7 @@ function TaskTile({ task, done, status, progress, photo, quick, controls, onOpen
       </button>
       {controls}
       {done && (
-        <span className="absolute top-2 right-2">
+        <span className={`absolute ${controls ? 'top-4 left-[3.25rem]' : 'top-2 right-2'}`}>
           <DoneBadge pop={pops > 0} />
           {pops > 0 && !reduceMotion && <Burst key={pops} className="top-0 left-0" />}
         </span>

@@ -11,10 +11,10 @@ interface DietSwitchesProps {
   socialToday: boolean
 }
 
-/** The diet tile's two switches, each named by its emoji: the plate, and the crossed-out glass. */
+/** The diet tile's two switches, stacked on its right, each named by its emoji: the plate, and the crossed-out glass. */
 export function DietSwitches({ entry, rules, socialToday }: DietSwitchesProps) {
   return (
-    <div className="flex items-center justify-between px-3 pb-1">
+    <div className="absolute inset-y-0 right-3 flex flex-col items-end justify-center gap-1">
       <MiniSwitch
         label={dietToggleLabel(rules)}
         emoji="🍽️"
@@ -22,7 +22,7 @@ export function DietSwitches({ entry, rules, socialToday }: DietSwitchesProps) {
         onChange={(checked) => void dayEntryRepo.update(entry.id, { dietFollowed: checked })}
       />
       {socialToday ? (
-        <span role="img" aria-label="Social occasion today — a drink is allowed" className="px-2 text-xl leading-none">
+        <span role="img" aria-label="Social occasion today — a drink is allowed" className="flex min-h-11 items-center px-2 text-xl leading-none">
           🥂
         </span>
       ) : (
@@ -52,7 +52,7 @@ function MiniSwitch({ label, emoji, checked, onChange }: MiniSwitchProps) {
       aria-checked={checked}
       aria-label={label}
       onClick={() => onChange(!checked)}
-      className="flex min-h-touch touch-manipulation items-center gap-1.5 rounded-full px-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink"
+      className="flex min-h-11 touch-manipulation items-center gap-1.5 rounded-full px-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink"
     >
       <span aria-hidden="true" className="text-xl leading-none">
         {emoji}
