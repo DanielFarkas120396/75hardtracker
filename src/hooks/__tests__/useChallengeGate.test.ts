@@ -128,3 +128,28 @@ describe('canGiveUp', () => {
     expect(canGiveUp(gate)).toBe(false)
   })
 })
+
+describe('resolveGate with a late day', () => {
+  // Days 1–4 complete; Day 5 (yesterday) left unfinished; today is Day 6.
+  const yesterdayUnfinished: DayEntry[] = [dayEntry(1, true), dayEntry(2, true), dayEntry(3, true), dayEntry(4, true), dayEntry(5, false)]
+
+  it('keeps a 75 Hard attempt running in the morning, offering to finish yesterday', () => {
+    const gate = resolveGate(challenge(), yesterdayUnfinished, today, 9 * 60)
+    expect(gate.kind).toBe('active')
+    expect(gate.lateDayNumber).toBe(5)
+    expect(gate.lateDayPending).toBe(true)
+    expect(gate.streak).toBe(4)
+  })
+
+  it('turns it into a missed day at noon', () => {
+    const gate = resolveGate(challenge(), yesterdayUnfinished, today, 12 * 60)
+    expect(gate.kind).toBe('needsRestart')
+    expect(gate.lateDayNumber).toBeNull()
+  })
+
+  it('stops offering once yesterday is finished', () => {
+    const gate = resolveGate(challenge(), everyDayComplete, today, 9 * 60)
+    expect(gate.lateDayNumber).toBe(5)
+    expect(gate.lateDayPending).toBe(false)
+  })
+})

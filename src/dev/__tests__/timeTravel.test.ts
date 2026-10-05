@@ -13,6 +13,7 @@ describe('time travel', () => {
 
   it('travels in its own scratch database, never the real one', () => {
     expect(timeTravelUrl(40)).toBe('/?db=time-travel&travel=40')
+    expect(timeTravelUrl(12, true)).toBe('/?db=time-travel&travel=12&late=1&now=09:00')
     expect(isTimeTravelling('?db=time-travel')).toBe(true)
     expect(isTimeTravelling('')).toBe(false)
     expect(isTimeTravelling('?db=day75')).toBe(false)

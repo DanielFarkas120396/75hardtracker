@@ -19,10 +19,19 @@ interface PhotoCardProps {
   cheer: string
   /** Scroll here and open the camera on arrival (from the Gallery), then call onCameraOpened. */
   openCameraNow?: boolean
+  /** Only a photo from the library (finishing yesterday: the camera would take today's). */
+  libraryOnly?: boolean
   onCameraOpened?: () => void
 }
 
-export function PhotoCard({ entry, complete, cheer, openCameraNow = false, onCameraOpened }: PhotoCardProps) {
+export function PhotoCard({
+  entry,
+  complete,
+  cheer,
+  openCameraNow = false,
+  onCameraOpened,
+  libraryOnly = false,
+}: PhotoCardProps) {
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const libraryInputRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
@@ -83,7 +92,9 @@ export function PhotoCard({ entry, complete, cheer, openCameraNow = false, onCam
 
   return (
     <Card id={PHOTO_CARD_ID} complete={complete} cheer={cheer} title="Photo" icon="photo" summary="Taken">
-      <p className="mt-1 text-sm text-ink-muted">One progress photo a day.</p>
+      <p className="mt-1 text-sm text-ink-muted">
+        {libraryOnly ? "Yesterday's photo, from your library." : 'One progress photo a day.'}
+      </p>
 
       <div className="mt-4">
         {photo ? (
@@ -118,11 +129,13 @@ export function PhotoCard({ entry, complete, cheer, openCameraNow = false, onCam
         )}
 
         <div className="mt-3 flex flex-col gap-2">
-          <Button variant="secondary" onClick={openCamera} disabled={busy}>
-            {busy ? 'Saving…' : photo ? '📷 Retake photo' : '📷 Take photo'}
-          </Button>
+          {!libraryOnly && (
+            <Button variant="secondary" onClick={openCamera} disabled={busy}>
+              {busy ? 'Saving…' : photo ? '📷 Retake photo' : '📷 Take photo'}
+            </Button>
+          )}
           <Button variant="secondary" onClick={() => libraryInputRef.current?.click()} disabled={busy}>
-            🖼️ Choose from library
+            {busy && libraryOnly ? 'Saving…' : '🖼️ Choose from library'}
           </Button>
         </div>
 

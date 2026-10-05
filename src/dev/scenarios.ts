@@ -353,12 +353,23 @@ export async function seedReturningWithoutProfile(): Promise<void> {
 
 /**
  * Time travel: an attempt on Day `day`, every earlier day done and today
- * untouched. Past Day 75, all 75 days are done — the victory screen.
+ * untouched. Past Day 75, all 75 days are done — the victory screen. With
+ * `yesterdayUnfinished`, yesterday is only half logged (late logging).
  */
-export async function seedTravelDay(day: number): Promise<void> {
+export async function seedTravelDay(day: number, { yesterdayUnfinished = false } = {}): Promise<void> {
   const today = Math.min(Math.max(1, Math.floor(day)), CHALLENGE_LENGTH)
   const days: SeedDay[] = []
-  for (let d = 1; d < today; d++) days.push(await perfectDay(d))
+  for (let d = 1; d < today; d++) {
+    if (yesterdayUnfinished && d === today - 1) {
+      days.push({
+        dayNumber: d,
+        entry: { water_ml: 2000, dietFollowed: true, noAlcohol: true },
+        workouts: [{ type: 'Running', durationMin: RULESETS.hard.minWorkoutMin, isOutdoor: true }],
+      })
+    } else {
+      days.push(await perfectDay(d))
+    }
+  }
   if (day > CHALLENGE_LENGTH) days.push(await perfectDay(CHALLENGE_LENGTH))
 
   await replaceDatabase([

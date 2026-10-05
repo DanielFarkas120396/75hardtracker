@@ -19,13 +19,21 @@ export function streakEndingAt(entries: DayCompletionSummary[], dayNumber: numbe
 /**
  * The streak to show on `todayDayNumber`: consecutive completed days ending
  * today if today is already complete, otherwise ending yesterday — so a day
- * that's still in progress never drops the flame to 0. Days after the end of
- * the challenge count from the final day.
+ * that's still in progress never drops the flame to 0. Likewise an
+ * unfinished late day (yesterday, until noon): the streak then ends the day
+ * before it. Days after the end of the challenge count from the final day.
  */
-export function calculateStreak(entries: DayCompletionSummary[], todayDayNumber: number): number {
+export function calculateStreak(
+  entries: DayCompletionSummary[],
+  todayDayNumber: number,
+  lateDay: number | null = null,
+): number {
   if (!Number.isFinite(todayDayNumber) || todayDayNumber < 1) return 0
 
+  const isComplete = (day: number) => entries.some((e) => e.dayNumber === day && e.completed)
   const today = Math.min(todayDayNumber, CHALLENGE_LENGTH)
-  const todayComplete = entries.some((e) => e.dayNumber === today && e.completed)
-  return streakEndingAt(entries, todayComplete ? today : today - 1)
+  if (isComplete(today)) return streakEndingAt(entries, today)
+  const yesterday = today === todayDayNumber ? today - 1 : today
+  const yesterdayOpen = yesterday === lateDay && !isComplete(yesterday)
+  return streakEndingAt(entries, yesterdayOpen ? yesterday - 1 : yesterday)
 }
