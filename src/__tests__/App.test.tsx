@@ -30,7 +30,7 @@ describe('App', () => {
     await profileRepo.completeOnboarding({ name: 'Daniel', why: 'A fresh start' })
 
     render(<App />)
-    await screen.findByText('Hey Daniel', undefined, { timeout: 5000 })
+    await screen.findByText('“A fresh start”', undefined, { timeout: 5000 })
 
     await act(async () => {
       await resetAll()

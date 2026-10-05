@@ -1,12 +1,12 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { pokeLine } from '../../../content/microcopy'
 import { freshDatabase } from '../../../db/__tests__/fixtures'
 import { TASK_IDS } from '../../../logic/dayCompletion'
 import type { Menace } from '../../../logic/menace'
 import type { TaskId } from '../../../logic/types'
-import { DuckHeader } from '../DuckHeader'
+import { DuckHeader, LINE_EVERY_MS, LINE_VISIBLE_MS } from '../DuckHeader'
 
 const completionOf = (missing: TaskId[]) =>
   Object.fromEntries(TASK_IDS.map((task) => [task, !missing.includes(task)])) as Record<TaskId, boolean>
@@ -19,6 +19,10 @@ describe('DuckHeader', () => {
   })
 
   beforeEach(freshDatabase)
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
 
   it('says the line for his menace', () => {
     render(<DuckHeader menace={TAPPING} missing={['reading']} completion={completionOf(['reading'])} dayNumber={3} onLunge={vi.fn()} />)
@@ -72,6 +76,18 @@ describe('DuckHeader', () => {
 
     // Real timers: faking setTimeout can freeze the AnimatePresence swap.
     expect(await screen.findByText("Tick. Tock. You're cutting it close.", undefined, { timeout: 3000 })).toBeInTheDocument()
+  })
+
+  it('hides his bubble after a while, and brings it back now and then', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] })
+    render(<DuckHeader menace={TAPPING} missing={['reading']} completion={completionOf(['reading'])} dayNumber={3} onLunge={vi.fn()} />)
+    expect(screen.getByText("Tick. Tock. You're cutting it close.")).toBeInTheDocument()
+
+    await act(async () => vi.advanceTimersByTime(LINE_VISIBLE_MS + 100))
+    expect(screen.queryByText("Tick. Tock. You're cutting it close.")).not.toBeInTheDocument()
+
+    await act(async () => vi.advanceTimersByTime(LINE_EVERY_MS))
+    expect(screen.getByText("Tick. Tock. You're cutting it close.")).toBeInTheDocument()
   })
 
   it("says the player's name when the day starts", () => {

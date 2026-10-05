@@ -1,30 +1,18 @@
-import { useState } from 'react'
 import { Button } from '../../components/ui/Button'
-import { Card } from '../../components/ui/Card'
 import { formatLiters } from '../../content/variants'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import type { DayEntry } from '../../db/types'
 import type { Ruleset } from '../../logic/rulesets'
 
-interface WaterCardProps {
+interface WaterTaskProps {
   entry: DayEntry
-  complete: boolean
-  cheer: string
   rules: Ruleset
 }
 
-export function WaterCard({ entry, complete, cheer, rules }: WaterCardProps) {
-  const [lastDelta, setLastDelta] = useState<number | null>(null)
-
+/** The water sheet's body: the bottle, and the pours. */
+export function WaterTask({ entry, rules }: WaterTaskProps) {
   const addWater = (deltaMl: number) => {
     void dayEntryRepo.adjustWater(entry.id, deltaMl)
-    setLastDelta(deltaMl)
-  }
-
-  const undo = () => {
-    if (lastDelta === null) return
-    void dayEntryRepo.adjustWater(entry.id, -lastDelta)
-    setLastDelta(null)
   }
 
   const fillPercent = Math.min(100, (entry.water_ml / rules.waterTargetMl) * 100)
@@ -32,10 +20,8 @@ export function WaterCard({ entry, complete, cheer, rules }: WaterCardProps) {
   const targetLiters = formatLiters(rules.waterTargetMl)
 
   return (
-    <Card complete={complete} cheer={cheer} title="Water" icon="water" summary={`${formatLiters(entry.water_ml)} L`}>
-      <p className="mt-1 text-sm text-ink-muted">Goal: {targetLiters} L a day.</p>
-
-      <div className="mt-4 flex items-center gap-4">
+    <div>
+      <div className="flex items-center gap-4">
         <div className="relative h-24 w-14 shrink-0 overflow-hidden rounded-2xl border-2 border-blue bg-blue-light">
           <div
             className="absolute inset-x-0 bottom-0 bg-blue motion-safe:transition-[height] motion-safe:duration-500"
@@ -55,10 +41,10 @@ export function WaterCard({ entry, complete, cheer, rules }: WaterCardProps) {
         <Button variant="water" onClick={() => addWater(500)}>
           + 500 ml
         </Button>
-        <Button variant="secondary" onClick={undo} disabled={lastDelta === null}>
-          Undo
+        <Button variant="secondary" onClick={() => addWater(-250)} disabled={entry.water_ml === 0}>
+          − 250 ml
         </Button>
       </div>
-    </Card>
+    </div>
   )
 }

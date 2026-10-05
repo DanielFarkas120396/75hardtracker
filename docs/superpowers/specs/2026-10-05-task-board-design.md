@@ -1,6 +1,6 @@
 # Today as a task board — design
 
-Date: 2026-10-05 · Status: **agreed**, not built. Delivered as two PRs into `main`: first the XP removal, then the board.
+Date: 2026-10-05 · Status: **built**. Delivered as two PRs into `main`: the XP removal (PR #31), then the board.
 
 ## Why
 

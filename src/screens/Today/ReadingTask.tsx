@@ -1,28 +1,22 @@
-import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { Button } from '../../components/ui/Button'
-import { Card } from '../../components/ui/Card'
 import { Stepper } from '../../components/ui/Stepper'
-import { readingRuleLine } from '../../content/variants'
 import { bookRepo } from '../../db/repositories/bookRepo'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import { SETTING_KEYS, settingsRepo } from '../../db/repositories/settingsRepo'
 import type { DayEntry } from '../../db/types'
+import { useCurrentBook } from '../../hooks/useCurrentBook'
 import { validateBook, type BookErrors } from '../../logic/books'
 import type { Ruleset } from '../../logic/rulesets'
 
-interface ReadingCardProps {
+interface ReadingTaskProps {
   entry: DayEntry
-  complete: boolean
-  cheer: string
   rules: Ruleset
 }
 
-export function ReadingCard({ entry, complete, cheer, rules }: ReadingCardProps) {
-  const books = useLiveQuery(() => bookRepo.getAll(), []) ?? []
-  const currentBookId = useLiveQuery(() => settingsRepo.get<number | null>(SETTING_KEYS.currentBookId, null), [])
-  const currentBook = books.find((b) => b.id === currentBookId)
-
+/** The reading sheet's body: the book being read, and the pages. */
+export function ReadingTask({ entry, rules }: ReadingTaskProps) {
+  const { books, currentBook } = useCurrentBook()
   const [showAddBook, setShowAddBook] = useState(false)
 
   const stepPages = (delta: number) => {
@@ -32,16 +26,8 @@ export function ReadingCard({ entry, complete, cheer, rules }: ReadingCardProps)
   const pagesLeft = Math.max(0, rules.pagesTarget - entry.pages_read)
 
   return (
-    <Card
-      complete={complete}
-      cheer={cheer}
-      title="Reading"
-      icon="reading"
-      summary={`${entry.pages_read} pages${currentBook ? ` · ${currentBook.title}` : ''}`}
-    >
-      <p className="mt-1 text-sm text-ink-muted">{readingRuleLine(rules)}</p>
-
-      <div className="mt-4">
+    <div>
+      <div>
         {books.length > 0 ? (
           <>
             {/* A current book that no longer exists falls back to "Pick a book…". */}
@@ -88,7 +74,7 @@ export function ReadingCard({ entry, complete, cheer, rules }: ReadingCardProps)
           </Button>
         )}
       </div>
-    </Card>
+    </div>
   )
 }
 

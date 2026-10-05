@@ -1,9 +1,7 @@
 import { useState } from 'react'
 import { Button } from '../../components/ui/Button'
-import { Card } from '../../components/ui/Card'
 import { Stepper } from '../../components/ui/Stepper'
 import { Toggle } from '../../components/ui/Toggle'
-import { workoutRuleLine } from '../../content/variants'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import { workoutRepo } from '../../db/repositories/workoutRepo'
 import type { Workout, WorkoutType } from '../../db/types'
@@ -12,11 +10,10 @@ import type { Ruleset } from '../../logic/rulesets'
 
 const WORKOUT_TYPES: WorkoutType[] = ['Running', 'Walking', 'Weights', 'Yoga', 'Cycling', 'Swimming', 'Other']
 
-interface WorkoutCardProps {
+interface WorkoutTaskProps {
   dayEntryId: number
   workouts: Workout[]
   complete: boolean
-  cheer: string
   rules: Ruleset
   /** Whether this attempt's weekly recovery day (75 Soft) was taken on this entry. */
   restDay: boolean
@@ -24,7 +21,8 @@ interface WorkoutCardProps {
   weekRestDay: number | undefined
 }
 
-export function WorkoutCard({ dayEntryId, workouts, complete, cheer, rules, restDay, weekRestDay }: WorkoutCardProps) {
+/** The workouts sheet's body: the day's sessions, and 75 Soft's recovery day. */
+export function WorkoutTask({ dayEntryId, workouts, complete, rules, restDay, weekRestDay }: WorkoutTaskProps) {
   const [restDayError, setRestDayError] = useState<string | null>(null)
 
   const addWorkout = () => {
@@ -44,23 +42,16 @@ export function WorkoutCard({ dayEntryId, workouts, complete, cheer, rules, rest
     void dayEntryRepo.setRestDay(dayEntryId, false)
   }
 
-  const minutes = workouts.reduce((sum, w) => sum + w.durationMin, 0)
-  const summary = restDay
-    ? 'Recovery day'
-    : `${workouts.length} ${workouts.length === 1 ? 'workout' : 'workouts'} · ${minutes} min`
-
   return (
-    <Card complete={complete} cheer={cheer} title="Workouts" icon="workout" summary={summary}>
-      <p className="mt-1 text-sm text-ink-muted">{workoutRuleLine(rules)}</p>
-
-      <div className="mt-4 flex flex-col gap-3">
+    <div>
+      <div className="flex flex-col gap-3">
         {workouts.map((workout) => (
           <WorkoutRow key={workout.id} workout={workout} />
         ))}
       </div>
 
       {workouts.length < MAX_WORKOUTS && (
-        <Button variant="secondary" className="mt-4 w-full" onClick={addWorkout}>
+        <Button variant="secondary" className={`w-full ${workouts.length > 0 ? 'mt-4' : ''}`} onClick={addWorkout}>
           + Add workout
         </Button>
       )}
@@ -94,7 +85,7 @@ export function WorkoutCard({ dayEntryId, workouts, complete, cheer, rules, rest
           )}
         </div>
       )}
-    </Card>
+    </div>
   )
 }
 

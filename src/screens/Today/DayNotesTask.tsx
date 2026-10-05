@@ -1,40 +1,24 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { Icon } from '../../components/icons/Icon'
+import { MOODS, type Mood } from '../../content/moods'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import type { DayEntry } from '../../db/types'
-
-type Mood = NonNullable<DayEntry['mood']>
-
-const MOODS: { value: Mood; emoji: string; label: string }[] = [
-  { value: 1, emoji: '😫', label: 'Rough' },
-  { value: 2, emoji: '😕', label: 'Meh' },
-  { value: 3, emoji: '😐', label: 'Okay' },
-  { value: 4, emoji: '🙂', label: 'Good' },
-  { value: 5, emoji: '😄', label: 'Great' },
-]
 
 /** How long typing has to pause before notes are saved. */
 const NOTES_SAVE_DELAY_MS = 600
 
-interface DayNotesCardProps {
+interface DayNotesTaskProps {
   entry: DayEntry
 }
 
-/** Optional mood and notes for the day. Neither counts toward completing it. */
-export function DayNotesCard({ entry }: DayNotesCardProps) {
+/** The mood sheet's body: the five moods and the notes. Neither counts toward completing the day. */
+export function DayNotesTask({ entry }: DayNotesTaskProps) {
   const setMood = (mood: Mood) => {
     void dayEntryRepo.update(entry.id, { mood: entry.mood === mood ? undefined : mood })
   }
 
   return (
-    <section className="rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0">
-      <h2 className="flex items-center gap-2 font-rounded text-lg font-extrabold text-ink">
-        <Icon name="notes" className="shrink-0 text-world-ink" />
-        How was today?
-      </h2>
-      <p className="mt-1 text-sm text-ink-muted">Optional — just for you. It doesn't affect completing the day.</p>
-
-      <div role="group" aria-label="Mood" className="mt-3 grid grid-cols-5 gap-1">
+    <div>
+      <div role="group" aria-label="Mood" className="grid grid-cols-5 gap-1">
         {MOODS.map((mood) => {
           const selected = entry.mood === mood.value
           return (
@@ -58,14 +42,14 @@ export function DayNotesCard({ entry }: DayNotesCardProps) {
 
       {/* Keyed by entry so the text resets on a new day. */}
       <NotesField key={entry.id} entry={entry} />
-    </section>
+    </div>
   )
 }
 
 /** Blank notes are stored as "no notes". */
 const toNotes = (value: string) => (value.trim() === '' ? undefined : value)
 
-/** Notes are saved once typing pauses, on blur, and — if still pending — when the card unmounts. */
+/** Notes are saved once typing pauses, on blur, and — if still pending — when the sheet closes. */
 function NotesField({ entry }: { entry: DayEntry }) {
   const fieldId = useId()
   const [text, setText] = useState(entry.notes ?? '')
@@ -83,7 +67,7 @@ function NotesField({ entry }: { entry: DayEntry }) {
     pendingText.current = null
   }
 
-  // Save anything still pending when the card unmounts (e.g. switching tabs mid-sentence).
+  // Save anything still pending when the field unmounts (closing the sheet mid-sentence).
   useEffect(() => {
     const timerRef = timer
     const pendingRef = pendingText
