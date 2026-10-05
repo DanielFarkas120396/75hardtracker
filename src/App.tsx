@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from 'react'
 import { BadgeUnlockToast } from './components/BadgeUnlockToast'
+import { TimeTravelBadge } from './dev/TimeTravelBadge'
 import { BottomNav, type ScreenId } from './components/ui/BottomNav'
 import { useBadgeUnlocks } from './hooks/useBadgeUnlocks'
 import { canGiveUp, useChallengeGate } from './hooks/useChallengeGate'
@@ -163,6 +164,7 @@ function MainApp({ today }: { today: string }) {
       </div>
 
       <BottomNav active={screen} onChange={goTo} />
+      {import.meta.env.DEV && <TimeTravelBadge />}
 
       <DayCompleteCelebration celebration={celebration} onDismiss={dismissCelebration} />
       <BadgeUnlockToast badges={toasts} onDismiss={dismissToast} />

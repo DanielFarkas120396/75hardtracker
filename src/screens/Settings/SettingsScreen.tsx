@@ -11,6 +11,8 @@ import { resetAll } from '../../db/exportImport'
 import { useProfile } from '../../hooks/useProfile'
 import { useSettings } from '../../hooks/useSettings'
 import { useThemeSetting } from '../../hooks/useThemePreference'
+import { isTimeTravelling } from '../../dev/timeTravel'
+import { TimeTravelPanel } from '../../dev/TimeTravelPanel'
 import { getInstallState, subscribeToInstallState } from '../../lib/installPrompt'
 import { rulesFor } from '../../logic/rulesets'
 import { AppearanceSection } from './AppearanceSection'
@@ -35,7 +37,7 @@ interface SettingsScreenProps {
   canGiveUp: boolean
 }
 
-type PageId = 'profile' | 'badges' | 'challenge' | 'books' | 'history' | 'appearance' | 'sound' | 'companion' | 'install' | 'backup'
+type PageId = 'profile' | 'badges' | 'challenge' | 'books' | 'history' | 'appearance' | 'sound' | 'companion' | 'install' | 'backup' | 'timeTravel'
 
 const PAGE_TITLES: Record<PageId, string> = {
   profile: 'Profile',
@@ -48,6 +50,7 @@ const PAGE_TITLES: Record<PageId, string> = {
   companion: 'Companion',
   install: 'Install the app',
   backup: 'Backup & storage',
+  timeTravel: 'Time travel',
 }
 
 const THEME_LABELS = { system: 'System', light: 'Light', dark: 'Dark' } as const
@@ -114,6 +117,7 @@ export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGi
           {page === 'companion' && <CompanionSection bedtime={settings.bedtime} onBedtimeChange={settings.setBedtime} />}
           {page === 'install' && <InstallSection />}
           {page === 'backup' && <ExportImportSection today={today} />}
+          {import.meta.env.DEV && page === 'timeTravel' && <TimeTravelPanel />}
         </SettingsPage>
       ) : (
         <>
@@ -168,6 +172,17 @@ export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGi
             <SettingsGroup title="Data">
               <SettingsRow icon="backup" label="Backup & storage" onClick={() => open('backup')} />
             </SettingsGroup>
+
+            {import.meta.env.DEV && (
+              <SettingsGroup title="Developer" footer="Only in the dev server, never in the real app.">
+                <SettingsRow
+                  icon="journey"
+                  label="Time travel"
+                  value={isTimeTravelling() ? 'On' : undefined}
+                  onClick={() => open('timeTravel')}
+                />
+              </SettingsGroup>
+            )}
 
             <SettingsGroup
               title="Danger zone"
