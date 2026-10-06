@@ -17,6 +17,48 @@ export const VARIANT_SUMMARIES: Record<ChallengeVariant, string> = {
   soft: 'Like 75 Medium, plus a recovery day a week. Three jokers.',
 }
 
+/** Each challenge in a few words, for the variant picker. */
+export const VARIANT_TAGLINES: Record<ChallengeVariant, string> = {
+  hard: 'The original. No mercy.',
+  strong: 'Hard, with one social night a week.',
+  medium: 'One workout. Eat healthy.',
+  soft: 'A gentler start, with a recovery day.',
+}
+
+const COUNT_WORDS = ['No', 'One', 'Two', 'Three', 'Four'] as const
+
+/** The 3 things that set a challenge apart, as short chips: workouts, the weekly break (or the water), the jokers. */
+export function variantHighlights(rules: Ruleset): string[] {
+  const workouts = rules.requiredWorkouts === 1 ? '1 workout a day' : `${rules.requiredWorkouts} workouts a day`
+  const week =
+    rules.restDaysPerWeek > 0
+      ? 'Recovery day weekly'
+      : rules.socialDaysPerWeek > 0
+        ? 'Social night weekly'
+        : `${formatLiters(rules.waterTargetMl)} L of water`
+  const jokers = rules.jokers === 0 ? 'No jokers' : rules.jokers === 1 ? '1 joker' : `${rules.jokers} jokers`
+  return [workouts, week, jokers]
+}
+
+/** What a missed day costs, for the deal: "Miss a day: back to Day 1." or the jokers first. */
+export function stakesLine(rules: Ruleset): string {
+  if (rules.jokers === 0) return 'Miss a day: back to Day 1.'
+  const jokers = `${COUNT_WORDS[rules.jokers]} ${rules.jokers === 1 ? 'joker' : 'jokers'}`
+  const days = rules.jokers === 1 ? 'one missed day' : `${COUNT_WORDS[rules.jokers].toLowerCase()} missed days`
+  return `${jokers}: ${days} forgiven. Miss one more: back to Day 1.`
+}
+
+/** The daily rules, one short line each, for the deal. */
+export function dailyRuleLines(rules: Ruleset): string[] {
+  return [
+    workoutRuleLine(rules),
+    dietRuleLine(rules),
+    `${formatLiters(rules.waterTargetMl)} L of water.`,
+    readingRuleLine(rules),
+    'A progress photo.',
+  ]
+}
+
 /** Litres for display, without a trailing ".0": 3800 → "3.8", 3000 → "3". */
 export function formatLiters(ml: number): string {
   return String(Number((ml / 1000).toFixed(1)))

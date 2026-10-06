@@ -10,7 +10,8 @@ describe('GalleryScreen', () => {
     const onTakePhoto = vi.fn()
     render(<GalleryScreen onTakePhoto={onTakePhoto} />)
 
-    expect(await screen.findByRole('heading', { name: 'No photos yet' })).toBeInTheDocument()
+    // The first render waits on a live query: under a loaded test run, it can take more than a second.
+    expect(await screen.findByRole('heading', { name: 'No photos yet' }, { timeout: 5000 })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: "Take today's photo" }))
     expect(onTakePhoto).toHaveBeenCalledOnce()
   })

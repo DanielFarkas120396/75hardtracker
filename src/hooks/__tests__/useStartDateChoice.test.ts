@@ -36,4 +36,21 @@ describe('useStartDateChoice', () => {
     act(() => result.current.setPickedDate(''))
     expect(result.current.dateError).toBe('Pick a start date.')
   })
+
+  it('picks tomorrow at first, and refuses a start more than 60 days ahead', () => {
+    const { result } = renderHook(() => useStartDateChoice(today))
+
+    act(() => result.current.setChoice('pick'))
+    expect(result.current).toMatchObject({ startDate: addDaysISO(today, 1), maxDate: addDaysISO(today, 60), dateError: null })
+
+    act(() => result.current.setPickedDate(addDaysISO(today, 60)))
+    expect(result.current.dateError).toBeNull()
+    act(() => result.current.setPickedDate(addDaysISO(today, 61)))
+    expect(result.current.dateError).toBe('Start within the next 60 days.')
+  })
+
+  it('starts from a saved choice', () => {
+    const { result } = renderHook(() => useStartDateChoice(today, { choice: 'pick', pickedDate: '2026-10-10' }))
+    expect(result.current).toMatchObject({ choice: 'pick', startDate: '2026-10-10' })
+  })
 })

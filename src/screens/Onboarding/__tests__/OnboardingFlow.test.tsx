@@ -4,10 +4,14 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { db } from '../../../db/db'
 import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
 import { profileRepo } from '../../../db/repositories/profileRepo'
-import { addDaysISO, todayISO } from '../../../lib/dates'
+import { addDaysISO, dateForDayNumber, formatShortDay, todayISO } from '../../../lib/dates'
 import { OnboardingFlow } from '../OnboardingFlow'
 
 const today = todayISO()
+
+// The clock, in minutes since midnight: morning unless a test says otherwise.
+const clock = vi.hoisted(() => ({ nowMin: 9 * 60 }))
+vi.mock('../../../hooks/useNow', () => ({ useNow: () => clock.nowMin }))
 
 const click = (name: string | RegExp) => fireEvent.click(screen.getByRole('button', { name }))
 const heading = (name: string) => screen.findByRole('heading', { name })
@@ -27,7 +31,11 @@ describe('OnboardingFlow', () => {
     MotionGlobalConfig.skipAnimations = true
   })
 
-  beforeEach(freshDatabase)
+  beforeEach(async () => {
+    localStorage.clear() // the flow's draft
+    clock.nowMin = 9 * 60
+    await freshDatabase()
+  })
 
   afterEach(() => {
     vi.restoreAllMocks()
@@ -58,13 +66,20 @@ describe('OnboardingFlow', () => {
 
     expect(await heading('Deal, Daniel.')).toBeInTheDocument()
     expect(screen.getByText('75 Medium starts tomorrow.')).toBeInTheDocument()
+    const deal = screen.getByRole('region', { name: 'The deal' })
+    expect(deal).toHaveTextContent('1 session of at least 45 minutes.')
+    expect(deal).toHaveTextContent('One joker: one missed day forgiven. Miss one more: back to Day 1.')
+    expect(deal).toHaveTextContent(
+      `${formatShortDay(addDaysISO(today, 1))} → ${formatShortDay(dateForDayNumber(addDaysISO(today, 1), 75))}`,
+    )
     expect(screen.getByText('“A fresh start”')).toBeInTheDocument()
-    click("Let's go")
+    click('Hold to commit') // a click with no press: as VoiceOver or a keyboard
 
     await waitFor(async () => expect(await profileRepo.get()).toMatchObject({ name: 'Daniel', why: 'A fresh start' }))
     expect(await db.challenges.toArray()).toMatchObject([
       { attemptNumber: 1, status: 'active', variant: 'medium', startDate: addDaysISO(today, 1) },
     ])
+    expect(localStorage.length).toBe(0) // the draft is gone
   })
 
   it('asks a returning player only for a name and a reason, and leaves the attempts alone', async () => {
@@ -155,7 +170,7 @@ describe('OnboardingFlow', () => {
     expect(screen.getByRole('button', { name: 'Build real discipline' })).toHaveAttribute('aria-pressed', 'true')
 
     fireEvent.change(whyField(), { target: { value: 'Build real discipline, finally' } })
-    expect(screen.getByRole('button', { name: 'Build real discipline' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.queryByRole('button', { name: 'Build real discipline' })).not.toBeInTheDocument() // own words now
     expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled()
   })
 
@@ -173,6 +188,8 @@ describe('OnboardingFlow', () => {
     fireEvent.change(screen.getByLabelText('Start date'), { target: { value: addDaysISO(today, -1) } })
 
     expect(screen.getByRole('alert')).toHaveTextContent("The start can't be in the past.")
+    expect(screen.getByLabelText('Start date')).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByLabelText('Start date')).toHaveAccessibleDescription("The start can't be in the past.")
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled()
   })
 
@@ -186,14 +203,14 @@ describe('OnboardingFlow', () => {
     click('Continue')
     await heading('When do you start?')
 
-    fireEvent.click(screen.getByRole('radio', { name: 'Pick a date' })) // keeps the default picked date: today
+    fireEvent.click(screen.getByRole('radio', { name: 'Pick a date' })) // keeps the default picked date: tomorrow
     click('Continue')
 
     await heading('Deal, Daniel.')
-    rerender(<OnboardingFlow mode="new" today={addDaysISO(today, 1)} />)
+    rerender(<OnboardingFlow mode="new" today={addDaysISO(today, 2)} />)
 
     expect(screen.getByRole('alert')).toHaveTextContent("The start can't be in the past.")
-    expect(screen.getByRole('button', { name: "Let's go" })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Hold to commit' })).toBeDisabled()
   })
 
   it('says so, and lets the player try again, when saving fails', async () => {
@@ -240,5 +257,79 @@ describe('OnboardingFlow', () => {
     rerender(<OnboardingFlow mode="returning" today={today} />)
 
     expect(await heading('Welcome back, Daniel.')).toBeInTheDocument()
+  })
+  it('comes back to the same step, with the answers so far, after a restart', async () => {
+    const { unmount } = render(<OnboardingFlow mode="new" today={today} />)
+    await passWelcomeAndName()
+    await heading('Pick your challenge')
+    fireEvent.click(screen.getByRole('radio', { name: /^75 Strong/ }))
+    unmount() // iOS closed the app
+
+    render(<OnboardingFlow mode="new" today={today} />)
+    expect(await heading('Pick your challenge')).toHaveFocus()
+    expect(screen.getByRole('radio', { name: /^75 Strong/ })).toHaveAttribute('aria-checked', 'true')
+    click('Back')
+    await heading('What should the duck call you?')
+    expect(nameField()).toHaveValue('Daniel')
+  })
+
+  it('hides the ideas once the player writes their own reason, so a tap never wipes it', async () => {
+    render(<OnboardingFlow mode="returning" today={today} />)
+    await passWelcomeAndName()
+    await heading('Why are you doing this?')
+    expect(screen.getAllByRole('button', { pressed: false })).toHaveLength(4)
+
+    fireEvent.change(whyField(), { target: { value: 'For my kids' } })
+    expect(screen.queryByRole('button', { name: 'Clear my head' })).not.toBeInTheDocument()
+
+    fireEvent.change(whyField(), { target: { value: '' } })
+    expect(screen.getByRole('button', { name: 'Clear my head' })).toBeInTheDocument()
+  })
+
+  it('counts the characters as the reason nears its limit', async () => {
+    render(<OnboardingFlow mode="returning" today={today} />)
+    await passWelcomeAndName()
+    await heading('Why are you doing this?')
+
+    fireEvent.change(whyField(), { target: { value: 'x'.repeat(99) } })
+    expect(screen.queryByText('99/140')).not.toBeInTheDocument()
+    fireEvent.change(whyField(), { target: { value: 'x'.repeat(120) } })
+    expect(screen.getByText('120/140')).toBeInTheDocument()
+  })
+
+  it('shows Day 75, and warns about starting today in the evening', async () => {
+    clock.nowMin = 21 * 60 + 5
+    render(<OnboardingFlow mode="new" today={today} />)
+    await passWelcomeAndName()
+    await heading('Pick your challenge')
+    click('Continue') // 75 Hard
+    await heading('Why are you doing this?')
+    click('A fresh start')
+    click('Continue')
+    await heading('When do you start?')
+
+    expect(screen.getByText(`Day 75 is ${formatShortDay(dateForDayNumber(today, 75))}.`)).toBeInTheDocument()
+    expect(screen.getByText("It's 21:05. Today means two workouts before midnight. Tomorrow might be smarter.")).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Tomorrow' }))
+    expect(screen.queryByText(/Tomorrow might be smarter/)).not.toBeInTheDocument()
+  })
+
+  it('refuses a start more than 60 days ahead', async () => {
+    render(<OnboardingFlow mode="new" today={today} />)
+    await passWelcomeAndName()
+    await heading('Pick your challenge')
+    click('Continue')
+    await heading('Why are you doing this?')
+    click('A fresh start')
+    click('Continue')
+    await heading('When do you start?')
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Pick a date' }))
+    expect(screen.getByLabelText('Start date')).toHaveAttribute('max', addDaysISO(today, 60))
+    fireEvent.change(screen.getByLabelText('Start date'), { target: { value: addDaysISO(today, 61) } })
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Start within the next 60 days.')
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled()
   })
 })

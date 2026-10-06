@@ -41,46 +41,48 @@ export function InstallFirst({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center bg-surface px-6 pt-10 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-center">
-      <Mascot mood="content" size={96} />
-      <h1 className="mt-4 font-display text-3xl tracking-wide text-ink">Add 75 Hard to your Home Screen</h1>
-      <p className="mt-3 text-ink-muted">
-        It opens full screen, works offline, and keeps your progress safe. Start there: on iPhone, the app on your Home
-        Screen keeps its own data, apart from Safari.
-      </p>
+    <div className="min-h-dvh bg-surface">
+      <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center px-6 pt-10 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-center">
+        <Mascot mood="content" size={96} />
+        <h1 className="mt-4 font-display text-2xl tracking-wide text-ink">Add 75 Hard to your Home Screen</h1>
+        <p className="mt-3 text-ink-muted">
+          It opens full screen, works offline, and keeps your progress safe. Start there: on iPhone, the app on your Home
+          Screen keeps its own data, apart from Safari.
+        </p>
 
-      {state === 'ios' ? (
-        <ol className="mt-6 flex w-full flex-col gap-3 text-left">
-          <InstallStep number={1}>
-            Tap the <strong className="text-ink">Share</strong> button
-            <Icon name="share" size={20} className="mx-1 inline align-text-bottom text-world-ink" label="Share" /> in Safari's
-            toolbar.
-          </InstallStep>
-          <InstallStep number={2}>
-            Choose <strong className="text-ink">Add to Home Screen</strong> (scroll down the list if needed).
-          </InstallStep>
-          <InstallStep number={3}>
-            Open <strong className="text-ink">75 Hard</strong> from your Home Screen, and set it up there.
-          </InstallStep>
-        </ol>
-      ) : (
-        <div className="mt-6 w-full">
-          <Button
-            className="w-full"
-            onClick={() => {
-              setAsked(true)
-              void promptInstall()
-            }}
-          >
-            Install 75 Hard
-          </Button>
-          {asked && <p className="mt-3 text-sm text-ink-muted">Then open it from your home screen and set it up there.</p>}
-        </div>
-      )}
+        {state === 'ios' ? (
+          <ol className="mt-6 flex w-full flex-col gap-3 text-left">
+            <InstallStep number={1}>
+              Tap the <strong className="text-ink">Share</strong> button
+              <Icon name="share" size={20} className="mx-1 inline align-text-bottom text-world-ink" label="Share" /> in Safari's
+              toolbar.
+            </InstallStep>
+            <InstallStep number={2}>
+              Choose <strong className="text-ink">Add to Home Screen</strong> (scroll down the list if needed).
+            </InstallStep>
+            <InstallStep number={3}>
+              Open <strong className="text-ink">75 Hard</strong> from your Home Screen, and set it up there.
+            </InstallStep>
+          </ol>
+        ) : (
+          <div className="mt-6 w-full">
+            <Button
+              className="w-full"
+              onClick={() => {
+                setAsked(true)
+                void promptInstall()
+              }}
+            >
+              Install 75 Hard
+            </Button>
+            {asked && <p className="mt-3 text-sm text-ink-muted">Then open it from your home screen and set it up there.</p>}
+          </div>
+        )}
 
-      <button type="button" onClick={skip} className="mt-auto min-h-touch pt-6 font-rounded text-sm font-bold text-ink-muted underline">
-        Continue in the browser anyway
-      </button>
+        <button type="button" onClick={skip} className="mt-auto min-h-touch pt-6 font-rounded text-sm font-bold text-ink-muted underline">
+          Continue in the browser anyway
+        </button>
+      </div>
     </div>
   )
 }

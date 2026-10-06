@@ -2,14 +2,22 @@ import type { KeyboardEvent, ReactNode } from 'react'
 import { BackupRestore } from '../../components/BackupRestore'
 import { StartDateChoice } from '../../components/StartDateChoice'
 import { Button } from '../../components/ui/Button'
+import { HoldButton } from '../../components/ui/HoldButton'
 import { VariantPicker } from '../../components/VariantPicker'
-import { startsWhen, WHY_IDEAS } from '../../content/onboarding'
-import { VARIANT_NAMES } from '../../content/variants'
+import { finishLine, lateStartHint, startsInLine, startsWhen, WHY_IDEAS } from '../../content/onboarding'
+import { dailyRuleLines, stakesLine, VARIANT_NAMES } from '../../content/variants'
 import type { StartDateChoiceState } from '../../hooks/useStartDateChoice'
+import { dateForDayNumber, formatShortDay } from '../../lib/dates'
+import { CHALLENGE_LENGTH } from '../../logic/constants'
 import type { OnboardingMode } from '../../logic/onboarding'
 import { cleanText, isValidName, isValidWhy, NAME_MAX_LENGTH, WHY_MAX_LENGTH } from '../../logic/profile'
-import type { ChallengeVariant } from '../../logic/rulesets'
+import { RULESETS, type ChallengeVariant } from '../../logic/rulesets'
 import { GateHeading } from '../RestartFlow/GateHeading'
+
+/** From this length on, the why field shows how much room is left. */
+const WHY_COUNTER_FROM = 100
+
+const FIELD = 'w-full rounded-xl border border-ink/15 bg-canvas font-rounded text-lg font-bold text-ink'
 
 /** Enter moves on when the step's answer is valid; it never inserts a new line. */
 function enterMovesOn(valid: boolean, onNext: () => void) {
@@ -66,14 +74,17 @@ export function NameStep({ name, onChange, onNext }: NameStepProps) {
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={enterMovesOn(valid, onNext)}
         aria-label="Your name"
+        aria-describedby="name-hint"
         placeholder="Your name"
         maxLength={NAME_MAX_LENGTH}
         autoComplete="given-name"
         autoCapitalize="words"
         enterKeyHint="next"
-        className="mt-6 min-h-touch w-full rounded-xl bg-canvas px-4 text-center font-rounded text-lg font-bold text-ink"
+        className={`mt-6 min-h-touch px-4 text-center ${FIELD}`}
       />
-      <p className="mt-2 text-sm text-ink-muted">Up to {NAME_MAX_LENGTH} characters.</p>
+      <p id="name-hint" className="mt-2 text-sm text-ink-muted">
+        {valid ? `Up to ${NAME_MAX_LENGTH} characters.` : `Type a name to continue. Up to ${NAME_MAX_LENGTH} characters.`}
+      </p>
       <Button className="mt-6 w-full" onClick={onNext} disabled={!valid}>
         Continue
       </Button>
@@ -91,13 +102,18 @@ export function ChallengeStep({ variant, onChange, onNext }: ChallengeStepProps)
   return (
     <>
       <StepTitle>Pick your challenge</StepTitle>
-      <p className="mt-2 text-ink-muted">You can still switch in Settings until the end of Day 1. After that, it's locked.</p>
+      <p className="mt-2 text-ink-muted">
+        A joker is a missed day that's forgiven. You can switch until the end of Day 1. After that, it's locked.
+      </p>
       <div className="mt-4 w-full text-left">
         <VariantPicker value={variant} onChange={onChange} />
       </div>
-      <Button className="mt-6 w-full" onClick={onNext}>
-        Continue
-      </Button>
+      {/* Pinned to the bottom, so the four cards never push Continue off a small screen. */}
+      <div className="sticky bottom-0 -mx-6 mt-auto w-[calc(100%+3rem)] bg-surface px-6 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] before:pointer-events-none before:absolute before:inset-x-0 before:-top-8 before:h-8 before:bg-gradient-to-t before:from-surface before:to-transparent">
+        <Button className="w-full" onClick={onNext}>
+          Continue
+        </Button>
+      </div>
     </>
   )
 }
@@ -110,6 +126,9 @@ interface WhyStepProps {
 
 export function WhyStep({ why, onChange, onNext }: WhyStepProps) {
   const valid = isValidWhy(why)
+  const cleaned = cleanText(why)
+  // The ideas only fill an empty field (or swap one idea for another): a tap never wipes the player's own words.
+  const showIdeas = cleaned === '' || (WHY_IDEAS as readonly string[]).includes(cleaned)
   return (
     <>
       <StepTitle>Why are you doing this?</StepTitle>
@@ -123,26 +142,33 @@ export function WhyStep({ why, onChange, onNext }: WhyStepProps) {
         maxLength={WHY_MAX_LENGTH}
         rows={3}
         enterKeyHint="next"
-        className="mt-4 w-full resize-none rounded-xl bg-canvas p-4 font-rounded text-lg font-bold text-ink"
+        className={`mt-4 resize-none p-4 ${FIELD}`}
       />
-      <div className="mt-3 flex flex-wrap justify-center gap-2">
-        {WHY_IDEAS.map((idea) => {
-          const chosen = cleanText(why) === idea
-          return (
-            <button
-              key={idea}
-              type="button"
-              aria-pressed={chosen}
-              onClick={() => onChange(idea)}
-              className={`min-h-touch rounded-full px-4 font-rounded text-sm font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
-                chosen ? 'bg-green-light text-green-ink ring-2 ring-green-ink' : 'bg-canvas text-ink'
-              }`}
-            >
-              {idea}
-            </button>
-          )
-        })}
-      </div>
+      {why.length >= WHY_COUNTER_FROM && (
+        <p className="mt-1 self-end text-sm text-ink-muted tabular-nums">
+          {why.length}/{WHY_MAX_LENGTH}
+        </p>
+      )}
+      {showIdeas && (
+        <div className="mt-3 flex flex-wrap justify-center gap-2">
+          {WHY_IDEAS.map((idea) => {
+            const chosen = cleaned === idea
+            return (
+              <button
+                key={idea}
+                type="button"
+                aria-pressed={chosen}
+                onClick={() => onChange(idea)}
+                className={`min-h-touch rounded-full border px-4 font-rounded text-sm font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
+                  chosen ? 'border-world-edge bg-world-soft text-world-ink ring-1 ring-world-edge' : 'border-ink/15 bg-canvas text-ink'
+                }`}
+              >
+                {idea}
+              </button>
+            )
+          })}
+        </div>
+      )}
       <Button className="mt-6 w-full" onClick={onNext} disabled={!valid}>
         Continue
       </Button>
@@ -153,22 +179,29 @@ export function WhyStep({ why, onChange, onNext }: WhyStepProps) {
 interface StartStepProps {
   start: StartDateChoiceState
   today: string
+  variant: ChallengeVariant
+  /** Minutes since midnight, for the evening warning. */
+  nowMin: number
   onNext: () => void
 }
 
-export function StartStep({ start, today, onNext }: StartStepProps) {
+export function StartStep({ start, today, variant, nowMin, onNext }: StartStepProps) {
+  const lateHint = start.choice === 'today' ? lateStartHint(nowMin, RULESETS[variant]) : null
   return (
     <>
       <StepTitle>When do you start?</StepTitle>
-      <p className="mt-2 text-ink-muted">Day 1 is the first day you log.</p>
+      <p className="mt-2 text-ink-muted">Day 1 is the date you pick. Every task is due by midnight.</p>
       <div className="mt-4 w-full">
-        <StartDateChoice state={start} today={today} />
+        <StartDateChoice state={start} today={today} errorId="start-date-error" />
       </div>
-      {start.dateError && (
-        <p role="alert" className="mt-2 text-sm font-semibold text-danger-ink">
+      {start.dateError ? (
+        <p id="start-date-error" role="alert" className="mt-2 text-sm font-semibold text-danger-ink">
           {start.dateError}
         </p>
+      ) : (
+        <p className="mt-3 font-rounded font-bold text-ink">{finishLine(start.startDate)}</p>
       )}
+      {lateHint && <p className="mt-2 text-sm font-semibold text-world-ink">{lateHint}</p>}
       <Button className="mt-6 w-full" onClick={onNext} disabled={start.dateError !== null}>
         Continue
       </Button>
@@ -190,27 +223,83 @@ interface ReadyStepProps {
   onFinish: () => void
 }
 
+/**
+ * The last screen. A new player signs the deal: the rules, what a missed day
+ * costs, the dates and their reason, held down to commit. A returning player
+ * just picks up where they were.
+ */
 export function ReadyStep({ mode, name, why, variant, startDate, today, dateError, busy, error, onFinish }: ReadyStepProps) {
   const alert = dateError ?? error
   const valid = isValidName(name) && isValidWhy(why)
+
+  if (mode === 'returning') {
+    return (
+      <>
+        <StepTitle>Welcome back, {cleanText(name)}.</StepTitle>
+        <p className="mt-3 text-ink-muted">Your challenge is right where you left it.</p>
+        <Reason why={why} className="mt-5 rounded-card border border-ink/15 bg-canvas p-5" />
+        {alert && <Alert>{alert}</Alert>}
+        <Button className="mt-6 w-full" onClick={onFinish} disabled={busy || !valid}>
+          {busy ? 'Starting…' : "Let's go"}
+        </Button>
+      </>
+    )
+  }
+
+  const rules = RULESETS[variant]
+  const startsIn = dateError ? null : startsInLine(startDate, today)
   return (
     <>
-      <StepTitle>{mode === 'new' ? `Deal, ${cleanText(name)}.` : `Welcome back, ${cleanText(name)}.`}</StepTitle>
-      <p className="mt-3 text-ink-muted">
-        {mode === 'new'
-          ? `${VARIANT_NAMES[variant]} starts ${startsWhen(startDate, today)}.`
-          : 'Your challenge is right where you left it.'}
-      </p>
-      <p className="mt-4 font-rounded italic text-ink">“{cleanText(why)}”</p>
-      <p className="mt-4 font-rounded font-bold text-ink">I'm watching.</p>
-      {alert && (
-        <p role="alert" className="mt-2 text-sm font-semibold text-danger-ink">
-          {alert}
-        </p>
-      )}
-      <Button className="mt-6 w-full" onClick={onFinish} disabled={busy || dateError !== null || !valid}>
-        {busy ? 'Starting…' : "Let's go"}
-      </Button>
+      <StepTitle>Deal, {cleanText(name)}.</StepTitle>
+      <p className="mt-2 text-ink-muted">{`${VARIANT_NAMES[variant]} starts ${startsWhen(startDate, today)}.`}</p>
+
+      <section aria-label="The deal" className="mt-5 w-full rounded-card border border-world-edge/40 bg-world-soft p-5 text-left">
+        <p className="font-display text-3xl tracking-wide text-world-ink">{VARIANT_NAMES[variant]}</p>
+        {!dateError && (
+          <>
+            <p className="mt-1 font-rounded font-bold text-ink">
+              {formatShortDay(startDate)} → {formatShortDay(dateForDayNumber(startDate, CHALLENGE_LENGTH))}
+            </p>
+            {startsIn && <p className="text-sm font-semibold text-ink-muted">{startsIn}</p>}
+          </>
+        )}
+        <p className="mt-4 text-sm font-bold text-ink-muted">Every day, for {CHALLENGE_LENGTH} days</p>
+        <ul className="mt-1 list-disc space-y-1 pl-5 text-ink marker:text-world-ink">
+          {dailyRuleLines(rules).map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+        <p className="mt-4 font-rounded font-extrabold text-world-ink">{stakesLine(rules)}</p>
+        <Reason why={why} className="mt-4 border-t border-world-edge/30 pt-4" />
+      </section>
+
+      {alert && <Alert>{alert}</Alert>}
+      <HoldButton
+        className="mt-6 w-full"
+        onCommit={onFinish}
+        disabled={busy || dateError !== null || !valid}
+        hint={busy ? undefined : "Press and hold to sign. I'm watching."}
+      >
+        {busy ? 'Starting…' : 'Hold to commit'}
+      </HoldButton>
     </>
+  )
+}
+
+/** The player's reason, as they'll see it again at hard moments. */
+function Reason({ why, className }: { why: string; className: string }) {
+  return (
+    <div className={`w-full text-left ${className}`}>
+      <p className="text-sm font-bold text-ink-muted">Your reason</p>
+      <p className="mt-1 font-display text-2xl tracking-wide text-ink">“{cleanText(why)}”</p>
+    </div>
+  )
+}
+
+function Alert({ children }: { children: ReactNode }) {
+  return (
+    <p role="alert" className="mt-3 text-sm font-semibold text-danger-ink">
+      {children}
+    </p>
   )
 }
