@@ -1,6 +1,6 @@
 # Onboarding redesign (design)
 
-Status: **approved** by the owner on 2026-10-06 (hold to commit; all four challenges stay visible). **Built** on `feat/onboarding-redesign`, in review. While building: the idea dropped from the why step is "Get in the best shape of my life" (the longest), and the duck is smaller (64) on the challenge step and the deal, so their buttons stay in reach.
+Status: **approved** by the owner on 2026-10-06 (hold to commit; all four challenges stay visible). **Built** (PR #39, merged into main on 2026-10-06; the owner tried it on their phone first). While building: the idea dropped from the why step is "Get in the best shape of my life" (the longest), and the duck is smaller (64) on the challenge step and the deal, so their buttons stay in reach.
 
 This is a follow-up to the [welcome flow](2026-09-28-welcome-flow-design.md). It comes from the Impeccable critique of 2026-10-06, which scored 26/40. The steps, the data and `profileRepo.completeOnboarding` stay the same. The owner chose: a stricter, higher-stakes tone; the commitment moment first; every finding in scope.
 
