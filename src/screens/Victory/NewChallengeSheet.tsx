@@ -54,7 +54,7 @@ function NewChallengeForm({ defaultVariant, today, onClose }: NewChallengeSheetP
       </div>
 
       <div className="mt-3">
-        <StartDateChoice state={start} today={today} />
+        <StartDateChoice state={start} today={today} errorId="new-challenge-error" />
       </div>
 
       {!start.dateError && (
@@ -64,7 +64,7 @@ function NewChallengeForm({ defaultVariant, today, onClose }: NewChallengeSheetP
       )}
 
       {(start.dateError ?? error) && (
-        <p role="alert" className="mt-2 text-sm font-semibold text-danger-ink">
+        <p id="new-challenge-error" role="alert" className="mt-2 text-sm font-semibold text-danger-ink">
           {start.dateError ?? error}
         </p>
       )}

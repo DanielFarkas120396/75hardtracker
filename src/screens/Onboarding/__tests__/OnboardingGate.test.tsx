@@ -25,7 +25,8 @@ function renderGate() {
 
 /** Past the welcome and name steps; the step that follows tells the two modes apart. */
 async function passWelcomeAndName() {
-  fireEvent.click(await screen.findByRole('button', { name: 'Get started' }))
+  // The flow is a lazy chunk: under a loaded test run, its first render can take more than a second.
+  fireEvent.click(await screen.findByRole('button', { name: 'Get started' }, { timeout: 5000 }))
   fireEvent.change(await screen.findByRole('textbox', { name: 'Your name' }), { target: { value: 'Daniel' } })
   fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
 }
@@ -35,7 +36,10 @@ describe('OnboardingGate', () => {
     MotionGlobalConfig.skipAnimations = true
   })
 
-  beforeEach(freshDatabase)
+  beforeEach(async () => {
+    localStorage.clear() // the welcome flow's draft
+    await freshDatabase()
+  })
 
   it('welcomes a new player, who picks a challenge next', async () => {
     renderGate()
@@ -72,7 +76,7 @@ describe('OnboardingGate', () => {
     await screen.findByRole('heading', { name: 'When do you start?' })
     fireEvent.click(screen.getByRole('button', { name: 'Continue' })) // today
     await screen.findByRole('heading', { name: 'Deal, Daniel.' })
-    fireEvent.click(screen.getByRole('button', { name: "Let's go" }))
+    fireEvent.click(screen.getByRole('button', { name: 'Hold to commit' })) // a click with no press: as VoiceOver or a keyboard
 
     expect(await screen.findByText('Main app for Daniel')).toBeInTheDocument()
   })
