@@ -36,7 +36,10 @@ describe('App', () => {
       await resetAll()
     })
 
-    expect(await screen.findByRole('heading', { name: '75 days. 5 tasks. One duck with a knife.' })).toBeInTheDocument()
+    // The welcome flow is a lazy chunk: under a loaded test run, it can take more than a second.
+    expect(
+      await screen.findByRole('heading', { name: '75 days. 5 tasks. One duck with a knife.' }, { timeout: 5000 }),
+    ).toBeInTheDocument()
     // Give a raced bootstrapIfEmpty call (useChallengeGate, still mounted for a moment) a chance to run.
     await act(async () => {
       await new Promise((r) => setTimeout(r, 50))
