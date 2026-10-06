@@ -28,3 +28,6 @@ backups/
 
 # Worktrees the desktop app creates for other sessions
 .claude/worktrees/
+
+# Impeccable design reviews and detector settings (local)
+.impeccable/
