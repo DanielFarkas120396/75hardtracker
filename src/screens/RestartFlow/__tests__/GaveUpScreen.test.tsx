@@ -1,12 +1,15 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../../db/db'
 import { addChallenge, freshDatabase, TEST_PROFILE } from '../../../db/__tests__/fixtures'
 import type { Challenge } from '../../../db/types'
 import { ProfileContext } from '../../../hooks/useProfile'
 import { addDaysISO, todayISO } from '../../../lib/dates'
 import { GaveUpScreen } from '../GaveUpScreen'
+
+// Morning, so the start defaults to Today (from 18:00 it's Tomorrow).
+vi.mock('../../../hooks/useNow', () => ({ useNow: () => 9 * 60 }))
 
 const today = todayISO()
 
