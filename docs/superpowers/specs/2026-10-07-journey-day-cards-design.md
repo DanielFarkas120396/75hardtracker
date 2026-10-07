@@ -1,6 +1,6 @@
 # Journey day cards
 
-**Status:** approved 2026-10-07, PR #62 into `v3`. Round 2 (2026-10-07, after the phone check): the card was off-centre and too big; it now shows only the photo, the notes and the workouts.
+**Status:** merged into `v3` 2026-10-07 (PR #62), checked on the phone. Round 2 (after the first phone check): the card was off-centre and too big; it now shows only the photo, the notes and the workouts.
 
 ## Why
 
