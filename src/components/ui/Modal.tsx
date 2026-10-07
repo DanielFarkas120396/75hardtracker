@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, type TargetAndTransition } from 'framer-motion'
+import { AnimatePresence, motion, type DragControls, type TargetAndTransition } from 'framer-motion'
 import { useEffect, useEffectEvent, useRef, type ReactNode } from 'react'
 
 interface ModalProps {
@@ -9,6 +9,10 @@ interface ModalProps {
   placement?: 'center' | 'sheet'
   /** The id of the heading that names the dialog. */
   labelledBy?: string
+  /** A centred dialog only: the point (in viewport pixels) it grows out of and shrinks back into. */
+  from?: { x: number; y: number }
+  /** Lets a handle inside the panel drag it down to close: the handle calls `start` on pointer down. */
+  dragControls?: DragControls
 }
 
 const PANEL: Record<NonNullable<ModalProps['placement']>, { container: string; panel: string; closed: TargetAndTransition; open: TargetAndTransition }> = {
@@ -31,10 +35,15 @@ const PANEL: Record<NonNullable<ModalProps['placement']>, { container: string; p
  * backdrop tap or Escape; scrolls when taller than its room. Focus moves to
  * the panel on open and back to what had it on close.
  */
-export function Modal({ open, onClose, children, placement = 'center', labelledBy }: ModalProps) {
+export function Modal({ open, onClose, children, placement = 'center', labelledBy, from, dragControls }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const close = useEffectEvent(() => onClose())
   const look = PANEL[placement]
+  // "Reduce motion" (the app's MotionConfig) drops the movement and keeps the fade.
+  const closed =
+    from && placement === 'center'
+      ? { x: from.x - window.innerWidth / 2, y: from.y - window.innerHeight / 2, scale: 0.05, opacity: 0 }
+      : look.closed
 
   useEffect(() => {
     if (!open) return
@@ -66,9 +75,19 @@ export function Modal({ open, onClose, children, placement = 'center', labelledB
             aria-modal="true"
             aria-labelledby={labelledBy}
             tabIndex={-1}
-            initial={look.closed}
+            initial={closed}
             animate={look.open}
-            exit={look.closed}
+            exit={closed}
+            {...(dragControls && {
+              drag: 'y' as const,
+              dragControls,
+              dragListener: false,
+              dragConstraints: { top: 0, bottom: 0 },
+              dragElastic: { top: 0, bottom: 0.8 },
+              onDragEnd: (_: unknown, info: { offset: { y: number }; velocity: { y: number } }) => {
+                if (info.offset.y > 80 || info.velocity.y > 500) onClose()
+              },
+            })}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
             className={`overflow-y-auto bg-surface shadow-lg outline-none ${look.panel}`}
             onClick={(e) => e.stopPropagation()}

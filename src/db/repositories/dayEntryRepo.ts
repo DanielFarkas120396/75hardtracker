@@ -102,6 +102,11 @@ export const dayEntryRepo = {
     await changeAndSync(id, () => db.dayEntries.update(id, changes))
   },
 
+  /** Records the book the day's pages went to. It plays no part in completing the day, so nothing is recomputed. */
+  async setBook(id: number, bookId: number): Promise<void> {
+    await db.dayEntries.update(id, { bookId })
+  },
+
   /**
    * Replaces the day's plan and the per-task estimate frozen at save time;
    * an empty plan removes both fields. An estimate is kept only for a task

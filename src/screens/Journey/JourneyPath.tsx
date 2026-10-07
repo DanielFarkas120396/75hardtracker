@@ -14,6 +14,8 @@ interface JourneyPathProps {
   todayDayNumber: number
   /** The map's scroll area, for the moving effects; without it (as in tests) the map is drawn still. */
   scrollRef?: RefObject<HTMLElement | null>
+  /** Opens a day's card; without it (as in tests) the stones can't be tapped. */
+  onOpenDay?: (dayNumber: number, from: { x: number; y: number }) => void
 }
 
 const ROAD = roadPath()
@@ -76,6 +78,7 @@ export function JourneyPath(props: JourneyPathProps) {
             world={worldForDay(dayNumber)}
             isMilestone={(MILESTONES as readonly number[]).includes(dayNumber)}
             flagWaves={props.completedDayNumbers.has(dayNumber) || dayNumber < todayDayNumber}
+            onOpen={props.onOpenDay}
           />
         ))}
 

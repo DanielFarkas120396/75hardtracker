@@ -38,6 +38,8 @@ export interface DayEntry {
   planEstimates?: Partial<Record<TaskId, number>>
   /** 75 Soft's recovery day: the workouts task counts as done. Set only through dayEntryRepo.setRestDay. */
   restDay?: true
+  /** The book the day's pages went to: the current book when pages were last logged. Unset on days logged before this was tracked. */
+  bookId?: number
   completed: boolean
 }
 
@@ -59,6 +61,8 @@ export interface Book {
   finished: boolean
   /** ISO datetime the book was finished; unset while unfinished (and for books finished before this was tracked). */
   finishedAt?: string
+  /** A photo of the cover, picked from the library and shrunk. */
+  cover?: Blob
 }
 
 export interface Measurement {

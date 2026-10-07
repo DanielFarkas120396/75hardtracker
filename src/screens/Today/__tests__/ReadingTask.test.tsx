@@ -1,9 +1,10 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { db } from '../../../db/db'
 import { freshDatabase } from '../../../db/__tests__/fixtures'
-import type { DayEntry } from '../../../db/types'
+import { SETTING_KEYS } from '../../../db/repositories/settingsRepo'
+import type { Book, DayEntry } from '../../../db/types'
 import { RULESETS } from '../../../logic/rulesets'
 import { ReadingTask } from '../ReadingTask'
 
@@ -54,5 +55,25 @@ describe('ReadingTask: adding a book', () => {
 
     expect(await screen.findByRole('alert')).toBeInTheDocument()
     expect(await db.books.count()).toBe(0)
+  })
+})
+
+describe('ReadingTask: the day remembers its book', () => {
+  beforeAll(() => {
+    MotionGlobalConfig.skipAnimations = true
+  })
+
+  beforeEach(freshDatabase)
+
+  it('records the current book on the day when pages are logged', async () => {
+    const bookId = await db.books.add({ title: 'Atomic Habits', totalPages: 320, currentPage: 0, finished: false } as Book)
+    await db.settings.put({ key: SETTING_KEYS.currentBookId, value: bookId })
+    await db.dayEntries.add(entry)
+    render(<ReadingTask entry={entry} rules={RULESETS.hard} />)
+    await screen.findByLabelText('Add a cover for Atomic Habits') // the current book has loaded
+
+    fireEvent.click(screen.getByRole('button', { name: '+ 10 pages' }))
+
+    await waitFor(async () => expect((await db.dayEntries.get(entry.id))?.bookId).toBe(bookId))
   })
 })

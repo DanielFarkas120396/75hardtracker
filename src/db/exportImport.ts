@@ -18,13 +18,16 @@ interface ExportedPhoto {
   mimeType: string
 }
 
+/** A book, with its cover (if any) as base64. */
+type ExportedBook = Omit<Book, 'cover'> & { coverBase64?: string; coverMimeType?: string }
+
 export interface ExportPayload {
   version: number
   exportedAt: string
   challenges: Challenge[]
   dayEntries: DayEntry[]
   workouts: Workout[]
-  books: Book[]
+  books: ExportedBook[]
   measurements: Measurement[]
   photos: ExportedPhoto[]
   badges: Badge[]
@@ -68,13 +71,19 @@ export async function exportAll(): Promise<ExportPayload> {
     })),
   )
 
+  const exportedBooks: ExportedBook[] = await Promise.all(
+    books.map(async ({ cover, ...book }) =>
+      cover ? { ...book, coverBase64: await blobToBase64(cover), coverMimeType: cover.type || 'image/jpeg' } : book,
+    ),
+  )
+
   return {
     version: EXPORT_VERSION,
     exportedAt: new Date().toISOString(),
     challenges,
     dayEntries,
     workouts,
-    books,
+    books: exportedBooks,
     measurements,
     photos: exportedPhotos,
     badges,
@@ -106,6 +115,10 @@ const isDayNumberList = (value: unknown): boolean =>
 const isNonNegativeInteger = (value: unknown): boolean => Number.isInteger(value) && (value as number) >= 0
 const isWorkoutType = (value: unknown): boolean => (WORKOUT_TYPES as readonly unknown[]).includes(value)
 const isFeel = (value: unknown): boolean => value === 1 || value === 2 || value === 3 || value === 4 || value === 5
+
+const isBase64 = (value: unknown): boolean =>
+  isString(value) && value.length % 4 === 0 && /^[A-Za-z0-9+/]*={0,2}$/.test(value)
+const isImageType = (value: unknown): boolean => isString(value) && value.startsWith('image/')
 
 const isPlanMap = (value: unknown): boolean =>
   isRow(value) &&
@@ -147,6 +160,7 @@ const ROW_CHECKS: Record<Exclude<keyof ExportPayload, 'version' | 'exportedAt'>,
     plans: isOptional(isPlanMap),
     planEstimates: isOptional(isEstimateMap),
     restDay: isOptional(isBoolean),
+    bookId: isOptional(isNumber),
   },
   workouts: {
     id: isNumber,
@@ -156,13 +170,21 @@ const ROW_CHECKS: Record<Exclude<keyof ExportPayload, 'version' | 'exportedAt'>,
     isOutdoor: isBoolean,
     feel: isOptional(isFeel),
   },
-  books: { id: isNumber, title: isString, totalPages: isNumber, currentPage: isNumber, finished: isBoolean },
+  books: {
+    id: isNumber,
+    title: isString,
+    totalPages: isNumber,
+    currentPage: isNumber,
+    finished: isBoolean,
+    coverBase64: isOptional(isBase64),
+    coverMimeType: isOptional(isImageType),
+  },
   measurements: { id: isNumber, date: isString, weight_kg: isOptional(isNumber) },
   photos: {
     id: isNumber,
     date: isString,
-    blobBase64: (v) => isString(v) && v.length % 4 === 0 && /^[A-Za-z0-9+/]*={0,2}$/.test(v),
-    mimeType: (v) => isString(v) && v.startsWith('image/'),
+    blobBase64: isBase64,
+    mimeType: isImageType,
   },
   badges: { id: isNumber, badgeId: isString, challengeId: isNumber, unlockedAt: isString },
   settings: { key: isString },
@@ -229,6 +251,9 @@ export async function importAll(payload: ExportPayload): Promise<void> {
     date: p.date,
     blob: base64ToBlob(p.blobBase64, p.mimeType),
   }))
+  const books: Book[] = payload.books.map(({ coverBase64, coverMimeType, ...book }) =>
+    coverBase64 ? { ...book, cover: base64ToBlob(coverBase64, coverMimeType ?? 'image/jpeg') } : book,
+  )
 
   const normalized = normalizeRecords(
     {
@@ -266,7 +291,7 @@ export async function importAll(payload: ExportPayload): Promise<void> {
       db.challenges.bulkAdd(normalized.challenges),
       db.dayEntries.bulkAdd(normalized.dayEntries),
       db.workouts.bulkAdd(normalized.workouts),
-      db.books.bulkAdd(payload.books),
+      db.books.bulkAdd(books),
       db.measurements.bulkAdd(payload.measurements),
       db.photos.bulkAdd(photos),
       db.badges.bulkAdd(normalized.badges),
