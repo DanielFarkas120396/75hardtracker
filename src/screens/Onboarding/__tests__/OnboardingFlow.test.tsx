@@ -26,6 +26,15 @@ async function pickChallenge(name = /^75 Hard/) {
   click('Continue')
 }
 
+/** Signs the deal with a finger: a checkmark across the pad, in two arms. */
+function drawCheck() {
+  const pad = screen.getByRole('button', { name: 'Sign the deal: draw a checkmark.' })
+  const arms: [number, number][] = [[40, 100], [60, 125], [80, 150], [100, 128], [120, 106], [140, 84], [160, 62], [180, 40]]
+  fireEvent.pointerDown(pad, { button: 0, clientX: arms[0][0], clientY: arms[0][1] })
+  for (const [clientX, clientY] of arms.slice(1, -1)) fireEvent.pointerMove(pad, { clientX, clientY })
+  fireEvent.pointerUp(pad, { clientX: 180, clientY: 40 })
+}
+
 /** A draft, as the flow saves it, for the scratch test database. */
 function seedDraft(draft: Record<string, unknown>) {
   localStorage.setItem(
@@ -88,11 +97,12 @@ describe('OnboardingFlow', () => {
       `${formatShortDay(addDaysISO(today, 1))} → ${formatShortDay(dateForDayNumber(addDaysISO(today, 1), 75))}`,
     )
     expect(screen.getByText('“A fresh start”')).toBeInTheDocument()
-    click('Hold to commit') // a click with no press: as VoiceOver or a keyboard
+    drawCheck()
+    click('I commit')
 
     // The duck takes the signature first; the save waits for that moment.
     expect(screen.getByText("I'm watching, Daniel.")).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Hold to commit' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'I commit' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument()
     expect(await profileRepo.get()).toBeUndefined()
 
@@ -233,7 +243,7 @@ describe('OnboardingFlow', () => {
     rerender(<OnboardingFlow mode="new" today={addDaysISO(today, 2)} />)
 
     expect(screen.getByRole('alert')).toHaveTextContent("The start can't be in the past.")
-    expect(screen.getByRole('button', { name: 'Hold to commit' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'I commit' })).toBeDisabled()
 
     click('Change start date')
     expect(await heading('When do you start?')).toBeInTheDocument()
@@ -245,14 +255,17 @@ describe('OnboardingFlow', () => {
     render(<OnboardingFlow mode="new" today={today} />)
     await heading('Deal, Daniel.')
 
-    click('Hold to commit')
+    drawCheck()
+    click('I commit')
     expect(screen.getByText("I'm watching, Daniel.")).toBeInTheDocument()
 
     expect(await screen.findByRole('alert', {}, { timeout: SIGNED_BEAT_MS + 2000 })).toHaveTextContent(
       "Couldn't save that — try again.",
     )
-    expect(screen.getByRole('button', { name: 'Hold to commit' })).toBeEnabled()
     expect(screen.queryByText("I'm watching, Daniel.")).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'I commit' })).toBeDisabled() // the signature was spent: draw it again
+    drawCheck()
+    expect(screen.getByRole('button', { name: 'I commit' })).toBeEnabled()
   })
 
   it('preselects no challenge: Continue waits for a tap', async () => {
