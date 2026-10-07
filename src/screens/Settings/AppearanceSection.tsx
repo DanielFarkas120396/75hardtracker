@@ -12,7 +12,7 @@ export function AppearanceSection() {
   const { preference, setPreference } = useThemeSetting()
 
   return (
-    <section className="rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0">
+    <section className="rounded-card bg-surface p-4 ring-1 ring-ink/10 dark:ring-0">
       <h2 id="appearance-heading" className="font-rounded text-lg font-bold text-ink">
         Appearance
       </h2>
@@ -27,7 +27,7 @@ export function AppearanceSection() {
               aria-checked={selected}
               onClick={() => void setPreference(option)}
               className={`min-h-touch rounded-xl px-2 font-rounded text-sm font-bold motion-safe:transition-colors ${
-                selected ? 'bg-surface text-ink shadow-sm ring-1 ring-ink-muted' : 'text-ink-muted'
+                selected ? 'bg-surface text-ink ring-1 ring-ink-muted' : 'text-ink-muted'
               }`}
             >
               {LABELS[option]}

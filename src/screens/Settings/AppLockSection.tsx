@@ -58,7 +58,7 @@ export function AppLockSection() {
   }
 
   return (
-    <section className="rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0">
+    <section className="rounded-card bg-surface p-4 ring-1 ring-ink/10 dark:ring-0">
       <p className="text-sm text-ink-muted">
         Lock the app with a 6-digit PIN, and Face ID as the shortcut. It asks when the app opens and when you come back
         after more than a minute away. Your photos, weight and notes stay hidden until then, even in the app switcher.

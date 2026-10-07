@@ -90,7 +90,7 @@ export function VictoryScreen({ challenge, today, revealed, streak, missedDays }
 
 function VictoryStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-card bg-surface p-3 shadow-sm">
+    <div className="rounded-card bg-surface p-3">
       <p className="font-rounded text-xs font-bold text-ink-muted">{label}</p>
       <p className="mt-1 font-rounded text-xl font-bold text-ink">{value}</p>
     </div>

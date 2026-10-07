@@ -15,7 +15,7 @@ export function DoneBadge({ pop, className = '' }: DoneBadgeProps) {
       initial={pop && !reduceMotion ? { scale: 0 } : false}
       animate={{ scale: 1 }}
       transition={{ type: 'spring', stiffness: 500, damping: 14 }}
-      className={`flex h-7 w-7 items-center justify-center rounded-full bg-world text-sm text-on-world shadow-sm ${className}`}
+      className={`flex h-7 w-7 items-center justify-center rounded-full bg-world text-sm text-on-world ${className}`}
     >
       ✓
     </motion.span>

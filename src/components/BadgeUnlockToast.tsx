@@ -45,7 +45,7 @@ function ToastItem({ badge, onDismiss }: { badge: BadgeDefinition; onDismiss: (b
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: -40, opacity: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-      className="pointer-events-auto flex w-full max-w-xs items-center gap-3 rounded-2xl border-b-4 border-yellow-dark bg-yellow px-4 py-3 shadow-md"
+      className="pointer-events-auto flex w-full max-w-xs items-center gap-3 rounded-xl2 bg-yellow px-4 py-3 shadow-md"
     >
       <span className="text-2xl" role="img" aria-label="badge">
         🏅

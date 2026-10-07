@@ -63,7 +63,7 @@ export function PinPad({ title, error, hint, disabled = false, onComplete, extra
             type="button"
             disabled={disabled}
             onClick={() => press(digit)}
-            className={`${key} bg-surface text-ink shadow-sm active:bg-world-soft disabled:opacity-40`}
+            className={`${key} bg-surface text-ink active:bg-world-soft disabled:opacity-40`}
           >
             {digit}
           </button>
@@ -73,7 +73,7 @@ export function PinPad({ title, error, hint, disabled = false, onComplete, extra
           type="button"
           disabled={disabled}
           onClick={() => press('0')}
-          className={`${key} bg-surface text-ink shadow-sm active:bg-world-soft disabled:opacity-40`}
+          className={`${key} bg-surface text-ink active:bg-world-soft disabled:opacity-40`}
         >
           0
         </button>

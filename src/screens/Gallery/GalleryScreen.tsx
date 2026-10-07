@@ -36,7 +36,7 @@ export function GalleryScreen({ onTakePhoto }: GalleryScreenProps) {
           <section className="flex flex-col items-center gap-3 rounded-card bg-world-soft px-6 py-8 text-center">
             <div className="relative">
               <Mascot mood="content" size={120} decorative />
-              <span className="absolute -right-2 bottom-2 flex h-11 w-11 items-center justify-center rounded-full bg-surface text-world-ink shadow-sm">
+              <span className="absolute -right-2 bottom-2 flex h-11 w-11 items-center justify-center rounded-full bg-surface text-world-ink">
                 <Icon name="photo" size={26} />
               </span>
             </div>

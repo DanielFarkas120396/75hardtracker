@@ -30,6 +30,7 @@ No backend: all data (including photos) lives in the browser via IndexedDB (Dexi
 - **Install first** — opened in a phone browser, the app first asks to be added to the Home Screen (the 3 steps on iPhone, one button on Android), since on iPhone a Home Screen app keeps its own data apart from Safari's. "Continue in Safari" stays possible, and "I've added it" says to open the app from the Home Screen. The welcome screen can also restore a backup (a new phone, or after installing).
 - **Backups** — Settings → Backup & storage, or the Sunday reminder: one file with everything, photos included, through the share sheet (save it to iCloud Drive). An optional password encrypts it (AES-256-GCM, key from PBKDF2); restoring a protected file asks for it.
 - **Installable and offline** — a PWA with a precached service worker; after the first visit it loads without a network.
+- **The look** — dark first: a warm near-black canvas with cream text, DM Sans for text and Barlow Condensed for titles and numbers, flat pill buttons, cards without shadows, and the world you are in (Hell to Heaven) as a muted accent and a sunrise glow behind the Today hero and the welcome duck. Light mode is a warm cream version of the same.
 - **Accessible** — text and state colours meet WCAG contrast (4.5:1 for text) in both themes, and the app honours the "reduce motion" setting.
 
 ## Scripts

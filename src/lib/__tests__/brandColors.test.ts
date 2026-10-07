@@ -30,4 +30,15 @@ describe('brand ink colours', () => {
       }
     })
   }
+
+  for (const mode of ['light', 'dark'] as const) {
+    it(`keeps the Workouts page's cards readable (${mode})`, () => {
+      const body = block(mode === 'dark' ? '.dark' : '@theme')
+      // Every channel moves one way between the stack's ends, so its ends bound every shade.
+      for (const end of ['stack-from', 'stack-to']) {
+        expect(contrastRatio(token(body, 'on-stack'), token(body, end)), end).toBeGreaterThanOrEqual(4.5)
+      }
+      expect(contrastRatio(token(body, 'on-open-card'), token(body, 'open-card'))).toBeGreaterThanOrEqual(4.5)
+    })
+  }
 })

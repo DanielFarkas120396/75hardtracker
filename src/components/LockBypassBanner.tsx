@@ -16,7 +16,7 @@ export function LockBypassBanner() {
       <button
         type="button"
         onClick={() => void appLockRepo.dismissBypassNotice()}
-        className="mt-2 min-h-touch rounded-2xl bg-surface px-4 font-rounded text-sm font-bold text-ink shadow-sm"
+        className="mt-2 min-h-touch rounded-2xl bg-surface px-4 font-rounded text-sm font-bold text-ink"
       >
         Got it
       </button>

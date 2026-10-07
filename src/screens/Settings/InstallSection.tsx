@@ -7,7 +7,7 @@ export function InstallSection() {
   const state = useSyncExternalStore(subscribeToInstallState, getInstallState)
 
   return (
-    <section className="rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0">
+    <section className="rounded-card bg-surface p-4 ring-1 ring-ink/10 dark:ring-0">
       <h2 className="font-rounded text-lg font-bold text-ink">Install the app</h2>
       {state === 'installed' && <p className="mt-1 text-sm text-ink-muted">You're using the installed app. ✓</p>}
       {state === 'available' && (
