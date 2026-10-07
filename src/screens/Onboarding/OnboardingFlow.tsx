@@ -36,8 +36,8 @@ export const SIGNED_BEAT_MS = 1200
 
 /**
  * The welcome flow: one question per screen, shown until the player has a
- * profile. A new player also picks the challenge and its start, and holding
- * "Hold to commit" signs the deal: the duck has a moment, then attempt #1 is
+ * profile. A new player also picks the challenge and its start, and a drawn
+ * checkmark signs the deal: the duck has a moment, then attempt #1 is
  * created with the profile (profileRepo.completeOnboarding). The answers so
  * far are kept on the device, so a restart (iOS closing the app) comes back to
  * the same step, or to the first one whose answer no longer holds.
@@ -108,7 +108,7 @@ export function OnboardingFlow({ mode, today }: OnboardingFlowProps) {
     setSigned(false)
   }
 
-  // The hold completed: the duck takes the signature, then the save runs and the app takes over.
+  // The deal is signed: the duck takes the signature, then the save runs and the app takes over.
   const sign = () => {
     setSigned(true)
     setError(null)

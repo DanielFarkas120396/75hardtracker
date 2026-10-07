@@ -1,10 +1,10 @@
 import { motion, type Variants } from 'framer-motion'
-import type { KeyboardEvent, ReactNode } from 'react'
+import { useId, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { BackupRestore } from '../../components/BackupRestore'
 import { Icon } from '../../components/icons/Icon'
 import { StartDateChoice } from '../../components/StartDateChoice'
 import { Button } from '../../components/ui/Button'
-import { HoldButton } from '../../components/ui/HoldButton'
+import { DrawCheckPad } from '../../components/ui/DrawCheckPad'
 import { VariantPicker } from '../../components/VariantPicker'
 import { finishLine, lateStartHint, startsInLine, WHY_IDEAS } from '../../content/onboarding'
 import { dailyRuleLines, stakesLine, VARIANT_NAMES } from '../../content/variants'
@@ -273,7 +273,7 @@ interface ReadyStepProps {
   dateError: string | null
   busy: boolean
   error: string | null
-  /** The hold completed: the duck takes over for a moment before the app does. */
+  /** The deal is signed: the duck takes over for a moment before the app does. */
   signed: boolean
   onSign: () => void
   /** Back to the start step, when the date can't be used any more. */
@@ -283,13 +283,15 @@ interface ReadyStepProps {
 
 /**
  * The last screen. A new player signs the deal: the rules, what a missed day
- * costs, the dates and their reason, held down to commit. A returning player
- * just picks up where they were.
+ * costs, the dates and their reason, with a checkmark drawn by hand. A
+ * returning player just picks up where they were.
  */
 export function ReadyStep(props: ReadyStepProps) {
   const { mode, name, why, variant, startDate, today, dateError, busy, error, signed, onSign, onChangeStart, onFinish } = props
   const alert = dateError ?? error
   const valid = isValidName(name) && isValidWhy(why)
+  const [checked, setChecked] = useState(false)
+  const padLabelId = useId()
 
   if (mode === 'returning') {
     return (
@@ -377,14 +379,27 @@ export function ReadyStep(props: ReadyStepProps) {
           )}
         </p>
         {!signed && (
-          <HoldButton
-            className="w-full"
-            onCommit={onSign}
-            disabled={busy || dateError !== null || !valid}
-            hint={busy ? undefined : "Hold for 1 second to sign. I'm watching."}
-          >
-            {busy ? 'Saving…' : 'Hold to commit'}
-          </HoldButton>
+          <>
+            <p id={padLabelId} className="font-rounded text-lg font-bold text-ink">
+              Sign the deal: draw a checkmark.
+            </p>
+            <DrawCheckPad
+              className="mt-3"
+              labelledBy={padLabelId}
+              onChange={setChecked}
+              disabled={busy || dateError !== null || !valid}
+            />
+            <Button
+              className="mt-4 w-full text-xl"
+              onClick={() => {
+                setChecked(false) // the signature is spent: a failed save asks for a new one
+                onSign()
+              }}
+              disabled={!checked || busy || dateError !== null || !valid}
+            >
+              {busy ? 'Saving…' : 'I commit'}
+            </Button>
+          </>
         )}
       </motion.div>
     </>

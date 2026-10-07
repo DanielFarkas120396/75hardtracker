@@ -1,6 +1,6 @@
 # Onboarding, round 2 (design)
 
-Status: **approved** by the owner on 2026-10-07. **Merged** into main the same day (PR #42), after the owner tried it on their phone. After that check, Hold moved below the rules card (no longer sticky), the social occasion says it's weekly, and the deal fades in line by line.
+Status: **approved** by the owner on 2026-10-07. **Merged** into main the same day (PR #42), after the owner tried it on their phone. After that check, Hold moved below the rules card (no longer sticky), the social occasion says it's weekly, and the deal fades in line by line. **Superseded in part** on 2026-10-07: the hold button gave way to a drawn checkmark, see [draw to commit](2026-10-07-draw-to-commit-design.md).
 
 This follows the [round 2 notes](2026-10-07-onboarding-round-2-notes.md) and a second critique run on the same day. Both scored the onboarding 26/40.
 
