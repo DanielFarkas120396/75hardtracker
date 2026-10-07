@@ -28,7 +28,7 @@ export function LateDayCard({ dayNumber, onOpen }: { dayNumber: number; onOpen: 
       <button
         type="button"
         onClick={onOpen}
-        className="min-h-touch shrink-0 rounded-2xl border-b-4 border-world-edge bg-world px-4 font-rounded text-sm font-bold text-on-world active:translate-y-1 active:border-b-0"
+        className="min-h-touch shrink-0 rounded-full bg-world px-4 font-rounded text-sm font-semibold text-on-world active:scale-95 motion-safe:transition-transform"
       >
         Finish it
       </button>

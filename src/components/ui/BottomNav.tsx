@@ -34,7 +34,7 @@ export function BottomNav({ active, onChange }: BottomNavProps) {
             key={tab.id}
             type="button"
             onClick={() => onChange(tab.id)}
-            className={`flex min-h-touch flex-1 flex-col items-center justify-center gap-0.5 rounded-[1.25rem] py-1.5 font-rounded text-[0.6875rem] font-bold motion-safe:transition-colors ${isActive ? 'bg-world-soft text-world-ink' : 'text-ink-muted'}`}
+            className={`flex min-h-touch flex-1 flex-col items-center justify-center gap-0.5 rounded-[1.25rem] py-1.5 font-rounded text-[0.6875rem] font-semibold motion-safe:transition-colors ${isActive ? 'bg-world-soft text-world-ink' : 'text-ink-muted'}`}
             aria-current={isActive ? 'page' : undefined}
           >
             <Icon name={tab.icon} size={22} />
