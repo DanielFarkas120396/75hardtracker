@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Mascot } from '../../components/mascot/Mascot'
 import { Greeting, WhyQuote } from '../../components/ProfileLines'
 import { Button } from '../../components/ui/Button'
-import { ProgressRing } from '../../components/ui/ProgressRing'
+import { GaugeRing } from '../../components/ui/GaugeRing'
 import { preStartPlanLine, VARIANT_NAMES } from '../../content/variants'
 import type { Challenge } from '../../db/types'
 import { formatDisplayDate } from '../../lib/dates'
@@ -21,7 +21,7 @@ interface PreStartViewProps {
 
 /**
  * What Today shows before Day 1: a countdown instead of task cards (no day can
- * be logged yet), in the Today hero's look (the ring at 0), so Day 1 isn't a jump.
+ * be logged yet), in the Today hero's look (the gauge at 0), so Day 1 isn't a jump.
  */
 export function PreStartView({ challenge, todayDayNumber, today }: PreStartViewProps) {
   const brokenStartDate = !Number.isFinite(todayDayNumber)
@@ -38,9 +38,9 @@ export function PreStartView({ challenge, todayDayNumber, today }: PreStartViewP
         </p>
         <div className="flex items-end gap-2">
           <Mascot mood="waiting" size={64} />
-          <ProgressRing value={0} max={TASK_IDS.length} size={112} strokeWidth={10} trackColor="var(--color-surface)">
-            <span className="font-display text-3xl tracking-wide text-ink-muted">0/{TASK_IDS.length}</span>
-          </ProgressRing>
+          <div className="w-40">
+            <GaugeRing value={0} max={TASK_IDS.length} />
+          </div>
         </div>
         <WhyQuote className="max-w-xs" />
       </section>

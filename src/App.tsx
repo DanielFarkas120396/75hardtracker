@@ -144,6 +144,7 @@ function MainApp({ today }: { today: string }) {
                 streak={gate.streak}
                 jokersLeft={gate.jokersLeft}
                 pendingLateDay={gate.lateDayPending ? gate.lateDayNumber : null}
+                celebrating={celebration !== null}
                 openCamera={cameraRequested}
                 onCameraOpened={() => setCameraRequested(false)}
               />
