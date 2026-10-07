@@ -5,15 +5,10 @@ import { Icon } from '../../components/icons/Icon'
 import type { IconName } from '../../components/icons/icons'
 import { Burst } from '../../components/ui/Burst'
 import { DoneBadge } from '../../components/ui/DoneBadge'
-import {
-  BOARD_TASKS,
-  notesStatusLine,
-  TASK_TITLES,
-  taskProgress,
-  taskStatusLine,
-  type BoardTask,
-} from '../../content/taskStatus'
+import { TASK_TITLES, taskProgress, taskStatusLine, type BoardTask } from '../../content/taskStatus'
 import type { DayEntry } from '../../db/types'
+import { TASK_IDS } from '../../logic/dayCompletion'
+import { minutesToFinish } from '../../logic/menace'
 import type { Ruleset } from '../../logic/rulesets'
 import type { DayTaskData, TaskId } from '../../logic/types'
 import { DietSwitches } from './DietSwitches'
@@ -44,29 +39,36 @@ interface TaskBoardProps {
   socialToday?: boolean
   /**
    * Late in the evening with tasks left (the duck tapping or hunting): the open
-   * tiles get a red edge, and the done ones and the notes fold into a row of chips.
+   * tasks come first, quickest to finish first, and the done ones fold into a row of chips.
    */
   urgent?: boolean
+  /** Minutes until midnight, when urgent: a task that no longer fits gets a red edge. */
+  minutesLeft?: number
   onOpen: (task: BoardTask) => void
 }
 
+/** A status line for VoiceOver: "0 of 2 · 45 min each" reads as "0 of 2, 45 min each". */
+function spoken(status: string): string {
+  return status.replaceAll(' · ', ', ')
+}
+
 /**
- * The six tiles of a day: the five tasks and the mood, each opening its sheet
- * on tap. Done tiles go quiet so the open ones stand out; when it's urgent,
- * only the open tasks keep a tile.
+ * The five tasks of a day, a tile each, opening its sheet on tap (mood and
+ * notes live outside the board: they're optional and never "done"). Done
+ * tiles go quiet, with one tick, so the open ones stand out; when it's
+ * urgent, only the open tasks keep a tile, quickest first.
  */
 export function TaskBoard(props: TaskBoardProps) {
-  const { entry, data, completion, rules, bookTitle, photo, quickActions, socialToday, urgent = false, onOpen } = props
+  const { entry, data, completion, rules, bookTitle, photo, quickActions, socialToday, urgent = false, minutesLeft, onOpen } = props
   const reduceMotion = useReducedMotion()
-  const isDone = (task: BoardTask) => task !== 'notes' && completion[task]
-  const open = BOARD_TASKS.filter((task) => task !== 'notes' && !completion[task])
+  const open = TASK_IDS.filter((task) => !completion[task])
   const reshaped = urgent && open.length > 0
-  const tiles = reshaped ? open : BOARD_TASKS
-  const chips = reshaped ? BOARD_TASKS.filter((task) => !open.includes(task)) : []
+  const tiles = reshaped ? [...open].sort((a, b) => minutesToFinish(a, data, rules) - minutesToFinish(b, data, rules)) : TASK_IDS
+  const chips = reshaped ? TASK_IDS.filter((task) => completion[task]) : []
   const layout = reduceMotion ? false : 'position'
+  const wontFit = (task: TaskId) => minutesLeft !== undefined && minutesToFinish(task, data, rules) > minutesLeft
 
-  const statusOf = (task: BoardTask) =>
-    task === 'notes' ? notesStatusLine(entry) : taskStatusLine(task, data, rules, isDone(task), bookTitle)
+  const statusOf = (task: TaskId) => taskStatusLine(task, data, rules, completion[task], bookTitle)
 
   return (
     <section aria-label="Tasks">
@@ -79,31 +81,31 @@ export function TaskBoard(props: TaskBoardProps) {
                 layout={layout}
                 type="button"
                 onClick={() => onOpen(task)}
-                aria-label={`${TASK_TITLES[task]}, ${statusOf(task)}${isDone(task) ? ', done' : ''}`}
+                aria-label={`${TASK_TITLES[task]}, ${spoken(statusOf(task))}, done`}
                 className="flex min-h-touch items-center gap-1.5 rounded-full bg-surface px-3 font-rounded text-sm font-bold text-ink-muted shadow-sm ring-1 ring-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:ring-0"
               >
                 <Icon name={TASK_ICONS[task]} size={16} />
                 {TASK_TITLES[task]}
-                {isDone(task) && (
-                  <span aria-hidden="true" className="text-world-ink">
-                    ✓
-                  </span>
-                )}
+                <span aria-hidden="true" className="text-world-ink">
+                  ✓
+                </span>
               </motion.button>
             ))}
           </div>
         )}
         <div className="grid grid-cols-2 gap-3">
-          {tiles.map((task) => {
-            const done = isDone(task)
+          {tiles.map((task, i) => {
+            const done = completion[task]
+            // An odd tile out at the end takes the whole row.
+            const lastOdd = i === tiles.length - 1 && tiles.length % 2 === 1
             return (
-              <motion.div key={task} layout={layout} className={reshaped && tiles.length === 1 ? 'col-span-2' : undefined}>
+              <motion.div key={task} layout={layout} className={lastOdd ? 'col-span-2' : undefined}>
                 <TaskTile
                   task={task}
                   done={done}
-                  urgent={reshaped && !done}
+                  urgency={!reshaped || done ? 'none' : wontFit(task) ? 'late' : 'open'}
                   status={statusOf(task)}
-                  progress={task === 'notes' || done ? null : taskProgress(task, data, rules)}
+                  progress={done ? null : taskProgress(task, data, rules)}
                   photo={task === 'photo' && done ? photo : undefined}
                   quick={done ? undefined : quickActions?.[task]}
                   controls={task === 'diet' ? <DietSwitches entry={entry} rules={rules} socialToday={socialToday ?? false} /> : undefined}
@@ -119,21 +121,21 @@ export function TaskBoard(props: TaskBoardProps) {
 }
 
 interface TaskTileProps {
-  task: BoardTask
+  task: TaskId
   done: boolean
-  /** Late with this task still open: a red edge and a bold status line. */
-  urgent: boolean
+  /** Late in the evening: 'late' when it no longer fits before midnight (a red edge), 'open' otherwise (a stronger edge). */
+  urgency: 'none' | 'open' | 'late'
   status: string
   /** 0–1 for a measurable, unfinished task; null otherwise. */
   progress: number | null
   photo?: Blob
   quick?: QuickAction
-  /** Controls on the tile's right (the diet switches); the tick then takes the icon's place. */
+  /** Controls on the tile's right (the diet switches). */
   controls?: ReactNode
   onOpen: () => void
 }
 
-function TaskTile({ task, done, urgent, status, progress, photo, quick, controls, onOpen }: TaskTileProps) {
+function TaskTile({ task, done, urgency, status, progress, photo, quick, controls, onOpen }: TaskTileProps) {
   const reduceMotion = useReducedMotion()
   const tone = TASK_TONES[task]
 
@@ -146,17 +148,16 @@ function TaskTile({ task, done, urgent, status, progress, photo, quick, controls
     if (done) setPops((n) => n + 1)
   }
 
-  // A done tile goes quiet (neutral, muted text, the world's tick) so the open ones stand out.
+  // A done tile goes quiet (neutral fill, muted icon and text) with one mark: the world's tick on its icon.
   const onPhoto = photo !== undefined
   const titleColor = onPhoto ? 'text-white' : done ? 'text-ink-muted' : 'text-ink'
-  const statusColor = onPhoto ? 'text-white/90' : done ? 'text-ink-muted' : urgent ? 'font-extrabold text-ink' : tone.ink
-  const iconBox = onPhoto ? 'bg-black/40 text-white' : done ? 'bg-world text-on-world' : `bg-surface ${tone.ink}`
+  const statusColor = onPhoto ? 'text-white/90' : done ? 'text-ink-muted' : urgency !== 'none' ? 'font-extrabold text-ink' : tone.ink
+  const iconBox = onPhoto ? 'bg-black/40 text-white' : done ? 'bg-canvas text-ink-muted' : `bg-surface ${tone.ink}`
   const fill = done ? 'bg-surface ring-1 ring-ink/10 dark:ring-0' : tone.tint
-  // On the diet tile the switches fill the right side, so the tick takes the icon's place instead of a corner.
-  const tickInIcon = done && controls !== undefined && !onPhoto
+  const edge = urgency === 'late' ? 'ring-2 ring-danger-ink' : urgency === 'open' ? 'ring-2 ring-ink/30' : ''
 
   return (
-    <div className={`relative min-h-[7.5rem] overflow-hidden rounded-card shadow-sm ${fill} ${urgent ? 'ring-2 ring-danger-ink' : ''}`}>
+    <div className={`relative min-h-[7.5rem] overflow-hidden rounded-card shadow-sm ${fill} ${edge}`}>
       {photo && (
         <>
           <BlobImage blob={photo} alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -166,37 +167,35 @@ function TaskTile({ task, done, urgent, status, progress, photo, quick, controls
       <button
         type="button"
         onClick={onOpen}
-        aria-label={`${TASK_TITLES[task]}, ${status}${done ? ', done' : ''}`}
+        aria-label={`${TASK_TITLES[task]}, ${spoken(status)}${done ? ', done' : ''}`}
         className="relative flex min-h-[7.5rem] w-full flex-col items-start p-3 text-left focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
       >
         <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${iconBox}`}>
-          {tickInIcon ? (
-            <span aria-hidden="true" className="font-bold">
-              ✓
-            </span>
-          ) : (
-            <Icon name={TASK_ICONS[task]} size={20} />
-          )}
+          <Icon name={TASK_ICONS[task]} size={20} />
         </span>
         <span className={`mt-auto pt-3 font-rounded font-extrabold leading-tight ${titleColor}`}>{TASK_TITLES[task]}</span>
         <span className={`mt-0.5 text-xs font-semibold leading-tight ${statusColor}`}>{status}</span>
       </button>
       {controls}
+      {/* The tick sits on the icon's corner: the same place on every tile, clear of the diet switches. */}
       {done && (
-        <span className={`absolute ${tickInIcon ? 'top-3 left-3' : 'top-2 right-2'}`}>
-          {!tickInIcon && <DoneBadge pop={pops > 0} />}
+        <span className="absolute top-1.5 left-[2.375rem]">
+          <DoneBadge pop={pops > 0} />
           {pops > 0 && !reduceMotion && <Burst key={pops} className="top-0 left-0" />}
         </span>
       )}
+      {/* A full 48 px touch target around a small chip, so the shortcut never outshines the tile's title. */}
       {quick && (
         <button
           type="button"
           aria-label={quick.label}
           onClick={quick.onPress}
-          className={`absolute top-2 right-2 flex min-h-touch min-w-touch touch-manipulation items-center justify-center gap-1 rounded-full bg-surface px-3 font-rounded text-xs font-extrabold shadow-sm motion-safe:transition-transform motion-safe:active:scale-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${tone.ink}`}
+          className={`group absolute top-1 right-1 flex min-h-touch min-w-touch touch-manipulation items-center justify-center rounded-full font-rounded text-xs font-extrabold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${tone.ink}`}
         >
-          <Icon name={quick.icon} size={16} />
-          {quick.text}
+          <span className="flex h-8 items-center gap-1 rounded-full border border-ink/15 px-2.5 motion-safe:transition-transform motion-safe:group-active:scale-90">
+            <Icon name={quick.icon} size={14} />
+            {quick.text}
+          </span>
         </button>
       )}
       {progress !== null && (

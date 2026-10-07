@@ -191,7 +191,8 @@ function MainApp({ today }: { today: string }) {
       {import.meta.env.DEV && <TimeTravelBadge />}
 
       <DayCompleteCelebration celebration={celebration} onDismiss={dismissCelebration} />
-      <BadgeUnlockToast badges={toasts} onDismiss={dismissToast} />
+      {/* Badges wait for the day-complete celebration to be dismissed: one peak at a time. */}
+      <BadgeUnlockToast badges={celebration ? [] : toasts} onDismiss={dismissToast} />
     </>
   )
 }

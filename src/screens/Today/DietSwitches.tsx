@@ -61,7 +61,7 @@ function MiniSwitch({ label, emoji, checked, onChange }: MiniSwitchProps) {
         className={`relative inline-flex h-5 w-8 shrink-0 items-center rounded-full motion-safe:transition-colors ${checked ? 'bg-green-ink' : 'bg-ink-muted'}`}
       >
         <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-surface shadow motion-safe:transition-transform ${checked ? 'translate-x-3.5' : 'translate-x-0.5'}`}
+          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow motion-safe:transition-transform ${checked ? 'translate-x-3.5' : 'translate-x-0.5'}`}
         />
       </span>
     </button>

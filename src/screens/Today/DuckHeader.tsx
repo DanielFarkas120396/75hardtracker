@@ -159,7 +159,7 @@ export function useDuck({
     // Above the duck, rising from him, and narrow enough to stay in the space beside the ring, never over its count.
     // The caller places it in the duck's own box. Read by VoiceOver as he says it.
     speech: (
-      <div aria-live="polite" className="pointer-events-none absolute bottom-full left-0 z-20 mb-2 w-max max-w-[6rem]">
+      <div aria-live="polite" className="pointer-events-none absolute bottom-full left-0 z-20 mb-2 w-max max-w-[7rem]">
         <AnimatePresence>
           {speech && (
             <motion.p
@@ -172,7 +172,7 @@ export function useDuck({
               className="relative w-max max-w-full rounded-2xl bg-surface px-2.5 py-1.5 font-rounded text-xs font-bold leading-snug text-ink shadow-md"
             >
               <span aria-hidden="true" className="absolute -bottom-1.5 left-5 h-3 w-3 rotate-45 bg-surface" />
-              <span className="relative">{speech.text}</span>
+              <span className="relative line-clamp-3">{speech.text}</span>
             </motion.p>
           )}
         </AnimatePresence>
