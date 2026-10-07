@@ -23,6 +23,11 @@ describe('isCheckmark', () => {
     expect(isCheckmark(stroke([60, 90], [58, 140], [70, 150], [160, 60]))).toBe(true)
   })
 
+  it('accepts a fast thumb: a tiny first arm with two samples, then a long second arm', () => {
+    const quick: Point[] = [{ x: 60, y: 130 }, { x: 72, y: 148 }, ...stroke([72, 148], [200, 30]).slice(1)]
+    expect(isCheckmark(quick)).toBe(true)
+  })
+
   it('refuses a tap, a flick and a tiny mark', () => {
     expect(isCheckmark([{ x: 50, y: 50 }])).toBe(false)
     expect(isCheckmark(stroke([50, 50], [55, 55]))).toBe(false)
