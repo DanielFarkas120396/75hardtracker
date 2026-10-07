@@ -17,7 +17,7 @@ import { describeTask } from './taskSheets'
 /** On Today, under the hero: yesterday isn't finished, and there's until noon to log it. */
 export function LateDayCard({ dayNumber, onOpen }: { dayNumber: number; onOpen: () => void }) {
   return (
-    <section className="mx-4 mb-4 flex items-center gap-3 rounded-card border-2 border-world bg-surface p-4 shadow-sm">
+    <section className="mx-4 mb-4 flex items-center gap-3 rounded-card border-2 border-world bg-surface p-4">
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-world-soft text-world-ink">
         <Icon name="history" />
       </span>
@@ -126,7 +126,7 @@ export function LateDayView({ challenge, dayEntries, dayNumber, date, onBack }: 
           <button
             type="button"
             onClick={() => setOpenTask('notes')}
-            className="mt-4 flex min-h-touch w-full items-center justify-center gap-1.5 rounded-full bg-surface px-3 font-rounded text-sm font-bold text-ink shadow-sm ring-1 ring-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:ring-0"
+            className="mt-4 flex min-h-touch w-full items-center justify-center gap-1.5 rounded-full bg-surface px-3 font-rounded text-sm font-bold text-ink ring-1 ring-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:ring-0"
           >
             <span aria-hidden="true">📝</span>
             Notes

@@ -32,7 +32,7 @@ export function StartDateChoice({ state, today, errorId, hintId }: StartDateChoi
               aria-checked={selected}
               onClick={() => state.setChoice(id)}
               className={`min-h-touch flex-1 rounded-xl px-2 font-rounded text-sm font-bold motion-safe:transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
-                selected ? 'bg-surface text-ink shadow-sm ring-1 ring-ink-muted' : 'text-ink-muted'
+                selected ? 'bg-surface text-ink ring-1 ring-ink-muted' : 'text-ink-muted'
               }`}
             >
               {label}

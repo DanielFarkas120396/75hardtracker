@@ -53,7 +53,7 @@ export function BodySection({ today }: BodySectionProps) {
   }
 
   return (
-    <section className="rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0">
+    <section className="rounded-card bg-surface p-4 ring-1 ring-ink/10 dark:ring-0">
       <div className="flex items-center justify-between gap-2">
         <h2 className="min-w-0 flex-1">
           <button

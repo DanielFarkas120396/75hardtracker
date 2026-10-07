@@ -110,7 +110,7 @@ export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGi
           {page === 'history' && <AttemptHistorySection today={today} />}
           {page === 'appearance' && <AppearanceSection />}
           {page === 'sound' && (
-            <section className="flex flex-col gap-2 rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0">
+            <section className="flex flex-col gap-2 rounded-card bg-surface p-4 ring-1 ring-ink/10 dark:ring-0">
               <Toggle checked={settings.soundEnabled} onChange={settings.setSoundEnabled} label="Sound effects" />
             </section>
           )}

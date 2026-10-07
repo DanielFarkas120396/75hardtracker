@@ -36,7 +36,7 @@ import { TodayHero } from './TodayHero'
 
 /** The labelled buttons under the board, in thumb reach: the evening plan, the social night, the notes. Each stays on one line. */
 const ACTION_BUTTON =
-  'flex min-h-touch flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-surface px-3 font-rounded text-sm font-bold text-ink shadow-sm ring-1 ring-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:ring-0'
+  'flex min-h-touch flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-surface px-3 font-rounded text-sm font-bold text-ink ring-1 ring-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:ring-0'
 
 /** Late in the evening with tasks left: the duck is tapping or hunting. */
 function isUrgent(menace: Menace, missing: readonly TaskId[]): boolean {
@@ -173,7 +173,7 @@ function TodayTasks({
       <button
         type="button"
         onClick={() => setOpenTask('notes')}
-        className="flex min-h-touch items-center gap-1.5 rounded-full bg-surface px-4 font-rounded text-sm font-bold text-ink shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        className="flex min-h-touch items-center gap-1.5 rounded-full bg-surface px-4 font-rounded text-sm font-bold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
       >
         {notesTold ? notesStatusLine(entry) : 'How did it go?'}
       </button>

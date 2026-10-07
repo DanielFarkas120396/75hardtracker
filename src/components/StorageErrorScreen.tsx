@@ -51,7 +51,7 @@ export function StorageErrorScreen({ problem, error }: StorageErrorScreenProps) 
         <button
           type="button"
           onClick={() => window.location.reload()}
-          className="min-h-touch rounded-2xl border-b-4 border-ink/15 bg-surface px-6 py-3 font-rounded font-bold text-ink active:translate-y-1 active:border-b-0"
+          className="min-h-touch rounded-full bg-ink/8 px-6 py-3 font-rounded font-semibold text-ink active:scale-[0.97]"
         >
           Reload
         </button>

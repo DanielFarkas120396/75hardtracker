@@ -51,7 +51,7 @@ export function ExportImportSection({ today }: ExportImportSectionProps) {
   }
 
   return (
-    <section className="rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0">
+    <section className="rounded-card bg-surface p-4 ring-1 ring-ink/10 dark:ring-0">
       <h2 className="font-rounded text-lg font-bold text-ink">Backup & storage</h2>
       <p className="mt-1 text-sm text-ink-muted">
         Everything lives only on this phone. Save a backup now and then — photos included — to iCloud Drive, so a lost

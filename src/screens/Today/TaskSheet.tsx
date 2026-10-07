@@ -104,7 +104,7 @@ function SheetContent({ content, headingId, onClose }: { content: TaskSheetConte
                 initial={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="block whitespace-nowrap rounded-full bg-world px-3 py-1 font-rounded text-xs font-bold text-on-world shadow-sm"
+                className="block whitespace-nowrap rounded-full bg-world px-3 py-1 font-rounded text-xs font-bold text-on-world"
               >
                 {cheer}
               </motion.span>

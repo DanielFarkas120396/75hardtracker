@@ -13,7 +13,7 @@ export function BackupReminderBanner() {
   return (
     <>
       {visible && (
-        <section role="region" aria-label="Backup reminder" className="mx-4 mb-4 rounded-card bg-surface p-4 shadow-sm">
+        <section role="region" aria-label="Backup reminder" className="mx-4 mb-4 rounded-card bg-surface p-4">
           <h2 className="font-rounded text-base font-bold text-ink">💾 Sunday backup time</h2>
           <p className="mt-1 text-sm text-ink-muted">
             Your data only lives on this phone. Save a backup to iCloud Drive so a lost phone doesn’t cost you your streak.
