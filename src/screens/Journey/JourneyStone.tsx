@@ -1,4 +1,5 @@
 import { motion, useReducedMotion } from 'framer-motion'
+import type { KeyboardEvent, MouseEvent } from 'react'
 import type { World, WorldId } from './worlds'
 
 export type NodeState = 'completed' | 'today' | 'locked' | 'missed'
@@ -21,6 +22,8 @@ interface JourneyStoneProps {
   isMilestone: boolean
   /** A milestone already passed: its flag waves. */
   flagWaves: boolean
+  /** Opens the day's card, from the point tapped; days not reached yet can't be opened. */
+  onOpen?: (dayNumber: number, from: { x: number; y: number }) => void
 }
 
 /** The texture that makes a stone belong to its world, drawn over the stone's face. */
@@ -99,7 +102,33 @@ function LockBadge() {
 }
 
 /** One day on the Journey: a stepping stone in its world's style. */
-export function JourneyStone({ x, y, dayNumber, state, world, isMilestone, flagWaves }: JourneyStoneProps) {
+export function JourneyStone({ x, y, dayNumber, state, world, isMilestone, flagWaves, onOpen }: JourneyStoneProps) {
+  const stone = <Stone x={x} y={y} dayNumber={dayNumber} state={state} world={world} isMilestone={isMilestone} flagWaves={flagWaves} />
+  if (!onOpen || state === 'locked') return stone
+
+  const centre = (target: Element) => {
+    const box = target.getBoundingClientRect()
+    return { x: box.left + box.width / 2, y: box.top + box.height / 2 }
+  }
+  // A tap grows the card from the finger; the keyboard, from the stone's middle.
+  const onClick = (e: MouseEvent<SVGGElement>) =>
+    onOpen(dayNumber, e.clientX || e.clientY ? { x: e.clientX, y: e.clientY } : centre(e.currentTarget))
+  const onKeyDown = (e: KeyboardEvent<SVGGElement>) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return
+    e.preventDefault()
+    onOpen(dayNumber, centre(e.currentTarget))
+  }
+
+  return (
+    <g role="button" tabIndex={0} aria-label={`Open Day ${dayNumber}`} onClick={onClick} onKeyDown={onKeyDown} className="cursor-pointer">
+      {/* A touch target a little wider than the stone. */}
+      <circle cx={x} cy={y} r={RADIUS + 6} fill="transparent" />
+      {stone}
+    </g>
+  )
+}
+
+function Stone({ x, y, dayNumber, state, world, isMilestone, flagWaves }: Omit<JourneyStoneProps, 'onOpen'>) {
   const reduceMotion = useReducedMotion()
   const { face, rim, ink } = world.stone
   const dim = state === 'locked' || state === 'missed'

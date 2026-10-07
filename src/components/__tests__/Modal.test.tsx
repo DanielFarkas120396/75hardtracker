@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { Modal } from '../ui/Modal'
@@ -45,5 +45,22 @@ describe('Modal as a sheet', () => {
 
     rerender(<Host open={false} onClose={() => {}} />)
     expect(tile).toHaveFocus()
+  })
+})
+
+describe('Modal growing from a point', () => {
+  beforeAll(() => {
+    MotionGlobalConfig.skipAnimations = true
+  })
+
+  it('ends up centred, whatever point it grew from', async () => {
+    render(
+      <Modal open onClose={() => {}} from={{ x: 20, y: 700 }}>
+        Day 23
+      </Modal>,
+    )
+
+    // No translation left: the flex container centres it.
+    await waitFor(() => expect(screen.getByRole('dialog').style.transform).not.toMatch(/translate/))
   })
 })

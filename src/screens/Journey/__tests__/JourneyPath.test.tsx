@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
-import { beforeAll, describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { JourneyPath } from '../JourneyPath'
 
 /** The vertical position of a day's stone, read from its transform. */
@@ -39,5 +39,20 @@ describe('JourneyPath', () => {
     for (const name of ['Hell', 'The Wasteland', 'The Dark Forest', 'The Meadows', 'The Mountains', 'Heaven']) {
       expect(container).toHaveTextContent(name)
     }
+  })
+
+  it('opens past days and today, never a day not reached yet', () => {
+    const onOpenDay = vi.fn()
+    render(
+      <JourneyPath completedDayNumbers={new Set([1])} missedDayNumbers={new Set([2])} todayDayNumber={3} onOpenDay={onOpenDay} />,
+    )
+
+    expect(screen.getAllByRole('button', { name: /^Open Day/ }).map((b) => b.getAttribute('aria-label'))).toEqual([
+      'Open Day 1',
+      'Open Day 2',
+      'Open Day 3',
+    ])
+    fireEvent.click(screen.getByRole('button', { name: 'Open Day 2' }))
+    expect(onOpenDay).toHaveBeenCalledWith(2, expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) }))
   })
 })

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { BookCover } from '../../components/BookCover'
 import { Button } from '../../components/ui/Button'
 import { Stepper } from '../../components/ui/Stepper'
 import { bookRepo } from '../../db/repositories/bookRepo'
@@ -20,7 +21,10 @@ export function ReadingTask({ entry, rules }: ReadingTaskProps) {
 
   const stepPages = (delta: number) => {
     void dayEntryRepo.adjustPages(entry.id, delta)
-    if (currentBook) void bookRepo.adjustCurrentPage(currentBook.id, delta)
+    if (!currentBook) return
+    void bookRepo.adjustCurrentPage(currentBook.id, delta)
+    // The day remembers its book, for its card on the Journey: the last one read wins.
+    if (entry.bookId !== currentBook.id) void dayEntryRepo.setBook(entry.id, currentBook.id)
   }
   const pagesLeft = Math.max(0, rules.pagesTarget - entry.pages_read)
 
@@ -50,22 +54,25 @@ export function BookPicker() {
     <div>
       {books.length > 0 ? (
         <>
-          {/* A current book that no longer exists falls back to "Pick a book…". */}
-          <select
-            value={currentBook?.id ?? ''}
-            onChange={(e) => void settingsRepo.set(SETTING_KEYS.currentBookId, Number(e.target.value))}
-            aria-label="Current book"
-            className="min-h-touch w-full rounded-xl bg-canvas px-3 font-rounded font-bold text-ink"
-          >
-            <option value="" disabled>
-              Pick a book…
-            </option>
-            {books.map((book) => (
-              <option key={book.id} value={book.id}>
-                {book.title} {book.finished ? '✓' : ''}
+          <div className="flex items-center gap-3">
+            {currentBook && <BookCover book={currentBook} size="sm" />}
+            {/* A current book that no longer exists falls back to "Pick a book…". */}
+            <select
+              value={currentBook?.id ?? ''}
+              onChange={(e) => void settingsRepo.set(SETTING_KEYS.currentBookId, Number(e.target.value))}
+              aria-label="Current book"
+              className="min-h-touch w-full min-w-0 rounded-xl bg-canvas px-3 font-rounded font-bold text-ink"
+            >
+              <option value="" disabled>
+                Pick a book…
               </option>
-            ))}
-          </select>
+              {books.map((book) => (
+                <option key={book.id} value={book.id}>
+                  {book.title} {book.finished ? '✓' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
           {!currentBook && (
             <p className="mt-1 text-xs text-ink-muted">
               Pick the book you're reading, and the pages you log move its bookmark.
