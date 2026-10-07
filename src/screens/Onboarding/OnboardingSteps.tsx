@@ -1,3 +1,4 @@
+import { motion, type Variants } from 'framer-motion'
 import type { KeyboardEvent, ReactNode } from 'react'
 import { BackupRestore } from '../../components/BackupRestore'
 import { Icon } from '../../components/icons/Icon'
@@ -22,6 +23,16 @@ const WHY_COUNTER_FROM = 100
 const LONG_REASON_FROM = 60
 
 const FIELD = 'w-full rounded-xl border border-ink/15 bg-canvas font-rounded text-lg font-bold text-ink'
+
+/** The deal appears line by line: each part fades up after the one before. Reduce motion keeps only the fade. */
+const DEAL_CARD: Variants = {
+  hidden: { opacity: 0, y: 12 },
+  shown: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut', delayChildren: 0.15, staggerChildren: 0.08 } },
+}
+const DEAL_LINE: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  shown: { opacity: 1, y: 0, transition: { duration: 0.25, ease: 'easeOut' } },
+}
 
 /** Enter moves on when the step's answer is valid; it never inserts a new line. */
 function enterMovesOn(valid: boolean, onNext: () => void) {
@@ -310,25 +321,41 @@ export function ReadyStep(props: ReadyStepProps) {
     <>
       <StepTitle>Deal, {cleanText(name)}.</StepTitle>
 
-      <section aria-label="The deal" className="mt-5 w-full rounded-card border border-world-edge/40 bg-world-soft p-5 text-left">
-        <p className="font-display text-3xl tracking-wide text-world-ink">{VARIANT_NAMES[variant]}</p>
+      <motion.section
+        aria-label="The deal"
+        variants={DEAL_CARD}
+        initial="hidden"
+        animate="shown"
+        className="mt-5 w-full rounded-card border border-world-edge/40 bg-world-soft p-5 text-left"
+      >
+        <motion.p variants={DEAL_LINE} className="font-display text-3xl tracking-wide text-world-ink">
+          {VARIANT_NAMES[variant]}
+        </motion.p>
         {!dateError && (
-          <>
+          <motion.div variants={DEAL_LINE}>
             <p className="mt-1 font-rounded font-bold text-ink">
               {formatShortDay(startDate)} → {formatShortDay(dateForDayNumber(startDate, CHALLENGE_LENGTH))}
             </p>
             {startsIn && <p className="text-sm font-semibold text-ink-muted">{startsIn}</p>}
-          </>
+          </motion.div>
         )}
-        <p className="mt-4 text-sm font-bold text-ink-muted">Every day, for {CHALLENGE_LENGTH} days</p>
+        <motion.p variants={DEAL_LINE} className="mt-4 text-sm font-bold text-ink-muted">
+          Every day, for {CHALLENGE_LENGTH} days
+        </motion.p>
         <ul className="mt-1 list-disc space-y-1 pl-5 text-ink marker:text-world-ink">
           {dailyRuleLines(rules).map((line) => (
-            <li key={line}>{line}</li>
+            <motion.li key={line} variants={DEAL_LINE}>
+              {line}
+            </motion.li>
           ))}
         </ul>
-        <p className="mt-4 font-rounded font-extrabold text-world-ink">{stakesLine(rules)}</p>
-        <Reason why={why} className="mt-4 border-t border-world-edge/30 pt-4" />
-      </section>
+        <motion.p variants={DEAL_LINE} className="mt-4 font-rounded font-extrabold text-world-ink">
+          {stakesLine(rules)}
+        </motion.p>
+        <motion.div variants={DEAL_LINE}>
+          <Reason why={why} className="mt-4 border-t border-world-edge/30 pt-4" />
+        </motion.div>
+      </motion.section>
 
       {alert && <Alert>{alert}</Alert>}
       {dateError && (
@@ -338,9 +365,24 @@ export function ReadyStep(props: ReadyStepProps) {
       )}
 
       {/* After the whole card, not pinned over it: the player reads every rule before they reach the signature. */}
-      <div className="mt-6 w-full">
+      <motion.div
+        className="mt-6 w-full"
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.6 }}
+        transition={{ duration: 0.35, ease: 'easeOut' }}
+      >
         <p aria-live="polite" className="font-display text-2xl tracking-wide text-ink empty:hidden">
-          {signed ? `I'm watching, ${cleanText(name)}.` : ''}
+          {signed && (
+            <motion.span
+              className="inline-block"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+            >
+              I'm watching, {cleanText(name)}.
+            </motion.span>
+          )}
         </p>
         {!signed && (
           <HoldButton
@@ -352,7 +394,7 @@ export function ReadyStep(props: ReadyStepProps) {
             {busy ? 'Saving…' : 'Hold to commit'}
           </HoldButton>
         )}
-      </div>
+      </motion.div>
     </>
   )
 }

@@ -15,6 +15,7 @@ The steps, the data and `profileRepo.completeOnboarding` stay the same. There is
 ## 1. The deal
 
 - **"Hold to commit" comes after the whole rules card,** in the page, not pinned over it. The owner's call after the phone check (2026-10-07): you scroll through every rule before you reach the signature.
+- **The deal appears line by line:** the card fades up, then each line after the one before; "Hold to commit" fades in when you scroll down to it, and "I'm watching, {name}." fades in when you sign. Reduce motion keeps only the fades.
 - **The social occasion says it's weekly:** "No alcohol, except on one declared social occasion a week." (deal and the diet sheet).
 - **Less text:**
   - the subtitle "75 Hard starts today." goes, since it repeated the card and used a second date format;
