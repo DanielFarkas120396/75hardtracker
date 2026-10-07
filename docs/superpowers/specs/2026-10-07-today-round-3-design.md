@@ -1,6 +1,6 @@
 # Today, round 3 (design)
 
-Status: **built** on `feat/today-round-3` (2026-10-07), waiting for the owner's phone check before the merge. Two changes while building: the tick sits on the icon's corner (the same place on every tile, clear of the diet switches), and a photo from the shortcut has no Undo (undoing it would delete the photo).
+Status: **merged** into `main` on 2026-10-07 (PR #47), after the owner checked it on the phone. Two changes while building: the tick sits on the icon's corner (the same place on every tile, clear of the diet switches), and a photo from the shortcut has no Undo (undoing it would delete the photo).
 
 This comes from the second Impeccable critique of Today on 2026-10-07, which scored 27/40 again. Round 2 fixed most of the first critique's issues; this round fixes what the redesign itself brought.
 
