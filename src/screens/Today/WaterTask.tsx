@@ -34,7 +34,7 @@ export function WaterTask({ entry, rules }: WaterTaskProps) {
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-4 grid grid-cols-3 gap-2">
         <Button variant="water" onClick={() => addWater(250)}>
           + 250 ml
         </Button>

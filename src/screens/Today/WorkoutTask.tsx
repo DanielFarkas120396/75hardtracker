@@ -163,7 +163,7 @@ function WorkoutRow({ workout, onRemove }: { workout: Workout; onRemove: () => v
       <Toggle
         checked={workout.isOutdoor}
         onChange={(checked) => void workoutRepo.update(workout.id, { isOutdoor: checked })}
-        label={workout.isOutdoor ? 'Outdoor' : 'Indoor'}
+        label="Outdoor"
         activeColor="blue"
       />
 

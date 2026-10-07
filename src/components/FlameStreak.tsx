@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 
 interface FlameStreakProps {
   streak: number
+  /** Grows slightly with the streak (up to 1.5×); off where space is tight, as in Today's hero. */
+  grow?: boolean
 }
 
 /**
@@ -23,12 +25,12 @@ const loadFlame = () =>
  * and grey) at 0; with reduce motion on it holds still. Until the player has
  * loaded, the plain emoji stands in at the same size.
  */
-export function FlameStreak({ streak }: FlameStreakProps) {
+export function FlameStreak({ streak, grow = true }: FlameStreakProps) {
   const reduceMotion = useReducedMotionConfig() ?? false
   const box = useRef<HTMLSpanElement>(null)
   const [flame, setFlame] = useState<AnimationItem>()
   const lit = streak > 0
-  const scale = Math.min(1.5, 1 + streak * 0.02)
+  const scale = grow ? Math.min(1.5, 1 + streak * 0.02) : 1
 
   useEffect(() => {
     let cancelled = false

@@ -42,28 +42,27 @@ describe('TaskBoard', () => {
     URL.revokeObjectURL = vi.fn()
   })
 
-  it('shows six tiles named by their task and status', () => {
+  it('shows the five tasks, a tile each, named for VoiceOver without the dots', () => {
     render(board(empty))
 
-    expect(screen.getByRole('button', { name: 'Workouts, 0 of 2 · 45 min each' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Workouts, 0 of 2, 45 min each' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Diet, 2 to tick' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Water, 0 / 3.8 L' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Reading, 0 of 10 pages' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Photo, No photo yet' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Mood & notes, How was today?' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Mood/ })).not.toBeInTheDocument()
+    // Five tiles: the photo, last and alone, takes the whole row.
+    expect(screen.getByRole('button', { name: /^Photo,/ }).parentElement!.parentElement!).toHaveClass('col-span-2')
   })
 
   it('marks done tiles with their summary', () => {
     render(board({ ...empty, water_ml: 3800, pages_read: 12 }, { bookTitle: 'Atomic Habits' }))
 
     expect(screen.getByRole('button', { name: 'Water, 3.8 L, done' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Reading, 12 pages · Atomic Habits, done' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reading, 12 pages, Atomic Habits, done' })).toBeInTheDocument()
     expect(screen.queryByTestId('burst')).not.toBeInTheDocument()
-  })
-
-  it('shows the mood on its tile', () => {
-    render(board(empty, { entry: { ...entry, mood: 5 } }))
-    expect(screen.getByRole('button', { name: 'Mood & notes, 😄 Great' })).toBeInTheDocument()
+    // One quiet mark: a neutral icon box, the tick on its corner.
+    expect(screen.getByRole('button', { name: 'Water, 3.8 L, done' }).firstElementChild).toHaveClass('text-ink-muted')
   })
 
   it('fills the progress bar of a task under way', () => {
@@ -85,8 +84,6 @@ describe('TaskBoard', () => {
     render(board(empty, { onOpen }))
     fireEvent.click(screen.getByRole('button', { name: /^Water/ }))
     expect(onOpen).toHaveBeenCalledWith('water')
-    fireEvent.click(screen.getByRole('button', { name: /^Mood/ }))
-    expect(onOpen).toHaveBeenCalledWith('notes')
   })
 
   it('shows a shortcut on the tiles that have one, and hides it once the task is done', () => {
@@ -126,16 +123,18 @@ describe('TaskBoard', () => {
     expect(screen.getByRole('button', { name: /^Reading,/ }).parentElement!).toHaveClass('bg-yellow-light')
   })
 
-  it('when it is urgent, folds the done tasks and the notes into chips and lifts the open tiles', () => {
+  it('when it is urgent, folds the done tasks into chips and lifts the open tiles, quickest first', () => {
     const onOpen = vi.fn()
-    render(board({ ...empty, water_ml: 3800, hasPhoto: true }, { urgent: true, onOpen }))
+    render(board({ ...empty, water_ml: 3800, hasPhoto: true }, { urgent: true, minutesLeft: 60, onOpen }))
 
-    // Water and Photo are done; with Mood & notes they become chips.
-    for (const name of ['Water, 3.8 L, done', 'Photo, Taken, done', 'Mood & notes, How was today?']) {
+    for (const name of ['Water, 3.8 L, done', 'Photo, Taken, done']) {
       expect(screen.getByRole('button', { name })).toHaveClass('rounded-full')
     }
-    const workouts = screen.getByRole('button', { name: /^Workouts,/ }).parentElement!
-    expect(workouts).toHaveClass('ring-danger-ink')
+    const tiles = screen.getAllByRole('button', { name: /^(Workouts|Diet|Reading),/ }).map((b) => b.getAttribute('aria-label')!.split(',')[0])
+    expect(tiles).toEqual(['Diet', 'Reading', 'Workouts'])
+    // A red edge only on what no longer fits in the hour left: two workouts don't, the diet does.
+    expect(screen.getByRole('button', { name: /^Workouts,/ }).parentElement!).toHaveClass('ring-danger-ink')
+    expect(screen.getByRole('button', { name: /^Diet,/ }).parentElement!).toHaveClass('ring-ink/30')
 
     fireEvent.click(screen.getByRole('button', { name: 'Water, 3.8 L, done' }))
     expect(onOpen).toHaveBeenCalledWith('water')
@@ -158,7 +157,7 @@ describe('TaskBoard', () => {
     expect(screen.getByRole('button', { name: /^Reading,/ }).parentElement!.parentElement!).toHaveClass('col-span-2')
   })
 
-  it('keeps the six tiles when it is urgent but everything is done', () => {
+  it('keeps the five tiles when it is urgent but everything is done', () => {
     const all: DayTaskData = {
       water_ml: 3800,
       pages_read: 10,

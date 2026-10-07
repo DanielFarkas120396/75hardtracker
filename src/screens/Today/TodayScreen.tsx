@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { BackupReminderBanner } from '../../components/BackupReminderBanner'
 import { LockBypassBanner } from '../../components/LockBypassBanner'
-import { planSavedLine, timeLeftLine } from '../../content/microcopy'
+import { planReminderLine, planSavedLine, timeLeftLine } from '../../content/microcopy'
+import { notesStatusLine } from '../../content/taskStatus'
 import type { BoardTask } from '../../content/taskStatus'
 import { VARIANT_NAMES } from '../../content/variants'
 import type { Challenge, DayEntry } from '../../db/types'
@@ -33,9 +34,9 @@ import { TaskSheet } from './TaskSheet'
 import { describeTask } from './taskSheets'
 import { TodayHero } from './TodayHero'
 
-/** The labelled buttons under the board, in thumb reach: the evening plan and the social occasion. */
+/** The labelled buttons under the board, in thumb reach: the evening plan, the social night, the notes. Each stays on one line. */
 const ACTION_BUTTON =
-  'flex min-h-touch flex-1 items-center justify-center gap-2 rounded-full bg-surface px-4 font-rounded text-sm font-extrabold text-ink shadow-sm ring-1 ring-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:ring-0'
+  'flex min-h-touch flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-surface px-3 font-rounded text-sm font-extrabold text-ink shadow-sm ring-1 ring-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:ring-0'
 
 /** Late in the evening with tasks left: the duck is tapping or hunting. */
 function isUrgent(menace: Menace, missing: readonly TaskId[]): boolean {
@@ -156,6 +157,29 @@ function TodayTasks({
   }
   const urgent = isUrgent(menace, completion.missing)
   const hasPlan = completion.missing.some((task) => entry.plans?.[task])
+  const won = completion.missing.length === 0
+  const minutesLeft = 24 * 60 - nowMin
+  // Nothing left to plan once he's hunting: only to do.
+  const canPlan = completion.missing.length > 0 && menace.level !== 'hunting'
+  const notesTold = entry.mood !== undefined || (entry.notes ?? '').trim() !== ''
+
+  // Under the ring, what matters next: the day won and its closing ritual, the time left, or the next plan.
+  const below = won ? (
+    <>
+      <p className="font-rounded text-sm font-extrabold text-world-ink">Day {todayDayNumber} won</p>
+      <button
+        type="button"
+        onClick={() => setOpenTask('notes')}
+        className="flex min-h-touch items-center gap-1.5 rounded-full bg-surface px-4 font-rounded text-sm font-extrabold text-ink shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+      >
+        {notesTold ? notesStatusLine(entry) : 'How did it go?'}
+      </button>
+    </>
+  ) : urgent ? (
+    <p className="font-rounded text-sm font-extrabold text-danger-ink">{timeLeftLine(nowMin)}</p>
+  ) : menace.next ? (
+    <p className="font-rounded text-xs font-bold text-ink-muted">{planReminderLine(menace.next.task, menace.next.at)}</p>
+  ) : null
 
   return (
     <PhotoCapture
@@ -168,12 +192,12 @@ function TodayTasks({
         <MenaceAtmosphere level={menace.level} flashes={lunges} />
         <div className="relative z-10">
           <Hero
-            attemptLine={`${VARIANT_NAMES[rules.variant]} · #${challenge.attemptNumber}`}
+            attemptLine={`${VARIANT_NAMES[rules.variant]} #${challenge.attemptNumber}`}
             dayNumber={todayDayNumber}
             completedCount={completedCount}
             streak={streak}
             jokersLeft={rules.jokers > 0 ? jokersLeft : undefined}
-            countdown={urgent ? timeLeftLine(nowMin) : null}
+            below={below}
             menace={menace}
             missing={completion.missing}
             completion={completion.completion}
@@ -197,25 +221,36 @@ function TodayTasks({
               photo={photo?.blob}
               socialToday={socialToday}
               urgent={urgent}
+              minutesLeft={urgent ? minutesLeft : undefined}
               onAddWorkout={sheetContext.onAddWorkout}
               onOpen={setOpenTask}
             />
-            {(completion.missing.length > 0 || sheetContext.canPlanSocial) && (
-              <div className="mt-4 flex gap-3">
-                {completion.missing.length > 0 && (
-                  <button type="button" onClick={() => setPlanOpen(true)} className={ACTION_BUTTON}>
-                    <span aria-hidden="true">🗓️</span>
-                    {hasPlan ? 'Edit my plan' : 'Plan my evening'}
-                  </button>
-                )}
-                {sheetContext.canPlanSocial && (
-                  <button type="button" onClick={() => setSocialOpen(true)} className={ACTION_BUTTON}>
-                    <span aria-hidden="true">🥂</span>
-                    Plan a social occasion
-                  </button>
-                )}
-              </div>
-            )}
+            <div className="mt-4 flex flex-wrap gap-2">
+              {canPlan && (
+                <button type="button" onClick={() => setPlanOpen(true)} className={ACTION_BUTTON}>
+                  <span aria-hidden="true">🗓️</span>
+                  {hasPlan ? 'Edit my plan' : 'Plan my evening'}
+                </button>
+              )}
+              {sheetContext.canPlanSocial && (
+                <button
+                  type="button"
+                  onClick={() => setSocialOpen(true)}
+                  aria-label="Plan a social occasion"
+                  className={ACTION_BUTTON}
+                >
+                  <span aria-hidden="true">🥂</span>
+                  Social night
+                </button>
+              )}
+              {/* Once the day is won, the hero's "How did it go?" opens the notes instead. */}
+              {!won && (
+                <button type="button" onClick={() => setOpenTask('notes')} className={ACTION_BUTTON}>
+                  <span aria-hidden="true">📝</span>
+                  Notes
+                </button>
+              )}
+            </div>
           </main>
         </div>
 

@@ -123,6 +123,14 @@ export function LateDayView({ challenge, dayEntries, dayNumber, date, onBack }: 
             onAddWorkout={sheetContext.onAddWorkout}
             onOpen={setOpenTask}
           />
+          <button
+            type="button"
+            onClick={() => setOpenTask('notes')}
+            className="mt-4 flex min-h-touch w-full items-center justify-center gap-1.5 rounded-full bg-surface px-3 font-rounded text-sm font-extrabold text-ink shadow-sm ring-1 ring-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:ring-0"
+          >
+            <span aria-hidden="true">📝</span>
+            Notes
+          </button>
         </main>
 
         <TaskSheet content={openTask ? describeTask(openTask, sheetContext) : null} onClose={() => setOpenTask(null)} />

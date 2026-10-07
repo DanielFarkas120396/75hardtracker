@@ -24,6 +24,7 @@ async function setup({
   socialDays,
   profile,
   pendingLateDay = null,
+  complete = false,
 }: {
   variant?: ChallengeVariant
   todayDayNumber?: number
@@ -31,6 +32,8 @@ async function setup({
   socialDays?: number[]
   profile?: Profile
   pendingLateDay?: number | null
+  /** Every task of today logged. */
+  complete?: boolean
 } = {}) {
   const today = todayISO()
   const startDate = addDaysISO(today, -(todayDayNumber - 1))
@@ -42,7 +45,13 @@ async function setup({
     ...(socialDays ? { socialDays } : {}),
   })
   const challenge = (await db.challenges.get(challengeId)) as Challenge
-  await dayEntryRepo.getOrCreate({ challengeId, dayNumber: todayDayNumber, date: today })
+  const todayEntry = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: todayDayNumber, date: today })
+  if (complete) {
+    await dayEntryRepo.update(todayEntry.id, { water_ml: 3800, pages_read: 10, dietFollowed: true, noAlcohol: true, photoId: 1 })
+    for (const isOutdoor of [true, false]) {
+      await workoutRepo.add({ dayEntryId: todayEntry.id, type: 'Running', durationMin: 45, isOutdoor })
+    }
+  }
   // In the app the gate's live entries pick up yesterday's entry once it's created; here it exists up front.
   if (pendingLateDay !== null) {
     await dayEntryRepo.getOrCreate({ challengeId, dayNumber: pendingLateDay, date: addDaysISO(today, -1) })
@@ -93,8 +102,24 @@ describe('TodayScreen', () => {
     await setup({ variant: 'hard', todayDayNumber: 3 })
 
     expect(await screen.findByText('1h30 left')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^Workouts,/ }).parentElement!).toHaveClass('ring-danger-ink')
-    expect(screen.getByRole('button', { name: 'Mood & notes, How was today?' })).toHaveClass('rounded-full')
+    // Red only on what no longer fits before midnight: the water (3.8 L) does, two workouts (90 min) just fit.
+    expect(screen.getByRole('button', { name: /^Water,/ }).parentElement!).toHaveClass('ring-danger-ink')
+    expect(screen.getByRole('button', { name: /^Workouts,/ }).parentElement!).toHaveClass('ring-ink/30')
+    expect(screen.getByRole('button', { name: /^Workouts,/ }).parentElement!).not.toHaveClass('ring-danger-ink')
+    // He's hunting: nothing left to plan, only to do.
+    expect(screen.queryByRole('button', { name: 'Plan my evening' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Notes' })).toBeInTheDocument()
+  })
+
+  it('at 5/5: the day is won, and the hero asks how it went instead of the plan', async () => {
+    await setup({ variant: 'hard', todayDayNumber: 3, complete: true })
+
+    expect(await screen.findByText('Day 3 won')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: '5 of 5 tasks done' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Plan my evening' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Notes' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'How did it go?' }))
+    expect(await screen.findByRole('dialog', { name: 'Mood & notes' })).toBeInTheDocument()
   })
 
   it("ignores a stray socialDays entry on a Hard row: keeps the alcohol toggle instead of the drink-allowed line", async () => {
@@ -110,7 +135,7 @@ describe('TodayScreen', () => {
   it('Hard on Day 3: names the attempt, and offers no joker, recovery or social controls', async () => {
     await setup({ variant: 'hard', todayDayNumber: 3 })
 
-    expect(await screen.findByText('75 Hard · #1')).toBeInTheDocument()
+    expect(await screen.findByText('75 Hard #1')).toBeInTheDocument()
     expect(screen.queryByText(/joker/i)).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Plan a social occasion' })).not.toBeInTheDocument()
 
@@ -127,7 +152,7 @@ describe('TodayScreen', () => {
   it('Medium on Day 1: shows the joker chip, and the hero opens the social sheet in one tap', async () => {
     await setup({ variant: 'medium', todayDayNumber: 1, jokersLeft: 1 })
 
-    expect(await screen.findByText('1 joker left')).toBeInTheDocument()
+    expect(await screen.findByText('1 joker')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Plan a social occasion' }))
     expect(await screen.findByRole('heading', { name: 'Plan a social occasion' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Close' }))
@@ -166,7 +191,7 @@ describe('TodayScreen', () => {
   it('shows no reason without a profile', async () => {
     await setup({ todayDayNumber: 3 })
 
-    expect(await screen.findByText('75 Hard · #1')).toBeInTheDocument()
+    expect(await screen.findByText('75 Hard #1')).toBeInTheDocument()
     expect(screen.queryByText('“A fresh start”')).not.toBeInTheDocument()
   })
 
@@ -177,9 +202,15 @@ describe('TodayScreen', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Add 250 ml' }))
     await waitFor(async () => expect((await entry()).water_ml).toBe(250))
+    // A stray tap is one tap to take back.
+    expect(screen.getByRole('status')).toHaveTextContent('Logged 250 ml')
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    await waitFor(async () => expect((await entry()).water_ml).toBe(0))
+    expect(screen.queryByRole('button', { name: 'Undo' })).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Add the 10 pages left' }))
     await waitFor(async () => expect((await entry()).pages_read).toBe(10))
+    expect(screen.getByRole('status')).toHaveTextContent('Logged 10 pages')
 
     expect(screen.getByRole('button', { name: 'Take photo' })).toHaveTextContent('Snap')
     fireEvent.click(screen.getByRole('button', { name: 'Add workout' }))
@@ -212,7 +243,7 @@ describe('TodayScreen', () => {
 
   it('shows nothing about yesterday once it is done or past noon', async () => {
     await setup({ variant: 'hard', todayDayNumber: 3 })
-    expect(await screen.findByText('75 Hard · #1')).toBeInTheDocument()
+    expect(await screen.findByText('75 Hard #1')).toBeInTheDocument()
     expect(screen.queryByText(/isn't finished/)).not.toBeInTheDocument()
   })
 })

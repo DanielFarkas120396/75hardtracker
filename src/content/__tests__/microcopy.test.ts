@@ -9,6 +9,7 @@ import {
   GLARE_LINE,
   LUNGE_LINE,
   nextCatchphrase,
+  planReminderLine,
   planSavedLine,
   pokeLine,
   POKE_LINES,
@@ -52,12 +53,12 @@ describe('duckLine', () => {
     expect(duckLine({ menace: threat('content', 'done'), missing: [], dayNumber: 2 })).toBe('All five. You may live.')
   })
 
-  it('watches an untouched day, then counts progress', () => {
+  it('watches an untouched day, and leaves the counting to the ring', () => {
     expect(duckLine({ menace: threat('watching', 'plenty'), missing: TASK_IDS, dayNumber: 1 })).toBe(
       "New day. I'm watching.",
     )
     expect(duckLine({ menace: threat('watching', 'plenty'), missing: ['water', 'reading'], dayNumber: 1 })).toBe(
-      "3 down, 2 to go. I'm watching.",
+      'Started. Not finished.',
     )
   })
 
@@ -124,6 +125,10 @@ describe('reaction lines', () => {
 
   it('confirms the earliest plan', () => {
     expect(planSavedLine(20 * 60 + 5)).toBe('20:05. Not a minute later.')
+  })
+
+  it('names the next plan under the ring', () => {
+    expect(planReminderLine('reading', 21 * 60)).toBe('Reading at 21:00')
   })
 })
 

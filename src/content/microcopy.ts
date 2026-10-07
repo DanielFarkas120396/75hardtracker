@@ -134,13 +134,18 @@ interface WatchingInput {
   yesterdayOpen: boolean
 }
 
+/** His calm line. He never counts: the ring already says how many are done. */
 function watchingLine({ missing, name, started, yesterdayOpen }: WatchingInput): string {
   if (yesterdayOpen) return YESTERDAY_OPEN_LINE
-  const done = TASK_IDS.length - missing.length
   if (missing.length === 1) return ONE_LEFT_LINES[missing[0]]
-  if (done === 0 && started) return STARTED_LINE
-  if (done === 0) return name ? `New day, ${name}. I'm watching.` : "New day. I'm watching."
-  return `${done} down, ${missing.length} to go. I'm watching.`
+  const done = TASK_IDS.length - missing.length
+  if (done === 0 && !started) return name ? `New day, ${name}. I'm watching.` : "New day. I'm watching."
+  return STARTED_LINE
+}
+
+/** The next plan, under Today's ring: "Reading at 21:00". */
+export function planReminderLine(task: TaskId, at: number): string {
+  return `${TASK_NAMES[task]} at ${formatHHmm(at)}`
 }
 
 /**
