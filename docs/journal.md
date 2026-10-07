@@ -2,7 +2,7 @@
 
 A day-by-day record of what shipped, for note taking and follow-up. Built from the git history and the PRs (merge commits not counted). Newest open items are at the end.
 
-**Span:** 2026-09-24 → 2026-10-07 · 12 working days · about 220 commits · about **52 hours** of work · 65 PRs (64 merged, 1 open).
+**Span:** 2026-09-24 → 2026-10-07 · 12 working days · about 220 commits · about **52 hours** of work · 65 PRs, all merged.
 
 | Day | Time | Commits | PRs | Headline |
 |---|---|---|---|---|
@@ -175,7 +175,7 @@ The busiest day by PRs (25). Until about 15:50, five rounds on v2 shipped straig
 
 **7. Journey day cards (#62–#64):** tap a past day, today or a forgiven day; a card grows from the stone, centred, with only the photo, notes and workouts. Phone-checked.
 
-**8. PR #65 (open):** two tests failed after 18:00 because of the Tomorrow default; their clock is now frozen at 09:00.
+**8. PR #65 (merged 10-07, 19:12):** two tests failed after 18:00 because of the Tomorrow default; their clock is now frozen at 09:00.
 
 ---
 
@@ -210,7 +210,7 @@ How it's estimated:
 
 ## Open items (as of 2026-10-07)
 
-- [ ] **Merge PR #65** (test clock freeze). All four checks pass.
+- [x] **Merge PR #65** (test clock freeze): merged 2026-10-07; all 945 tests pass on `main`.
 - [ ] **`.claude/launch.json`** has an uncommitted `dev-phone-main` entry (port 5197, `main-phone` worktree): commit or drop.
 - [ ] **Phone pass on the Ember screens.** The specs record phone checks for the earlier rounds and the Journey cards, not for the whole v3 look.
 - [ ] **Duck animation around the signature** (draw to commit): still to design.
