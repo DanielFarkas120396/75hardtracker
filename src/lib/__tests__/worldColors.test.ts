@@ -26,8 +26,17 @@ describe('WORLD_COLORS', () => {
       for (const bg of [SURFACE[mode], p.canvas, p.soft]) expect(contrastRatio(p.ink, bg)).toBeGreaterThanOrEqual(4.5)
       expect(contrastRatio(p.onWorld, p.world)).toBeGreaterThanOrEqual(4.5)
     })
+
+    // The onboarding's evening warning: danger text in a world-soft box on the canvas.
+    it.each(WORLDS.map((w) => w.id))(`keeps warnings readable in %s (${mode})`, (id) => {
+      const p = WORLD_COLORS[id][mode]
+      for (const bg of [p.canvas, p.soft]) expect(contrastRatio(DANGER_INK[mode], bg)).toBeGreaterThanOrEqual(4.5)
+    })
   }
 })
+
+/** --color-danger-ink, in index.css (checked below). */
+const DANGER_INK = { light: '#c0282e', dark: '#ff6b70' } as const
 
 const TOKENS = {
   world: 'world',
@@ -54,5 +63,10 @@ describe('index.css', () => {
         expect(body).toContain(`--color-${token}: ${WORLD_COLORS[id][mode][key as keyof typeof TOKENS]};`)
       }
     }
+  })
+
+  it('defines the danger ink checked above, in both themes', () => {
+    expect(block('@theme')).toContain(`--color-danger-ink: ${DANGER_INK.light};`)
+    expect(block('.dark')).toContain(`--color-danger-ink: ${DANGER_INK.dark};`)
   })
 })

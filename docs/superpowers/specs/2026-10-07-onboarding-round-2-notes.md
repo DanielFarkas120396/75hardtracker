@@ -1,6 +1,6 @@
 # Onboarding, round 2 (handover notes, 2026-10-07)
 
-Status: **open**. Nothing is built yet, and no decisions have been made. These notes are for the next session.
+Status: **answered** on 2026-10-07. The owner's choices and the work are in [2026-10-07-onboarding-round-2-design.md](2026-10-07-onboarding-round-2-design.md).
 
 ## Where things stand
 

@@ -53,4 +53,12 @@ describe('useStartDateChoice', () => {
     const { result } = renderHook(() => useStartDateChoice(today, { choice: 'pick', pickedDate: '2026-10-10' }))
     expect(result.current).toMatchObject({ choice: 'pick', startDate: '2026-10-10' })
   })
+
+  it('starts from the given default, unless a saved choice says otherwise', () => {
+    const fresh = renderHook(() => useStartDateChoice(today, undefined, 'tomorrow'))
+    expect(fresh.result.current).toMatchObject({ choice: 'tomorrow', startDate: addDaysISO(today, 1) })
+
+    const saved = renderHook(() => useStartDateChoice(today, { choice: 'today', pickedDate: '' }, 'tomorrow'))
+    expect(saved.result.current.choice).toBe('today')
+  })
 })

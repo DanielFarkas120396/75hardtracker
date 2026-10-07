@@ -8,3 +8,20 @@ import { vi } from 'vitest'
 vi.mock('lottie-web/build/player/lottie_light', () => ({
   default: { loadAnimation: () => ({ play() {}, goToAndStop() {}, destroy() {} }) },
 }))
+
+// jsdom has no IntersectionObserver, which framer-motion's `whileInView` needs (the deal's Hold
+// button fades in when scrolled to). The stand-in reports every element as in view at once.
+if (typeof window !== 'undefined' && !('IntersectionObserver' in window)) {
+  class InViewObserver {
+    constructor(private readonly callback: IntersectionObserverCallback) {}
+    observe(target: Element) {
+      this.callback([{ target, isIntersecting: true, intersectionRatio: 1 } as IntersectionObserverEntry], this as never)
+    }
+    unobserve() {}
+    disconnect() {}
+    takeRecords() {
+      return []
+    }
+  }
+  vi.stubGlobal('IntersectionObserver', InViewObserver)
+}

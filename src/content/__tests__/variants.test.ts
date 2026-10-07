@@ -36,8 +36,8 @@ describe('variant copy', () => {
     expect(workoutRuleLine(RULESETS.medium)).toBe('1 session of at least 45 minutes.')
     expect(workoutRuleLine(RULESETS.soft)).toBe('1 session of at least 45 minutes. One recovery day a week.')
     expect(dietRuleLine(RULESETS.hard)).toBe('No cheat meals, no alcohol.')
-    expect(dietRuleLine(RULESETS.strong)).toBe('No cheat meals. No alcohol, except a declared social occasion.')
-    expect(dietRuleLine(RULESETS.medium)).toBe('Eat healthy. No alcohol, except a declared social occasion.')
+    expect(dietRuleLine(RULESETS.strong)).toBe('No cheat meals. No alcohol, except on one declared social occasion a week.')
+    expect(dietRuleLine(RULESETS.medium)).toBe('Eat healthy. No alcohol, except on one declared social occasion a week.')
     expect(dietToggleLabel(RULESETS.strong)).toBe('I followed my diet')
     expect(dietToggleLabel(RULESETS.soft)).toBe('I ate healthy')
     expect(readingRuleLine(RULESETS.hard)).toBe('10 pages of non-fiction a day.')
@@ -94,16 +94,16 @@ describe('variant copy', () => {
 
 describe('picker and deal copy', () => {
   it('sets each challenge apart in three chips', () => {
-    expect(variantHighlights(RULESETS.hard)).toEqual(['2 workouts a day', '3.8 L of water', 'No jokers'])
+    expect(variantHighlights(RULESETS.hard)).toEqual(['2 workouts a day', 'No days off', 'No jokers'])
     expect(variantHighlights(RULESETS.strong)).toEqual(['2 workouts a day', 'Social night weekly', 'No jokers'])
     expect(variantHighlights(RULESETS.medium)).toEqual(['1 workout a day', 'Social night weekly', '1 joker'])
-    expect(variantHighlights(RULESETS.soft)).toEqual(['1 workout a day', 'Recovery day weekly', '3 jokers'])
+    expect(variantHighlights(RULESETS.soft)).toEqual(['1 workout a day', 'Social + recovery weekly', '3 jokers'])
   })
 
   it('says what a missed day costs', () => {
-    expect(stakesLine(RULESETS.hard)).toBe('Miss a day: back to Day 1.')
-    expect(stakesLine(RULESETS.medium)).toBe('One joker: one missed day forgiven. Miss one more: back to Day 1.')
-    expect(stakesLine(RULESETS.soft)).toBe('Three jokers: three missed days forgiven. Miss one more: back to Day 1.')
+    expect(stakesLine(RULESETS.hard)).toBe('Miss a day: back to Day 1.')
+    expect(stakesLine(RULESETS.medium)).toBe('One joker: one missed day forgiven. Miss one more: back to Day 1.')
+    expect(stakesLine(RULESETS.soft)).toBe('Three jokers: three missed days forgiven. Miss one more: back to Day 1.')
   })
 
   it('lists the five daily rules', () => {

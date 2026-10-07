@@ -13,15 +13,25 @@ export function startsWhen(startDate: string, today: string): string {
   return `on ${formatDisplayDate(startDate)}`
 }
 
-/** The last day of an attempt that starts on `startDate`, for the start step: "Day 75 is Fri 19 Dec." */
+/** Both ends of an attempt that starts on `startDate`, for the start step: "Day 1: Tue 6 Oct · Day 75: Sat 19 Dec." */
 export function finishLine(startDate: string): string {
-  return `Day ${CHALLENGE_LENGTH} is ${formatShortDay(dateForDayNumber(startDate, CHALLENGE_LENGTH))}.`
+  const last = formatShortDay(dateForDayNumber(startDate, CHALLENGE_LENGTH))
+  return `Day 1: ${formatShortDay(startDate)} · Day ${CHALLENGE_LENGTH}: ${last}.`
 }
+
+/** Past this many days, the deal says the wait is long. */
+const LONG_WAIT_DAYS = 14
 
 /** How long until a later start, for the deal: "Starts in 3 days.", or null for today and tomorrow. */
 export function startsInLine(startDate: string, today: string): string | null {
   const days = dayNumberForDate(today, startDate) - 1
-  return days > 1 ? `Starts in ${days} days.` : null
+  if (days <= 1) return null
+  return days > LONG_WAIT_DAYS ? `Starts in ${days} days. That's a long wait.` : `Starts in ${days} days.`
+}
+
+/** The start choice before the player touches it: tomorrow in the evening, when today is nearly over. */
+export function defaultStartChoice(nowMin: number): 'today' | 'tomorrow' {
+  return nowMin >= LATE_START_FROM_MIN ? 'tomorrow' : 'today'
 }
 
 /** From this time on, starting today gets a warning. */

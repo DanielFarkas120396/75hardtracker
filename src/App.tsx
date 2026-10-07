@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from 'react'
 import { BadgeUnlockToast } from './components/BadgeUnlockToast'
+import { DuckArt } from './components/mascot/duckArt'
 import { TimeTravelBadge } from './dev/TimeTravelBadge'
 import { BottomNav, type ScreenId } from './components/ui/BottomNav'
 import { useBadgeUnlocks } from './hooks/useBadgeUnlocks'
@@ -32,10 +33,12 @@ const JokerUsedScreen = lazy(() =>
 const GaveUpScreen = lazy(() => import('./screens/RestartFlow/GaveUpScreen').then((m) => ({ default: m.GaveUpScreen })))
 const VictoryScreen = lazy(() => import('./screens/Victory/VictoryScreen').then((m) => ({ default: m.VictoryScreen })))
 
+/** A still duck while the app opens, instead of a bare word flashing past. */
 function LoadingScreen() {
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-canvas">
-      <p className="font-rounded text-ink-muted">Loading…</p>
+    <div className="flex min-h-dvh items-center justify-center bg-canvas" role="status">
+      <DuckArt size={96} />
+      <span className="sr-only">Loading…</span>
     </div>
   )
 }

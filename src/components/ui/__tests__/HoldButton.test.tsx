@@ -27,29 +27,46 @@ describe('HoldButton', () => {
     expect(onCommit).toHaveBeenCalledOnce()
   })
 
-  it('does nothing on a tap, or when the finger lets go or slides off early', () => {
+  it('does nothing on a tap or an early release, and says to keep holding', () => {
+    const onCommit = vi.fn()
+    render(
+      <HoldButton onCommit={onCommit} hint="Hold for 1 second to sign.">
+        Hold to commit
+      </HoldButton>,
+    )
+
+    fireEvent.pointerDown(button(), { button: 0 })
+    act(() => vi.advanceTimersByTime(HOLD_MS / 2))
+    fireEvent.pointerUp(button())
+    fireEvent.click(button(), { detail: 1 })
+    act(() => vi.advanceTimersByTime(HOLD_MS))
+
+    expect(onCommit).not.toHaveBeenCalled()
+    expect(button()).toHaveAccessibleDescription('Keep holding.')
+
+    fireEvent.pointerDown(button(), { button: 0 }) // the next press clears it
+    expect(button()).toHaveAccessibleDescription('Hold for 1 second to sign.')
+  })
+
+  it('keeps holding when the finger drifts off the button', () => {
     const onCommit = vi.fn()
     render(<HoldButton onCommit={onCommit}>Hold to commit</HoldButton>)
 
     fireEvent.pointerDown(button(), { button: 0 })
-    fireEvent.pointerUp(button())
-    fireEvent.click(button(), { detail: 1 })
-
-    fireEvent.pointerDown(button(), { button: 0 })
-    act(() => vi.advanceTimersByTime(HOLD_MS / 2))
     fireEvent.pointerLeave(button())
     act(() => vi.advanceTimersByTime(HOLD_MS))
 
-    expect(onCommit).not.toHaveBeenCalled()
+    expect(onCommit).toHaveBeenCalledOnce()
   })
 
-  it('commits at once from a keyboard or assistive tech: a click with no press', () => {
+  it('commits at once from a keyboard or assistive tech: a click no press started, whatever its detail', () => {
     const onCommit = vi.fn()
     render(<HoldButton onCommit={onCommit}>Hold to commit</HoldButton>)
 
     fireEvent.click(button(), { detail: 0 })
+    fireEvent.click(button(), { detail: 1 }) // iOS VoiceOver may report 1
 
-    expect(onCommit).toHaveBeenCalledOnce()
+    expect(onCommit).toHaveBeenCalledTimes(2)
   })
 
   it('does nothing while disabled, and describes itself with the hint', () => {

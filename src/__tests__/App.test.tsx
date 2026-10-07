@@ -45,7 +45,7 @@ describe('App', () => {
       await new Promise((r) => setTimeout(r, 50))
     })
 
-    expect(screen.getByRole('progressbar', { name: 'Welcome progress' })).toHaveAttribute('aria-valuetext', 'Step 1 of 6')
+    expect(screen.getByRole('progressbar', { name: 'Setup progress' })).toHaveAttribute('aria-valuetext', 'Step 1 of 6')
     expect(await db.challenges.count()).toBe(0)
   })
 })

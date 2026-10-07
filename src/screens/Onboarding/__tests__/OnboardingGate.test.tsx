@@ -27,7 +27,7 @@ function renderGate() {
 async function passWelcomeAndName() {
   // The flow is a lazy chunk: under a loaded test run, its first render can take more than a second.
   fireEvent.click(await screen.findByRole('button', { name: 'Get started' }, { timeout: 5000 }))
-  fireEvent.change(await screen.findByRole('textbox', { name: 'Your name' }), { target: { value: 'Daniel' } })
+  fireEvent.change(await screen.findByRole('textbox', { name: 'What should the duck call you?' }), { target: { value: 'Daniel' } })
   fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
 }
 
@@ -69,15 +69,17 @@ describe('OnboardingGate', () => {
     await passWelcomeAndName()
     // Each step's heading is awaited first: until then, the previous step may still be leaving.
     await screen.findByRole('heading', { name: 'Pick your challenge' })
-    fireEvent.click(screen.getByRole('button', { name: 'Continue' })) // 75 Hard
+    fireEvent.click(screen.getByRole('radio', { name: /^75 Hard/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
     await screen.findByRole('heading', { name: 'Why are you doing this?' })
     fireEvent.click(screen.getByRole('button', { name: 'A fresh start' }))
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
     await screen.findByRole('heading', { name: 'When do you start?' })
-    fireEvent.click(screen.getByRole('button', { name: 'Continue' })) // today
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
     await screen.findByRole('heading', { name: 'Deal, Daniel.' })
     fireEvent.click(screen.getByRole('button', { name: 'Hold to commit' })) // a click with no press: as VoiceOver or a keyboard
 
-    expect(await screen.findByText('Main app for Daniel')).toBeInTheDocument()
+    // The duck has its moment (SIGNED_BEAT_MS) before the save, then the app takes over.
+    expect(await screen.findByText('Main app for Daniel', {}, { timeout: 4000 })).toBeInTheDocument()
   })
 })
