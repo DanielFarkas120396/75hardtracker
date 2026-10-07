@@ -225,6 +225,11 @@
   --color-on-world: #1f1813;
 }
 
+/* The duck's art keeps its reference colours; a warm cast settles him into the Ember palette. */
+.duck {
+  filter: sepia(0.35) saturate(0.9);
+}
+
 /* The sunrise band: the world's colour glowing behind a hero (Today, Welcome), fading into the canvas. */
 .world-glow {
   background: radial-gradient(

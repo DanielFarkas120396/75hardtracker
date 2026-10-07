@@ -50,7 +50,7 @@ export function DuckArt({ ref, size, label }: DuckArtProps) {
   const a11y = label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true }
 
   return (
-    <svg ref={ref} viewBox={DUCK_VIEWBOX} width={size} height={(size * 500) / 490} overflow="visible" {...a11y}>
+    <svg ref={ref} className="duck" viewBox={DUCK_VIEWBOX} width={size} height={(size * 500) / 490} overflow="visible" {...a11y}>
       <defs>
         <clipPath id={clipId}>
           <path d={BLADE} />
