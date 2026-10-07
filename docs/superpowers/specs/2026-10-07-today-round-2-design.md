@@ -29,7 +29,7 @@ Today a done tile turns `world-soft`, which is close to the task pastels: Hell's
 
 The old bubble floated over "Day N / 75", the attempt line and the ring, and screen readers never heard it. A fixed caption was tried first; after the phone check the owner asked for speech that comes and goes instead (2026-10-07).
 
-**Where:** a speech bubble pops out under the duck, over the reason line, with its tail pointing up at him. It never covers the day or the ring.
+**Where:** a speech bubble rises above the duck, with its tail pointing down at him. It stays narrow, in the space left of the ring, so it never covers the count. (First placed under the duck; the owner asked for above, 2026-10-07.)
 
 **When he speaks** (about 4 s each time, then the bubble fades):
 - a beat after Today opens: the day's line ("New day, Sam. I'm watching.", "Started. Not finished.", "Yesterday's still open. Noon.");
@@ -45,10 +45,10 @@ The old bubble floated over "Day N / 75", the attempt line and the ring, and scr
 
 **Accessibility:** the bubble sits in an `aria-live="polite"` region, so VoiceOver reads each line as he says it. With reduce motion on, it only fades.
 
-**The hero gets lighter.** Its rows become:
-1. duck, "Day N / 75", ring;
-2. the attempt, streak and jokers line;
-3. the reason, clamped to two lines.
+**The hero is built around the ring** (the owner's call after the phone check, 2026-10-07):
+1. a small centred line: "Day N / 75", the attempt, the streak and the jokers;
+2. the ring, large (132 px) and centred, with "2/5" big inside and "tasks done" under it; the duck at its bottom left, talking upwards; the evening countdown under the ring;
+3. the reason, centred, clamped to two lines.
 
 The world line ("The Meadows · 11 days to …") leaves the hero, since the Journey tab already says it, so nothing gets cut off any more.
 

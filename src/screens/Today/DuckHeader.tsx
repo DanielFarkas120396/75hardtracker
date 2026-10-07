@@ -49,8 +49,8 @@ interface DuckProps {
 }
 
 /**
- * The Today screen's duck: `duck` sits in the hero's corner, `speech` is the
- * bubble he talks in. He speaks for a few seconds and falls quiet: when Today
+ * The Today screen's duck: `duck` sits beside the hero's ring, `speech` is the
+ * bubble he talks in, rising above him. He speaks for a few seconds and falls quiet: when Today
  * opens, when his line changes (the day starts, a task is ticked, the clock
  * gets close), when he reacts (a poke, a glare, a saved plan), and now and
  * then on his own with one of his catchphrases. His mood follows the menace;
@@ -156,21 +156,22 @@ export function useDuck({
         <Mascot mood={LEVEL_MOODS[menace.level]} size={64} reaction={reaction} decorative />
       </button>
     ),
-    // Under the duck, over the reason line: it never hides the day or the ring. Read by VoiceOver as he says it.
+    // Above the duck, rising from him, and narrow enough to stay in the space beside the ring, never over its count.
+    // The caller places it in the duck's own box. Read by VoiceOver as he says it.
     speech: (
-      <div aria-live="polite" className="pointer-events-none absolute top-[4.75rem] left-3 z-20 max-w-[15rem]">
+      <div aria-live="polite" className="pointer-events-none absolute bottom-full left-0 z-20 mb-2 w-max max-w-[6rem]">
         <AnimatePresence>
           {speech && (
             <motion.p
               key={speech.id}
-              initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.85, y: reduceMotion ? 0 : -6 }}
+              initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.85, y: reduceMotion ? 0 : 6 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: reduceMotion ? 1 : 0.95 }}
               transition={{ duration: 0.18, ease: 'easeOut' }}
-              style={{ transformOrigin: '2rem 0' }}
-              className="relative w-max max-w-full rounded-2xl bg-surface px-3 py-2 font-rounded text-sm font-bold text-ink shadow-md"
+              style={{ transformOrigin: '2rem 100%' }}
+              className="relative w-max max-w-full rounded-2xl bg-surface px-2.5 py-1.5 font-rounded text-xs font-bold leading-snug text-ink shadow-md"
             >
-              <span aria-hidden="true" className="absolute -top-1.5 left-6 h-3 w-3 rotate-45 bg-surface" />
+              <span aria-hidden="true" className="absolute -bottom-1.5 left-5 h-3 w-3 rotate-45 bg-surface" />
               <span className="relative">{speech.text}</span>
             </motion.p>
           )}
