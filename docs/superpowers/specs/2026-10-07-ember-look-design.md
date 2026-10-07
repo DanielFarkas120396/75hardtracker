@@ -1,6 +1,6 @@
 # Ember look (v3): design
 
-Date: 2026-10-07 · Status: **part 1 (foundation) in review** as a PR into `v3`; parts 2–5 not started.
+Date: 2026-10-07 · Status: part 1 (foundation) merged into `v3` (PR #53); **part 2 (Today) in review**; parts 3–5 not started.
 
 The owner found the app too "Duolingo-y": chunky buttons, rounded fonts, candy colours. Five style mockups were compared on 2026-10-07 (Night sky, Ember, Performance, Paper dark, Deep forest); the owner picked **Ember**. The mockup source is `2026-10-07-ember-look/board.html` (throwaway HTML, all five styles, `?style=s2` for Ember) and the render is `2026-10-07-ember-look/ember.png`.
 

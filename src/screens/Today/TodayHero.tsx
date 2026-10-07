@@ -24,20 +24,22 @@ interface TodayHeroProps {
 }
 
 /**
- * The top of Today, in the world's colours, built around the gauge of tasks
- * done: the day and the attempt on one line above it; the duck on its left,
- * talking upwards now and then; the streak and the jokers on its right; what
- * matters next under it; and the player's reason at the bottom.
+ * The top of Today, on the world's sunrise glow, built around the gauge of
+ * tasks done: the day and the attempt on one line above it; the duck on its
+ * left, talking upwards now and then; the streak and the jokers on its right;
+ * what matters next under it; and the player's reason at the bottom.
  */
 export function TodayHero({ attemptLine, dayNumber, completedCount, taskCount, streak, jokersLeft, duck, speech, below, celebrating = false }: TodayHeroProps) {
   const profile = useProfile()
 
   return (
-    <section className="relative mx-4 mt-3 mb-3 rounded-card bg-world-soft px-3 pt-3 pb-3">
+    <section className="relative mx-4 mt-3 mb-3 px-3 pt-3 pb-3">
+      <span aria-hidden="true" className="world-glow pointer-events-none absolute -inset-x-8 -top-20 -bottom-6 -z-10" />
+
       {/* One line, never wrapping: the day, then the attempt. The 75 days are the Journey's to show. */}
       <h1 className="flex items-baseline justify-center gap-2 whitespace-nowrap text-center">
-        <span className="font-display text-2xl leading-none tracking-wide text-world-ink">Day {dayNumber}</span>
-        <span className="font-rounded text-xs font-bold text-ink-muted">{attemptLine}</span>
+        <span className="font-display text-4xl leading-none font-semibold tracking-wide text-ink">Day {dayNumber}</span>
+        <span className="font-rounded text-xs font-semibold text-ink-muted">{attemptLine}</span>
       </h1>
 
       {/* Three columns, so the gauge sits in the true centre: the duck, the gauge, the streak and jokers. */}
@@ -50,7 +52,7 @@ export function TodayHero({ attemptLine, dayNumber, completedCount, taskCount, s
           <GaugeRing value={completedCount} max={taskCount} held={celebrating} />
           {below}
         </div>
-        <div className="flex flex-col items-end gap-2 self-center font-rounded text-xs font-bold text-ink-muted">
+        <div className="flex flex-col items-end gap-2 self-center font-rounded text-xs font-semibold text-ink-muted">
           {/* No streak yet on Day 1: a grey "0" flame says nothing. */}
           {streak > 0 && <FlameStreak streak={streak} grow={false} />}
           {jokersLeft !== undefined && (
@@ -62,7 +64,7 @@ export function TodayHero({ attemptLine, dayNumber, completedCount, taskCount, s
         </div>
       </div>
 
-      {profile && <p className="mt-3 line-clamp-2 text-center font-rounded text-xs italic text-ink-muted">“{profile.why}”</p>}
+      {profile && <p className="mt-3 line-clamp-2 text-center font-quote text-sm italic text-ink-muted">“{profile.why}”</p>}
     </section>
   )
 }

@@ -5,6 +5,7 @@
 @import "@fontsource/dm-sans/700.css";
 @import "@fontsource/barlow-condensed/600.css";
 @import "@fontsource/barlow-condensed/700.css";
+@import "@fontsource/fraunces/400-italic.css";
 
 /* Enable class-based dark mode: toggling `.dark` on <html> flips all dark: variants */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -77,6 +78,10 @@
   /* Screen titles and big numbers only, never body text. Weights 600 and 700 are loaded. */
   --font-display:
     "Barlow Condensed", "DM Sans", system-ui, -apple-system, sans-serif;
+
+  /* The player's own words (the reason on Today): italic only. */
+  --font-quote:
+    "Fraunces", Georgia, serif;
 
   --radius-xl2: 1.25rem;
   --radius-card: 1.25rem;
@@ -231,6 +236,16 @@
   --color-world-soft: #2f2918;
   --color-canvas: #171409;
   --color-on-world: #1f1813;
+}
+
+/* The sunrise band: the world's colour glowing behind a hero (Today, Welcome), fading into the canvas. */
+.world-glow {
+  background: radial-gradient(
+    60% 55% at 50% 30%,
+    color-mix(in srgb, var(--color-world) 42%, transparent),
+    color-mix(in srgb, var(--color-world) 10%, transparent) 50%,
+    transparent 72%
+  );
 }
 
 /* The Face ID lock covers the app while it's in the background (set by useAppLock), so the iPhone

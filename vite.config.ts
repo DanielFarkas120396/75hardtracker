@@ -42,7 +42,7 @@ export default defineConfig(({ mode }) => ({
         // woff2 are precached: the others are for scripts the app doesn't use, and every browser
         // that can install a PWA reads woff2.
         // The Journey's background images (about 100 KB in all) are precached too, so the map works offline.
-        globPatterns: ['**/*.{js,css,html}', '**/dm-sans-latin-*.woff2', '**/barlow-condensed-latin-*.woff2', 'journey/*.webp'],
+        globPatterns: ['**/*.{js,css,html}', '**/dm-sans-latin-*.woff2', '**/barlow-condensed-latin-*.woff2', '**/fraunces-latin-400-italic*.woff2', 'journey/*.webp'],
         navigateFallback: '/index.html',
       },
     }),

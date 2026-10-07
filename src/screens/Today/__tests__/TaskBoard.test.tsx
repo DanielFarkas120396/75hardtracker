@@ -61,8 +61,8 @@ describe('TaskBoard', () => {
     expect(screen.getByRole('button', { name: 'Water, 3.8 L, done' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Reading, 12 pages, Atomic Habits, done' })).toBeInTheDocument()
     expect(screen.queryByTestId('burst')).not.toBeInTheDocument()
-    // One quiet mark: a neutral icon box, the tick on its corner.
-    expect(screen.getByRole('button', { name: 'Water, 3.8 L, done' }).firstElementChild).toHaveClass('text-ink-muted')
+    // The icon well turns green, the tick on its corner.
+    expect(screen.getByRole('button', { name: 'Water, 3.8 L, done' }).firstElementChild).toHaveClass('text-green-ink')
   })
 
   it('fills the progress bar of a task under way', () => {
@@ -118,9 +118,9 @@ describe('TaskBoard', () => {
     render(board({ ...empty, water_ml: 3800 }))
 
     const doneTile = screen.getByRole('button', { name: 'Water, 3.8 L, done' }).parentElement!
-    expect(doneTile).toHaveClass('bg-surface')
-    expect(doneTile).not.toHaveClass('bg-blue-light')
-    expect(screen.getByRole('button', { name: /^Reading,/ }).parentElement!).toHaveClass('bg-yellow-light')
+    expect(doneTile).toHaveClass('bg-green-light')
+    expect(doneTile).not.toHaveClass('bg-surface')
+    expect(screen.getByRole('button', { name: /^Reading,/ }).parentElement!).toHaveClass('bg-surface')
   })
 
   it('when it is urgent, folds the done tasks into chips and lifts the open tiles, quickest first', () => {
