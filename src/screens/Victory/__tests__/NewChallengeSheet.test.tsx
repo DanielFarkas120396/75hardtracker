@@ -8,6 +8,9 @@ import { addDaysISO, todayISO } from '../../../lib/dates'
 import type { ChallengeVariant } from '../../../logic/rulesets'
 import { NewChallengeSheet } from '../NewChallengeSheet'
 
+// Morning, so the start defaults to Today (from 18:00 it's Tomorrow).
+vi.mock('../../../hooks/useNow', () => ({ useNow: () => 9 * 60 }))
+
 /** A completed attempt, so `startNew` always creates a fresh active one instead of reusing it. */
 async function setup(defaultVariant: ChallengeVariant = 'hard') {
   const today = todayISO()
