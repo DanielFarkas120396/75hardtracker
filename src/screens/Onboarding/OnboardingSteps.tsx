@@ -54,15 +54,6 @@ function StepTitle({ children, id }: { children: ReactNode; id?: string }) {
   )
 }
 
-/** Pinned to the bottom of the screen, so a long step never pushes its main button out of reach. */
-function StickyFooter({ children }: { children: ReactNode }) {
-  return (
-    <div className="sticky bottom-0 -mx-6 mt-auto w-[calc(100%+3rem)] bg-canvas px-6 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] before:pointer-events-none before:absolute before:inset-x-0 before:-top-8 before:h-8 before:bg-gradient-to-t before:from-canvas before:to-transparent">
-      {children}
-    </div>
-  )
-}
-
 /** Under a disabled button: what's missing to move on. */
 function MissingHint({ id, children }: { id: string; children: ReactNode }) {
   return (
@@ -140,7 +131,8 @@ export function ChallengeStep({ variant, onChange, onNext }: ChallengeStepProps)
       <div className="mt-4 w-full pb-6 text-left">
         <VariantPicker value={variant} onChange={onChange} />
       </div>
-      <StickyFooter>
+      {/* Pinned to the bottom, so the four cards never push Continue off a small screen. */}
+      <div className="sticky bottom-0 -mx-6 mt-auto w-[calc(100%+3rem)] bg-canvas px-6 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] before:pointer-events-none before:absolute before:inset-x-0 before:-top-8 before:h-8 before:bg-gradient-to-t before:from-canvas before:to-transparent">
         <Button
           className="w-full"
           onClick={onNext}
@@ -150,7 +142,7 @@ export function ChallengeStep({ variant, onChange, onNext }: ChallengeStepProps)
           Continue
         </Button>
         {variant === null && <MissingHint id="challenge-hint">Pick a challenge to continue.</MissingHint>}
-      </StickyFooter>
+      </div>
     </>
   )
 }

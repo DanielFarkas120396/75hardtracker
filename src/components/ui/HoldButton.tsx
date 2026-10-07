@@ -4,9 +4,6 @@ import { useEffect, useId, useRef, useState, type PointerEvent } from 'react'
 /** How long the press has to last. */
 export const HOLD_MS = 1000
 
-/** Shown, and announced, when the finger lets go before HOLD_MS. */
-export const KEEP_HOLDING_LINE = 'Keep holding.'
-
 /** A click this soon after a press ended is that press's own click. */
 const CLICK_AFTER_PRESS_MS = 500
 
@@ -63,16 +60,15 @@ export function HoldButton({ onCommit, disabled = false, children, hint, classNa
     }, HOLD_MS)
   }
 
-  const onPointerUp = () => {
-    if (timer.current) setReleasedEarly(true)
-    pressEndedAt.current = performance.now()
+  const stop = () => {
     clearTimer()
     setHolding(false)
   }
 
-  const onPointerCancel = () => {
-    clearTimer()
-    setHolding(false)
+  const onPointerUp = () => {
+    if (timer.current) setReleasedEarly(true)
+    pressEndedAt.current = performance.now()
+    stop()
   }
 
   const onClick = () => {
@@ -80,7 +76,9 @@ export function HoldButton({ onCommit, disabled = false, children, hint, classNa
     if (!disabled && !pressesOwnClick) onCommit()
   }
 
-  const shownHint = releasedEarly && !disabled ? KEEP_HOLDING_LINE : hint
+  // Let go before HOLD_MS: the hint says so, and is announced.
+  const keepHolding = releasedEarly && !disabled
+  const shownHint = keepHolding ? 'Keep holding.' : hint
 
   return (
     <div className={className}>
@@ -89,7 +87,7 @@ export function HoldButton({ onCommit, disabled = false, children, hint, classNa
         disabled={disabled}
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
-        onPointerCancel={onPointerCancel}
+        onPointerCancel={stop}
         onClick={onClick}
         onContextMenu={(e) => e.preventDefault()}
         aria-describedby={shownHint ? hintId : undefined}
@@ -112,7 +110,7 @@ export function HoldButton({ onCommit, disabled = false, children, hint, classNa
         <p
           id={hintId}
           aria-live="polite"
-          className={`mt-2 text-sm ${releasedEarly && !disabled ? 'font-semibold text-ink' : 'text-ink-muted'}`}
+          className={`mt-2 text-sm ${keepHolding ? 'font-semibold text-ink' : 'text-ink-muted'}`}
         >
           {shownHint}
         </p>
