@@ -12,7 +12,7 @@ import { minutesToFinish } from '../../logic/menace'
 import type { Ruleset } from '../../logic/rulesets'
 import type { DayTaskData, TaskId } from '../../logic/types'
 import { DietSwitches } from './DietSwitches'
-import { TASK_ICONS, TASK_TONES } from './taskTones'
+import { TASK_ICONS, TASK_TONE } from './taskTones'
 
 /** A one-tap shortcut on a tile, next to opening its sheet ("+250 ml", the camera). */
 export interface QuickAction {
@@ -82,7 +82,7 @@ export function TaskBoard(props: TaskBoardProps) {
                 type="button"
                 onClick={() => onOpen(task)}
                 aria-label={`${TASK_TITLES[task]}, ${spoken(statusOf(task))}, done`}
-                className="flex min-h-touch items-center gap-1.5 rounded-full bg-surface px-3 font-rounded text-sm font-bold text-ink-muted shadow-sm ring-1 ring-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:ring-0"
+                className="flex min-h-touch items-center gap-1.5 rounded-full bg-surface px-3 font-rounded text-sm font-semibold text-ink-muted ring-1 ring-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:ring-0"
               >
                 <Icon name={TASK_ICONS[task]} size={16} />
                 {TASK_TITLES[task]}
@@ -137,7 +137,6 @@ interface TaskTileProps {
 
 function TaskTile({ task, done, urgency, status, progress, photo, quick, controls, onOpen }: TaskTileProps) {
   const reduceMotion = useReducedMotion()
-  const tone = TASK_TONES[task]
 
   // Compare with the previous render during render (React's "adjust state
   // when a prop changes" pattern): only a switch to done after mount pops.
@@ -148,16 +147,16 @@ function TaskTile({ task, done, urgency, status, progress, photo, quick, control
     if (done) setPops((n) => n + 1)
   }
 
-  // A done tile goes quiet (neutral fill, muted icon and text) with one mark: the world's tick on its icon.
+  // A done tile turns green (the tint, the icon well and the status) with the world's tick on its icon.
   const onPhoto = photo !== undefined
-  const titleColor = onPhoto ? 'text-white' : done ? 'text-ink-muted' : 'text-ink'
-  const statusColor = onPhoto ? 'text-white/90' : done ? 'text-ink-muted' : urgency !== 'none' ? 'font-extrabold text-ink' : tone.ink
-  const iconBox = onPhoto ? 'bg-black/40 text-white' : done ? 'bg-canvas text-ink-muted' : `bg-surface ${tone.ink}`
-  const fill = done ? 'bg-surface ring-1 ring-ink/10 dark:ring-0' : tone.tint
+  const titleColor = onPhoto ? 'text-white' : 'text-ink'
+  const statusColor = onPhoto ? 'text-white/90' : done ? 'text-green-ink' : urgency !== 'none' ? 'font-bold text-ink' : 'text-ink-muted'
+  const iconBox = onPhoto ? 'bg-black/40 text-white' : done ? 'bg-green/15 text-green-ink' : `${TASK_TONE.tint} ${TASK_TONE.ink}`
+  const fill = done ? 'bg-green-light' : 'bg-surface ring-1 ring-ink/10 dark:ring-0'
   const edge = urgency === 'late' ? 'ring-2 ring-danger-ink' : urgency === 'open' ? 'ring-2 ring-ink/30' : ''
 
   return (
-    <div className={`relative min-h-[7.5rem] overflow-hidden rounded-card shadow-sm ${fill} ${edge}`}>
+    <div className={`relative min-h-[7.5rem] overflow-hidden rounded-card ${fill} ${edge}`}>
       {photo && (
         <>
           <BlobImage blob={photo} alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -173,7 +172,7 @@ function TaskTile({ task, done, urgency, status, progress, photo, quick, control
         <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${iconBox}`}>
           <Icon name={TASK_ICONS[task]} size={20} />
         </span>
-        <span className={`mt-auto pt-3 font-rounded font-extrabold leading-tight ${titleColor}`}>{TASK_TITLES[task]}</span>
+        <span className={`mt-auto pt-3 font-rounded font-bold leading-tight ${titleColor}`}>{TASK_TITLES[task]}</span>
         <span className={`mt-0.5 text-xs font-semibold leading-tight ${statusColor}`}>{status}</span>
       </button>
       {controls}
@@ -190,7 +189,7 @@ function TaskTile({ task, done, urgency, status, progress, photo, quick, control
           type="button"
           aria-label={quick.label}
           onClick={quick.onPress}
-          className={`group absolute top-1 right-1 flex min-h-touch min-w-touch touch-manipulation items-center justify-center rounded-full font-rounded text-xs font-extrabold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${tone.ink}`}
+          className={`group absolute top-1 right-1 flex min-h-touch min-w-touch touch-manipulation items-center justify-center rounded-full font-rounded text-xs font-extrabold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink text-ink`}
         >
           <span className="flex h-8 items-center gap-1 rounded-full border border-ink/15 px-2.5 motion-safe:transition-transform motion-safe:group-active:scale-90">
             <Icon name={quick.icon} size={14} />
@@ -202,7 +201,7 @@ function TaskTile({ task, done, urgency, status, progress, photo, quick, control
         <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1 bg-black/5 dark:bg-white/10">
           <span
             data-testid="progress"
-            className={`block h-full ${tone.bar} motion-safe:transition-[width]`}
+            className={`block h-full ${TASK_TONE.bar} motion-safe:transition-[width]`}
             style={{ width: `${Math.round(progress * 100)}%` }}
           />
         </span>

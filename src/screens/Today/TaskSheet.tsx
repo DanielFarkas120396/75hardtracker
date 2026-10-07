@@ -5,7 +5,7 @@ import { Burst } from '../../components/ui/Burst'
 import { DoneBadge } from '../../components/ui/DoneBadge'
 import { Modal } from '../../components/ui/Modal'
 import { TASK_TITLES, type BoardTask } from '../../content/taskStatus'
-import { TASK_ICONS, TASK_TONES } from './taskTones'
+import { TASK_ICONS, TASK_TONE } from './taskTones'
 
 export interface TaskSheetContent {
   task: BoardTask
@@ -48,7 +48,6 @@ export function TaskSheet({ content, onClose }: TaskSheetProps) {
 function SheetContent({ content, headingId, onClose }: { content: TaskSheetContent; headingId: string; onClose: () => void }) {
   const { task, ruleLine, complete, cheer, closesWhenDone, body } = content
   const reduceMotion = useReducedMotion()
-  const tone = TASK_TONES[task]
 
   // Compare with the previous render during render (React's "adjust state
   // when a prop changes" pattern). `justDone` counts switches to complete
@@ -71,16 +70,16 @@ function SheetContent({ content, headingId, onClose }: { content: TaskSheetConte
 
   return (
     <>
-      <header className={`relative -mx-5 -mt-5 rounded-t-[2.5rem] px-5 pt-5 pb-4 ${tone.tint}`}>
+      <header className={`relative -mx-5 -mt-5 rounded-t-[2.5rem] px-5 pt-5 pb-4 ${TASK_TONE.tint}`}>
         <div className="flex items-start gap-3">
-          <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-surface ${tone.ink}`}>
+          <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-surface ${TASK_TONE.ink}`}>
             <Icon name={TASK_ICONS[task]} />
           </span>
           <div className="min-w-0 flex-1">
             <h2 id={headingId} className="font-rounded text-xl font-extrabold text-ink">
               {TASK_TITLES[task]}
             </h2>
-            <p className={`mt-0.5 text-sm font-semibold ${tone.ink}`}>{ruleLine}</p>
+            <p className={`mt-0.5 text-sm font-semibold ${TASK_TONE.ink}`}>{ruleLine}</p>
           </div>
           {complete && (
             <span className="relative mt-2 shrink-0">

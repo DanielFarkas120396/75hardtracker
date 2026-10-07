@@ -11,7 +11,7 @@ import { workoutRepo } from '../../db/repositories/workoutRepo'
 import type { WorkoutType } from '../../db/types'
 import type { Ruleset } from '../../logic/rulesets'
 import { ActivityPicker } from './ActivityPicker'
-import { TASK_ICONS, TASK_TONES } from './taskTones'
+import { TASK_ICONS, TASK_TONE } from './taskTones'
 
 const MAX_MIN = 300
 
@@ -47,9 +47,9 @@ function AddWorkoutForm({ dayEntryId, rules, onClose }: Omit<AddWorkoutSheetProp
 
   return (
     <>
-      {/* The same header as the task sheets: the workouts tint, the icon, the title and a close button. */}
-      <header className={`-mx-5 -mt-5 flex items-center gap-3 rounded-t-[2.5rem] px-5 pt-5 pb-4 ${TASK_TONES.workouts.tint}`}>
-        <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-surface ${TASK_TONES.workouts.ink}`}>
+      {/* The same header as the task sheets: the world tint, the icon, the title and a close button. */}
+      <header className={`-mx-5 -mt-5 flex items-center gap-3 rounded-t-[2.5rem] px-5 pt-5 pb-4 ${TASK_TONE.tint}`}>
+        <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-surface ${TASK_TONE.ink}`}>
           <Icon name={TASK_ICONS.workouts} />
         </span>
         <h2 id="add-workout-title" className="min-w-0 flex-1 font-rounded text-xl font-extrabold text-ink">
