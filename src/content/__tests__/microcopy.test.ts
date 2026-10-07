@@ -3,7 +3,18 @@ import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { TASK_IDS } from '../../logic/dayCompletion'
 import type { Menace, MenaceLevel, MenaceReason } from '../../logic/menace'
 import { RULESETS, VARIANTS } from '../../logic/rulesets'
-import { duckLine, GLARE_LINE, LUNGE_LINE, planSavedLine, pokeLine, POKE_LINES, taskCheer, timeLeftLine } from '../microcopy'
+import {
+  CATCHPHRASES,
+  duckLine,
+  GLARE_LINE,
+  LUNGE_LINE,
+  nextCatchphrase,
+  planSavedLine,
+  pokeLine,
+  POKE_LINES,
+  taskCheer,
+  timeLeftLine,
+} from '../microcopy'
 
 describe('taskCheer', () => {
   it('rotates, so consecutive days get different cheers', () => {
@@ -113,6 +124,16 @@ describe('reaction lines', () => {
 
   it('confirms the earliest plan', () => {
     expect(planSavedLine(20 * 60 + 5)).toBe('20:05. Not a minute later.')
+  })
+})
+
+describe('nextCatchphrase', () => {
+  it('picks one of his lines for the mood, never the one he just said', () => {
+    for (let i = 0; i < 20; i++) {
+      const line = nextCatchphrase('hunting', 'Run.')
+      expect(CATCHPHRASES.hunting).toContain(line)
+      expect(line).not.toBe('Run.')
+    }
   })
 })
 

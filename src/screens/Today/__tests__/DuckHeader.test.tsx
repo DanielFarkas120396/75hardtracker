@@ -6,20 +6,21 @@ import { freshDatabase } from '../../../db/__tests__/fixtures'
 import { TASK_IDS } from '../../../logic/dayCompletion'
 import type { Menace } from '../../../logic/menace'
 import type { TaskId } from '../../../logic/types'
-import { useDuck } from '../DuckHeader'
+import { CATCHPHRASES } from '../../../content/microcopy'
+import { CHATTER_MAX_MS, FIRST_LINE_DELAY_MS, SPEECH_MS, useDuck } from '../DuckHeader'
 
 const completionOf = (missing: TaskId[]) =>
   Object.fromEntries(TASK_IDS.map((task) => [task, !missing.includes(task)])) as Record<TaskId, boolean>
 
 const TAPPING: Menace = { level: 'tapping', reason: 'close' }
 
-/** The duck and his caption, as the hero lays them out. */
+/** The duck and his speech bubble, as the hero lays them out. */
 function DuckHeader(props: Parameters<typeof useDuck>[0]) {
-  const { duck, caption } = useDuck(props)
+  const { duck, speech } = useDuck(props)
   return (
     <>
       {duck}
-      {caption}
+      {speech}
     </>
   )
 }
@@ -35,9 +36,10 @@ describe('DuckHeader', () => {
     vi.useRealTimers()
   })
 
-  it('says the line for his menace', () => {
+  it('says the line for his menace, a beat after Today opens', async () => {
     render(<DuckHeader menace={TAPPING} missing={['reading']} completion={completionOf(['reading'])} dayNumber={3} onLunge={vi.fn()} />)
-    expect(screen.getByText("Tick. Tock. You're cutting it close.")).toBeInTheDocument()
+    expect(screen.queryByText("Tick. Tock. You're cutting it close.")).not.toBeInTheDocument()
+    expect(await screen.findByText("Tick. Tock. You're cutting it close.")).toBeInTheDocument()
   })
 
   it('answers a poke, and lunges on the third quick poke', async () => {
@@ -78,37 +80,43 @@ describe('DuckHeader', () => {
     expect(screen.queryByText('I saw that.')).not.toBeInTheDocument()
   })
 
-  it('returns to his menace line once a reaction line expires', async () => {
-    render(<DuckHeader menace={TAPPING} missing={['reading']} completion={completionOf(['reading'])} dayNumber={3} onLunge={vi.fn()} />)
-    const duck = screen.getByRole('button', { name: 'Poke the duck' })
-
-    fireEvent.click(duck)
-    expect(await screen.findByText(pokeLine(0))).toBeInTheDocument()
-
-    // Real timers: faking setTimeout can freeze the AnimatePresence swap.
-    expect(await screen.findByText("Tick. Tock. You're cutting it close.", undefined, { timeout: 3000 })).toBeInTheDocument()
-  })
-
-  it('keeps his line up for good, in a live caption VoiceOver reads', async () => {
+  it('speaks for a few seconds, falls quiet, then says a catchphrase on his own', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] })
     render(<DuckHeader menace={TAPPING} missing={['reading']} completion={completionOf(['reading'])} dayNumber={3} onLunge={vi.fn()} />)
-    const line = screen.getByText("Tick. Tock. You're cutting it close.")
-    expect(line.closest('[aria-live="polite"]')).not.toBeNull()
 
-    await act(async () => vi.advanceTimersByTime(60_000))
-    expect(screen.getByText("Tick. Tock. You're cutting it close.")).toBeInTheDocument()
+    await act(async () => vi.advanceTimersByTime(FIRST_LINE_DELAY_MS))
+    const line = screen.getByText("Tick. Tock. You're cutting it close.")
+    expect(line.closest('[aria-live="polite"]')).not.toBeNull() // VoiceOver hears him
+
+    await act(async () => vi.advanceTimersByTime(SPEECH_MS + 500))
+    expect(screen.queryByText("Tick. Tock. You're cutting it close.")).not.toBeInTheDocument()
+
+    await act(async () => vi.advanceTimersByTime(CHATTER_MAX_MS))
+    const said = screen.getByRole('paragraph').textContent
+    expect(CATCHPHRASES.tapping).toContain(said)
   })
 
-  it('stops greeting once something is logged, and speaks up for an unfinished yesterday', () => {
+  it('falls quiet after a reaction', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] })
+    render(<DuckHeader menace={TAPPING} missing={['reading']} completion={completionOf(['reading'])} dayNumber={3} onLunge={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Poke the duck' }))
+    expect(screen.getByText(pokeLine(0))).toBeInTheDocument()
+
+    await act(async () => vi.advanceTimersByTime(SPEECH_MS))
+    expect(screen.queryByText(pokeLine(0))).not.toBeInTheDocument()
+  })
+
+  it('stops greeting once something is logged, and speaks up for an unfinished yesterday', async () => {
     const calm = { menace: { level: 'watching', reason: 'plenty' } as Menace, missing: [...TASK_IDS], completion: completionOf([...TASK_IDS]), dayNumber: 3, name: 'Daniel', onLunge: vi.fn() }
     const { rerender } = render(<DuckHeader {...calm} started />)
-    expect(screen.getByText('Started. Not finished.')).toBeInTheDocument()
+    expect(await screen.findByText('Started. Not finished.')).toBeInTheDocument()
 
     rerender(<DuckHeader {...calm} yesterdayOpen />)
-    expect(screen.getByText("Yesterday's still open. Noon.")).toBeInTheDocument()
+    expect(await screen.findByText("Yesterday's still open. Noon.")).toBeInTheDocument()
   })
 
-  it("says the player's name when the day starts", () => {
+  it("says the player's name when the day starts", async () => {
     render(
       <DuckHeader
         menace={{ level: 'watching', reason: 'plenty' }}
@@ -119,7 +127,7 @@ describe('DuckHeader', () => {
         onLunge={vi.fn()}
       />,
     )
-    expect(screen.getByText("New day, Daniel. I'm watching.")).toBeInTheDocument()
+    expect(await screen.findByText("New day, Daniel. I'm watching.")).toBeInTheDocument()
   })
 
   it('shows an announcement pushed from outside', async () => {

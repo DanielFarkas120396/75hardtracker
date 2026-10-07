@@ -4,7 +4,7 @@ Date: 2026-10-05 · Status: **built**. Delivered as two PRs into `main`: the XP 
 
 **Changed by [Today, round 2](2026-10-07-today-round-2-design.md):**
 - Done tiles go neutral instead of `world-soft`.
-- The duck's bubble became a fixed caption.
+- The duck's bubble moved under him (no longer over the day and the ring), and he speaks now and then, with catchphrases.
 - The plan and social buttons moved under the grid.
 - The board reshapes late in the evening.
 - The workouts sheet no longer closes itself.

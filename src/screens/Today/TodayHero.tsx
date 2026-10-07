@@ -16,8 +16,8 @@ interface TodayHeroProps {
   jokersLeft: number | undefined
   /** The duck, in the top-left corner. */
   duck?: ReactNode
-  /** The duck's line, in its own row under the top row. */
-  caption?: ReactNode
+  /** The duck's speech bubble: it pops up under him now and then, over the reason line. */
+  speech?: ReactNode
   /** Late with tasks left: how long until midnight ("1h30 left"), under the ring. */
   countdown?: string | null
 }
@@ -25,8 +25,8 @@ interface TodayHeroProps {
 /**
  * The top of Today, in the world's colours: the duck in the corner, the day
  * number with the attempt, the streak and the jokers, the ring of tasks done
- * (and, late in the evening, the time left); then the duck's line and the
- * player's reason.
+ * (and, late in the evening, the time left); then the player's reason. The
+ * duck speaks in a bubble under himself, now and then.
  */
 export function TodayHero({
   attemptLine,
@@ -36,7 +36,7 @@ export function TodayHero({
   streak,
   jokersLeft,
   duck,
-  caption,
+  speech,
   countdown,
 }: TodayHeroProps) {
   const profile = useProfile()
@@ -75,8 +75,8 @@ export function TodayHero({
           {countdown && <p className="font-rounded text-xs font-extrabold text-danger-ink">{countdown}</p>}
         </div>
       </div>
-      {caption}
       {profile && <p className="mt-2 line-clamp-2 font-rounded text-xs italic text-ink-muted">“{profile.why}”</p>}
+      {speech}
     </section>
   )
 }

@@ -1,5 +1,5 @@
 import { TASK_IDS } from '../logic/dayCompletion'
-import { formatHHmm, type Menace } from '../logic/menace'
+import { formatHHmm, type Menace, type MenaceLevel } from '../logic/menace'
 import type { Ruleset } from '../logic/rulesets'
 import type { TaskId } from '../logic/types'
 import { formatLiters } from './variants'
@@ -76,6 +76,20 @@ const ONE_LEFT_LINES: Record<TaskId, string> = {
   water: 'Just the water left. Drink.',
   reading: 'Just your pages left. Read.',
   photo: 'Just the photo left. Smile. Or else.',
+}
+
+/** What the duck says now and then, on his own, by mood: a few lines that rotate. */
+export const CATCHPHRASES: Record<MenaceLevel, readonly string[]> = {
+  content: ['The knife rests. For now.', 'Perfect. Suspiciously perfect.', "Sleep well. I won't."],
+  watching: ["I'm watching.", 'Tick the boxes. Keep your fingers.', 'The knife is sharp. Are you?', 'No excuses. Only tasks.'],
+  tapping: ['Tick. Tock.', "Clock's running. So am I.", 'I can hear the clock. Can you?'],
+  hunting: ["Midnight's coming. So am I.", 'Run.', "I'm sharpening."],
+}
+
+/** The next catchphrase for his mood, never the one he just said. */
+export function nextCatchphrase(level: MenaceLevel, last?: string): string {
+  const lines = CATCHPHRASES[level].filter((line) => line !== last)
+  return lines[Math.floor(Math.random() * lines.length)]
 }
 
 export const POKE_LINES = [

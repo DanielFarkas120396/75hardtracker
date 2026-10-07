@@ -257,11 +257,11 @@ function TodayTasks({
   )
 }
 
-type HeroProps = Omit<Parameters<typeof TodayHero>[0], 'duck' | 'caption' | 'taskCount'> &
+type HeroProps = Omit<Parameters<typeof TodayHero>[0], 'duck' | 'speech' | 'taskCount'> &
   Parameters<typeof useDuck>[0]
 
 /** The hero with its duck: rendered once the day has loaded, so the duck's hook always has its inputs. */
 function Hero({ menace, missing, completion, dayNumber, announcement, name, started, yesterdayOpen, onLunge, ...hero }: HeroProps) {
-  const { duck, caption } = useDuck({ menace, missing, completion, dayNumber, announcement, name, started, yesterdayOpen, onLunge })
-  return <TodayHero {...hero} dayNumber={dayNumber} taskCount={TASK_IDS.length} duck={duck} caption={caption} />
+  const { duck, speech } = useDuck({ menace, missing, completion, dayNumber, announcement, name, started, yesterdayOpen, onLunge })
+  return <TodayHero {...hero} dayNumber={dayNumber} taskCount={TASK_IDS.length} duck={duck} speech={speech} />
 }

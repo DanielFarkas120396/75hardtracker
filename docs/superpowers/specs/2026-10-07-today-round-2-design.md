@@ -25,23 +25,30 @@ Today a done tile turns `world-soft`, which is close to the task pastels: Hell's
 - **The tick:** stays in the corner. On the Diet tile it moves under the switches, so it no longer collides with the 🍽️ emoji.
 - **Order:** tiles keep their places during the day. §3 covers the evening.
 
-## 2. The duck's line gets a place of its own
+## 2. The duck speaks, then falls quiet
 
-The bubble floats over "Day N / 75", the attempt line and the ring. It shows on every open and again for 5 s every 45 s, and screen readers never hear it.
+The old bubble floated over "Day N / 75", the attempt line and the ring, and screen readers never heard it. A fixed caption was tried first; after the phone check the owner asked for speech that comes and goes instead (2026-10-07).
 
-**The caption:**
-- It is one line under the hero's top row, across the full width. It starts with a small speech tail pointing up at the duck.
-- It is always visible and holds up to two lines (clamped).
-- It is `aria-live="polite"`, so VoiceOver reads a new line.
-- It always shows the current line: the menace line, or a reaction line for 2.2 s after a poke, a glare or a saved plan.
+**Where:** a speech bubble pops out under the duck, over the reason line, with its tail pointing up at him. It never covers the day or the ring.
 
-**What goes:** the floating bubble and its 45 s timer.
+**When he speaks** (about 4 s each time, then the bubble fades):
+- a beat after Today opens: the day's line ("New day, Sam. I'm watching.", "Started. Not finished.", "Yesterday's still open. Noon.");
+- when that line changes: a task ticked ("3 down, 2 to go."), one left, the clock getting close;
+- when he reacts, for about 2.5 s: a poke, a glare at an unticked task, a saved plan, a declared social occasion;
+- now and then on his own, every 40–75 s: a catchphrase for his mood, never the same one twice in a row.
+
+**Catchphrases:**
+- calm (all done): "The knife rests. For now." · "Perfect. Suspiciously perfect." · "Sleep well. I won't."
+- watching: "I'm watching." · "Tick the boxes. Keep your fingers." · "The knife is sharp. Are you?" · "No excuses. Only tasks."
+- tense: "Tick. Tock." · "Clock's running. So am I." · "I can hear the clock. Can you?"
+- hunting: "Midnight's coming. So am I." · "Run." · "I'm sharpening."
+
+**Accessibility:** the bubble sits in an `aria-live="polite"` region, so VoiceOver reads each line as he says it. With reduce motion on, it only fades.
 
 **The hero gets lighter.** Its rows become:
 1. duck, "Day N / 75", ring;
 2. the attempt, streak and jokers line;
-3. the caption;
-4. the reason, clamped to two lines.
+3. the reason, clamped to two lines.
 
 The world line ("The Meadows · 11 days to …") leaves the hero, since the Journey tab already says it, so nothing gets cut off any more.
 
@@ -134,7 +141,7 @@ They leave the hero, which only keeps the duck, the day and the ring.
   - the reshape at `tapping`/`hunting` (chips for done tasks and notes, open tiles, one open task spans both columns);
   - back to the grid when calm.
 - **`TodayHero` / `DuckHeader`:**
-  - the caption is always there, live, and swaps to a reaction line and back;
+  - the bubble speaks a beat after opening, falls quiet after a few seconds, says a catchphrase on its own later, and is live for VoiceOver;
   - there is no floating bubble;
   - the ring's accessible name;
   - the countdown only at `tapping`/`hunting`, with the right "1h30 left".
