@@ -4,7 +4,9 @@ import { VariantPicker } from '../../components/VariantPicker'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
 import { challengeRepo } from '../../db/repositories/challengeRepo'
+import { defaultStartChoice } from '../../content/onboarding'
 import { formatDisplayDate } from '../../lib/dates'
+import { useNow } from '../../hooks/useNow'
 import { useStartDateChoice } from '../../hooks/useStartDateChoice'
 import type { ChallengeVariant } from '../../logic/rulesets'
 
@@ -27,7 +29,8 @@ export function NewChallengeSheet(props: NewChallengeSheetProps) {
 /** Mounted each time the sheet opens, so the variant and start choice reset to their defaults. */
 function NewChallengeForm({ defaultVariant, today, onClose }: NewChallengeSheetProps) {
   const [variant, setVariant] = useState<ChallengeVariant>(defaultVariant)
-  const start = useStartDateChoice(today)
+  const nowMin = useNow()
+  const start = useStartDateChoice(today, undefined, defaultStartChoice(nowMin))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

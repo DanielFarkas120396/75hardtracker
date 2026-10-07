@@ -12,14 +12,16 @@ interface StartDateChoiceProps {
   today: string
   /** The id of the element that shows `state.dateError`, so the date field points at it. */
   errorId?: string
+  /** The id of a note about the choice (the evening warning), so the choice points at it. */
+  hintId?: string
 }
 
 /** Today / Tomorrow / Pick a date, with a date field while picking. */
-export function StartDateChoice({ state, today, errorId }: StartDateChoiceProps) {
+export function StartDateChoice({ state, today, errorId, hintId }: StartDateChoiceProps) {
   const invalid = state.dateError !== null
   return (
     <>
-      <div role="radiogroup" aria-label="When to start" className="flex gap-1 rounded-2xl border border-ink/15 bg-canvas p-1">
+      <div role="radiogroup" aria-label="When to start" aria-describedby={hintId} className="flex gap-1 rounded-2xl border border-ink/15 bg-canvas p-1">
         {START_CHOICES.map(({ id, label }) => {
           const selected = state.choice === id
           return (
@@ -49,7 +51,7 @@ export function StartDateChoice({ state, today, errorId }: StartDateChoiceProps)
           onChange={(e) => state.setPickedDate(e.target.value)}
           aria-invalid={invalid || undefined}
           aria-describedby={invalid && errorId ? errorId : undefined}
-          className="mt-2 min-h-touch w-full rounded-xl border border-ink/15 bg-canvas px-3 font-rounded font-bold text-ink aria-invalid:border-danger-ink"
+          className="mt-2 min-h-touch w-full rounded-xl border border-ink/15 bg-canvas px-3 text-center font-rounded font-bold text-ink aria-invalid:border-danger-ink"
         />
       )}
     </>

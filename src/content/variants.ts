@@ -21,31 +21,39 @@ export const VARIANT_SUMMARIES: Record<ChallengeVariant, string> = {
 export const VARIANT_TAGLINES: Record<ChallengeVariant, string> = {
   hard: 'The original. No mercy.',
   strong: 'Hard, with one social night a week.',
-  medium: 'One workout. Eat healthy.',
+  medium: 'One workout, healthy eating.',
   soft: 'A gentler start, with a recovery day.',
 }
 
+/** What a joker is, shown on a selected challenge that has some. */
+export const JOKER_DEFINITION = 'A joker forgives one missed day.'
+
 const COUNT_WORDS = ['No', 'One', 'Two', 'Three', 'Four'] as const
 
-/** The 3 things that set a challenge apart, as short chips: workouts, the weekly break (or the water), the jokers. */
+/** "Day 1" with a no-break space, so the "1" never sits alone on the next line. */
+const DAY_ONE = 'Day 1'
+
+/** The 3 things that set a challenge apart, the same 3 on every card: workouts, the weekly allowance, the jokers. */
 export function variantHighlights(rules: Ruleset): string[] {
   const workouts = rules.requiredWorkouts === 1 ? '1 workout a day' : `${rules.requiredWorkouts} workouts a day`
   const week =
-    rules.restDaysPerWeek > 0
-      ? 'Recovery day weekly'
+    rules.socialDaysPerWeek > 0 && rules.restDaysPerWeek > 0
+      ? 'Social + recovery weekly'
       : rules.socialDaysPerWeek > 0
         ? 'Social night weekly'
-        : `${formatLiters(rules.waterTargetMl)} L of water`
+        : rules.restDaysPerWeek > 0
+          ? 'Recovery day weekly'
+          : 'No days off'
   const jokers = rules.jokers === 0 ? 'No jokers' : rules.jokers === 1 ? '1 joker' : `${rules.jokers} jokers`
   return [workouts, week, jokers]
 }
 
 /** What a missed day costs, for the deal: "Miss a day: back to Day 1." or the jokers first. */
 export function stakesLine(rules: Ruleset): string {
-  if (rules.jokers === 0) return 'Miss a day: back to Day 1.'
+  if (rules.jokers === 0) return `Miss a day: back to ${DAY_ONE}.`
   const jokers = `${COUNT_WORDS[rules.jokers]} ${rules.jokers === 1 ? 'joker' : 'jokers'}`
   const days = rules.jokers === 1 ? 'one missed day' : `${COUNT_WORDS[rules.jokers].toLowerCase()} missed days`
-  return `${jokers}: ${days} forgiven. Miss one more: back to Day 1.`
+  return `${jokers}: ${days} forgiven. Miss one more: back to ${DAY_ONE}.`
 }
 
 /** The daily rules, one short line each, for the deal. */

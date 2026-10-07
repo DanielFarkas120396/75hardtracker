@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react'
 import { Button } from '../../components/ui/Button'
 import { getInstallState, promptInstall, subscribeToInstallState } from '../../lib/installPrompt'
 
-/** Offers to install the app to the home screen (or explains how, on iPhone). */
+/** Offers to install the app to the Home Screen (or explains how, on iPhone). */
 export function InstallSection() {
   const state = useSyncExternalStore(subscribeToInstallState, getInstallState)
 
@@ -13,7 +13,7 @@ export function InstallSection() {
       {state === 'available' && (
         <>
           <p className="mt-1 text-sm text-ink-muted">
-            Put 75 Hard on your home screen: it opens full-screen, works offline, and your data is less likely
+            Put 75 Hard on your Home Screen: it opens full-screen, works offline, and your data is less likely
             to be cleared.
           </p>
           <Button variant="primary" className="mt-3 w-full" onClick={() => void promptInstall()}>

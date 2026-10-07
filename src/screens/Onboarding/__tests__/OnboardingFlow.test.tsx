@@ -5,7 +5,8 @@ import { db } from '../../../db/db'
 import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
 import { profileRepo } from '../../../db/repositories/profileRepo'
 import { addDaysISO, dateForDayNumber, formatShortDay, todayISO } from '../../../lib/dates'
-import { OnboardingFlow } from '../OnboardingFlow'
+import { draftKey } from '../../../lib/onboardingDraft'
+import { OnboardingFlow, SIGNED_BEAT_MS } from '../OnboardingFlow'
 
 const today = todayISO()
 
@@ -15,8 +16,23 @@ vi.mock('../../../hooks/useNow', () => ({ useNow: () => clock.nowMin }))
 
 const click = (name: string | RegExp) => fireEvent.click(screen.getByRole('button', { name }))
 const heading = (name: string) => screen.findByRole('heading', { name })
-const nameField = () => screen.getByRole('textbox', { name: 'Your name' })
+const nameField = () => screen.getByRole('textbox', { name: 'What should the duck call you?' })
 const whyField = () => screen.getByRole('textbox', { name: 'Your why' })
+
+/** On the challenge step: tap a card (none is preselected) and move on. */
+async function pickChallenge(name = /^75 Hard/) {
+  await heading('Pick your challenge')
+  fireEvent.click(screen.getByRole('radio', { name }))
+  click('Continue')
+}
+
+/** A draft, as the flow saves it, for the scratch test database. */
+function seedDraft(draft: Record<string, unknown>) {
+  localStorage.setItem(
+    draftKey(db.name),
+    JSON.stringify({ step: 'ready', name: 'Daniel', variant: 'hard', why: 'A fresh start', startChoice: 'tomorrow', pickedDate: '', ...draft }),
+  )
+}
 
 /** From the welcome screen, past the name step with `name`. */
 async function passWelcomeAndName(name = 'Daniel') {
@@ -65,7 +81,6 @@ describe('OnboardingFlow', () => {
     click('Continue')
 
     expect(await heading('Deal, Daniel.')).toBeInTheDocument()
-    expect(screen.getByText('75 Medium starts tomorrow.')).toBeInTheDocument()
     const deal = screen.getByRole('region', { name: 'The deal' })
     expect(deal).toHaveTextContent('1 session of at least 45 minutes.')
     expect(deal).toHaveTextContent('One joker: one missed day forgiven. Miss one more: back to Day 1.')
@@ -75,7 +90,15 @@ describe('OnboardingFlow', () => {
     expect(screen.getByText('“A fresh start”')).toBeInTheDocument()
     click('Hold to commit') // a click with no press: as VoiceOver or a keyboard
 
-    await waitFor(async () => expect(await profileRepo.get()).toMatchObject({ name: 'Daniel', why: 'A fresh start' }))
+    // The duck takes the signature first; the save waits for that moment.
+    expect(screen.getByText("I'm watching, Daniel.")).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Hold to commit' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument()
+    expect(await profileRepo.get()).toBeUndefined()
+
+    await waitFor(async () => expect(await profileRepo.get()).toMatchObject({ name: 'Daniel', why: 'A fresh start' }), {
+      timeout: SIGNED_BEAT_MS + 2000,
+    })
     expect(await db.challenges.toArray()).toMatchObject([
       { attemptNumber: 1, status: 'active', variant: 'medium', startDate: addDaysISO(today, 1) },
     ])
@@ -166,8 +189,10 @@ describe('OnboardingFlow', () => {
     await heading('Why are you doing this?')
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled()
 
+    expect(screen.getByText('Write a reason or tap an idea to continue.')).toBeInTheDocument()
     click('Build real discipline')
-    expect(screen.getByRole('button', { name: 'Build real discipline' })).toHaveAttribute('aria-pressed', 'true')
+    expect(whyField()).toHaveValue('Build real discipline')
+    expect(screen.queryByText('Write a reason or tap an idea to continue.')).not.toBeInTheDocument()
 
     fireEvent.change(whyField(), { target: { value: 'Build real discipline, finally' } })
     expect(screen.queryByRole('button', { name: 'Build real discipline' })).not.toBeInTheDocument() // own words now
@@ -177,8 +202,7 @@ describe('OnboardingFlow', () => {
   it('refuses a start date in the past', async () => {
     render(<OnboardingFlow mode="new" today={today} />)
     await passWelcomeAndName()
-    await heading('Pick your challenge')
-    click('Continue')
+    await pickChallenge()
     await heading('Why are you doing this?')
     click('A fresh start')
     click('Continue')
@@ -196,8 +220,7 @@ describe('OnboardingFlow', () => {
   it('flags the ready step once a picked start date has slipped into the past', async () => {
     const { rerender } = render(<OnboardingFlow mode="new" today={today} />)
     await passWelcomeAndName()
-    await heading('Pick your challenge')
-    click('Continue')
+    await pickChallenge()
     await heading('Why are you doing this?')
     click('A fresh start')
     click('Continue')
@@ -211,6 +234,57 @@ describe('OnboardingFlow', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent("The start can't be in the past.")
     expect(screen.getByRole('button', { name: 'Hold to commit' })).toBeDisabled()
+
+    click('Change start date')
+    expect(await heading('When do you start?')).toBeInTheDocument()
+  })
+
+  it('goes back to the deal, saying so, when signing fails to save', async () => {
+    vi.spyOn(profileRepo, 'completeOnboarding').mockRejectedValueOnce(new Error('quota'))
+    seedDraft({ step: 'ready' })
+    render(<OnboardingFlow mode="new" today={today} />)
+    await heading('Deal, Daniel.')
+
+    click('Hold to commit')
+    expect(screen.getByText("I'm watching, Daniel.")).toBeInTheDocument()
+
+    expect(await screen.findByRole('alert', {}, { timeout: SIGNED_BEAT_MS + 2000 })).toHaveTextContent(
+      "Couldn't save that — try again.",
+    )
+    expect(screen.getByRole('button', { name: 'Hold to commit' })).toBeEnabled()
+    expect(screen.queryByText("I'm watching, Daniel.")).not.toBeInTheDocument()
+  })
+
+  it('preselects no challenge: Continue waits for a tap', async () => {
+    render(<OnboardingFlow mode="new" today={today} />)
+    await passWelcomeAndName()
+    await heading('Pick your challenge')
+
+    for (const radio of screen.getAllByRole('radio')) expect(radio).toHaveAttribute('aria-checked', 'false')
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Continue' })).toHaveAccessibleDescription('Pick a challenge to continue.')
+
+    fireEvent.click(screen.getByRole('radio', { name: /^75 Strong/ }))
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled()
+    expect(screen.getByRole('radio', { name: /^75 Strong/ })).toHaveTextContent(
+      'Everything in 75 Hard, plus one social occasion a week',
+    )
+  })
+
+  it('reopens a restored draft on the first step whose answer no longer holds', async () => {
+    seedDraft({ step: 'ready', why: '   ' })
+    const first = render(<OnboardingFlow mode="new" today={today} />)
+    expect(await heading('Why are you doing this?')).toBeInTheDocument()
+    first.unmount()
+
+    seedDraft({ step: 'ready', startChoice: 'pick', pickedDate: addDaysISO(today, -1) })
+    const second = render(<OnboardingFlow mode="new" today={today} />)
+    expect(await heading('When do you start?')).toBeInTheDocument()
+    second.unmount()
+
+    seedDraft({ step: 'why', variant: null })
+    render(<OnboardingFlow mode="new" today={today} />)
+    expect(await heading('Pick your challenge')).toBeInTheDocument()
   })
 
   it('says so, and lets the player try again, when saving fails', async () => {
@@ -230,7 +304,7 @@ describe('OnboardingFlow', () => {
 
   it('shows how far along the flow is, with Back from the second screen on', async () => {
     render(<OnboardingFlow mode="new" today={today} />)
-    const progress = () => screen.getByRole('progressbar', { name: 'Welcome progress' })
+    const progress = () => screen.getByRole('progressbar', { name: 'Setup progress' })
 
     expect(progress()).toHaveAttribute('aria-valuetext', 'Step 1 of 6')
     expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument()
@@ -244,8 +318,7 @@ describe('OnboardingFlow', () => {
   it('keeps rendering a step, without crashing, when the mode flips mid-flow (e.g. another tab)', async () => {
     const { rerender } = render(<OnboardingFlow mode="new" today={today} />)
     await passWelcomeAndName()
-    await heading('Pick your challenge')
-    click('Continue')
+    await pickChallenge()
     await heading('Why are you doing this?')
     click('A fresh start')
     click('Continue')
@@ -277,7 +350,9 @@ describe('OnboardingFlow', () => {
     render(<OnboardingFlow mode="returning" today={today} />)
     await passWelcomeAndName()
     await heading('Why are you doing this?')
-    expect(screen.getAllByRole('button', { pressed: false })).toHaveLength(4)
+    for (const idea of ['Prove I can finish what I start', 'Build real discipline', 'Clear my head', 'A fresh start']) {
+      expect(screen.getByRole('button', { name: idea })).toBeInTheDocument()
+    }
 
     fireEvent.change(whyField(), { target: { value: 'For my kids' } })
     expect(screen.queryByRole('button', { name: 'Clear my head' })).not.toBeInTheDocument()
@@ -297,29 +372,45 @@ describe('OnboardingFlow', () => {
     expect(screen.getByText('120/140')).toBeInTheDocument()
   })
 
-  it('shows Day 75, and warns about starting today in the evening', async () => {
-    clock.nowMin = 21 * 60 + 5
+  it('shows Day 1 and Day 75, starting today in the morning', async () => {
     render(<OnboardingFlow mode="new" today={today} />)
     await passWelcomeAndName()
-    await heading('Pick your challenge')
-    click('Continue') // 75 Hard
+    await pickChallenge()
     await heading('Why are you doing this?')
     click('A fresh start')
     click('Continue')
     await heading('When do you start?')
 
-    expect(screen.getByText(`Day 75 is ${formatShortDay(dateForDayNumber(today, 75))}.`)).toBeInTheDocument()
-    expect(screen.getByText("It's 21:05. Today means two workouts before midnight. Tomorrow might be smarter.")).toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('radio', { name: 'Tomorrow' }))
+    expect(screen.getByRole('radio', { name: 'Today' })).toHaveAttribute('aria-checked', 'true')
+    expect(
+      screen.getByText(`Day 1: ${formatShortDay(today)} · Day 75: ${formatShortDay(dateForDayNumber(today, 75))}.`),
+    ).toBeInTheDocument()
     expect(screen.queryByText(/Tomorrow might be smarter/)).not.toBeInTheDocument()
+  })
+
+  it('starts tomorrow by default in the evening, and warns when today is picked anyway', async () => {
+    clock.nowMin = 21 * 60 + 5
+    render(<OnboardingFlow mode="new" today={today} />)
+    await passWelcomeAndName()
+    await pickChallenge()
+    await heading('Why are you doing this?')
+    click('A fresh start')
+    click('Continue')
+    await heading('When do you start?')
+
+    expect(screen.getByRole('radio', { name: 'Tomorrow' })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.queryByText(/Tomorrow might be smarter/)).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Today' }))
+    const warning = "It's 21:05. Today means two workouts before midnight. Tomorrow might be smarter."
+    expect(screen.getByText(warning)).toBeInTheDocument()
+    expect(screen.getByRole('radiogroup', { name: 'When to start' })).toHaveAccessibleDescription(warning)
   })
 
   it('refuses a start more than 60 days ahead', async () => {
     render(<OnboardingFlow mode="new" today={today} />)
     await passWelcomeAndName()
-    await heading('Pick your challenge')
-    click('Continue')
+    await pickChallenge()
     await heading('Why are you doing this?')
     click('A fresh start')
     click('Continue')

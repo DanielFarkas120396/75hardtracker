@@ -25,9 +25,16 @@ export interface StartDateChoiceInitial {
   pickedDate: string
 }
 
-/** When an attempt starts: today, tomorrow or a picked date (tomorrow at first), never in the past nor too far ahead. */
-export function useStartDateChoice(today: string, initial?: StartDateChoiceInitial): StartDateChoiceState {
-  const [choice, setChoice] = useState<StartChoice>(initial?.choice ?? 'today')
+/**
+ * When an attempt starts: today, tomorrow or a picked date (tomorrow at first), never in the past nor too far ahead.
+ * `defaultChoice` applies when there's no `initial` (the evening passes 'tomorrow').
+ */
+export function useStartDateChoice(
+  today: string,
+  initial?: StartDateChoiceInitial,
+  defaultChoice: StartChoice = 'today',
+): StartDateChoiceState {
+  const [choice, setChoice] = useState<StartChoice>(initial?.choice ?? defaultChoice)
   const [pickedDate, setPickedDate] = useState(initial?.pickedDate ?? addDaysISO(today, 1))
 
   const maxDate = addDaysISO(today, START_MAX_DAYS_AHEAD)

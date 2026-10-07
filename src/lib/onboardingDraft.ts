@@ -11,7 +11,8 @@ import { isValidISODate } from './dates'
 export interface OnboardingDraft {
   step: OnboardingStep
   name: string
-  variant: ChallengeVariant
+  /** null until a challenge is picked: none is preselected. */
+  variant: ChallengeVariant | null
   why: string
   startChoice: StartChoice
   pickedDate: string
@@ -38,7 +39,7 @@ function parseDraft(raw: string | null): OnboardingDraft | null {
   if (
     !STEPS.includes(d.step as OnboardingStep) ||
     typeof d.name !== 'string' ||
-    !isChallengeVariant(d.variant) ||
+    (d.variant !== null && !isChallengeVariant(d.variant)) ||
     typeof d.why !== 'string' ||
     !START_CHOICES.includes(d.startChoice as StartChoice) ||
     typeof d.pickedDate !== 'string' ||

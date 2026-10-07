@@ -36,13 +36,24 @@ describe('InstallFirst', () => {
     expect(screen.getByText(/Add to Home Screen/, { selector: 'strong' })).toBeInTheDocument()
     expect(screen.queryByText('Welcome flow')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Continue in the browser anyway' }))
+    expect(screen.getByText("Set it up in the app, not in Safari. They don't share data.")).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue in Safari (your data stays here)' }))
     expect(screen.getByText('Welcome flow')).toBeInTheDocument()
     expect(localStorage.getItem(INSTALL_SKIPPED_KEY)).toBe('1')
 
     unmount()
     render(<InstallFirst>Welcome flow</InstallFirst>)
     expect(screen.getByText('Welcome flow')).toBeInTheDocument()
+  })
+
+  it('says where to go once the player has added it', () => {
+    render(<InstallFirst>Welcome flow</InstallFirst>)
+    fireEvent.click(screen.getByRole('button', { name: "I've added it" }))
+    expect(
+      screen.getByText('Now open 75 Hard from your Home Screen and set it up there. You can close this tab.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByText('Welcome flow')).not.toBeInTheDocument()
   })
 
   it('goes straight to the welcome flow in the installed app', () => {
