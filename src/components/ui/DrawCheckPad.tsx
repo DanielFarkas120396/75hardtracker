@@ -1,4 +1,4 @@
-import { useId, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 import { isCheckmark, type Point } from '../../lib/checkmark'
 import { Icon } from '../icons/Icon'
 
@@ -33,7 +33,20 @@ export function DrawCheckPad({ onChange, disabled = false, labelledBy, className
   // The stroke being drawn, as a ref: React may not have rendered the last moves when the finger lifts.
   const stroke = useRef<Point[]>([])
   const drawing = useRef(false)
+  const frame = useRef<HTMLDivElement>(null)
   const statusId = useId()
+
+  // iOS Safari doesn't always honour touch-action on an SVG: the page scrolls under the finger
+  // and the stroke is cancelled. Stopping the touch itself while drawing holds the page still.
+  useEffect(() => {
+    const el = frame.current
+    if (!el) return
+    const hold = (event: TouchEvent) => {
+      if (drawing.current) event.preventDefault()
+    }
+    el.addEventListener('touchmove', hold, { passive: false })
+    return () => el.removeEventListener('touchmove', hold)
+  }, [])
 
   const settle = (drawn: Point[]) => {
     stroke.current = drawn
@@ -90,7 +103,10 @@ export function DrawCheckPad({ onChange, disabled = false, labelledBy, className
 
   return (
     <div className={className}>
-      <div className="relative h-48 w-full overflow-hidden rounded-card border border-ink/15 bg-surface">
+      <div
+        ref={frame}
+        className="relative h-48 w-full touch-none overflow-hidden rounded-card border border-ink/15 bg-surface [-webkit-touch-callout:none]"
+      >
         <svg
           role="button"
           tabIndex={disabled ? -1 : 0}

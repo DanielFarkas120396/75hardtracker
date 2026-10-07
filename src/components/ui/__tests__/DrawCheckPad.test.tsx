@@ -73,6 +73,17 @@ describe('DrawCheckPad', () => {
     expect(drawn()).not.toBe('')
   })
 
+  it('holds the page still while a finger draws, and lets it scroll otherwise', () => {
+    setup()
+    const frame = pad().parentElement as HTMLElement
+    expect(fireEvent.touchMove(frame)).toBe(true) // not drawing: the touch keeps its default, a scroll
+
+    fireEvent.pointerDown(pad(), { button: 0, clientX: 40, clientY: 100 })
+    expect(fireEvent.touchMove(frame)).toBe(false) // drawing: the scroll is prevented
+    fireEvent.pointerUp(pad(), { clientX: 60, clientY: 120 })
+    expect(fireEvent.touchMove(frame)).toBe(true)
+  })
+
   it('ignores the finger and the keyboard while disabled', () => {
     const onChange = setup(true)
     drag(CHECK)
