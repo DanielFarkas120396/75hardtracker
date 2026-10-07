@@ -170,6 +170,21 @@ describe('export → reset → import', () => {
 
     expect((await db.workouts.get(workout.id))?.feel).toBe(4)
   })
+
+  it('keeps a book’s cover, and the book a day was read in, through a backup', async () => {
+    await seedEverything()
+    const [book] = await db.books.toArray()
+    const [entry] = await db.dayEntries.toArray()
+    await db.books.update(book.id, { cover: new Blob([jpegBytes(7)], { type: 'image/jpeg' }) })
+    await db.dayEntries.update(entry.id, { bookId: book.id })
+
+    await roundTrip()
+
+    const cover = (await db.books.get(book.id))?.cover
+    expect(cover?.type).toBe('image/jpeg')
+    expect([...new Uint8Array(await cover!.arrayBuffer())]).toEqual([...jpegBytes(7)])
+    expect((await db.dayEntries.get(entry.id))?.bookId).toBe(book.id)
+  })
 })
 
 describe('the Face ID lock and backups', () => {
@@ -222,6 +237,12 @@ describe('validateExportPayload', () => {
   it('rejects photo data that is not base64', async () => {
     const payload = await validPayload()
     ;(payload.photos as Record<string, unknown>[])[0].blobBase64 = '<script>alert(1)</script>'
+    expect(validateExportPayload(payload).ok).toBe(false)
+  })
+
+  it('rejects a book cover that is not an image', async () => {
+    const payload = await validPayload()
+    Object.assign((payload.books as Record<string, unknown>[])[0], { coverBase64: 'AAAA', coverMimeType: 'text/html' })
     expect(validateExportPayload(payload).ok).toBe(false)
   })
 
