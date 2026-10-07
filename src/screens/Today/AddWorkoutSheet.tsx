@@ -52,7 +52,7 @@ function AddWorkoutForm({ dayEntryId, rules, onClose }: Omit<AddWorkoutSheetProp
         <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-surface ${TASK_TONE.ink}`}>
           <Icon name={TASK_ICONS.workouts} />
         </span>
-        <h2 id="add-workout-title" className="min-w-0 flex-1 font-rounded text-xl font-extrabold text-ink">
+        <h2 id="add-workout-title" className="min-w-0 flex-1 font-rounded text-xl font-bold text-ink">
           Add workout
         </h2>
         <button
@@ -66,7 +66,7 @@ function AddWorkoutForm({ dayEntryId, rules, onClose }: Omit<AddWorkoutSheetProp
       </header>
       <div className="mt-4 flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
-          <p className="font-rounded font-extrabold text-ink">{type}</p>
+          <p className="font-rounded font-bold text-ink">{type}</p>
           <ActivityPicker value={type} onPick={setType} />
         </div>
         <div className="flex justify-center">

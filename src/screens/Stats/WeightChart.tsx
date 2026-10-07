@@ -22,7 +22,7 @@ function WeightTooltip({ active, payload }: { active?: boolean; payload?: { payl
   if (!datum) return null
   return (
     <div className="rounded-xl bg-surface px-3 py-2 font-rounded shadow-md ring-1 ring-ink/10">
-      <p className="text-base font-extrabold text-ink">{datum.weight.toFixed(1)} kg</p>
+      <p className="text-base font-bold text-ink">{datum.weight.toFixed(1)} kg</p>
       <p className="text-xs font-semibold text-ink-muted">{format(datum.time, 'EEE d MMM yyyy')}</p>
     </div>
   )

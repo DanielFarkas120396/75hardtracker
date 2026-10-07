@@ -132,7 +132,10 @@ export function OnboardingFlow({ mode, today }: OnboardingFlowProps) {
             transition={{ duration: 0.2 }}
             className="flex flex-1 flex-col items-center pt-6 text-center"
           >
-            <Mascot mood={signed ? 'triumphant' : STEP_MOODS[step]} size={LONG_STEPS.has(step) ? 64 : 96} />
+            <div className="relative isolate">
+              <span aria-hidden="true" className="world-glow pointer-events-none absolute -inset-x-44 -top-28 -bottom-12 -z-10" />
+              <Mascot mood={signed ? 'triumphant' : STEP_MOODS[step]} size={LONG_STEPS.has(step) ? 64 : 96} />
+            </div>
             {step === 'welcome' && <WelcomeStep mode={mode} onNext={() => next('welcome')} />}
             {step === 'name' && <NameStep name={name} onChange={setName} onNext={() => next('name')} />}
             {step === 'challenge' && (

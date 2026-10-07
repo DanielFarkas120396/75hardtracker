@@ -33,7 +33,7 @@ export function TodayHero({ attemptLine, dayNumber, completedCount, taskCount, s
   const profile = useProfile()
 
   return (
-    <section className="relative mx-4 mt-3 mb-3 px-3 pt-3 pb-3">
+    <section className="relative isolate mx-4 mt-3 mb-3 px-3 pt-3 pb-3">
       <span aria-hidden="true" className="world-glow pointer-events-none absolute -inset-x-8 -top-20 -bottom-6 -z-10" />
 
       {/* One line, never wrapping: the day, then the attempt. The 75 days are the Journey's to show. */}

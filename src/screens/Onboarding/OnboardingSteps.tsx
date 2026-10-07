@@ -46,10 +46,12 @@ function enterMovesOn(valid: boolean, onNext: () => void) {
 }
 
 /** A step's title: it takes focus as the step appears, so VoiceOver reads the new question. */
-function StepTitle({ children, id }: { children: ReactNode; id?: string }) {
+function StepTitle({ children, id, size }: { children: ReactNode; id?: string; size?: 'md' | 'lg' }) {
   return (
     <div className="mt-4">
-      <GateHeading id={id}>{children}</GateHeading>
+      <GateHeading id={id} size={size}>
+        {children}
+      </GateHeading>
     </div>
   )
 }
@@ -67,7 +69,7 @@ function MissingHint({ id, children }: { id: string; children: ReactNode }) {
 export function WelcomeStep({ mode, onNext }: { mode: OnboardingMode; onNext: () => void }) {
   return (
     <>
-      <StepTitle>75 days. 5 tasks. One duck with a knife.</StepTitle>
+      <StepTitle size="lg">75 days. 5 tasks. One duck with a knife.</StepTitle>
       <p className="mt-3 text-ink-muted">
         Workouts, diet, water, reading and a progress photo, every single day. I'll be watching.
       </p>
@@ -343,7 +345,7 @@ export function ReadyStep(props: ReadyStepProps) {
             </motion.li>
           ))}
         </ul>
-        <motion.p variants={DEAL_LINE} className="mt-4 font-rounded font-extrabold text-world-ink">
+        <motion.p variants={DEAL_LINE} className="mt-4 font-rounded font-bold text-world-ink">
           {stakesLine(rules)}
         </motion.p>
         <motion.div variants={DEAL_LINE}>

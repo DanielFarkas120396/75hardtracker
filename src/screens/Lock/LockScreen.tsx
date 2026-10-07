@@ -104,7 +104,7 @@ export function LockScreen({ faceIdEnabled, failures, onFaceId, onPin, onConfirm
       </div>
 
       <Modal open={confirmBypass} onClose={() => setConfirmBypass(false)}>
-        <h2 className="font-rounded text-lg font-extrabold text-ink">Turn the lock off?</h2>
+        <h2 className="font-rounded text-lg font-bold text-ink">Turn the lock off?</h2>
         <p className="mt-2 text-sm text-ink-muted">
           This opens the app and turns the lock off. Next time, the app will show that it was turned off this way, so its
           owner knows.

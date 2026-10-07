@@ -29,7 +29,7 @@ export function WaterTask({ entry, rules }: WaterTaskProps) {
           />
         </div>
         <div>
-          <p className="font-rounded text-2xl font-extrabold text-ink">{liters} L</p>
+          <p className="font-rounded text-2xl font-bold text-ink">{liters} L</p>
           <p className="text-sm text-ink-muted">of {targetLiters} L</p>
         </div>
       </div>

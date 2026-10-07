@@ -189,7 +189,7 @@ function TaskTile({ task, done, urgency, status, progress, photo, quick, control
           type="button"
           aria-label={quick.label}
           onClick={quick.onPress}
-          className={`group absolute top-1 right-1 flex min-h-touch min-w-touch touch-manipulation items-center justify-center rounded-full font-rounded text-xs font-extrabold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink text-ink`}
+          className={`group absolute top-1 right-1 flex min-h-touch min-w-touch touch-manipulation items-center justify-center rounded-full font-rounded text-xs font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink text-ink`}
         >
           <span className="flex h-8 items-center gap-1 rounded-full border border-ink/15 px-2.5 motion-safe:transition-transform motion-safe:group-active:scale-90">
             <Icon name={quick.icon} size={14} />

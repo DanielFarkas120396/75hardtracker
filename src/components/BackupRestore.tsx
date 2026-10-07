@@ -99,7 +99,7 @@ export function BackupRestore({ label, look = 'button', confirmReplace = true }:
       )}
 
       <Modal open={locked !== null} onClose={() => setLocked(null)}>
-        <h3 className="font-rounded text-lg font-extrabold text-ink">This backup is protected</h3>
+        <h3 className="font-rounded text-lg font-bold text-ink">This backup is protected</h3>
         <Field label="Its password" error={passwordError ?? undefined}>
           <input
             type="password"
@@ -120,7 +120,7 @@ export function BackupRestore({ label, look = 'button', confirmReplace = true }:
       </Modal>
 
       <Modal open={pending !== null} onClose={() => setPending(null)}>
-        <h3 className="font-rounded text-lg font-extrabold text-ink">Replace all data?</h3>
+        <h3 className="font-rounded text-lg font-bold text-ink">Replace all data?</h3>
         <p className="mt-2 text-sm text-ink-muted">
           Restoring this file will replace everything currently on this device — all attempts, photos, and badges — with
           the contents of the file. This can't be undone.

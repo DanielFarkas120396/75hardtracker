@@ -50,7 +50,7 @@ export function GalleryScreen({ onTakePhoto }: GalleryScreenProps) {
           groups.map((group) => (
             <section key={group.key} data-world={group.world.id} aria-label={group.world.name}>
               <h2 className="mb-2 flex items-center gap-2">
-                <span className="rounded-full bg-world-soft px-3 py-1 font-rounded text-sm font-extrabold text-world-ink">
+                <span className="rounded-full bg-world-soft px-3 py-1 font-rounded text-sm font-bold text-world-ink">
                   {group.world.name}
                 </span>
                 {attempts > 1 && (

@@ -75,7 +75,7 @@ function SocialForm({ challenge, today, todayDayNumber, onClose, onDeclared }: S
 
   return (
     <>
-      <h3 className="font-rounded text-lg font-extrabold text-ink">Plan a social occasion</h3>
+      <h3 className="font-rounded text-lg font-bold text-ink">Plan a social occasion</h3>
       <p className="mt-1 text-sm text-ink-muted">
         Tomorrow at the earliest, one per week. On that day a drink is allowed — the diet still counts.
       </p>

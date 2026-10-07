@@ -122,7 +122,7 @@ export function DayBoard(props: DayBoardProps) {
                   logged.undo()
                   setLogged(null)
                 }}
-                className="min-h-touch rounded-xl px-3 font-extrabold underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-surface"
+                className="min-h-touch rounded-xl px-3 font-bold underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-surface"
               >
                 Undo
               </button>

@@ -54,7 +54,7 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
       <MotionConfig reducedMotion="user">
         <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-canvas p-6 text-center">
           <Mascot mood="sad" size={110} />
-          <h1 className="font-rounded text-2xl font-extrabold text-ink">Something went wrong</h1>
+          <h1 className="font-rounded text-2xl font-bold text-ink">Something went wrong</h1>
           <p className="max-w-sm font-rounded text-ink-muted">
             The app hit an unexpected error. Your data is still saved on this device — reloading usually fixes it.
           </p>

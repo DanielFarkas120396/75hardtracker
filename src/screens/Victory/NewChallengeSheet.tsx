@@ -50,7 +50,7 @@ function NewChallengeForm({ defaultVariant, today, onClose }: NewChallengeSheetP
 
   return (
     <>
-      <h3 className="font-rounded text-lg font-extrabold text-ink">Start a new challenge</h3>
+      <h3 className="font-rounded text-lg font-bold text-ink">Start a new challenge</h3>
 
       <div className="mt-3">
         <VariantPicker value={variant} onChange={setVariant} />

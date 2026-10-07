@@ -237,7 +237,7 @@ export function CameraSheet({ ghost, onCapture, onClose, onUnavailable }: Camera
           {phase === 'countdown' && count > 0 && (
             <p
               aria-live="assertive"
-              className="absolute inset-0 flex items-center justify-center font-rounded text-9xl font-extrabold text-white drop-shadow-lg"
+              className="absolute inset-0 flex items-center justify-center font-rounded text-9xl font-bold text-white drop-shadow-lg"
             >
               {count}
             </p>

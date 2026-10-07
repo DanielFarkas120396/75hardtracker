@@ -213,7 +213,7 @@ export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGi
       />
 
       <Modal open={showResetConfirm} onClose={() => setShowResetConfirm(false)}>
-        <h3 className="font-rounded text-lg font-extrabold text-ink">Erase everything?</h3>
+        <h3 className="font-rounded text-lg font-bold text-ink">Erase everything?</h3>
         <p className="mt-2 text-sm text-ink-muted">
           This deletes every attempt, photo, book, and badge on this device. Consider exporting a backup first.
           This can't be undone.

@@ -22,7 +22,7 @@ export function LateDayCard({ dayNumber, onOpen }: { dayNumber: number; onOpen: 
         <Icon name="history" />
       </span>
       <div className="min-w-0 flex-1">
-        <h2 className="font-rounded font-extrabold text-ink">Day {dayNumber} isn't finished</h2>
+        <h2 className="font-rounded font-bold text-ink">Day {dayNumber} isn't finished</h2>
         <p className="font-rounded text-sm text-ink-muted">Forgot to log it? You have until 12:00.</p>
       </div>
       <button
@@ -126,7 +126,7 @@ export function LateDayView({ challenge, dayEntries, dayNumber, date, onBack }: 
           <button
             type="button"
             onClick={() => setOpenTask('notes')}
-            className="mt-4 flex min-h-touch w-full items-center justify-center gap-1.5 rounded-full bg-surface px-3 font-rounded text-sm font-extrabold text-ink shadow-sm ring-1 ring-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:ring-0"
+            className="mt-4 flex min-h-touch w-full items-center justify-center gap-1.5 rounded-full bg-surface px-3 font-rounded text-sm font-bold text-ink shadow-sm ring-1 ring-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:ring-0"
           >
             <span aria-hidden="true">📝</span>
             Notes
