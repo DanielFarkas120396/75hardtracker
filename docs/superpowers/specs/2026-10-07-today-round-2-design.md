@@ -1,6 +1,6 @@
 # Today, round 2 (design)
 
-Status: **approved** by the owner on 2026-10-07. **Built** on `feat/today-round-2` (PR pending the owner's phone check). While building, `worldLines.ts` went with the world line, its last user.
+Status: **approved** by the owner on 2026-10-07. **Merged** into main the same day (PR #45), after the owner's phone check. After that check the duck's line became a bubble that comes and goes (above him, with catchphrases) and the hero was rebuilt around a large, centred ring. `worldLines.ts` went with the world line, its last user.
 
 This comes from the Impeccable critique of the Today screen on 2026-10-07, which scored it 27/40.
 
