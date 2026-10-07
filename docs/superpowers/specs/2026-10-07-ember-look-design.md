@@ -30,7 +30,7 @@ The owner found the app too "Duolingo-y": chunky buttons, rounded fonts, candy c
 - **Duck**: current art, warmed (`sepia(.35) saturate(.9)`), 62px in the hero, 112px on Welcome.
 - **Nav**: floating bar in `#1d1612`, active tab on a 16% amber pill with amber icon and label.
 - **Welcome**: duck in the glow, uppercase condensed headline, amber pill button, underlined restore link.
-- **Stats**: same cards; the world progress bar in amber segments; activity rows with an amber icon well and a condensed count on the right.
+- **Stats**: same cards; the world progress bar in amber segments. The workouts keep their stacked activity cards (the owner preferred them to the mockup's rows, 2026-10-07), in a muted amber-to-brown stack.
 
 ## Board: chips by default (added 2026-10-07)
 
