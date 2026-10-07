@@ -40,10 +40,11 @@ export function Modal({ open, onClose, children, placement = 'center', labelledB
   const close = useEffectEvent(() => onClose())
   const look = PANEL[placement]
   // "Reduce motion" (the app's MotionConfig) drops the movement and keeps the fade.
-  const closed =
-    from && placement === 'center'
-      ? { x: from.x - window.innerWidth / 2, y: from.y - window.innerHeight / 2, scale: 0.05, opacity: 0 }
-      : look.closed
+  const grows = from !== undefined && placement === 'center'
+  const closed = grows
+    ? { x: from.x - window.innerWidth / 2, y: from.y - window.innerHeight / 2, scale: 0.05, opacity: 0 }
+    : look.closed
+  const opened = grows ? { x: 0, y: 0, scale: 1, opacity: 1 } : look.open
 
   useEffect(() => {
     if (!open) return
@@ -76,7 +77,7 @@ export function Modal({ open, onClose, children, placement = 'center', labelledB
             aria-labelledby={labelledBy}
             tabIndex={-1}
             initial={closed}
-            animate={look.open}
+            animate={opened}
             exit={closed}
             {...(dragControls && {
               drag: 'y' as const,
