@@ -35,8 +35,8 @@ export function AttemptHistorySection({ today }: AttemptHistorySectionProps) {
   }
 
   return (
-    <section className="rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0">
-      <h2 className="font-rounded text-lg font-extrabold text-ink">Attempt history</h2>
+    <section className="rounded-card bg-surface p-4 ring-1 ring-ink/10 dark:ring-0">
+      <h2 className="font-rounded text-lg font-bold text-ink">Attempt history</h2>
       <p className="mt-1 text-sm text-ink-muted">Tap an attempt to see its days and photos.</p>
 
       <ul className="mt-3 flex flex-col gap-2">
@@ -105,7 +105,7 @@ function AttemptDetail({ attempt, open, onClose }: { attempt: AttemptRecord; ope
       <Modal open={open} onClose={onClose}>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="font-rounded text-lg font-extrabold text-ink">Attempt #{challenge.attemptNumber}</h3>
+            <h3 className="font-rounded text-lg font-bold text-ink">Attempt #{challenge.attemptNumber}</h3>
             <p className="text-sm text-ink-muted">{dateRangeLabel(summary)}</p>
           </div>
           <StatusChip status={challenge.status} />
@@ -116,7 +116,7 @@ function AttemptDetail({ attempt, open, onClose }: { attempt: AttemptRecord; ope
           {summary.completedDays === 1 ? 'day' : 'days'}
         </p>
 
-        <h4 className="mt-4 font-rounded font-extrabold text-ink">Days</h4>
+        <h4 className="mt-4 font-rounded font-bold text-ink">Days</h4>
         {rows.length === 0 ? (
           <p className="mt-1 text-sm text-ink-muted">Nothing to show until Day 1.</p>
         ) : (
@@ -135,7 +135,7 @@ function AttemptDetail({ attempt, open, onClose }: { attempt: AttemptRecord; ope
           </ul>
         )}
 
-        <h4 className="mt-4 font-rounded font-extrabold text-ink">Photos</h4>
+        <h4 className="mt-4 font-rounded font-bold text-ink">Photos</h4>
         {photos && photos.length > 0 ? (
           <div className="mt-2 grid grid-cols-3 gap-2">
             {photos.map((entry, i) => (
@@ -179,7 +179,7 @@ function DayRow({
     const single = row.fromDay === row.toDay
     return (
       <li className="flex gap-2 text-sm">
-        <span aria-hidden="true" className="font-extrabold text-green-ink">
+        <span aria-hidden="true" className="font-bold text-green-ink">
           ✓
         </span>
         <span>
@@ -208,7 +208,7 @@ function DayRow({
   const missed = row.missing.map((task) => TASK_NAMES[task]).join(', ')
   return (
     <li className="flex gap-2 text-sm">
-      <span aria-hidden="true" className={inProgress ? 'font-extrabold text-ink-muted' : 'font-extrabold text-danger-ink'}>
+      <span aria-hidden="true" className={inProgress ? 'font-bold text-ink-muted' : 'font-bold text-danger-ink'}>
         {inProgress ? '…' : '✗'}
       </span>
       <span>

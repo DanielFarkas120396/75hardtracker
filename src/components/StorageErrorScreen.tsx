@@ -45,13 +45,13 @@ export function StorageErrorScreen({ problem, error }: StorageErrorScreenProps) 
     <MotionConfig reducedMotion="user">
       <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-canvas p-6 text-center">
         <Mascot mood={problem === 'failed' ? 'sad' : 'waiting'} size={110} />
-        <h1 className="font-rounded text-2xl font-extrabold text-ink">{title}</h1>
+        <h1 className="font-rounded text-2xl font-bold text-ink">{title}</h1>
         <p className="max-w-sm font-rounded text-ink-muted">{body}</p>
         {detail && <p className="max-w-sm break-words font-mono text-xs text-ink-muted">{detail}</p>}
         <button
           type="button"
           onClick={() => window.location.reload()}
-          className="min-h-touch rounded-2xl border-b-4 border-ink/15 bg-surface px-6 py-3 font-rounded font-bold text-ink active:translate-y-1 active:border-b-0"
+          className="min-h-touch rounded-full bg-ink/8 px-6 py-3 font-rounded font-semibold text-ink active:scale-[0.97]"
         >
           Reload
         </button>

@@ -5,7 +5,7 @@ export function TimeTravelPanel() {
   const travelling = isTimeTravelling()
 
   return (
-    <section className="rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0">
+    <section className="rounded-card bg-surface p-4 ring-1 ring-ink/10 dark:ring-0">
       <p className="text-sm text-ink-muted">
         Opens the app on that day, in a separate test copy: every earlier day done, today untouched. Your real data
         stays as it is. Only in the dev server.

@@ -36,7 +36,7 @@ export function PinPad({ title, error, hint, disabled = false, onComplete, extra
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <h2 className="font-rounded text-lg font-extrabold text-ink">{title}</h2>
+      <h2 className="font-rounded text-lg font-bold text-ink">{title}</h2>
       <div
         role="status"
         aria-label={`${digits.length} of ${PIN_LENGTH} digits entered`}
@@ -63,7 +63,7 @@ export function PinPad({ title, error, hint, disabled = false, onComplete, extra
             type="button"
             disabled={disabled}
             onClick={() => press(digit)}
-            className={`${key} bg-surface text-ink shadow-sm active:bg-world-soft disabled:opacity-40`}
+            className={`${key} bg-surface text-ink active:bg-world-soft disabled:opacity-40`}
           >
             {digit}
           </button>
@@ -73,7 +73,7 @@ export function PinPad({ title, error, hint, disabled = false, onComplete, extra
           type="button"
           disabled={disabled}
           onClick={() => press('0')}
-          className={`${key} bg-surface text-ink shadow-sm active:bg-world-soft disabled:opacity-40`}
+          className={`${key} bg-surface text-ink active:bg-world-soft disabled:opacity-40`}
         >
           0
         </button>

@@ -115,7 +115,7 @@ export function WorkoutTask({ dayEntryId, workouts, complete, rules, restDay, we
             <button
               type="button"
               onClick={undoRemove}
-              className="min-h-touch rounded-xl px-3 font-extrabold underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-surface"
+              className="min-h-touch rounded-xl px-3 font-bold underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-surface"
             >
               Undo
             </button>
@@ -134,7 +134,7 @@ function WorkoutRow({ workout, onRemove }: { workout: Workout; onRemove: () => v
   return (
     <div className="flex flex-col gap-2 rounded-2xl bg-canvas p-3">
       <div className="flex items-center justify-between gap-2">
-        <p className="font-rounded text-lg font-extrabold text-ink">{workout.type}</p>
+        <p className="font-rounded text-lg font-bold text-ink">{workout.type}</p>
         <button
           type="button"
           onClick={onRemove}

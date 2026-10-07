@@ -29,7 +29,7 @@ export function BackupExportSheet({ open, onClose }: { open: boolean; onClose: (
 
   return (
     <Modal open={open} onClose={close}>
-      <h3 className="font-rounded text-lg font-extrabold text-ink">Save a backup</h3>
+      <h3 className="font-rounded text-lg font-bold text-ink">Save a backup</h3>
       <p className="mt-1 text-sm text-ink-muted">
         One file with everything, photos included. Save it to <strong className="text-ink">iCloud Drive</strong> (Save to
         Files), so it survives losing your phone.

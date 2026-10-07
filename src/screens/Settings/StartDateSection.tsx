@@ -96,8 +96,8 @@ export function StartDateSection({ challenge, today, todayDayNumber }: StartDate
   }
 
   return (
-    <section className="rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0">
-      <h2 className="font-rounded text-lg font-extrabold text-ink">Challenge</h2>
+    <section className="rounded-card bg-surface p-4 ring-1 ring-ink/10 dark:ring-0">
+      <h2 className="font-rounded text-lg font-bold text-ink">Challenge</h2>
       <p className="mt-1 text-sm text-ink-muted">{statusLine(challenge, todayDayNumber)}</p>
 
       {editable ? (
@@ -153,7 +153,7 @@ export function StartDateSection({ challenge, today, todayDayNumber }: StartDate
       )}
 
       <Modal open={confirmClear} onClose={() => setConfirmClear(false)}>
-        <h3 className="font-rounded text-lg font-extrabold text-ink">Move the start date?</h3>
+        <h3 className="font-rounded text-lg font-bold text-ink">Move the start date?</h3>
         <p className="mt-2 text-sm text-ink-muted">
           You've already logged progress for Day 1. Moving the start to {formatDisplayDate(draft)} clears it —
           workouts, water, pages, diet, the photo and any badges earned so far.

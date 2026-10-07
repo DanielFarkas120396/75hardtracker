@@ -7,7 +7,7 @@ A local-first PWA for the 75 Hard challenge (React 19, Vite, TypeScript, Tailwin
 - `main` is the current app: the v2 redesign, merged on 2026-10-05 (PR #28). Each feature gets its own branch from `main` and a PR into `main`.
 - The tag `v1` (a9f1f1b) keeps the old version forever, as a fallback. Never move or delete it.
 - The `v2` branch is kept as a record; new work doesn't go there.
-- A big redesign (a "v3") would get its own long-lived branch again, like `v2` did, so `main` keeps working.
+- `v3` is the Ember redesign (dark-first, amber on warm black): a long-lived branch from `main`, like `v2` was. Redesign PRs go into `v3`; `main` keeps working until `v3` merges in one go. Design: `docs/superpowers/specs/2026-10-07-ember-look-design.md`.
 - Vercel deployments are paused by the owner: there are no preview links. Don't wait for Vercel checks.
 
 ## Before every commit or merge

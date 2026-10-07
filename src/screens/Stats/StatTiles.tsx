@@ -3,10 +3,10 @@ import type { ReactNode } from 'react'
 /** A stats tile: a small illustration, the number, and what it counts. */
 export function StatTile({ art, value, label, tone }: { art: ReactNode; value: string; label: string; tone: string }) {
   return (
-    <div className="flex flex-col gap-2 rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0">
+    <div className="flex flex-col gap-2 rounded-card bg-surface p-4 ring-1 ring-ink/10 dark:ring-0">
       <div className={`flex h-12 items-end ${tone}`}>{art}</div>
-      <p className={`font-display text-2xl leading-none tracking-wide ${tone}`}>{value}</p>
-      <p className="font-rounded text-xs font-bold text-ink-muted">{label}</p>
+      <p className={`font-display text-2xl leading-none font-semibold tracking-wide ${tone}`}>{value}</p>
+      <p className="font-rounded text-xs font-semibold tracking-wider text-ink-muted uppercase">{label}</p>
     </div>
   )
 }

@@ -22,7 +22,7 @@ export interface WorldPalette {
 }
 
 /** The card surface of each theme (--color-surface). */
-export const SURFACE = { light: '#ffffff', dark: '#1f2426' } as const
+export const SURFACE = { light: '#ffffff', dark: '#221a15' } as const
 
 const palette = (world: string, edge: string, ink: string, soft: string, canvas: string, onWorld: string) => ({
   world,
@@ -35,28 +35,28 @@ const palette = (world: string, edge: string, ink: string, soft: string, canvas:
 
 export const WORLD_COLORS: Record<WorldId, { light: WorldPalette; dark: WorldPalette }> = {
   hell: {
-    light: palette('#cb4a1b', '#9e3915', '#b33a12', '#fde6dc', '#fdf6f3', '#ffffff'),
-    dark: palette('#ff6a2a', '#c65220', '#ff8a5a', '#3a1812', '#1a1211', '#1f2426'),
+    light: palette('#c98a3a', '#a06c2a', '#8a5612', '#f6e6cf', '#f9f3ea', '#1f1813'),
+    dark: palette('#e2a45a', '#b07c3c', '#e8b573', '#30241a', '#16110e', '#1f1813'),
   },
   wasteland: {
-    light: palette('#807266', '#63584f', '#6b5d52', '#efe9e3', '#f8f6f3', '#ffffff'),
-    dark: palette('#b3a598', '#8b8076', '#cbbfb3', '#2e2824', '#171513', '#1f2426'),
+    light: palette('#9c8f7f', '#7b7062', '#6a5e51', '#ece5dc', '#f7f4f0', '#1f1813'),
+    dark: palette('#b8a995', '#8c8070', '#c9bba8', '#2a2520', '#15120f', '#1f1813'),
   },
   forest: {
-    light: palette('#2f7d4f', '#24613d', '#22643c', '#dcefe2', '#f4f9f5', '#ffffff'),
-    dark: palette('#4fae74', '#3d875a', '#6fd093', '#16301f', '#111815', '#1f2426'),
+    light: palette('#5f9a6e', '#4a7a56', '#2f6a40', '#dcebe0', '#f1f6f2', '#1f1813'),
+    dark: palette('#7fb08a', '#5f8a69', '#93c29e', '#1c2a20', '#10140f', '#1f1813'),
   },
   meadow: {
-    light: palette('#368532', '#2a6727', '#2f7a2b', '#e1f2d6', '#f6fbf1', '#ffffff'),
-    dark: palette('#6cc35e', '#549849', '#8fdc80', '#1e3418', '#121811', '#1f2426'),
+    light: palette('#7fa85e', '#64874a', '#466b2c', '#e3edd6', '#f4f7ee', '#1f1813'),
+    dark: palette('#9bc27a', '#789a5c', '#abd08c', '#22291b', '#121410', '#1f1813'),
   },
   mountains: {
-    light: palette('#3279ae', '#275e87', '#1f6aa3', '#dfeefa', '#f4f8fc', '#ffffff'),
-    dark: palette('#7cc0f0', '#6095bb', '#9fd2f7', '#1c2a38', '#10161c', '#1f2426'),
+    light: palette('#6f9bc0', '#557c9c', '#2f6690', '#dde9f2', '#f1f5f9', '#1f1813'),
+    dark: palette('#8fb6d6', '#6b8fad', '#a3c6e2', '#1e252c', '#10141a', '#1f1813'),
   },
   heaven: {
-    light: palette('#d9a521', '#a98019', '#8a6100', '#fbf0cf', '#fdfaf0', '#1f2426'),
-    dark: palette('#f3c23a', '#bd972d', '#ffd76a', '#3a3017', '#17150e', '#1f2426'),
+    light: palette('#d4b25a', '#a88c42', '#7d6212', '#f5ebcd', '#faf6ea', '#1f1813'),
+    dark: palette('#e8c76a', '#bc9f4a', '#edd07e', '#2f2918', '#171409', '#1f1813'),
   },
 }
 

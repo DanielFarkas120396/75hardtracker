@@ -23,12 +23,12 @@ export function Stepper({ value, onStep, step = 1, min = 0, max = Infinity, unit
         type="button"
         onClick={decrement}
         disabled={value <= min}
-        className="flex h-11 w-11 items-center justify-center rounded-xl border-b-4 border-ink/15 bg-canvas text-xl font-bold text-ink active:translate-y-1 active:border-b-0 disabled:opacity-40"
+        className="flex h-11 w-11 items-center justify-center rounded-full bg-ink/8 text-xl font-semibold text-ink active:scale-95 motion-safe:transition-transform disabled:opacity-40"
         aria-label="Decrease"
       >
         −
       </button>
-      <span className="min-w-16 text-center font-rounded text-xl font-extrabold text-ink">
+      <span className="min-w-16 text-center font-rounded text-xl font-bold text-ink">
         {value}
         {unit ? <span className="ml-1 text-sm font-semibold text-ink-muted">{unit}</span> : null}
       </span>
@@ -36,7 +36,7 @@ export function Stepper({ value, onStep, step = 1, min = 0, max = Infinity, unit
         type="button"
         onClick={increment}
         disabled={value >= max}
-        className="flex h-11 w-11 items-center justify-center rounded-xl border-b-4 border-world-edge bg-world text-xl font-bold text-on-world active:translate-y-1 active:border-b-0 disabled:opacity-40"
+        className="flex h-11 w-11 items-center justify-center rounded-full bg-world text-xl font-semibold text-on-world active:scale-95 motion-safe:transition-transform disabled:opacity-40"
         aria-label="Increase"
       >
         +

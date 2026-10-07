@@ -110,7 +110,7 @@ export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGi
           {page === 'history' && <AttemptHistorySection today={today} />}
           {page === 'appearance' && <AppearanceSection />}
           {page === 'sound' && (
-            <section className="flex flex-col gap-2 rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0">
+            <section className="flex flex-col gap-2 rounded-card bg-surface p-4 ring-1 ring-ink/10 dark:ring-0">
               <Toggle checked={settings.soundEnabled} onChange={settings.setSoundEnabled} label="Sound effects" />
             </section>
           )}
@@ -213,7 +213,7 @@ export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGi
       />
 
       <Modal open={showResetConfirm} onClose={() => setShowResetConfirm(false)}>
-        <h3 className="font-rounded text-lg font-extrabold text-ink">Erase everything?</h3>
+        <h3 className="font-rounded text-lg font-bold text-ink">Erase everything?</h3>
         <p className="mt-2 text-sm text-ink-muted">
           This deletes every attempt, photo, book, and badge on this device. Consider exporting a backup first.
           This can't be undone.

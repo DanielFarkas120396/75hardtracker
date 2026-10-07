@@ -66,7 +66,7 @@ export function FlameStreak({ streak, grow = true }: FlameStreakProps) {
         <span ref={box} className="absolute inset-0" />
         {!flame && <span className="absolute inset-0 flex items-center justify-center text-2xl leading-none">🔥</span>}
       </span>
-      <span aria-hidden="true" className={`font-rounded text-lg font-extrabold ${lit ? 'text-orange-ink' : 'text-ink-muted'}`}>
+      <span aria-hidden="true" className={`font-rounded text-lg font-bold ${lit ? 'text-orange-ink' : 'text-ink-muted'}`}>
         {streak}
       </span>
     </div>

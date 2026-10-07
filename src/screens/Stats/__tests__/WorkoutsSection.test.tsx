@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { db } from '../../../db/db'
@@ -85,7 +85,8 @@ describe('WorkoutsSection', () => {
 
     fireEvent.click(weights)
     expect(weights).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.queryByRole('list', { name: /sessions$/ })).not.toBeInTheDocument()
+    // The folding panel leaves the page a tick after the tap.
+    await waitFor(() => expect(screen.queryByRole('list', { name: /sessions$/ })).not.toBeInTheDocument())
   })
 
   it('lists the activities not tried yet', async () => {

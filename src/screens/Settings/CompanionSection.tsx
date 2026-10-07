@@ -21,8 +21,8 @@ export function CompanionSection({ bedtime, onBedtimeChange }: CompanionSectionP
   const valid = isValidBedtime(draft)
 
   return (
-    <section className="rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0">
-      <h2 className="font-rounded text-lg font-extrabold text-ink">Companion</h2>
+    <section className="rounded-card bg-surface p-4 ring-1 ring-ink/10 dark:ring-0">
+      <h2 className="font-rounded text-lg font-bold text-ink">Companion</h2>
       <Field label="Bedtime" error={valid ? undefined : `Pick a time between ${EARLIEST_BEDTIME} and ${LATEST_BEDTIME}.`}>
         <input
           type="time"

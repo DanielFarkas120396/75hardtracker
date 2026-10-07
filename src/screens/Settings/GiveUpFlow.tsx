@@ -107,7 +107,7 @@ function StepHeading({ children, focusOnMount = true }: { children: ReactNode; f
   }, [focusOnMount])
 
   return (
-    <h3 ref={heading} tabIndex={-1} className="font-rounded text-lg font-extrabold text-ink outline-none">
+    <h3 ref={heading} tabIndex={-1} className="font-rounded text-lg font-bold text-ink outline-none">
       {children}
     </h3>
   )

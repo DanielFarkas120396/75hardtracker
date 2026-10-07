@@ -5,7 +5,7 @@ import { useEffect, useRef, type ReactNode } from 'react'
  * giving up). The control that had focus disappears with the old screen, so
  * the title takes focus as it appears, telling VoiceOver where the player is.
  */
-export function GateHeading({ children, id }: { children: ReactNode; id?: string }) {
+export function GateHeading({ children, id, size = 'md' }: { children: ReactNode; id?: string; size?: 'md' | 'lg' }) {
   const heading = useRef<HTMLHeadingElement>(null)
 
   useEffect(() => {
@@ -13,7 +13,7 @@ export function GateHeading({ children, id }: { children: ReactNode; id?: string
   }, [])
 
   return (
-    <h1 ref={heading} id={id} tabIndex={-1} className="font-display text-2xl tracking-wide text-ink outline-none">
+    <h1 ref={heading} id={id} tabIndex={-1} className={`font-display tracking-wide text-ink outline-none ${size === 'lg' ? 'text-4xl leading-none uppercase' : 'text-2xl'}`}>
       {children}
     </h1>
   )

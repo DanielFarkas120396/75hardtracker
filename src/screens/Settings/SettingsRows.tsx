@@ -6,8 +6,8 @@ import type { IconName } from '../../components/icons/icons'
 export function SettingsGroup({ title, footer, children }: { title: string; footer?: string; children: ReactNode }) {
   return (
     <section aria-label={title}>
-      <h2 className="mb-1.5 px-4 font-rounded text-xs font-extrabold tracking-wide text-ink-muted uppercase">{title}</h2>
-      <div className="divide-y divide-ink/10 overflow-hidden rounded-card bg-surface shadow-sm ring-1 ring-ink/10 dark:divide-white/10 dark:ring-0">
+      <h2 className="mb-1.5 px-4 font-rounded text-xs font-bold tracking-wide text-ink-muted uppercase">{title}</h2>
+      <div className="divide-y divide-ink/10 overflow-hidden rounded-card bg-surface ring-1 ring-ink/10 dark:divide-white/10 dark:ring-0">
         {children}
       </div>
       {footer && <p className="mt-1.5 px-4 font-rounded text-xs text-ink-muted">{footer}</p>}

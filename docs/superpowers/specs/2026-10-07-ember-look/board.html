@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>75 Hard · style board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #0a0a0a; color: #ddd; font-family: Inter, system-ui, sans-serif; }
+  .board { padding: 40px 32px 80px; }
+  .style-block { margin-bottom: 72px; }
+  .style-head { display: flex; align-items: baseline; gap: 16px; margin: 0 0 18px 6px; color: #aaa; font-size: 14px; }
+  .style-head b { color: #fff; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+  .style-head span { max-width: 820px; }
+  .row { display: flex; gap: 28px; align-items: flex-start; }
+
+  /* phone frame */
+  .phone { width: 390px; height: 844px; border-radius: 44px; overflow: hidden; position: relative; flex: none;
+           box-shadow: 0 0 0 10px #141414, 0 0 0 11px #2a2a2a, 0 30px 60px rgba(0,0,0,.6); }
+  .screen { position: absolute; inset: 0; overflow: hidden; }
+  .scroll { position: absolute; inset: 0; padding: 60px 16px 120px; overflow: hidden; }
+  .status { position: absolute; top: 0; left: 0; right: 0; height: 54px; display: flex; justify-content: space-between; align-items: center; padding: 10px 30px 0; font-size: 15px; font-weight: 600; z-index: 5; }
+  .notch { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 120px; height: 34px; border-radius: 20px; background: #000; z-index: 6; }
+
+  /* shared structure (skin is per-style) */
+  .duck { display: inline-block; }
+  .duck svg { width: 100%; height: auto; display: block; overflow: visible; }
+
+  .hero { position: relative; }
+  .hero .top { display: flex; align-items: baseline; gap: 10px; }
+  .hero .day { font-size: 40px; line-height: 1; }
+  .hero .attempt { font-size: 14px; opacity: .7; }
+  .hero .mid { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-top: 18px; }
+  .hero .bubble { font-size: 13px; line-height: 1.3; padding: 8px 10px; border-radius: 12px; display: inline-block; max-width: 110px; }
+  .hero .left { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+  .hero .right { display: flex; justify-content: flex-end; align-items: flex-start; }
+  .prog { width: 150px; height: 150px; position: relative; display: grid; place-items: center; }
+  .prog .num { position: absolute; text-align: center; line-height: 1; }
+  .prog .num b { font-size: 44px; display: block; }
+  .prog .num small { font-size: 12px; opacity: .7; display: block; margin-top: 6px; letter-spacing: .04em; }
+  .prog svg { width: 150px; height: 150px; }
+  .prog .ring { display: none; } .prog .arc { display: none; } .prog .seg { display: none; }
+  .quote { font-size: 14px; text-align: center; margin-top: 14px; opacity: .7; font-style: italic; }
+  .streak { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; }
+  .streak svg { width: 18px; height: 18px; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .tile { padding: 16px; position: relative; min-height: 116px; display: flex; flex-direction: column; justify-content: space-between; }
+  .tile.wide { grid-column: 1 / -1; min-height: 100px; }
+  .tile .ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; }
+  .tile .ic svg { width: 20px; height: 20px; }
+  .tile .hd { display: flex; justify-content: space-between; align-items: flex-start; }
+  .tile h3 { font-size: 18px; font-weight: 600; margin-top: 14px; }
+  .tile p { font-size: 13px; margin-top: 3px; }
+  .tile .act { font-size: 13px; font-weight: 600; padding: 7px 12px; border-radius: 999px; border: 1px solid; white-space: nowrap; }
+  .tile .done { position: absolute; top: 12px; left: 42px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; }
+  .tile .done svg { width: 12px; height: 12px; }
+  .toggles { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+  .tog { width: 40px; height: 24px; border-radius: 12px; position: relative; }
+  .tog::after { content: ""; position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; }
+  .chips { display: flex; gap: 10px; margin-top: 14px; }
+  .chip { flex: 1; text-align: center; font-size: 13px; font-weight: 600; padding: 12px 6px; border-radius: 999px; }
+
+  .nav { position: absolute; left: 14px; right: 14px; bottom: 22px; height: 64px; border-radius: 32px; display: flex; justify-content: space-around; align-items: center; padding: 0 6px; }
+  .nav a { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10.5px; font-weight: 500; padding: 8px 10px; border-radius: 20px; min-width: 56px; }
+  .nav a svg { width: 20px; height: 20px; }
+
+  /* welcome */
+  .welcome { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 28px; text-align: center; }
+  .welcome .duck { width: 120px; margin-bottom: 26px; }
+  .welcome h1 { font-size: 30px; line-height: 1.12; font-weight: 700; }
+  .welcome p { font-size: 16px; line-height: 1.45; margin-top: 14px; opacity: .72; }
+  .welcome .cta { margin-top: 32px; width: 100%; padding: 17px; border-radius: 999px; font-size: 17px; font-weight: 600; text-align: center; }
+  .welcome .link { margin-top: 22px; font-size: 14px; opacity: .65; text-decoration: underline; text-underline-offset: 3px; }
+  .welcome .bar { position: absolute; top: 62px; left: 70px; right: 70px; height: 4px; border-radius: 2px; }
+
+  /* stats */
+  .st-title { display: flex; justify-content: space-between; align-items: flex-end; }
+  .st-title small { font-size: 12px; opacity: .6; display: block; margin-bottom: 4px; }
+  .st-title h2 { font-size: 26px; font-weight: 700; }
+  .card { padding: 16px; margin-top: 12px; }
+  .card .lab { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; opacity: .65; }
+  .card .big { font-size: 34px; font-weight: 700; margin-top: 4px; line-height: 1.05; }
+  .card .big small { font-size: 14px; font-weight: 500; opacity: .6; margin-left: 4px; }
+  .worlds { display: flex; gap: 4px; margin-top: 12px; height: 8px; }
+  .worlds i { flex: 1; border-radius: 4px; opacity: .25; }
+  .worlds i.on { opacity: 1; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .three { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .three .card { padding: 12px; }
+  .three .big { font-size: 24px; }
+  .three .lab { font-size: 11px; }
+  .sec { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; opacity: .6; margin-top: 22px; }
+  .act-row { display: flex; align-items: center; gap: 14px; }
+  .act-row .ic { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; }
+  .act-row .ic svg { width: 22px; height: 22px; }
+  .act-row .t { flex: 1; }
+  .act-row .t b { font-size: 16px; display: block; }
+  .act-row .t span { font-size: 13px; opacity: .65; }
+  .act-row .n { font-size: 24px; font-weight: 700; }
+  .fold { display: flex; justify-content: space-between; align-items: center; }
+  .fold b { font-size: 17px; }
+  .fold .act { font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 999px; border: 1px solid; }
+
+  /* ====================== STYLE 1 · Night sky ====================== */
+  .s1 { --bg1: #0f1226; --bg2: #1d1537; --ink: #eef0ff; --mute: rgba(238,240,255,.62); --acc: #7ac5a0; --acc-soft: rgba(122,197,160,.16);
+        --card: rgba(255,255,255,.055); --line: rgba(255,255,255,.09); --r: 24px; font-family: Inter, system-ui, sans-serif; color: var(--ink); }
+  .s1 .screen { background: linear-gradient(170deg, var(--bg1) 0%, var(--bg2) 100%); }
+  .s1 .screen::before { content: ""; position: absolute; top: -140px; left: 50%; transform: translateX(-50%); width: 420px; height: 320px; border-radius: 50%;
+        background: radial-gradient(closest-side, rgba(122,197,160,.28), transparent 70%); pointer-events: none; }
+  .s1 .hero { padding: 6px 4px 0; }
+  .s1 .day { font-weight: 600; letter-spacing: -0.03em; }
+  .s1 .bubble { background: var(--card); border: 1px solid var(--line); color: var(--mute); }
+  .s1 .prog .ring { display: block; } .s1 .ring .track { stroke: rgba(255,255,255,.08); } .s1 .ring .fill { stroke: var(--acc); }
+  .s1 .prog .num b { font-weight: 600; letter-spacing: -0.03em; } .s1 .prog .num small { color: var(--mute); }
+  .s1 .streak { color: #f0b47a; }
+  .s1 .tile, .s1 .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); backdrop-filter: blur(14px); }
+  .s1 .tile.is-done { background: var(--acc-soft); border-color: rgba(122,197,160,.25); }
+  .s1 .tile .ic { background: rgba(255,255,255,.07); color: var(--ink); }
+  .s1 .tile .ic svg { stroke-width: 1.5; }
+  .s1 .tile p { color: var(--mute); } .s1 .tile.is-done p { color: var(--acc); }
+  .s1 .tile .act { border-color: var(--line); color: var(--ink); }
+  .s1 .tile .done { background: var(--acc); color: #0f1226; }
+  .s1 .tog { background: rgba(255,255,255,.12); } .s1 .tog.on { background: var(--acc); } .s1 .tog.on::after { background: #0f1226; }
+  .s1 .chip { background: var(--card); border: 1px solid var(--line); }
+  .s1 .nav { background: rgba(20,18,45,.78); border: 1px solid var(--line); backdrop-filter: blur(18px); color: var(--mute); }
+  .s1 .nav a.on { background: var(--acc-soft); color: var(--acc); }
+  .s1 .nav svg { stroke-width: 1.5; }
+  .s1 .welcome .cta { background: var(--acc); color: #0f1226; }
+  .s1 .welcome h1 { font-weight: 600; letter-spacing: -0.02em; }
+  .s1 .welcome .bar { background: rgba(255,255,255,.12); }
+  .s1 .welcome .duck { filter: saturate(.75); width: 104px; }
+  .s1 .hero .duck { width: 62px; filter: saturate(.75); }
+  .s1 .worlds i { background: var(--acc); }
+  .s1 .card .big { font-weight: 600; letter-spacing: -0.03em; }
+  .s1 .fold .act { border-color: var(--line); }
+  .s1 .act-row .ic { background: rgba(255,255,255,.07); } .s1 .act-row .ic svg { stroke-width: 1.5; }
+
+  /* ====================== STYLE 2 · Ember ====================== */
+  .s2 { --bg: #16110e; --ink: #f6ecdc; --mute: rgba(246,236,220,.62); --acc: #e2a45a; --acc2: #7fb08a; --card: #221a15; --line: rgba(246,236,220,.07); --r: 20px;
+        font-family: "DM Sans", system-ui, sans-serif; color: var(--ink); }
+  .s2 .screen { background: var(--bg); }
+  .s2 .screen::before { content: ""; position: absolute; left: -60px; right: -60px; top: 20px; height: 380px;
+        background: radial-gradient(60% 55% at 50% 30%, rgba(226,164,90,.42), rgba(226,164,90,.10) 50%, transparent 72%); pointer-events: none; }
+  .s2 .num-font, .s2 .day, .s2 .prog .num b, .s2 .card .big, .s2 .act-row .n, .s2 .st-title h2 { font-family: "Barlow Condensed", sans-serif; font-weight: 600; letter-spacing: .01em; }
+  .s2 .day { font-size: 46px; }
+  .s2 .hero { padding: 6px 4px 0; }
+  .s2 .bubble { background: rgba(246,236,220,.08); color: var(--mute); }
+  .s2 .prog .arc { display: block; } .s2 .arc .track { stroke: rgba(246,236,220,.12); } .s2 .arc .fill { stroke: var(--acc); }
+  .s2 .prog .num b { font-size: 54px; } .s2 .prog .num small { color: var(--mute); }
+  .s2 .streak { color: var(--acc); }
+  .s2 .quote { font-family: Fraunces, serif; font-style: italic; font-size: 15px; }
+  .s2 .tile, .s2 .card { background: var(--card); border-radius: var(--r); }
+  .s2 .tile.is-done { background: #1d2419; }
+  .s2 .tile .ic { background: rgba(226,164,90,.14); color: var(--acc); }
+  .s2 .tile.is-done .ic { background: rgba(127,176,138,.16); color: var(--acc2); }
+  .s2 .tile .ic svg { stroke-width: 2.25; }
+  .s2 .tile p { color: var(--mute); } .s2 .tile.is-done p { color: var(--acc2); }
+  .s2 .tile .act { border-color: transparent; background: rgba(246,236,220,.08); color: var(--ink); }
+  .s2 .tile .done { background: var(--acc2); color: #16110e; }
+  .s2 .tog { background: rgba(246,236,220,.14); } .s2 .tog.on { background: var(--acc2); }
+  .s2 .chip { background: var(--card); }
+  .s2 .nav { background: #1d1612; color: var(--mute); box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+  .s2 .nav a.on { background: rgba(226,164,90,.16); color: var(--acc); }
+  .s2 .nav svg { stroke-width: 2.25; }
+  .s2 .welcome .cta { background: var(--acc); color: #16110e; }
+  .s2 .welcome h1 { font-family: "Barlow Condensed", sans-serif; font-weight: 600; font-size: 40px; letter-spacing: .01em; text-transform: uppercase; }
+  .s2 .welcome .bar { background: rgba(246,236,220,.14); }
+  .s2 .welcome .duck { width: 112px; filter: sepia(.35) saturate(.9); }
+  .s2 .hero .duck { width: 62px; filter: sepia(.35) saturate(.9); }
+  .s2 .worlds i { background: var(--acc); }
+  .s2 .card .big { font-size: 40px; }
+  .s2 .fold .act { border-color: transparent; background: rgba(246,236,220,.08); }
+  .s2 .act-row .ic { background: rgba(226,164,90,.14); color: var(--acc); } .s2 .act-row .ic svg { stroke-width: 2.25; }
+  .s2 .act-row .n { font-size: 30px; }
+
+  /* ====================== STYLE 3 · Performance ====================== */
+  .s3 { --bg: #121417; --ink: #f2f4f6; --mute: rgba(242,244,246,.55); --acc: #5fbf86; --card: #1a1d21; --line: #2a2e33; --r: 10px;
+        font-family: Inter, system-ui, sans-serif; color: var(--ink); }
+  .s3 .screen { background: var(--bg); }
+  .s3 .day, .s3 .prog .num b, .s3 .card .big, .s3 .act-row .n, .s3 .st-title h2, .s3 .welcome h1 { font-family: "Barlow Condensed", sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: .01em; }
+  .s3 .day { font-size: 52px; }
+  .s3 .attempt, .s3 .lab, .s3 .sec, .s3 .prog .num small, .s3 .tile p, .s3 .st-title small { text-transform: uppercase; letter-spacing: .1em; font-size: 11px; font-weight: 500; }
+  .s3 .hero { padding: 6px 4px 0; border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+  .s3 .bubble { background: transparent; border: 1px solid var(--line); color: var(--mute); border-radius: 6px; }
+  .s3 .prog .seg { display: block; } .s3 .seg rect { fill: var(--line); } .s3 .seg rect.on { fill: var(--acc); }
+  .s3 .prog { height: 120px; } .s3 .prog .num b { font-size: 64px; }
+  .s3 .streak { color: var(--ink); font-family: "Barlow Condensed", sans-serif; font-size: 22px; }
+  .s3 .quote { font-style: normal; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
+  .s3 .tile, .s3 .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); }
+  .s3 .tile.is-done { border-color: rgba(95,191,134,.5); }
+  .s3 .tile .ic { background: transparent; border: 1px solid var(--line); border-radius: 8px; color: var(--mute); }
+  .s3 .tile.is-done .ic { color: var(--acc); border-color: var(--acc); }
+  .s3 .tile .ic svg { stroke-width: 2; }
+  .s3 .tile h3 { font-family: "Barlow Condensed", sans-serif; font-size: 22px; text-transform: uppercase; letter-spacing: .02em; }
+  .s3 .tile p { color: var(--mute); } .s3 .tile.is-done p { color: var(--acc); }
+  .s3 .tile .act { border-color: var(--line); border-radius: 6px; color: var(--ink); text-transform: uppercase; letter-spacing: .06em; font-size: 11px; }
+  .s3 .tile .done { background: var(--acc); color: #121417; border-radius: 4px; }
+  .s3 .tog { background: #2a2e33; border-radius: 4px; } .s3 .tog::after { border-radius: 3px; } .s3 .tog.on { background: var(--acc); } .s3 .tog.on::after { background: #121417; }
+  .s3 .chip { background: transparent; border: 1px solid var(--line); border-radius: 6px; text-transform: uppercase; letter-spacing: .06em; font-size: 11px; }
+  .s3 .nav { background: #0d0f11; border: 1px solid var(--line); border-radius: 12px; left: 0; right: 0; bottom: 0; height: 84px; padding-bottom: 18px; color: var(--mute); }
+  .s3 .nav a { border-radius: 6px; text-transform: uppercase; letter-spacing: .06em; font-size: 9.5px; }
+  .s3 .nav a.on { color: var(--acc); }
+  .s3 .nav svg { stroke-width: 2; }
+  .s3 .welcome .cta { background: var(--acc); color: #121417; border-radius: 8px; text-transform: uppercase; letter-spacing: .08em; }
+  .s3 .welcome h1 { font-size: 44px; line-height: 1; }
+  .s3 .welcome .bar { background: var(--line); border-radius: 0; }
+  .s3 .welcome .duck { width: 96px; } .s3 .hero .duck { width: 58px; }
+  .s3 .duck.mono svg * { fill: var(--acc) !important; stroke: var(--acc) !important; }
+  .s3 .duck.mono svg [data-part="eyes"] * { fill: var(--bg) !important; }
+  .s3 .duck.mono svg [data-part="knife"] * { fill: #e8ecef !important; stroke: var(--bg) !important; }
+  .s3 .duck.mono svg [data-part="glint"] { display: none; }
+  .s3 .worlds i { background: var(--acc); border-radius: 1px; } .s3 .worlds { gap: 3px; }
+  .s3 .card .big { font-size: 42px; }
+  .s3 .fold .act { border-color: var(--line); border-radius: 6px; text-transform: uppercase; letter-spacing: .06em; font-size: 11px; }
+  .s3 .act-row .ic { background: transparent; border: 1px solid var(--line); border-radius: 8px; color: var(--mute); }
+  .s3 .act-row .n { font-size: 32px; }
+
+  /* ====================== STYLE 4 · Paper dark ====================== */
+  .s4 { --bg: #1f1c19; --ink: #efe6d8; --mute: rgba(239,230,216,.6); --acc: #9fbf9e; --card: #27231f; --line: rgba(239,230,216,.1); --r: 14px;
+        font-family: Inter, system-ui, sans-serif; color: var(--ink); }
+  .s4 .screen { background: var(--bg); }
+  .s4 .screen::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5; mix-blend-mode: overlay;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 .18 0'/></filter><rect width='120' height='120' filter='url(%23n)'/></svg>"); }
+  .s4 .day, .s4 .prog .num b, .s4 .card .big, .s4 .act-row .n, .s4 .st-title h2, .s4 .welcome h1, .s4 .tile h3 { font-family: Fraunces, Georgia, serif; font-weight: 400; letter-spacing: -0.01em; }
+  .s4 .day { font-size: 46px; }
+  .s4 .quote { font-family: Fraunces, serif; font-style: italic; }
+  .s4 .hero { padding: 6px 4px 0; }
+  .s4 .bubble { background: transparent; border: 1px solid var(--line); color: var(--mute); }
+  .s4 .prog .ring { display: block; } .s4 .ring .track { stroke: rgba(239,230,216,.1); } .s4 .ring .fill { stroke: var(--acc); stroke-width: 4; }
+  .s4 .prog .num b { font-size: 52px; } .s4 .prog .num small { color: var(--mute); font-family: Fraunces, serif; font-style: italic; font-size: 13px; letter-spacing: 0; text-transform: none; }
+  .s4 .streak { color: #d6a06a; font-family: Fraunces, serif; font-size: 17px; }
+  .s4 .tile, .s4 .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); }
+  .s4 .tile.is-done { background: #252b23; border-color: rgba(159,191,158,.25); }
+  .s4 .tile .ic { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+  .s4 .tile .ic svg { stroke-width: 1.25; }
+  .s4 .tile h3 { font-size: 21px; }
+  .s4 .tile p { color: var(--mute); } .s4 .tile.is-done p { color: var(--acc); }
+  .s4 .tile .act { border-color: var(--line); color: var(--ink); font-weight: 500; }
+  .s4 .tile .done { background: var(--acc); color: #1f1c19; }
+  .s4 .tog { background: rgba(239,230,216,.14); } .s4 .tog.on { background: var(--acc); } .s4 .tog.on::after { background: #1f1c19; }
+  .s4 .chip { background: transparent; border: 1px solid var(--line); font-weight: 500; }
+  .s4 .nav { background: #27231f; border: 1px solid var(--line); color: var(--mute); }
+  .s4 .nav a.on { color: var(--ink); } .s4 .nav a.on::after { content: ""; width: 4px; height: 4px; border-radius: 50%; background: var(--acc); margin-top: 1px; }
+  .s4 .nav svg { stroke-width: 1.25; }
+  .s4 .welcome .cta { background: var(--ink); color: #1f1c19; }
+  .s4 .welcome h1 { font-size: 34px; }
+  .s4 .welcome .bar { background: rgba(239,230,216,.14); }
+  .s4 .welcome .duck { width: 110px; } .s4 .hero .duck { width: 60px; }
+  .s4 .duck.line svg * { fill: none !important; stroke: var(--ink) !important; stroke-width: 7 !important; }
+  .s4 .duck.line svg [data-part="eyes"] * { fill: var(--ink) !important; }
+  .s4 .duck.line svg [data-part="glint"] { display: none; }
+  .s4 .worlds i { background: var(--acc); }
+  .s4 .card .big { font-size: 38px; }
+  .s4 .fold .act { border-color: var(--line); font-weight: 500; }
+  .s4 .act-row .ic { background: transparent; border: 1px solid var(--line); } .s4 .act-row .ic svg { stroke-width: 1.25; }
+  .s4 .act-row .n { font-size: 30px; }
+
+  /* ====================== STYLE 5 · Deep forest ====================== */
+  .s5 { --ink: #f2f5f1; --mute: rgba(242,245,241,.68); --acc: #8fd3a8; --card: rgba(8,18,12,.5); --line: rgba(255,255,255,.1); --r: 28px;
+        font-family: Manrope, system-ui, sans-serif; color: var(--ink); }
+  .s5 .screen { background: #0b140e; }
+  .s5 .screen .bgimg { position: absolute; inset: -30px; background: url("../../../../public/journey/forest.webp") center 20% / cover no-repeat; filter: blur(14px) saturate(.9) brightness(.55); }
+  .s5 .screen .bgimg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11,20,14,.1) 0%, rgba(11,20,14,.55) 45%, rgba(11,20,14,.92) 100%); }
+  .s5 .scroll, .s5 .welcome { z-index: 2; } .s5 .nav { z-index: 3; }
+  .s5 .day { font-weight: 800; letter-spacing: -0.03em; font-size: 44px; }
+  .s5 .hero { padding: 6px 4px 0; }
+  .s5 .bubble { background: var(--card); border: 1px solid var(--line); color: var(--ink); backdrop-filter: blur(10px); }
+  .s5 .prog .ring { display: block; } .s5 .ring .track { stroke: rgba(255,255,255,.14); } .s5 .ring .fill { stroke: var(--acc); stroke-width: 10; } .s5 .ring .track { stroke-width: 10; }
+  .s5 .prog .num b { font-weight: 800; letter-spacing: -0.03em; font-size: 48px; } .s5 .prog .num small { color: var(--mute); }
+  .s5 .streak { color: #f3c27a; }
+  .s5 .quote { opacity: .85; }
+  .s5 .tile, .s5 .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); backdrop-filter: blur(18px); }
+  .s5 .tile.is-done { background: rgba(143,211,168,.16); border-color: rgba(143,211,168,.3); }
+  .s5 .tile .ic { background: rgba(255,255,255,.1); color: var(--ink); }
+  .s5 .tile .ic svg { stroke-width: 2.25; }
+  .s5 .tile h3 { font-weight: 700; }
+  .s5 .tile p { color: var(--mute); } .s5 .tile.is-done p { color: var(--acc); }
+  .s5 .tile .act { border-color: transparent; background: rgba(255,255,255,.12); color: var(--ink); }
+  .s5 .tile .done { background: var(--acc); color: #0b140e; }
+  .s5 .tog { background: rgba(255,255,255,.2); } .s5 .tog.on { background: var(--acc); } .s5 .tog.on::after { background: #0b140e; }
+  .s5 .chip { background: var(--card); border: 1px solid var(--line); backdrop-filter: blur(18px); }
+  .s5 .nav { background: rgba(8,18,12,.6); border: 1px solid var(--line); backdrop-filter: blur(20px); color: var(--mute); }
+  .s5 .nav a.on { background: rgba(255,255,255,.12); color: var(--ink); }
+  .s5 .nav svg { stroke-width: 2.25; }
+  .s5 .welcome .cta { background: var(--ink); color: #0b140e; }
+  .s5 .welcome h1 { font-weight: 800; letter-spacing: -0.02em; font-size: 32px; }
+  .s5 .welcome .bar { background: rgba(255,255,255,.2); }
+  .s5 .welcome .duck { width: 124px; filter: drop-shadow(0 12px 24px rgba(0,0,0,.5)); } .s5 .hero .duck { width: 68px; filter: drop-shadow(0 6px 12px rgba(0,0,0,.5)); }
+  .s5 .welcome .bgimg { filter: blur(6px) brightness(.5); }
+  .s5 .worlds i { background: var(--acc); }
+  .s5 .card .big { font-weight: 800; letter-spacing: -0.03em; }
+  .s5 .fold .act { border-color: transparent; background: rgba(255,255,255,.12); }
+  .s5 .act-row .ic { background: rgba(255,255,255,.1); } .s5 .act-row .ic svg { stroke-width: 2.25; }
+  .s5 .hero .duck { width: 60px; } .s5 .day { font-size: 40px; }
+</style>
+</head>
+<body>
+<div class="board" id="board"></div>
+
+<!-- Duck art, copied from src/components/mascot/duckArt.tsx -->
+<template id="duck-tpl">
+<svg viewBox="-10 20 490 500" overflow="visible" aria-hidden="true">
+  <defs><clipPath id="duck-blade"><path d="M112 313 L224 310 C232 310 237 314 237 321 C236 330 229 339 221 346 C206 360 188 372 164 375 C146 376 128 366 112 353 Z"/></clipPath></defs>
+  <g stroke="#5a1a16" stroke-width="12" stroke-linejoin="round" stroke-linecap="round">
+    <path fill="#ffb624" d="M96 460 C91 460 99 467 101 471 C103 475 103 480 106 484 C109 488 113 491 117 494 C121 497 126 499 131 501 C136 503 144 505 150 506 C156 507 160 507 165 507 C170 507 174 507 177 505 C180 503 182 500 184 497 C186 494 188 490 186 487 C184 484 179 481 170 478 C161 475 142 473 130 470 C118 467 101 460 96 460 Z"/>
+    <path fill="#ffb624" d="M279 478 C276 481 278 488 281 491 C284 494 290 496 294 498 C298 500 302 500 307 500 C312 500 316 500 321 499 C326 498 330 498 334 496 C338 494 344 491 348 488 C352 485 354 483 356 480 C358 477 359 472 360 468 C361 464 366 459 361 458 C356 457 340 462 330 464 C320 466 308 470 300 472 C292 474 282 475 279 478 Z"/>
+    <path fill="#f9dd97" d="M238 39 C229 38 222 39 215 39 C208 39 203 40 196 41 C189 42 182 44 173 47 C164 50 154 55 145 60 C136 65 129 70 122 75 C115 80 109 86 104 91 C99 96 95 100 90 106 C85 112 80 121 76 127 C72 133 72 134 69 140 C66 146 62 157 59 165 C56 173 54 180 52 190 C50 200 48 212 47 225 C46 238 44 252 43 265 C42 278 41 292 40 305 C39 318 39 330 39 340 C39 350 39 357 40 365 C41 373 41 378 44 387 C47 396 52 410 58 420 C64 430 70 438 77 446 C84 454 90 463 101 469 C112 475 131 478 145 481 C159 484 171 485 183 486 C195 487 205 486 215 486 C225 486 235 486 243 486 C251 486 258 485 265 484 C272 483 280 480 287 479 C294 478 303 476 310 475 C317 474 324 472 330 470 C336 468 343 465 348 463 C353 461 357 462 362 458 C367 454 373 446 377 440 C381 434 384 431 388 424 C392 417 396 405 399 398 C402 391 402 387 403 381 C404 375 404 368 404 360 C404 352 403 345 403 335 C403 325 403 312 403 300 C403 288 404 275 405 262 C406 249 408 237 407 224 C406 211 401 196 397 184 C393 172 391 163 385 151 C379 139 372 123 363 111 C354 99 343 87 334 79 C325 71 318 68 311 63 C304 58 298 55 291 52 C284 49 277 46 268 44 C259 42 247 40 238 39 Z"/>
+    <path fill="#f9dd97" stroke="none" d="M405 215 C407 215 404 220 407 224 C410 228 416 236 420 242 C424 248 428 253 433 262 C438 271 445 285 449 295 C453 305 456 316 457 324 C458 332 458 340 457 345 C456 350 455 354 453 357 C451 360 448 363 445 364 C442 365 440 366 437 365 C434 364 431 363 428 361 C425 359 420 354 417 352 C414 350 410 350 408 348 C406 346 405 344 404 341 C403 338 404 338 402 331 C400 324 396 312 394 300 C392 288 393 274 393 262 C393 250 394 234 396 226 C398 218 403 215 405 215 Z"/>
+    <path fill="none" d="M405 215 C405 216 404 220 407 224 C410 228 416 236 420 242 C424 248 428 253 433 262 C438 271 445 285 449 295 C453 305 456 316 457 324 C458 332 458 340 457 345 C456 350 455 354 453 357 C451 360 448 363 445 364 C442 365 440 366 437 365 C434 364 431 363 428 361 C425 359 420 354 417 352 C414 350 410 350 408 348 C406 346 405 344 404 341 C403 338 402 333 402 331"/>
+    <g data-part="eyes" stroke="none" fill="#5a1a16"><ellipse cx="155.5" cy="177.4" rx="12.8" ry="12.8"/><ellipse cx="314.8" cy="170.6" rx="12.8" ry="12.8"/></g>
+    <ellipse cx="239" cy="213" rx="64" ry="26" fill="#ffb624" stroke-width="13"/>
+    <path fill="#f9dd97" stroke="none" d="M51 195 C46 197 42 205 38 210 C34 215 33 219 30 224 C27 229 23 236 21 242 C19 248 18 251 16 258 C14 265 13 277 12 283 C11 289 11 289 12 295 C13 301 14 312 16 319 C18 326 22 334 26 340 C30 346 34 353 39 356 C44 359 49 358 53 359 C57 360 60 361 64 361 C68 361 73 360 76 359 C79 358 81 354 83 352 C85 350 86 350 88 346 C90 342 93 334 96 325 C99 316 103 307 104 295 C105 283 103 267 100 255 C97 243 91 231 86 222 C81 213 74 204 68 200 C62 196 56 193 51 195 Z"/>
+    <path fill="none" d="M51 195 C49 198 42 205 38 210 C34 215 33 219 30 224 C27 229 23 236 21 242 C19 248 18 251 16 258 C14 265 13 277 12 283 C11 289 11 289 12 295 C13 301 14 312 16 319 C18 326 22 334 26 340 C30 346 34 353 39 356 C44 359 49 358 53 359 C57 360 60 361 64 361 C68 361 73 360 76 359 C79 358 81 354 83 352 C85 350 87 347 88 346"/>
+    <g data-part="knife">
+      <path fill="#d8d7d5" stroke-width="13" d="M112 313 L224 310 C232 310 237 314 237 321 C236 330 229 339 221 346 C206 360 188 372 164 375 C146 376 128 366 112 353 Z"/>
+      <g clip-path="url(#duck-blade)" stroke="none"><path data-part="glint" d="M20 290 L42 290 L12 390 L-10 390 Z" fill="#fff" opacity=".9"/></g>
+      <path fill="#ffa6c5" stroke-width="13" d="M95 314 L112 313 L111 350 L88 350 Z"/>
+    </g>
+  </g>
+</svg>
+</template>
+
+<script>
+const I = {
+  dumbbell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"/></svg>',
+  leaf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19c0-8 5-13 14-14 0 9-4 14-12 14H5z"/><path d="M5 19c3-4 6-7 10-9"/></svg>',
+  drop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>',
+  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h7a2 2 0 0 1 2 2v12a2 2 0 0 0-2-2H3zM21 5h-7a2 2 0 0 0-2 2v12a2 2 0 0 1 2-2h7z"/></svg>',
+  camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L19 7"/></svg>',
+  flame: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4-1-6 1-9z"/></svg>',
+  today: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>',
+  flag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4h12l-2 4 2 4H5"/></svg>',
+  chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V12M12 20V5M19 20v-8"/></svg>',
+  images: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 16l5-5 4 4 3-3 4 4"/></svg>',
+  gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>',
+  scale: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 10c1-2 7-2 8 0M12 10v2"/></svg>',
+  kettle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 9V6a3 3 0 0 1 6 0v3"/><path d="M6 20a6 6 0 1 1 12 0z"/></svg>',
+  walk: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="1.5"/><path d="M10 21l2-6 3 2v4M8 13l2-5 4 1 2 3M8 13l-2 3"/></svg>',
+  run: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="15" cy="4" r="1.5"/><path d="M6 21l4-7 3 2v5M9 13l2-5 4 1 3 3M7 9l4-1"/></svg>',
+}
+const duckSvg = document.getElementById('duck-tpl').innerHTML
+const duck = (cls='') => `<span class="duck ${cls}">${duckSvg}</span>`
+
+const ring = (p) => { const r=66, c=2*Math.PI*r; return `<svg class="ring" viewBox="0 0 150 150"><circle class="track" cx="75" cy="75" r="${r}" fill="none" stroke-width="7"/><circle class="fill" cx="75" cy="75" r="${r}" fill="none" stroke-width="7" stroke-linecap="round" stroke-dasharray="${c*p} ${c}" transform="rotate(-90 75 75)"/></svg>` }
+const arc = (p) => { // 240° arc, ticks
+  let t=''; const n=40; for(let i=0;i<n;i++){ const a=(-210+i*(240/(n-1)))*Math.PI/180; const on=i/(n-1)<=p; const x1=75+58*Math.cos(a), y1=75+58*Math.sin(a), x2=75+(on?70:66)*Math.cos(a), y2=75+(on?70:66)*Math.sin(a);
+    t+=`<line class="${on?'fill':'track'}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-width="${on?3:2}" stroke-linecap="round"/>` }
+  return `<svg class="arc" viewBox="0 0 150 150">${t}</svg>` }
+const seg = (done, total) => { let t=''; for(let i=0;i<total;i++){ t+=`<rect class="${i<done?'on':''}" x="${i*30}" y="110" width="24" height="6" rx="1"/>` } return `<svg class="seg" viewBox="0 0 150 120">${t}</svg>` }
+
+function welcome(duckCls) { return `
+<div class="phone"><div class="screen"><div class="bgimg"></div>
+  <div class="notch"></div><div class="status"><span>9:41</span><span>●●●</span></div>
+  <div class="welcome"><div class="bar"></div>
+    ${duck(duckCls)}
+    <h1>75 days. 5 tasks.<br>One duck with a knife.</h1>
+    <p>Workouts, diet, water, reading and a progress photo, every single day. I'll be watching.</p>
+    <div class="cta">Get started</div>
+    <div class="link">Already have a backup? Restore it</div>
+  </div>
+</div></div>` }
+
+function today(duckCls) { return `
+<div class="phone"><div class="screen"><div class="bgimg"></div>
+  <div class="notch"></div><div class="status"><span>9:41</span><span>●●●</span></div>
+  <div class="scroll">
+    <div class="hero">
+      <div class="top"><div class="day">Day 23</div><div class="attempt">75 Hard #1</div></div>
+      <div class="mid">
+        <div class="left"><div class="bubble">New day, Sam. I'm watching.</div>${duck(duckCls)}</div>
+        <div class="prog">${ring(0.6)}${arc(0.6)}${seg(3,5)}<div class="num"><b>3<span style="font-size:.5em;opacity:.55">/5</span></b><small>today's tasks</small></div></div>
+        <div class="right"><div class="streak">${I.flame}<span>22</span></div></div>
+      </div>
+      <div class="quote">“Prove I can finish what I start.”</div>
+    </div>
+    <div class="grid">
+      <div class="tile"><div class="hd"><div class="ic">${I.dumbbell}</div><div class="act">+ Workout</div></div><div><h3>Workouts</h3><p>1 of 2 · 45 min each</p></div></div>
+      <div class="tile is-done"><div class="hd"><div class="ic">${I.leaf}</div><div class="done">${I.check}</div><div class="toggles"><div class="tog on"></div><div class="tog on"></div></div></div><div><h3>Diet</h3><p>Followed</p></div></div>
+      <div class="tile"><div class="hd"><div class="ic">${I.drop}</div><div class="act">+ 250 ml</div></div><div><h3>Water</h3><p>1.5 / 3.8 L</p></div></div>
+      <div class="tile is-done"><div class="hd"><div class="ic">${I.book}</div><div class="done">${I.check}</div></div><div><h3>Reading</h3><p>10 pages</p></div></div>
+      <div class="tile wide"><div class="hd"><div class="ic">${I.camera}</div><div class="act">Snap</div></div><div><h3>Photo</h3><p>No photo yet</p></div></div>
+    </div>
+    <div class="chips"><div class="chip">Plan my evening</div><div class="chip">Social night</div><div class="chip">Notes</div></div>
+  </div>
+  ${nav('today')}
+</div></div>` }
+
+function stats() { return `
+<div class="phone"><div class="screen"><div class="bgimg"></div>
+  <div class="notch"></div><div class="status"><span>9:41</span><span>●●●</span></div>
+  <div class="scroll">
+    <div class="st-title"><div><small>Attempt #1</small><h2>Stats</h2></div><div class="streak">${I.flame}<span>22</span></div></div>
+    <div class="card"><div class="lab">The Dark Forest</div><div class="big">Day 23<small>of 75</small></div>
+      <div class="worlds"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
+      <div class="lab" style="margin-top:10px;text-transform:none;letter-spacing:0">31% of the climb from Hell to Heaven</div></div>
+    <div class="two"><div class="card"><div class="lab">Water drunk</div><div class="big">83.6<small>L</small></div></div><div class="card"><div class="lab">Pages read</div><div class="big">220</div></div></div>
+    <div class="card fold"><b>Weight</b><div class="act">+ Log</div></div>
+    <div class="sec">Workouts</div>
+    <div class="three"><div class="card"><div class="big">44</div><div class="lab">sessions</div></div><div class="card"><div class="big">40h</div><div class="lab">training</div></div><div class="card"><div class="big">22</div><div class="lab">outdoors</div></div></div>
+    <div class="card act-row"><div class="ic">${I.kettle}</div><div class="t"><b>Weights</b><span>11h 0m</span></div><div class="n">11</div></div>
+    <div class="card act-row"><div class="ic">${I.walk}</div><div class="t"><b>Walking</b><span>6h 40m</span></div><div class="n">8</div></div>
+    <div class="card act-row"><div class="ic">${I.run}</div><div class="t"><b>Running</b><span>5h 15m</span></div><div class="n">7</div></div>
+  </div>
+  ${nav('stats')}
+</div></div>` }
+
+function nav(on) { const t=[['today','Today',I.today],['journey','Journey',I.flag],['stats','Stats',I.chart],['gallery','Gallery',I.images],['settings','Settings',I.gear]]
+  return `<div class="nav">${t.map(([k,l,i])=>`<a class="${k===on?'on':''}">${i}<span>${l}</span></a>`).join('')}</div>` }
+
+const STYLES = [
+  ['s1','1 · Night sky','Navy to plum gradient, Inter, glass cards, the world as a soft glow at the top. Thin ring. Duck kept, slightly desaturated, smaller.',''],
+  ['s2','2 · Ember','Near-black with amber and cream, Barlow Condensed numbers, DM Sans text, a sunrise band behind the hero. Tick arc gauge. Filled icons. Duck warmed.',''],
+  ['s3','3 · Performance','Charcoal, hairlines, small radius, condensed uppercase numbers, the world colour only on data. Segment bar. Duck as a flat silhouette in the world colour.','mono'],
+  ['s4','4 · Paper dark','Warm dark grey with paper grain, Fraunces serif titles, cream ink, thin ring, sage accent. Duck as a line drawing.','line'],
+  ['s5','5 · Deep forest','Your Dark Forest art blurred behind the whole screen, frosted cards on top, Manrope, large radius, thick ring. Duck kept as is.',''],
+]
+const params = new URLSearchParams(location.search); const only = params.get('style')
+document.getElementById('board').innerHTML = STYLES.filter(([k])=>!only||k===only).map(([k,name,desc,d]) => `
+<section class="style-block ${k}" id="${k}">
+  <div class="style-head"><b>${name}</b><span>${desc}</span></div>
+  <div class="row">${welcome(d)}${today(d)}${stats()}</div>
+</section>`).join('')
+</script>
+</body>
+</html>
