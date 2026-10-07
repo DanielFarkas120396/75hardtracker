@@ -151,7 +151,7 @@ export function useDuck({
         type="button"
         onClick={poke}
         aria-label="Poke the duck"
-        className="block shrink-0 touch-manipulation rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        className="block shrink-0 touch-manipulation rounded-2xl [filter:sepia(.35)_saturate(.9)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
       >
         <Mascot mood={LEVEL_MOODS[menace.level]} size={64} reaction={reaction} decorative />
       </button>
