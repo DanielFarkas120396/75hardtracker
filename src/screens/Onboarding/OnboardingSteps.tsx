@@ -337,7 +337,8 @@ export function ReadyStep(props: ReadyStepProps) {
         </Button>
       )}
 
-      <StickyFooter>
+      {/* After the whole card, not pinned over it: the player reads every rule before they reach the signature. */}
+      <div className="mt-6 w-full">
         <p aria-live="polite" className="font-display text-2xl tracking-wide text-ink empty:hidden">
           {signed ? `I'm watching, ${cleanText(name)}.` : ''}
         </p>
@@ -351,7 +352,7 @@ export function ReadyStep(props: ReadyStepProps) {
             {busy ? 'Saving…' : 'Hold to commit'}
           </HoldButton>
         )}
-      </StickyFooter>
+      </div>
     </>
   )
 }

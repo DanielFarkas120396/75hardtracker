@@ -80,9 +80,9 @@ export function workoutRuleLine(rules: Ruleset): string {
 }
 
 export function dietRuleLine(rules: Ruleset): string {
-  if (rules.dietKind === 'healthy') return 'Eat healthy. No alcohol, except a declared social occasion.'
+  if (rules.dietKind === 'healthy') return 'Eat healthy. No alcohol, except on one declared social occasion a week.'
   return rules.socialDaysPerWeek > 0
-    ? 'No cheat meals. No alcohol, except a declared social occasion.'
+    ? 'No cheat meals. No alcohol, except on one declared social occasion a week.'
     : 'No cheat meals, no alcohol.'
 }
 
