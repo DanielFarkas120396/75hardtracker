@@ -91,7 +91,7 @@ export function HoldButton({ onCommit, disabled = false, children, hint, classNa
         onClick={onClick}
         onContextMenu={(e) => e.preventDefault()}
         aria-describedby={shownHint ? hintId : undefined}
-        className="relative min-h-touch w-full touch-manipulation select-none overflow-hidden rounded-2xl border-b-4 border-world-edge bg-world px-6 py-4 font-rounded text-xl font-extrabold text-on-world [-webkit-touch-callout:none] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:border-ink/10 disabled:bg-ink/10 disabled:text-ink-muted"
+        className="relative min-h-touch w-full touch-manipulation select-none overflow-hidden rounded-full bg-world px-6 py-4 font-rounded text-xl font-bold text-on-world [-webkit-touch-callout:none] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:bg-ink/10 disabled:text-ink-muted"
       >
         <span
           aria-hidden="true"

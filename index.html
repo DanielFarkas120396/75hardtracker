@@ -10,8 +10,8 @@
       content="A friendly offline tracker for 75 Hard, 75 Strong, 75 Medium and 75 Soft: log the day's tasks, watch the streak, keep every progress photo on your device."
     />
 
-    <meta name="theme-color" content="#fdf6f3" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#1a1211" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f9f3ea" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#16110e" media="(prefers-color-scheme: dark)" />
 
     <!-- Applies the saved theme and world before first paint (no light flash in dark mode, no
          colour jump). Mirrors applyTheme() and applyWorld() in src/lib — keep the storage keys and
@@ -20,12 +20,12 @@
       ;(function () {
         try {
           var canvases = {
-            hell: ['#fdf6f3', '#1a1211'],
-            wasteland: ['#f8f6f3', '#171513'],
-            forest: ['#f4f9f5', '#111815'],
-            meadow: ['#f6fbf1', '#121811'],
-            mountains: ['#f4f8fc', '#10161c'],
-            heaven: ['#fdfaf0', '#17150e'],
+            hell: ['#f9f3ea', '#16110e'],
+            wasteland: ['#f7f4f0', '#15120f'],
+            forest: ['#f1f6f2', '#10140f'],
+            meadow: ['#f4f7ee', '#121410'],
+            mountains: ['#f1f5f9', '#10141a'],
+            heaven: ['#faf6ea', '#171409'],
           }
           var preference = localStorage.getItem('75hard-theme') || 'system'
           var world = localStorage.getItem('75hard-world')
