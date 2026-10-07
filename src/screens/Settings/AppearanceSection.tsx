@@ -13,7 +13,7 @@ export function AppearanceSection() {
 
   return (
     <section className="rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0">
-      <h2 id="appearance-heading" className="font-rounded text-lg font-extrabold text-ink">
+      <h2 id="appearance-heading" className="font-rounded text-lg font-bold text-ink">
         Appearance
       </h2>
       <div role="radiogroup" aria-labelledby="appearance-heading" className="mt-3 grid grid-cols-3 gap-1 rounded-2xl bg-canvas p-1">

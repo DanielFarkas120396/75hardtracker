@@ -21,7 +21,7 @@ export function BooksSection() {
 
   return (
     <section className="rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0">
-      <h2 className="font-rounded text-lg font-extrabold text-ink">Books</h2>
+      <h2 className="font-rounded text-lg font-bold text-ink">Books</h2>
 
       {books.length > 0 ? (
         <ul className="mt-3 flex flex-col gap-2">
@@ -65,7 +65,7 @@ export function BooksSection() {
       </Modal>
 
       <Modal open={deleting !== null} onClose={() => setDeleting(null)}>
-        <h3 className="font-rounded text-lg font-extrabold text-ink">Delete this book?</h3>
+        <h3 className="font-rounded text-lg font-bold text-ink">Delete this book?</h3>
         <p className="mt-2 text-sm text-ink-muted">
           {deleting && `“${deleting.title}” and its bookmark will be removed. Pages you've already logged still count.`}
         </p>
@@ -121,7 +121,7 @@ function BookForm({ book, onDone }: { book: Book | null; onDone: () => void }) {
       }}
       noValidate
     >
-      <h3 className="font-rounded text-lg font-extrabold text-ink">{book ? 'Edit book' : 'Add a book'}</h3>
+      <h3 className="font-rounded text-lg font-bold text-ink">{book ? 'Edit book' : 'Add a book'}</h3>
 
       <Field label="Title" error={errors.title}>
         <input

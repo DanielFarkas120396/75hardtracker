@@ -11,7 +11,7 @@ export function BadgesSection({ challengeId }: BadgesSectionProps) {
 
   return (
     <section className="rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0">
-      <h2 className="font-rounded text-lg font-extrabold text-ink">
+      <h2 className="font-rounded text-lg font-bold text-ink">
         Badges ({unlockedIds.size}/{BADGE_DEFINITIONS.length})
       </h2>
 

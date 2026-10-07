@@ -83,7 +83,7 @@ function MeasurementForm({
       }}
       noValidate
     >
-      <h3 className="font-rounded text-lg font-extrabold text-ink">
+      <h3 className="font-rounded text-lg font-bold text-ink">
         {measurement ? 'Edit weigh-in' : 'Log a weigh-in'}
       </h3>
 
@@ -105,7 +105,7 @@ function MeasurementForm({
           placeholder="82.5"
           value={weight}
           onChange={(e) => setWeight(e.target.value)}
-          className="min-h-touch w-full rounded-xl bg-canvas px-3 font-rounded text-lg font-extrabold text-ink"
+          className="min-h-touch w-full rounded-xl bg-canvas px-3 font-rounded text-lg font-bold text-ink"
         />
       </Field>
 

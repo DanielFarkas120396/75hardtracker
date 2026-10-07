@@ -61,7 +61,7 @@ export function BodySection({ today }: BodySectionProps) {
             aria-expanded={open}
             aria-controls={open ? panelId : undefined}
             onClick={() => setOpen((value) => !value)}
-            className="flex min-h-touch w-full items-center gap-2 text-left font-rounded text-lg font-extrabold text-ink"
+            className="flex min-h-touch w-full items-center gap-2 text-left font-rounded text-lg font-bold text-ink"
           >
             <Icon name="scale" className="shrink-0 text-world-ink" />
             Weight
@@ -80,7 +80,7 @@ export function BodySection({ today }: BodySectionProps) {
         <div id={panelId}>
           {summary ? (
             <p className="mt-2 font-rounded">
-              <span className="text-3xl font-extrabold text-ink">{summary.latest.weight_kg.toFixed(1)} kg</span>
+              <span className="text-3xl font-bold text-ink">{summary.latest.weight_kg.toFixed(1)} kg</span>
               {summary.changeKg !== undefined && summary.since && (
                 <span className="ml-2 text-sm font-bold text-ink-muted">
                   {formatChange(summary.changeKg)} since {formatDisplayDate(summary.since)}
@@ -142,7 +142,7 @@ export function BodySection({ today }: BodySectionProps) {
       <MeasurementModal measurement={editing} open={formOpen} today={today} onClose={() => setFormOpen(false)} />
 
       <Modal open={deleting !== null} onClose={() => setDeleting(null)}>
-        <h3 className="font-rounded text-lg font-extrabold text-ink">Delete this weigh-in?</h3>
+        <h3 className="font-rounded text-lg font-bold text-ink">Delete this weigh-in?</h3>
         <p className="mt-2 text-sm text-ink-muted">
           {deleting && `${formatDisplayDate(deleting.date)} — this can't be undone.`}
         </p>

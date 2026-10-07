@@ -36,7 +36,7 @@ export function PinPad({ title, error, hint, disabled = false, onComplete, extra
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <h2 className="font-rounded text-lg font-extrabold text-ink">{title}</h2>
+      <h2 className="font-rounded text-lg font-bold text-ink">{title}</h2>
       <div
         role="status"
         aria-label={`${digits.length} of ${PIN_LENGTH} digits entered`}

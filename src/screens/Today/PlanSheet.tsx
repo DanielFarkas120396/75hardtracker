@@ -80,7 +80,7 @@ function PlanForm({ entry, data, missing, nowMin, rules, onClose, onSaved }: Pla
 
   return (
     <>
-      <h3 className="font-rounded text-lg font-extrabold text-ink">Tell the duck your plan</h3>
+      <h3 className="font-rounded text-lg font-bold text-ink">Tell the duck your plan</h3>
       <p className="mt-1 text-sm text-ink-muted">He leaves a task alone until its time comes. Break the plan and he'll know.</p>
       {missing.map((task) => {
         const error = errorFor(task)

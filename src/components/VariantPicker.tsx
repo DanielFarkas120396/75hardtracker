@@ -41,7 +41,7 @@ export function VariantPicker({ value, onChange, disabled = false }: VariantPick
               checked ? 'border-world-edge bg-world-soft ring-2 ring-world-edge' : 'border-ink/15 bg-canvas'
             }`}
           >
-            <span className="block font-rounded text-lg font-extrabold text-ink">{VARIANT_NAMES[variant]}</span>
+            <span className="block font-rounded text-lg font-bold text-ink">{VARIANT_NAMES[variant]}</span>
             <span className={`block text-sm font-bold ${checked ? 'text-world-ink' : 'text-ink-muted'}`}>
               {VARIANT_TAGLINES[variant]}
             </span>

@@ -76,7 +76,7 @@ function SheetContent({ content, headingId, onClose }: { content: TaskSheetConte
             <Icon name={TASK_ICONS[task]} />
           </span>
           <div className="min-w-0 flex-1">
-            <h2 id={headingId} className="font-rounded text-xl font-extrabold text-ink">
+            <h2 id={headingId} className="font-rounded text-xl font-bold text-ink">
               {TASK_TITLES[task]}
             </h2>
             <p className={`mt-0.5 text-sm font-semibold ${TASK_TONE.ink}`}>{ruleLine}</p>
@@ -104,7 +104,7 @@ function SheetContent({ content, headingId, onClose }: { content: TaskSheetConte
                 initial={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="block whitespace-nowrap rounded-full bg-world px-3 py-1 font-rounded text-xs font-extrabold text-on-world shadow-sm"
+                className="block whitespace-nowrap rounded-full bg-world px-3 py-1 font-rounded text-xs font-bold text-on-world shadow-sm"
               >
                 {cheer}
               </motion.span>

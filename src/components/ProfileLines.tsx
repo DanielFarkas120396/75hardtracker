@@ -8,7 +8,7 @@ interface LineProps {
 export function Greeting({ className = '' }: LineProps) {
   const profile = useProfile()
   if (!profile) return null
-  return <p className={`font-rounded text-sm font-extrabold text-ink ${className}`}>Hey {profile.name}</p>
+  return <p className={`font-rounded text-sm font-bold text-ink ${className}`}>Hey {profile.name}</p>
 }
 
 /** The player's reason, quoted: a discreet daily reminder on Today. Nothing without a profile. */

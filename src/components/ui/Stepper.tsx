@@ -28,7 +28,7 @@ export function Stepper({ value, onStep, step = 1, min = 0, max = Infinity, unit
       >
         −
       </button>
-      <span className="min-w-16 text-center font-rounded text-xl font-extrabold text-ink">
+      <span className="min-w-16 text-center font-rounded text-xl font-bold text-ink">
         {value}
         {unit ? <span className="ml-1 text-sm font-semibold text-ink-muted">{unit}</span> : null}
       </span>
