@@ -1,6 +1,6 @@
 # Gauge ring (design)
 
-Status: **built** on `feat/gauge-ring` (2026-10-07), waiting for the owner's check on the phone.
+Status: **merged** into `main` on 2026-10-07 (PR #49).
 
 The owner wanted a new completion ring. Two inspiration pictures became two previews in chat (a dial, a bar gauge); the owner picked the gauge, took the crown from the dial, and tuned the motion over many rounds of previews.
 
