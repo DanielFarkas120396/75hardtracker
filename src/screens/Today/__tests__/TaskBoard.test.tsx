@@ -42,7 +42,7 @@ describe('TaskBoard', () => {
     URL.revokeObjectURL = vi.fn()
   })
 
-  it('shows the five open tasks, a tile each, quickest to finish first, named for VoiceOver without the dots', () => {
+  it('shows the five open tasks, a tile each, the quickest kind first, named for VoiceOver without the dots', () => {
     render(board(empty))
 
     expect(screen.getByRole('button', { name: 'Workouts, 0 of 2, 45 min each' })).toBeInTheDocument()
@@ -73,11 +73,11 @@ describe('TaskBoard', () => {
     expect(onOpen).toHaveBeenCalledWith('water')
   })
 
-  it('re-sorts the open tiles as a task gets closer to done', () => {
-    // 1.2 L left is 72 minutes: the water now comes before two workouts (90).
+  it('keeps the tiles in place as a task progresses', () => {
+    // 1.2 L left would be quicker than two workouts, but the water tile stays where it is.
     render(board({ ...empty, water_ml: 2600 }))
     const order = screen.getAllByRole('button', { name: /^(Workouts|Water),/ }).map((b) => b.getAttribute('aria-label')!.split(',')[0])
-    expect(order).toEqual(['Water', 'Workouts'])
+    expect(order).toEqual(['Workouts', 'Water'])
   })
 
   it('fills the progress bar of a task under way', () => {

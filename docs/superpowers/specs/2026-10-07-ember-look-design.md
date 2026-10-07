@@ -34,7 +34,7 @@ The owner found the app too "Duolingo-y": chunky buttons, rounded fonts, candy c
 
 ## Board: chips by default (added 2026-10-07)
 
-The Today board used to fold done tasks into chips and sort the open tiles quickest-first only late in the evening. The owner liked that layout and asked for it as the default, so in v3 it is: done tasks are chips above the board at any hour (the photo chip shows the photo), the open tiles are always sorted by the time they still need, and the evening only adds the edge on the tiles (red on what no longer fits before midnight). The tile's pop and burst went with the done tile; the sheet keeps its own cheer.
+The Today board used to fold done tasks into chips and sort the open tiles quickest-first only late in the evening. The owner liked that layout and asked for it as the default, so in v3 it is: done tasks are chips above the board at any hour (the photo chip shows the photo), the open tiles sit in a fixed order (what each task takes in full, quickest first: diet, photo, reading, workouts, water) and never move while a task progresses, and the evening only adds the edge on the tiles (red on what no longer fits before midnight). The tile's pop and burst went with the done tile; the sheet keeps its own cheer.
 
 ## Open points for the build
 

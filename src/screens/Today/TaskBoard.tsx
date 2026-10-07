@@ -42,6 +42,9 @@ interface TaskBoardProps {
   onOpen: (task: BoardTask) => void
 }
 
+/** A day with nothing logged: the tiles sort by what a task takes in full, so they never move as it progresses. */
+const FRESH_DAY: DayTaskData = { water_ml: 0, pages_read: 0, dietFollowed: false, noAlcohol: false, hasPhoto: false, workouts: [] }
+
 /** A status line for VoiceOver: "0 of 2 · 45 min each" reads as "0 of 2, 45 min each". */
 function spoken(status: string): string {
   return status.replaceAll(' · ', ', ')
@@ -49,16 +52,16 @@ function spoken(status: string): string {
 
 /**
  * The five tasks of a day (mood and notes live outside the board: they're
- * optional and never "done"). The open ones are tiles, quickest to finish
- * first, each opening its sheet on tap; the done ones fold into a row of
- * chips above them. Late in the evening the tiles get an edge, red on what
+ * optional and never "done"). The open ones are tiles, the quickest kind of
+ * task first, each opening its sheet on tap; the done ones fold into a row
+ * of chips above them. A tile only ever leaves the grid, never changes place. Late in the evening the tiles get an edge, red on what
  * no longer fits before midnight.
  */
 export function TaskBoard(props: TaskBoardProps) {
   const { entry, data, completion, rules, bookTitle, photo, quickActions, socialToday, urgent = false, minutesLeft, onOpen } = props
   const reduceMotion = useReducedMotion()
   const tiles = TASK_IDS.filter((task) => !completion[task]).sort(
-    (a, b) => minutesToFinish(a, data, rules) - minutesToFinish(b, data, rules),
+    (a, b) => minutesToFinish(a, FRESH_DAY, rules) - minutesToFinish(b, FRESH_DAY, rules),
   )
   const chips = TASK_IDS.filter((task) => completion[task])
   const layout = reduceMotion ? false : 'position'
