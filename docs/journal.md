@@ -2,22 +2,25 @@
 
 A day-by-day record of what shipped, for note taking and follow-up. Built from the git history and the PRs (merge commits not counted). Newest open items are at the end.
 
-**Span:** 2026-09-24 → 2026-10-07 · 12 working days · about 220 commits · 65 PRs (64 merged, 1 open).
+**Span:** 2026-09-24 → 2026-10-07 · 12 working days · about 220 commits · about **52 hours** of work · 65 PRs (64 merged, 1 open).
 
-| Day | Commits | PRs | Headline |
-|---|---|---|---|
-| 09-24 (Thu) | 11 | — | The app exists: Today, Journey, gamification, Gallery, Stats, Settings, PWA, dark mode |
-| 09-25 (Fri) | 25 | — | Polish phases 5–7; the knife-holding duck is born |
-| 09-26 (Sat) | 17 | #1–#3 | Duck merged; animated flame; the ruleset engine |
-| 09-27 (Sun) | 30 | #4–#6 | 75 Strong / Medium / Soft; give up a challenge |
-| 09-28 (Mon) | 10 | #7 | Welcome flow and player profile |
-| 09-30 (Wed) | 1 | #8 | Sunday-evening backup reminder |
-| 10-01 (Thu) | 1 | — | Camera feedback note |
-| 10-02 (Fri) | 13 | #9–#14 | Inline camera; local-only decision; roadmap; Journey hell→heaven |
-| 10-03 (Sat) | 17 | #15–#19 | v2 redesign: the app wears your world |
-| 10-05 (Mon) | 48 | #20–#38 | v2 features, v2 → main, Today as a task board, workout history |
-| 10-06 (Tue) | 4 | #39–#40 | Onboarding redesign: sign the deal |
-| 10-07 (Wed) | 43 | #41–#65 | Onboarding & Today rounds, gauge, draw to commit, Ember v3 → main, Journey day cards |
+| Day | Time | Commits | PRs | Headline |
+|---|---|---|---|---|
+| 09-24 (Thu) | ~2h05 * | 11 | — | The app exists: Today, Journey, gamification, Gallery, Stats, Settings, PWA, dark mode |
+| 09-25 (Fri) | ~8h10 | 25 | — | Polish phases 5–7; the knife-holding duck is born |
+| 09-26 (Sat) | ~6h00 | 17 | #1–#3 | Duck merged; animated flame; the ruleset engine |
+| 09-27 (Sun) | ~7h30 | 30 | #4–#6 | 75 Strong / Medium / Soft; give up a challenge |
+| 09-28 (Mon) | ~3h55 | 10 | #7 | Welcome flow and player profile |
+| 09-30 (Wed) | ~40 min | 1 | #8 | Sunday-evening backup reminder |
+| 10-01 (Thu) | ~15 min * | 1 | — | Camera feedback note |
+| 10-02 (Fri) | ~3h45 | 13 | #9–#14 | Inline camera; local-only decision; roadmap; Journey hell→heaven |
+| 10-03 (Sat) | ~1h50 | 17 | #15–#19 | v2 redesign: the app wears your world |
+| 10-05 (Mon) | ~8h10 | 48 | #20–#38 | v2 features, v2 → main, Today as a task board, workout history |
+| 10-06 (Tue) | ~40 min * | 4 | #39–#40 | Onboarding redesign: sign the deal |
+| 10-07 (Wed) | ~9h00 | 43 | #41–#65 | Onboarding & Today rounds, gauge, draw to commit, Ember v3 → main, Journey day cards |
+| **Total** | **~52h** | **~220** | **65** | |
+
+Time is an estimate; the method and the hour-by-hour stretches are in [Time spent](#time-spent). * = no session transcript that day, so a lower bound from commit times.
 
 ---
 
@@ -173,6 +176,35 @@ The busiest day by PRs (25). Until about 15:50, five rounds on v2 shipped straig
 **7. Journey day cards (#62–#64):** tap a past day, today or a forgiven day; a card grows from the stone, centred, with only the photo, notes and workouts. Phone-checked.
 
 **8. PR #65 (open):** two tests failed after 18:00 because of the Tomorrow default; their clock is now frozen at 09:00.
+
+---
+
+## Time spent
+
+**Total: about 52 hours** over 12 working days (2026-09-24 → 2026-10-07, up to 18:29 on the last day).
+
+How it's estimated:
+- The timestamps of every message in the Claude Code sessions for this project (main checkout and worktrees, subagents included), in Brussels time.
+- Parallel sessions count once: it's wall-clock time, not the sum of the sessions.
+- A gap of more than 20 minutes is a break. Each stretch gets 15 minutes in front, for reading and thinking before the first message.
+- Days without a transcript (*) use commit times instead (a gap of more than an hour is a break). They're lower bounds: the work before the first commit and between commits isn't seen.
+- Work that ran past midnight counts on the day it started.
+
+| Day | Time | Stretches |
+|---|---|---|
+| 09-24 | ~2h05 * | 14:05–14:50, 16:00–17:18 |
+| 09-25 | ~8h10 | 09:18–12:20, 13:56–14:28, 14:44–17:13, 18:56–21:04 |
+| 09-26 | ~6h00 | 10:10–11:33, 17:31–20:04, 22:26–00:31 |
+| 09-27 | ~7h30 | 03:26–05:43, 08:26–10:58, 13:26–15:15, 19:57–20:12, 20:40–21:01, 21:33–21:49 |
+| 09-28 | ~3h55 | 10:54–13:40, 15:46–16:42, 19:34–19:50 |
+| 09-30 | ~40 min | 19:01–19:43 |
+| 10-01 | ~15 min * | 13:59–14:14 |
+| 10-02 | ~3h45 | 08:19–08:38, 08:45–09:00, 10:39–12:33, 16:02–17:17 |
+| 10-03 | ~1h50 | 11:15–12:18, 12:56–13:12, 14:30–15:02 |
+| 10-05 | ~8h10 | 08:54–09:09, 10:27–10:57, 11:08–11:23, 12:52–14:02, 14:11–14:44, 15:03–20:28 |
+| 10-06 | ~40 min * | 16:02–16:43 |
+| 10-07 | ~9h00 | 08:05–10:14, 10:21–11:36, 12:22–12:44, 12:55–13:17, 13:37–16:37, 16:45–18:36 |
+| **Total** | **~52h** | |
 
 ---
 
