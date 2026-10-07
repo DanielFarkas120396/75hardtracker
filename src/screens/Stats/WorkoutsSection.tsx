@@ -10,10 +10,11 @@ import type { ActivityHistory, WorkoutHistory } from '../../logic/workoutHistory
 const sessionsWord = (count: number) => (count === 1 ? 'session' : 'sessions')
 const moodFor = (feel: Mood) => MOODS.find((mood) => mood.value === feel)!
 
+const CARD = 'rounded-card bg-surface ring-1 ring-ink/10 dark:ring-0'
 /** The translucent wash for chips and the session list on the open card. */
-const WASH = 'bg-white/55 dark:bg-black/25'
+const WASH = 'bg-canvas/60'
 
-/** Every workout of the attempt, on Stats under Weight: a card per activity, stacked, all closed until one is tapped. */
+/** Every workout of the attempt, on Stats under Weight: a row per activity, all closed until one is tapped. */
 export function WorkoutsSection({ challengeId }: { challengeId: number }) {
   const history = useWorkoutHistory(challengeId)
   const headingId = useId()
@@ -21,25 +22,24 @@ export function WorkoutsSection({ challengeId }: { challengeId: number }) {
 
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-4">
-      <h2 id={headingId} className="flex items-center gap-2 px-1 font-rounded text-lg font-extrabold text-ink">
+      <h2 id={headingId} className="flex items-center gap-2 px-1 font-rounded text-lg font-bold text-ink">
         <Icon name="workout" className="shrink-0 text-world-ink" />
         Workouts
       </h2>
       {history &&
         (history.sessions === 0 ? (
-          <div className="rounded-card bg-surface p-5 text-center shadow-sm ring-1 ring-ink/10 dark:ring-0">
-            <h3 className="font-display text-xl tracking-wide text-ink">No workouts yet</h3>
+          <div className={`${CARD} p-5 text-center`}>
+            <h3 className="font-display text-xl font-semibold tracking-wide text-ink">No workouts yet</h3>
             <p className="mt-1 font-rounded text-sm font-semibold text-ink-muted">Log your first one from Today.</p>
           </div>
         ) : (
           <>
             <Summary history={history} />
-            <div>
-              {history.activities.map((activity, i) => (
+            <div className="flex flex-col gap-2.5">
+              {history.activities.map((activity) => (
                 <ActivityCard
                   key={activity.type}
                   activity={activity}
-                  shade={history.activities.length > 1 ? i / (history.activities.length - 1) : 0}
                   open={activity.type === open}
                   onToggle={() => setOpen(activity.type === open ? null : activity.type)}
                 />
@@ -61,9 +61,9 @@ function Summary({ history }: { history: WorkoutHistory }) {
   return (
     <ul aria-label="This attempt" className="grid grid-cols-3 gap-2.5">
       {tiles.map((tile) => (
-        <li key={tile.label} className="rounded-[1.25rem] bg-surface px-3.5 py-3 shadow-sm ring-1 ring-ink/10 dark:ring-0">
-          <span className="block font-display text-xl leading-tight tracking-wide text-world-ink">{tile.value}</span>
-          <span className="font-rounded text-xs font-bold text-ink-muted">{tile.label}</span>
+        <li key={tile.label} className={`${CARD} px-3.5 py-3`}>
+          <span className="block font-display text-2xl leading-tight font-semibold tracking-wide text-world-ink">{tile.value}</span>
+          <span className="font-rounded text-xs font-semibold text-ink-muted">{tile.label}</span>
         </li>
       ))}
     </ul>
@@ -72,38 +72,28 @@ function Summary({ history }: { history: WorkoutHistory }) {
 
 interface ActivityCardProps {
   activity: ActivityHistory
-  /** Where its colour sits between the stack's strongest shade (0, the top) and its softest (1). */
-  shade: number
   open: boolean
   onToggle: () => void
 }
 
 /**
- * One activity: a folder-like card drawn over the bottom of the one above. Closed, its logo,
- * count and time; open, sky blue with the logo faint behind its feels, totals and sessions.
+ * One activity. Closed, a row: the logo in a well of the world's tint, the name
+ * and the time, the count on the right. Open, the row sits on the world's tint
+ * with the logo faint behind its feels, totals and sessions.
  */
-function ActivityCard({ activity, shade, open, onToggle }: ActivityCardProps) {
+function ActivityCard({ activity, open, onToggle }: ActivityCardProps) {
   const { type, sessions, minutes, outdoors, feels } = activity
   const panelId = useId()
   const count = sessions.length
 
   return (
-    <section
-      className={`relative overflow-hidden rounded-[2rem] shadow-[0_-6px_16px_rgba(0,0,0,0.1)] not-first:-mt-8 motion-safe:transition-colors ${
-        open ? 'bg-open-card text-on-open-card' : 'text-on-stack'
-      }`}
-      style={
-        open
-          ? undefined
-          : { backgroundColor: `color-mix(in srgb, var(--color-stack-from), var(--color-stack-to) ${Math.round(shade * 100)}%)` }
-      }
-    >
+    <section className={`relative overflow-hidden rounded-card text-ink motion-safe:transition-colors ${open ? 'bg-world-soft' : CARD}`}>
       {open && (
         <Icon
           name={ACTIVITY_ICONS[type]}
           size={220}
           strokeWidth={1}
-          className="pointer-events-none absolute -top-4 -right-12 opacity-15"
+          className="pointer-events-none absolute -top-4 -right-12 text-world-ink opacity-15"
         />
       )}
       <button
@@ -112,31 +102,27 @@ function ActivityCard({ activity, shade, open, onToggle }: ActivityCardProps) {
         aria-controls={open ? panelId : undefined}
         aria-label={`${type}, ${count} ${sessionsWord(count)}`}
         onClick={onToggle}
-        className={`relative flex w-full items-center gap-4 px-5 pt-5 text-left ${open ? 'pb-2' : 'pb-12'}`}
+        className="relative flex w-full items-center gap-3.5 px-4 py-3.5 text-left"
       >
-        {!open && <Icon name={ACTIVITY_ICONS[type]} size={56} strokeWidth={1.5} className="shrink-0" />}
-        {open ? (
-          <span className="flex-1 font-rounded text-xl font-extrabold">{type}</span>
-        ) : (
-          <span className="flex-1">
-            <span className="block font-rounded text-lg font-extrabold">{type}</span>
-            <span className="block font-display text-4xl leading-none tracking-wide">{count}</span>
-            <span className="block font-rounded text-sm font-extrabold">
-              {sessionsWord(count)} · {formatMinutes(minutes)}
-            </span>
-          </span>
-        )}
-        <span className={`flex h-9 w-9 shrink-0 items-center justify-center self-start rounded-full ${open ? WASH : ''}`}>
-          <Icon name="chevron" size={20} className={open ? '-rotate-90' : 'rotate-90'} />
+        <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${open ? 'bg-surface/60' : 'bg-world-soft'} text-world-ink`}>
+          <Icon name={ACTIVITY_ICONS[type]} size={28} strokeWidth={1.75} />
         </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-rounded text-base font-bold">{type}</span>
+          <span className="block font-rounded text-sm font-semibold text-ink-muted">
+            {open ? `${count} ${sessionsWord(count)}` : formatMinutes(minutes)}
+          </span>
+        </span>
+        {!open && <span className="font-display text-3xl leading-none font-semibold tracking-wide">{count}</span>}
+        <Icon name="chevron" size={20} className={`shrink-0 text-ink-muted ${open ? '-rotate-90' : 'rotate-90'}`} />
       </button>
 
       {open && (
-        <div id={panelId} className="relative px-5 pb-12">
+        <div id={panelId} className="relative px-4 pb-4">
           {feels.length > 0 && (
             <ul aria-label="How it felt" className="flex flex-wrap gap-1.5">
               {feels.map(({ feel, count: times }) => (
-                <li key={feel} className={`flex items-center gap-1 rounded-full py-0.5 pr-2.5 pl-1.5 font-rounded text-sm font-extrabold ${WASH}`}>
+                <li key={feel} className={`flex items-center gap-1 rounded-full py-0.5 pr-2.5 pl-1.5 font-rounded text-sm font-semibold ${WASH}`}>
                   <span aria-hidden="true" className="text-lg">
                     {moodFor(feel).emoji}
                   </span>
@@ -149,27 +135,27 @@ function ActivityCard({ activity, shade, open, onToggle }: ActivityCardProps) {
 
           <div className="mt-3 flex items-end gap-6">
             <p>
-              <span className="block font-display text-6xl leading-[0.9] tracking-wide">{count}</span>
-              <span className="font-rounded text-sm font-extrabold">{sessionsWord(count)}</span>
+              <span className="block font-display text-6xl leading-[0.9] font-semibold tracking-wide">{count}</span>
+              <span className="font-rounded text-sm font-semibold text-ink-muted">{sessionsWord(count)}</span>
             </p>
             <p>
-              <span className="block font-display text-2xl leading-none tracking-wide">{formatMinutes(minutes)}</span>
-              <span className="font-rounded text-sm font-extrabold">in total</span>
+              <span className="block font-display text-2xl leading-none font-semibold tracking-wide">{formatMinutes(minutes)}</span>
+              <span className="font-rounded text-sm font-semibold text-ink-muted">in total</span>
             </p>
             <p>
-              <span className="block font-display text-2xl leading-none tracking-wide">{outdoors}</span>
-              <span className="font-rounded text-sm font-extrabold">outdoors</span>
+              <span className="block font-display text-2xl leading-none font-semibold tracking-wide">{outdoors}</span>
+              <span className="font-rounded text-sm font-semibold text-ink-muted">outdoors</span>
             </p>
           </div>
 
-          <ol aria-label={`${type} sessions`} className={`mt-4 divide-y divide-current/15 rounded-[1.25rem] px-3.5 ${WASH}`}>
+          <ol aria-label={`${type} sessions`} className={`mt-4 divide-y divide-ink/10 rounded-xl2 px-3.5 ${WASH}`}>
             {sessions.map((session) => (
               <li key={session.id} className="flex items-center gap-2.5 py-2.5">
                 <span className="flex-1">
-                  <span className="block font-rounded font-extrabold">Day {session.dayNumber}</span>
-                  <span className="block font-rounded text-xs font-bold">{formatShortDay(session.date)}</span>
+                  <span className="block font-rounded font-bold">Day {session.dayNumber}</span>
+                  <span className="block font-rounded text-xs font-semibold text-ink-muted">{formatShortDay(session.date)}</span>
                 </span>
-                <span className="font-rounded text-sm font-extrabold">
+                <span className="font-rounded text-sm font-semibold">
                   {session.durationMin} min · {session.isOutdoor ? 'Outdoor' : 'Indoor'}
                 </span>
                 <span className="w-7 text-center text-xl">
@@ -191,12 +177,12 @@ function ActivityCard({ activity, shade, open, onToggle }: ActivityCardProps) {
 function Untried({ types }: { types: readonly WorkoutType[] }) {
   return (
     <section>
-      <h3 className="px-1 font-rounded text-xs font-extrabold tracking-wide text-ink-muted uppercase">Not tried yet</h3>
+      <h3 className="px-1 font-rounded text-xs font-bold tracking-wide text-ink-muted uppercase">Not tried yet</h3>
       <ul aria-label="Not tried yet" className="mt-2 flex flex-wrap gap-2">
         {types.map((type) => (
           <li
             key={type}
-            className="flex items-center gap-2 rounded-full bg-surface py-1.5 pr-3.5 pl-2 font-rounded text-sm font-bold text-ink-muted shadow-sm ring-1 ring-ink/10 dark:ring-0"
+            className="flex items-center gap-2 rounded-full bg-surface py-1.5 pr-3.5 pl-2 font-rounded text-sm font-semibold text-ink-muted ring-1 ring-ink/10 dark:ring-0"
           >
             <Icon name={ACTIVITY_ICONS[type]} size={24} strokeWidth={1.8} />
             {type}
