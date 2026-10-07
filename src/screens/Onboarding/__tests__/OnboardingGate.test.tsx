@@ -77,7 +77,8 @@ describe('OnboardingGate', () => {
     await screen.findByRole('heading', { name: 'When do you start?' })
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
     await screen.findByRole('heading', { name: 'Deal, Daniel.' })
-    fireEvent.click(screen.getByRole('button', { name: 'Hold to commit' })) // a click with no press: as VoiceOver or a keyboard
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Sign the deal: draw a checkmark.' }), { key: 'Enter' }) // as VoiceOver or a keyboard
+    fireEvent.click(screen.getByRole('button', { name: 'I commit' }))
 
     // The duck has its moment (SIGNED_BEAT_MS) before the save, then the app takes over.
     expect(await screen.findByText('Main app for Daniel', {}, { timeout: 4000 })).toBeInTheDocument()
