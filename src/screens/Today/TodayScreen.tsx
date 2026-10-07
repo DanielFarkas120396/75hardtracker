@@ -68,6 +68,8 @@ interface TodayScreenProps {
   onCameraOpened?: () => void
   /** Yesterday, while it can still be finished (until noon) and isn't yet. */
   pendingLateDay?: number | null
+  /** The "Day complete!" overlay is up over this screen. */
+  celebrating?: boolean
 }
 
 export function TodayScreen(props: TodayScreenProps) {
@@ -104,6 +106,7 @@ function TodayTasks({
   openCamera,
   onCameraOpened,
   pendingLateDay,
+  celebrating,
   onOpenLateDay,
 }: TodayScreenProps & { onOpenLateDay: () => void }) {
   const rules = rulesFor(challenge)
@@ -195,6 +198,7 @@ function TodayTasks({
             attemptLine={`${VARIANT_NAMES[rules.variant]} #${challenge.attemptNumber}`}
             dayNumber={todayDayNumber}
             completedCount={completedCount}
+            celebrating={celebrating}
             streak={streak}
             jokersLeft={rules.jokers > 0 ? jokersLeft : undefined}
             below={below}

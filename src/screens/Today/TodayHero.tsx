@@ -1,11 +1,8 @@
 import type { ReactNode } from 'react'
 import { FlameStreak } from '../../components/FlameStreak'
 import { Icon } from '../../components/icons/Icon'
-import { ProgressRing } from '../../components/ui/ProgressRing'
+import { GaugeRing } from '../../components/ui/GaugeRing'
 import { useProfile } from '../../hooks/useProfile'
-
-/** The ring is the hero's centrepiece. */
-const RING_SIZE = 132
 
 interface TodayHeroProps {
   /** "75 Hard #1". */
@@ -16,21 +13,23 @@ interface TodayHeroProps {
   streak: number
   /** Jokers left, or undefined when the ruleset has none. */
   jokersLeft: number | undefined
-  /** The duck, at the bottom left beside the ring. */
+  /** The duck, at the bottom left beside the gauge. */
   duck?: ReactNode
   /** The duck's speech bubble: it pops up above him now and then. */
   speech?: ReactNode
-  /** Under the ring: "Day N won" and the closing ritual, the time left late in the evening, or the next plan. */
+  /** The "Day complete!" overlay is up: the gauge saves its finale for when it closes. */
+  celebrating?: boolean
+  /** Under the gauge: "Day N won" and the closing ritual, the time left late in the evening, or the next plan. */
   below?: ReactNode
 }
 
 /**
- * The top of Today, in the world's colours, built around the ring of tasks
+ * The top of Today, in the world's colours, built around the gauge of tasks
  * done: the day and the attempt on one line above it; the duck on its left,
  * talking upwards now and then; the streak and the jokers on its right; what
  * matters next under it; and the player's reason at the bottom.
  */
-export function TodayHero({ attemptLine, dayNumber, completedCount, taskCount, streak, jokersLeft, duck, speech, below }: TodayHeroProps) {
+export function TodayHero({ attemptLine, dayNumber, completedCount, taskCount, streak, jokersLeft, duck, speech, below, celebrating = false }: TodayHeroProps) {
   const profile = useProfile()
 
   return (
@@ -41,23 +40,14 @@ export function TodayHero({ attemptLine, dayNumber, completedCount, taskCount, s
         <span className="font-rounded text-xs font-bold text-ink-muted">{attemptLine}</span>
       </h1>
 
-      {/* Three columns, so the ring sits in the true centre: the duck, the ring, the streak and jokers. */}
+      {/* Three columns, so the gauge sits in the true centre: the duck, the gauge, the streak and jokers. */}
       <div className="mt-3 grid grid-cols-[4.5rem_1fr_4.5rem] items-end">
         <div className="relative justify-self-start">
           {speech}
           {duck}
         </div>
         <div className="flex flex-col items-center gap-1">
-          <ProgressRing value={completedCount} max={taskCount} size={RING_SIZE} strokeWidth={12} trackColor="var(--color-surface)">
-            <span role="img" aria-label={`${completedCount} of ${taskCount} tasks done`} className="flex flex-col items-center leading-none">
-              <span className="font-display text-4xl tracking-wide text-ink">
-                {completedCount}/{taskCount}
-              </span>
-              <span aria-hidden="true" className="mt-1 font-rounded text-xs font-bold text-ink-muted">
-                tasks done
-              </span>
-            </span>
-          </ProgressRing>
+          <GaugeRing value={completedCount} max={taskCount} held={celebrating} />
           {below}
         </div>
         <div className="flex flex-col items-end gap-2 self-center font-rounded text-xs font-bold text-ink-muted">

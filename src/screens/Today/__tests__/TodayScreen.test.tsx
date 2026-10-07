@@ -92,7 +92,7 @@ describe('TodayScreen', () => {
     expect(screen.getByRole('img', { name: '0 of 5 tasks done' })).toHaveTextContent('0/5')
     expect(screen.queryByText(/^\d+h\d\d left$|^\d+ min left$/)).not.toBeInTheDocument()
     // Day 3 with no streak: no grey "0" flame.
-    expect(screen.queryByText('0')).not.toBeInTheDocument()
+    expect(screen.queryByText('0', { ignore: 'script, style, svg[role="img"] text' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Plan my evening' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^Workouts,/ }).parentElement!).not.toHaveClass('ring-danger-ink')
   })
