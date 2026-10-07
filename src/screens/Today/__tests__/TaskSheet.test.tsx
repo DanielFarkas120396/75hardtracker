@@ -3,15 +3,13 @@ import { MotionGlobalConfig } from 'framer-motion'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CHEER_VISIBLE_MS, TaskSheet, type TaskSheetContent } from '../TaskSheet'
 
-const vibrate = vi.hoisted(() => vi.fn())
-vi.mock('../../../hooks/useHaptics', () => ({ useHaptics: () => vibrate }))
-
-function water(complete: boolean): TaskSheetContent {
+function water(complete: boolean, closesWhenDone = true): TaskSheetContent {
   return {
     task: 'water',
     ruleLine: 'Goal: 3.8 L a day.',
     complete,
     cheer: 'Fully hydrated! 💧',
+    closesWhenDone,
     body: <button type="button">+ 250 ml</button>,
   }
 }
@@ -22,7 +20,6 @@ describe('TaskSheet', () => {
   })
 
   beforeEach(() => {
-    vibrate.mockClear()
     // Only the close timer is faked; Framer's frame loop needs real frames.
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
   })
@@ -44,14 +41,23 @@ describe('TaskSheet', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
-  it('cheers, buzzes and closes itself when the task completes inside it', () => {
+  it('cheers but stays open when there is still something to add once done', () => {
+    const onClose = vi.fn()
+    const { rerender } = render(<TaskSheet content={water(false, false)} onClose={onClose} />)
+    rerender(<TaskSheet content={water(true, false)} onClose={onClose} />)
+
+    expect(screen.getByRole('status')).toHaveTextContent('Fully hydrated! 💧')
+    act(() => vi.advanceTimersByTime(CHEER_VISIBLE_MS * 2))
+    expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('cheers and closes itself when the task completes inside it', () => {
     const onClose = vi.fn()
     const { rerender } = render(<TaskSheet content={water(false)} onClose={onClose} />)
     rerender(<TaskSheet content={water(true)} onClose={onClose} />)
 
     expect(screen.getByText('✓')).toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent('Fully hydrated! 💧')
-    expect(vibrate).toHaveBeenCalledExactlyOnceWith(20)
     expect(onClose).not.toHaveBeenCalled()
 
     act(() => vi.advanceTimersByTime(CHEER_VISIBLE_MS))
@@ -64,7 +70,6 @@ describe('TaskSheet', () => {
 
     expect(screen.getByText('✓')).toBeInTheDocument()
     expect(screen.getByRole('status')).toBeEmptyDOMElement()
-    expect(vibrate).not.toHaveBeenCalled()
 
     act(() => vi.advanceTimersByTime(CHEER_VISIBLE_MS * 2))
     expect(onClose).not.toHaveBeenCalled()

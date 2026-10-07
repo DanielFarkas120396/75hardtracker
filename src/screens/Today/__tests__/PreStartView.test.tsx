@@ -33,6 +33,22 @@ describe('PreStartView', () => {
     await waitFor(async () => expect((await db.challenges.get(challengeId))?.socialDays).toEqual([1]))
   })
 
+  it('lets the player add the book they will read, before Day 1', async () => {
+    const today = todayISO()
+    const challengeId = await addChallenge({ startDate: addDaysISO(today, 3), attemptNumber: 1, status: 'active' })
+    const challenge = (await db.challenges.get(challengeId)) as Challenge
+
+    render(<PreStartView challenge={challenge} todayDayNumber={-2} today={today} />)
+
+    const book = screen.getByRole('region', { name: 'Your book' })
+    expect(book).toHaveTextContent('No books yet')
+    fireEvent.click(screen.getByRole('button', { name: '+ Add book' }))
+    fireEvent.change(screen.getByPlaceholderText('Book title'), { target: { value: 'Atomic Habits' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(async () => expect(await db.books.toArray()).toMatchObject([{ title: 'Atomic Habits' }]))
+  })
+
   it('offers no social button for a Hard challenge', async () => {
     const today = todayISO()
     const startDate = addDaysISO(today, 3)

@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import { FlameStreak } from '../../components/FlameStreak'
 import { Icon } from '../../components/icons/Icon'
 import { ProgressRing } from '../../components/ui/ProgressRing'
-import { worldProgressLine } from '../../content/worldLines'
 import { useProfile } from '../../hooks/useProfile'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 
@@ -15,19 +14,19 @@ interface TodayHeroProps {
   streak: number
   /** Jokers left, or undefined when the ruleset has none. */
   jokersLeft: number | undefined
-  /** The duck, in the top-left corner; his bubble floats over the summary. */
+  /** The duck, in the top-left corner. */
   duck?: ReactNode
-  /** A small control under the duck: the social occasion button. */
-  social?: ReactNode
-  /** A small control under the ring: the plan button. */
-  action?: ReactNode
+  /** The duck's line, in its own row under the top row. */
+  caption?: ReactNode
+  /** Late with tasks left: how long until midnight ("1h30 left"), under the ring. */
+  countdown?: string | null
 }
 
 /**
- * The top of Today, in the world's colours and as short as it can be: the
- * duck in the corner, the day number with the attempt, the streak and the
- * jokers, where today is in its world, and the player's reason; the ring
- * of tasks done on the right.
+ * The top of Today, in the world's colours: the duck in the corner, the day
+ * number with the attempt, the streak and the jokers, the ring of tasks done
+ * (and, late in the evening, the time left); then the duck's line and the
+ * player's reason.
  */
 export function TodayHero({
   attemptLine,
@@ -37,18 +36,15 @@ export function TodayHero({
   streak,
   jokersLeft,
   duck,
-  social,
-  action,
+  caption,
+  countdown,
 }: TodayHeroProps) {
   const profile = useProfile()
 
   return (
     <section className="relative mx-4 mt-3 mb-3 rounded-card bg-world-soft px-3 py-3">
       <div className="flex items-center gap-3">
-        <div className="flex shrink-0 flex-col items-center gap-1">
-          {duck}
-          {social}
-        </div>
+        {duck}
         <div className="min-w-0 flex-1">
           <h1 className="font-display leading-none tracking-wide">
             <span className="text-4xl text-world-ink">Day {dayNumber}</span>{' '}
@@ -56,7 +52,8 @@ export function TodayHero({
           </h1>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-rounded text-xs font-bold text-ink-muted">
             <span>{attemptLine}</span>
-            <FlameStreak streak={streak} />
+            {/* No streak yet on Day 1: a grey "0" flame says nothing. */}
+            {streak > 0 && <FlameStreak streak={streak} />}
             {jokersLeft !== undefined && (
               <span className="flex items-center gap-1 text-orange-ink">
                 <Icon name="joker" size={16} />
@@ -64,24 +61,22 @@ export function TodayHero({
               </span>
             )}
           </div>
-          <p className="mt-1 flex items-center gap-1 font-rounded text-xs font-bold text-world-ink">
-            <Icon name="journey" size={14} className="shrink-0" />
-            <span className="truncate">{worldProgressLine(dayNumber)}</span>
-          </p>
-          {profile && <p className="mt-1 truncate font-rounded text-xs italic text-ink-muted">“{profile.why}”</p>}
         </div>
-        <div className="flex shrink-0 flex-col items-center gap-2">
+        <div className="flex shrink-0 flex-col items-center gap-1">
           <ProgressRing value={completedCount} max={taskCount} size={60} strokeWidth={8} trackColor="var(--color-surface)">
-            <span className="flex flex-col items-center leading-none">
-              <span className="font-display text-base tracking-wide text-ink">
-                {completedCount}/{taskCount}
-              </span>
-              <span className="mt-0.5 font-rounded text-[0.5rem] font-extrabold uppercase text-ink-muted">tasks</span>
+            <span
+              role="img"
+              aria-label={`${completedCount} of ${taskCount} tasks done`}
+              className="font-display text-lg leading-none tracking-wide text-ink"
+            >
+              {completedCount}/{taskCount}
             </span>
           </ProgressRing>
-          {action}
+          {countdown && <p className="font-rounded text-xs font-extrabold text-danger-ink">{countdown}</p>}
         </div>
       </div>
+      {caption}
+      {profile && <p className="mt-2 line-clamp-2 font-rounded text-xs italic text-ink-muted">“{profile.why}”</p>}
     </section>
   )
 }

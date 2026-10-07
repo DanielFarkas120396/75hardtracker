@@ -1,5 +1,4 @@
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Mascot, type DuckMood, type DuckReaction } from '../../components/mascot/Mascot'
 import { registerPoke } from '../../components/mascot/rig'
 import { duckLine, GLARE_LINE, LUNGE_LINE, pokeLine } from '../../content/microcopy'
@@ -10,10 +9,6 @@ import type { TaskId } from '../../logic/types'
 
 /** How long a reaction's line stays up before his menace line returns. */
 const REACTION_LINE_MS = 2200
-/** How long the bubble stays up each time it appears. */
-export const LINE_VISIBLE_MS = 5000
-/** How often the bubble comes back on its own, between changes of line. */
-export const LINE_EVERY_MS = 45_000
 
 const LEVEL_MOODS: Record<MenaceLevel, DuckMood> = {
   content: 'content',
@@ -29,7 +24,7 @@ export interface DuckAnnouncement {
   id: number
 }
 
-interface DuckHeaderProps {
+interface DuckProps {
   menace: Menace
   missing: readonly TaskId[]
   completion: Record<TaskId, boolean>
@@ -37,20 +32,33 @@ interface DuckHeaderProps {
   announcement?: DuckAnnouncement
   /** The player's name, for the line that starts the day. */
   name?: string
+  /** Something is logged today, even if no task is done yet. */
+  started?: boolean
+  /** Yesterday can still be finished (until noon). */
+  yesterdayOpen?: boolean
   /** Three quick pokes make him lunge; the screen flashes red once. */
   onLunge: () => void
 }
 
 /**
- * The Today screen's duck, in the corner of the hero. His mood follows the
- * menace; he answers pokes (the third quick one makes him lunge), nods when
- * a task is ticked, and glares when one is unticked. His line floats over
- * the hero in a bubble that shows for a few seconds whenever it changes,
- * and comes back now and then in between.
+ * The Today screen's duck: `duck` sits in the hero's corner, `caption` is his
+ * line, in its own row under the hero's top row so it never covers the day.
+ * His mood follows the menace; he answers pokes (the third quick one makes
+ * him lunge), nods when a task is ticked, and glares when one is unticked.
+ * A reaction's line shows for a moment, then his menace line returns.
  */
-export function DuckHeader({ menace, missing, completion, dayNumber, announcement, name, onLunge }: DuckHeaderProps) {
+export function useDuck({
+  menace,
+  missing,
+  completion,
+  dayNumber,
+  announcement,
+  name,
+  started = false,
+  yesterdayOpen = false,
+  onLunge,
+}: DuckProps): { duck: ReactNode; caption: ReactNode } {
   const playShing = useKnifeSound()
-  const reduceMotion = useReducedMotion()
   const [reaction, setReaction] = useState<{ kind: DuckReaction; id: number }>()
   const [override, setOverride] = useState<{ text: string; id: number }>()
   const pokes = useRef<number[]>([])
@@ -80,23 +88,7 @@ export function DuckHeader({ menace, missing, completion, dayNumber, announcemen
     return () => clearTimeout(timer)
   }, [override])
 
-  const line = override?.text ?? duckLine({ menace, missing, dayNumber, name })
-
-  // The bubble shows for a while whenever the line changes (a new day, a
-  // reaction, an announcement), and on its own every so often in between.
-  const [tick, setTick] = useState(0)
-  useEffect(() => {
-    const id = setInterval(() => setTick((n) => n + 1), LINE_EVERY_MS)
-    return () => clearInterval(id)
-  }, [])
-  // A showing is keyed by its line and tick; the timer hides that one, and a new key shows again.
-  const showing = `${tick}:${line}`
-  const [hidden, setHidden] = useState<string>()
-  const visible = hidden !== showing
-  useEffect(() => {
-    const timer = setTimeout(() => setHidden(showing), LINE_VISIBLE_MS)
-    return () => clearTimeout(timer)
-  }, [showing])
+  const line = override?.text ?? duckLine({ menace, missing, dayNumber, name, started, yesterdayOpen })
 
   const poke = () => {
     const result = registerPoke(pokes.current, performance.now())
@@ -111,31 +103,25 @@ export function DuckHeader({ menace, missing, completion, dayNumber, announcemen
     }
   }
 
-  return (
-    <div className="relative shrink-0">
+  return {
+    duck: (
       <button
         type="button"
         onClick={poke}
         aria-label="Poke the duck"
-        className="block touch-manipulation rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        className="block shrink-0 touch-manipulation rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
       >
-        <Mascot mood={LEVEL_MOODS[menace.level]} size={72} reaction={reaction} decorative />
+        <Mascot mood={LEVEL_MOODS[menace.level]} size={64} reaction={reaction} decorative />
       </button>
-      <AnimatePresence initial={false}>
-        {visible && (
-          <motion.p
-            key="bubble"
-            initial={{ opacity: 0, y: reduceMotion ? 0 : 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.16 }}
-            className="absolute top-1 left-full z-10 ml-2 w-max max-w-[13rem] rounded-2xl bg-surface px-3 py-2 font-rounded text-sm font-bold text-ink shadow-md"
-          >
-            <span aria-hidden="true" className="absolute top-4 -left-1.5 h-3 w-3 rotate-45 bg-surface" />
-            <span className="relative block">{line}</span>
-          </motion.p>
-        )}
-      </AnimatePresence>
-    </div>
-  )
+    ),
+    caption: (
+      <p
+        aria-live="polite"
+        className="relative mt-3 line-clamp-2 rounded-2xl bg-surface px-3 py-2 font-rounded text-sm font-bold text-ink shadow-sm"
+      >
+        <span aria-hidden="true" className="absolute -top-1.5 left-6 h-3 w-3 rotate-45 bg-surface" />
+        <span className="relative">{line}</span>
+      </p>
+    ),
+  }
 }

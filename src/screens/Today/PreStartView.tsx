@@ -8,6 +8,7 @@ import { formatDisplayDate } from '../../lib/dates'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { daysUntilStart } from '../../logic/days'
 import { rulesFor } from '../../logic/rulesets'
+import { BookPicker } from './ReadingTask'
 import { SocialOccasionSheet } from './SocialOccasionSheet'
 
 interface PreStartViewProps {
@@ -50,6 +51,9 @@ export function PreStartView({ challenge, todayDayNumber, today }: PreStartViewP
           <p className="max-w-xs font-rounded text-sm text-ink-muted">
             You can still move the start date in Settings.
           </p>
+          <section aria-label="Your book" className="w-full max-w-xs rounded-card bg-surface p-3 text-left shadow-sm">
+            <BookPicker />
+          </section>
           {rules.socialDaysPerWeek > 0 && (
             <Button variant="secondary" onClick={() => setSocialOpen(true)}>
               🥂 Plan a social occasion

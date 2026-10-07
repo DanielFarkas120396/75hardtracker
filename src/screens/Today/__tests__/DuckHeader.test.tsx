@@ -6,12 +6,23 @@ import { freshDatabase } from '../../../db/__tests__/fixtures'
 import { TASK_IDS } from '../../../logic/dayCompletion'
 import type { Menace } from '../../../logic/menace'
 import type { TaskId } from '../../../logic/types'
-import { DuckHeader, LINE_EVERY_MS, LINE_VISIBLE_MS } from '../DuckHeader'
+import { useDuck } from '../DuckHeader'
 
 const completionOf = (missing: TaskId[]) =>
   Object.fromEntries(TASK_IDS.map((task) => [task, !missing.includes(task)])) as Record<TaskId, boolean>
 
 const TAPPING: Menace = { level: 'tapping', reason: 'close' }
+
+/** The duck and his caption, as the hero lays them out. */
+function DuckHeader(props: Parameters<typeof useDuck>[0]) {
+  const { duck, caption } = useDuck(props)
+  return (
+    <>
+      {duck}
+      {caption}
+    </>
+  )
+}
 
 describe('DuckHeader', () => {
   beforeAll(() => {
@@ -78,16 +89,23 @@ describe('DuckHeader', () => {
     expect(await screen.findByText("Tick. Tock. You're cutting it close.", undefined, { timeout: 3000 })).toBeInTheDocument()
   })
 
-  it('hides his bubble after a while, and brings it back now and then', async () => {
+  it('keeps his line up for good, in a live caption VoiceOver reads', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] })
     render(<DuckHeader menace={TAPPING} missing={['reading']} completion={completionOf(['reading'])} dayNumber={3} onLunge={vi.fn()} />)
-    expect(screen.getByText("Tick. Tock. You're cutting it close.")).toBeInTheDocument()
+    const line = screen.getByText("Tick. Tock. You're cutting it close.")
+    expect(line.closest('[aria-live="polite"]')).not.toBeNull()
 
-    await act(async () => vi.advanceTimersByTime(LINE_VISIBLE_MS + 100))
-    expect(screen.queryByText("Tick. Tock. You're cutting it close.")).not.toBeInTheDocument()
-
-    await act(async () => vi.advanceTimersByTime(LINE_EVERY_MS))
+    await act(async () => vi.advanceTimersByTime(60_000))
     expect(screen.getByText("Tick. Tock. You're cutting it close.")).toBeInTheDocument()
+  })
+
+  it('stops greeting once something is logged, and speaks up for an unfinished yesterday', () => {
+    const calm = { menace: { level: 'watching', reason: 'plenty' } as Menace, missing: [...TASK_IDS], completion: completionOf([...TASK_IDS]), dayNumber: 3, name: 'Daniel', onLunge: vi.fn() }
+    const { rerender } = render(<DuckHeader {...calm} started />)
+    expect(screen.getByText('Started. Not finished.')).toBeInTheDocument()
+
+    rerender(<DuckHeader {...calm} yesterdayOpen />)
+    expect(screen.getByText("Yesterday's still open. Noon.")).toBeInTheDocument()
   })
 
   it("says the player's name when the day starts", () => {

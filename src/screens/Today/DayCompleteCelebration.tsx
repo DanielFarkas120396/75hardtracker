@@ -3,7 +3,6 @@ import { useEffect, useEffectEvent } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Mascot } from '../../components/mascot/Mascot'
 import type { DayCelebration } from '../../hooks/useDayCompleteCelebration'
-import { useHaptics } from '../../hooks/useHaptics'
 import { useSound } from '../../hooks/useSound'
 import { celebrate } from '../../lib/confetti'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
@@ -13,16 +12,14 @@ interface DayCompleteCelebrationProps {
   onDismiss: () => void
 }
 
-/** Full-screen "Day complete!" overlay, shown the moment all five tasks are done. */
+/** Full-screen "Day complete!" overlay in the world's colour, shown the moment all five tasks are done. */
 export function DayCompleteCelebration({ celebration, onDismiss }: DayCompleteCelebrationProps) {
   const playSound = useSound()
-  const vibrate = useHaptics()
   const visible = celebration !== null
 
   const onShow = useEffectEvent(() => {
     celebrate()
     playSound()
-    vibrate([40, 60, 40])
   })
 
   useEffect(() => {
@@ -39,13 +36,13 @@ export function DayCompleteCelebration({ celebration, onDismiss }: DayCompleteCe
           role="dialog"
           aria-modal="true"
           aria-labelledby="day-complete-title"
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-green-deep p-6 text-center text-white"
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-world p-6 text-center text-on-world"
         >
           <Mascot mood="celebrating" size={140} />
           <h1 id="day-complete-title" className="font-display text-3xl tracking-wide">
             Day {celebration.dayNumber} complete!
           </h1>
-          <p className="max-w-xs font-rounded font-semibold text-white/90">
+          <p className="max-w-xs font-rounded font-semibold text-on-world">
             {celebration.isFinalDay
               ? `That was the last one. All ${CHALLENGE_LENGTH} days — every task, every day.`
               : celebration.late
@@ -53,9 +50,9 @@ export function DayCompleteCelebration({ celebration, onDismiss }: DayCompleteCe
                 : 'Every task, done. See you tomorrow — keep the streak alive.'}
           </p>
           {celebration.streak > 1 && (
-            <p className="font-rounded font-bold text-white/90">🔥 {celebration.streak}-day streak</p>
+            <p className="font-rounded font-bold text-on-world">🔥 {celebration.streak}-day streak</p>
           )}
-          <Button variant="primary" className="mt-4" onClick={onDismiss}>
+          <Button variant="secondary" className="mt-4" onClick={onDismiss}>
             {celebration.isFinalDay ? 'See your victory 🏆' : 'Nice!'}
           </Button>
         </motion.div>

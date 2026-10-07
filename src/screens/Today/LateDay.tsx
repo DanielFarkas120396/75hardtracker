@@ -8,6 +8,7 @@ import { useEntryPhoto } from '../../hooks/useEntryPhoto'
 import { useTodayEntry } from '../../hooks/useTodayEntry'
 import { useWorkoutsForEntry } from '../../hooks/useWorkoutsForEntry'
 import { challengeWeek, rulesFor } from '../../logic/rulesets'
+import { AddWorkoutSheet } from './AddWorkoutSheet'
 import { DayBoard } from './DayBoard'
 import { PhotoCapture } from './PhotoCapture'
 import { TaskSheet } from './TaskSheet'
@@ -57,6 +58,7 @@ export function LateDayView({ challenge, dayEntries, dayNumber, date, onBack }: 
   const { currentBook } = useCurrentBook()
   const photo = useEntryPhoto(entry?.photoId)
   const [openTask, setOpenTask] = useState<BoardTask | null>(null)
+  const [addWorkoutOpen, setAddWorkoutOpen] = useState(false)
 
   if (!entry || !workouts || !completion) {
     return (
@@ -82,6 +84,10 @@ export function LateDayView({ challenge, dayEntries, dayNumber, date, onBack }: 
     onPlanSocial: () => {},
     weekRestDay,
     libraryOnly: true,
+    onAddWorkout: () => {
+      setOpenTask(null)
+      setAddWorkoutOpen(true)
+    },
   }
 
   return (
@@ -114,11 +120,13 @@ export function LateDayView({ challenge, dayEntries, dayNumber, date, onBack }: 
             currentBook={currentBook}
             photo={photo?.blob}
             socialToday={socialThatDay}
+            onAddWorkout={sheetContext.onAddWorkout}
             onOpen={setOpenTask}
           />
         </main>
 
         <TaskSheet content={openTask ? describeTask(openTask, sheetContext) : null} onClose={() => setOpenTask(null)} />
+        <AddWorkoutSheet open={addWorkoutOpen} dayEntryId={entry.id} rules={rules} onClose={() => setAddWorkoutOpen(false)} />
       </div>
     </PhotoCapture>
   )

@@ -2,6 +2,16 @@
 
 Date: 2026-10-05 · Status: **built**. Delivered as two PRs into `main`: the XP removal (PR #31), then the board.
 
+**Changed by [Today, round 2](2026-10-07-today-round-2-design.md):**
+- Done tiles go neutral instead of `world-soft`.
+- The duck's bubble became a fixed caption.
+- The plan and social buttons moved under the grid.
+- The board reshapes late in the evening.
+- The workouts sheet no longer closes itself.
+- Haptics are gone.
+- The "N tasks left" line was never built, because the ring says it.
+- The Diet tile's done line stays a short "Followed", because its switches sit beside it.
+
 ## Why
 
 On an iPhone, Today takes three screens of scrolling to show the five tasks: each unfinished task is a tall card with all its controls open. Done cards already fold to one line (Card's `summary`), so the problem is the unfinished ones. The owner likes a "quest board" layout: a grid of compact tiles, each opening the task's controls on tap.

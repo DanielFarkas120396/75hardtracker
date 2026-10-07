@@ -5,7 +5,6 @@ import { Mascot } from '../../components/mascot/Mascot'
 import { victoryLine, victoryTitle } from '../../content/variants'
 import type { Challenge } from '../../db/types'
 import { useChallengeStats } from '../../hooks/useChallengeStats'
-import { useHaptics } from '../../hooks/useHaptics'
 import { useSound } from '../../hooks/useSound'
 import { celebrate } from '../../lib/confetti'
 import { dateForDayNumber, formatDisplayDate } from '../../lib/dates'
@@ -30,7 +29,6 @@ export function VictoryScreen({ challenge, today, revealed, streak, missedDays }
   const rules = rulesFor(challenge)
   const stats = useChallengeStats(challenge.id)
   const playSound = useSound()
-  const vibrate = useHaptics()
   const [sheetOpen, setSheetOpen] = useState(false)
 
   const onReveal = useEffectEvent(() => {
@@ -38,7 +36,6 @@ export function VictoryScreen({ challenge, today, revealed, streak, missedDays }
     celebratedThisSession.add(challenge.id)
     celebrate()
     playSound()
-    vibrate([40, 60, 40, 60, 80])
   })
 
   useEffect(() => {

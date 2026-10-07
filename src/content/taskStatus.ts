@@ -47,7 +47,7 @@ export function taskStatusLine(task: TaskId, data: DayTaskData, rules: Ruleset, 
       if (complete) return 'Followed'
       const toTick = social ? 1 : 2
       const ticked = (data.dietFollowed ? 1 : 0) + (!social && data.noAlcohol ? 1 : 0)
-      return `${ticked} of ${toTick}`
+      return ticked === 0 ? `${toTick} to tick` : `${ticked} of ${toTick}`
     }
     case 'water':
       return complete
