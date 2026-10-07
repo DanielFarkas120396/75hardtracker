@@ -1,6 +1,6 @@
 # Draw to commit (design)
 
-Status: **built** on 2026-10-07 (PR #51), and it **works on the owner's phone**. From that check: iOS Safari scrolled the page under the finger (touch-action on an SVG is not reliably honoured), so the pad's HTML frame holds the page still; and the recogniser accepts a fast thumb with a tiny first arm. The duck's animation around the signature is still to be designed.
+Status: **merged** into main on 2026-10-07 (PR #51), after the owner tried it on their phone. From that check: iOS Safari scrolled the page under the finger (touch-action on an SVG is not reliably honoured), so the pad's HTML frame holds the page still; and the recogniser accepts a fast thumb with a tiny first arm. The duck's animation around the signature is still to be designed.
 
 This replaces the held button from [onboarding round 2](2026-10-07-onboarding-round-2-design.md) §2. Everything else on the deal stays: the card appears line by line, the signature comes after the whole card and fades in when you scroll down to it, the duck has its 1.2 s moment with "I'm watching, {name}." before the app takes over.
 
