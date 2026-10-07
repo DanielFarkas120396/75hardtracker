@@ -38,7 +38,6 @@ describe('brand ink colours', () => {
       for (const end of ['stack-from', 'stack-to']) {
         expect(contrastRatio(token(body, 'on-stack'), token(body, end)), end).toBeGreaterThanOrEqual(4.5)
       }
-      expect(contrastRatio(token(body, 'on-open-card'), token(body, 'open-card'))).toBeGreaterThanOrEqual(4.5)
     })
   }
 })

@@ -1,3 +1,4 @@
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useId, useState } from 'react'
 import { Icon } from '../../components/icons/Icon'
 import { ACTIVITY_ICONS, formatMinutes } from '../../content/activities'
@@ -10,10 +11,10 @@ import type { ActivityHistory, WorkoutHistory } from '../../logic/workoutHistory
 const sessionsWord = (count: number) => (count === 1 ? 'session' : 'sessions')
 const moodFor = (feel: Mood) => MOODS.find((mood) => mood.value === feel)!
 
-/** The translucent wash for chips and the session list on the open card. */
+/** The translucent wash for the feel chips and the session list of an open card. */
 const WASH = 'bg-white/55 dark:bg-black/25'
 
-/** Every workout of the attempt, on Stats under Weight: a card per activity, stacked, all closed until one is tapped. */
+/** Every workout of the attempt, on Stats under Weight: a card per activity, stacked, all folded until one is tapped. */
 export function WorkoutsSection({ challengeId }: { challengeId: number }) {
   const history = useWorkoutHistory(challengeId)
   const headingId = useId()
@@ -79,111 +80,90 @@ interface ActivityCardProps {
 }
 
 /**
- * One activity: a folder-like card drawn over the bottom of the one above. Closed, its logo,
- * count and time; open, sky blue with the logo faint behind its feels, totals and sessions.
+ * One activity: a folder-like card drawn over the bottom of the one above, with its logo,
+ * count and time. Tapped, it keeps its colour and unfolds its feels and sessions below them.
  */
 function ActivityCard({ activity, shade, open, onToggle }: ActivityCardProps) {
-  const { type, sessions, minutes, outdoors, feels } = activity
+  const { type, sessions, minutes, feels } = activity
   const panelId = useId()
+  const reduceMotion = useReducedMotion()
   const count = sessions.length
 
   return (
     <section
-      className={`relative overflow-hidden rounded-[2rem] shadow-[0_-6px_16px_rgba(0,0,0,0.1)] not-first:-mt-8 motion-safe:transition-colors ${
-        open ? 'bg-open-card text-on-open-card' : 'text-on-stack'
-      }`}
-      style={
-        open
-          ? undefined
-          : { backgroundColor: `color-mix(in srgb, var(--color-stack-from), var(--color-stack-to) ${Math.round(shade * 100)}%)` }
-      }
+      className="relative overflow-hidden rounded-[2rem] pb-10 text-on-stack shadow-[0_-6px_16px_rgba(0,0,0,0.1)] not-first:-mt-8"
+      style={{ backgroundColor: `color-mix(in srgb, var(--color-stack-from), var(--color-stack-to) ${Math.round(shade * 100)}%)` }}
     >
-      {open && (
-        <Icon
-          name={ACTIVITY_ICONS[type]}
-          size={220}
-          strokeWidth={1}
-          className="pointer-events-none absolute -top-4 -right-12 opacity-15"
-        />
-      )}
       <button
         type="button"
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         aria-label={`${type}, ${count} ${sessionsWord(count)}`}
         onClick={onToggle}
-        className={`relative flex w-full items-center gap-4 px-5 pt-5 text-left ${open ? 'pb-2' : 'pb-12'}`}
+        className="relative flex w-full items-center gap-4 px-5 pt-5 pb-2 text-left"
       >
-        {!open && <Icon name={ACTIVITY_ICONS[type]} size={56} strokeWidth={1.5} className="shrink-0" />}
-        {open ? (
-          <span className="flex-1 font-rounded text-xl font-bold">{type}</span>
-        ) : (
-          <span className="flex-1">
-            <span className="block font-rounded text-lg font-bold">{type}</span>
-            <span className="block font-display text-4xl leading-none tracking-wide">{count}</span>
-            <span className="block font-rounded text-sm font-bold">
-              {sessionsWord(count)} · {formatMinutes(minutes)}
-            </span>
+        <Icon name={ACTIVITY_ICONS[type]} size={56} strokeWidth={1.5} className="shrink-0" />
+        <span className="flex-1">
+          <span className="block font-rounded text-lg font-bold">{type}</span>
+          <span className="block font-display text-4xl leading-none tracking-wide">{count}</span>
+          <span className="block font-rounded text-sm font-bold">
+            {sessionsWord(count)} · {formatMinutes(minutes)}
           </span>
-        )}
-        <span className={`flex h-9 w-9 shrink-0 items-center justify-center self-start rounded-full ${open ? WASH : ''}`}>
-          <Icon name="chevron" size={20} className={open ? '-rotate-90' : 'rotate-90'} />
+        </span>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center self-start rounded-full">
+          <Icon name="chevron" size={20} className={`motion-safe:transition-transform ${open ? '-rotate-90' : 'rotate-90'}`} />
         </span>
       </button>
 
-      {open && (
-        <div id={panelId} className="relative px-5 pb-12">
-          {feels.length > 0 && (
-            <ul aria-label="How it felt" className="flex flex-wrap gap-1.5">
-              {feels.map(({ feel, count: times }) => (
-                <li key={feel} className={`flex items-center gap-1 rounded-full py-0.5 pr-2.5 pl-1.5 font-rounded text-sm font-bold ${WASH}`}>
-                  <span aria-hidden="true" className="text-lg">
-                    {moodFor(feel).emoji}
-                  </span>
-                  <span className="sr-only">{moodFor(feel).label}: </span>
-                  {times}
-                </li>
-              ))}
-            </ul>
-          )}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            id={panelId}
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: reduceMotion ? 0 : 0.3, ease: 'easeInOut' }}
+            className="overflow-hidden"
+          >
+            <div className="px-5 pt-2">
+              {feels.length > 0 && (
+                <ul aria-label="How it felt" className="flex flex-wrap gap-1.5">
+                  {feels.map(({ feel, count: times }) => (
+                    <li key={feel} className={`flex items-center gap-1 rounded-full py-0.5 pr-2.5 pl-1.5 font-rounded text-sm font-bold ${WASH}`}>
+                      <span aria-hidden="true" className="text-lg">
+                        {moodFor(feel).emoji}
+                      </span>
+                      <span className="sr-only">{moodFor(feel).label}: </span>
+                      {times}
+                    </li>
+                  ))}
+                </ul>
+              )}
 
-          <div className="mt-3 flex items-end gap-6">
-            <p>
-              <span className="block font-display text-6xl leading-[0.9] tracking-wide">{count}</span>
-              <span className="font-rounded text-sm font-bold">{sessionsWord(count)}</span>
-            </p>
-            <p>
-              <span className="block font-display text-2xl leading-none tracking-wide">{formatMinutes(minutes)}</span>
-              <span className="font-rounded text-sm font-bold">in total</span>
-            </p>
-            <p>
-              <span className="block font-display text-2xl leading-none tracking-wide">{outdoors}</span>
-              <span className="font-rounded text-sm font-bold">outdoors</span>
-            </p>
-          </div>
-
-          <ol aria-label={`${type} sessions`} className={`mt-4 divide-y divide-current/15 rounded-[1.25rem] px-3.5 ${WASH}`}>
-            {sessions.map((session) => (
-              <li key={session.id} className="flex items-center gap-2.5 py-2.5">
-                <span className="flex-1">
-                  <span className="block font-rounded font-bold">Day {session.dayNumber}</span>
-                  <span className="block font-rounded text-xs font-bold">{formatShortDay(session.date)}</span>
-                </span>
-                <span className="font-rounded text-sm font-bold">
-                  {session.durationMin} min · {session.isOutdoor ? 'Outdoor' : 'Indoor'}
-                </span>
-                <span className="w-7 text-center text-xl">
-                  {session.feel && (
-                    <span role="img" aria-label={moodFor(session.feel).label}>
-                      {moodFor(session.feel).emoji}
+              <ol aria-label={`${type} sessions`} className={`mt-3 divide-y divide-current/15 rounded-[1.25rem] px-3.5 ${WASH}`}>
+                {sessions.map((session) => (
+                  <li key={session.id} className="flex items-center gap-2.5 py-2.5">
+                    <span className="flex-1">
+                      <span className="block font-rounded font-bold">Day {session.dayNumber}</span>
+                      <span className="block font-rounded text-xs font-bold">{formatShortDay(session.date)}</span>
                     </span>
-                  )}
-                </span>
-              </li>
-            ))}
-          </ol>
-        </div>
-      )}
+                    <span className="font-rounded text-sm font-bold">
+                      {session.durationMin} min · {session.isOutdoor ? 'Outdoor' : 'Indoor'}
+                    </span>
+                    <span className="w-7 text-center text-xl">
+                      {session.feel && (
+                        <span role="img" aria-label={moodFor(session.feel).label}>
+                          {moodFor(session.feel).emoji}
+                        </span>
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   )
 }
