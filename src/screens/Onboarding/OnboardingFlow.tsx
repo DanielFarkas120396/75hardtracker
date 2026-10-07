@@ -54,10 +54,10 @@ export function OnboardingFlow({ mode, today }: OnboardingFlowProps) {
   const [index, setIndex] = useState(() =>
     draft
       ? resumeStep(steps, draft.step, {
-          nameOk: isValidName(draft.name),
-          variantOk: draft.variant !== null,
-          whyOk: isValidWhy(draft.why),
-          dateOk: start.dateError === null,
+          name: isValidName(draft.name),
+          challenge: draft.variant !== null,
+          why: isValidWhy(draft.why),
+          start: start.dateError === null,
         })
       : 0,
   )
