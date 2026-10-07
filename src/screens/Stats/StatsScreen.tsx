@@ -29,8 +29,8 @@ export function StatsScreen({ challenge, streak, today, todayDayNumber, complete
     <div className="min-h-dvh bg-canvas pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
       <header className="flex items-center justify-between px-4 pt-6 pb-4">
         <div>
-          <p className="font-rounded text-sm font-bold text-ink-muted">Attempt #{challenge.attemptNumber}</p>
-          <h1 className="flex items-center gap-2 font-display text-2xl tracking-wide text-ink">
+          <p className="font-rounded text-sm font-semibold text-ink-muted">Attempt #{challenge.attemptNumber}</p>
+          <h1 className="flex items-center gap-2 font-display text-2xl font-semibold tracking-wide text-ink">
             <Icon name="stats" className="text-world-ink" />
             Stats
           </h1>
