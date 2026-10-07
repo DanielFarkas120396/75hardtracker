@@ -55,7 +55,7 @@ describe('applyTheme', () => {
     applyTheme('dark')
     expect(document.documentElement.classList.contains('dark')).toBe(true)
     expect(document.documentElement.style.colorScheme).toBe('dark')
-    expect(metaColors()).toEqual(['#1a1211', '#1a1211'])
+    expect(metaColors()).toEqual(['#16110e', '#16110e'])
   })
 
   it('restores each meta to its own media query when back on system', () => {
@@ -63,7 +63,7 @@ describe('applyTheme', () => {
     applyTheme('dark')
     applyTheme('system')
     expect(document.documentElement.classList.contains('dark')).toBe(false)
-    expect(metaColors()).toEqual(['#fdf6f3', '#1a1211'])
+    expect(metaColors()).toEqual(['#f9f3ea', '#16110e'])
   })
 })
 
