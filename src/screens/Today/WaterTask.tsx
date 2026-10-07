@@ -16,7 +16,7 @@ export function WaterTask({ entry, rules }: WaterTaskProps) {
   }
 
   const fillPercent = Math.min(100, (entry.water_ml / rules.waterTargetMl) * 100)
-  const liters = (entry.water_ml / 1000).toFixed(2)
+  const liters = formatLiters(entry.water_ml)
   const targetLiters = formatLiters(rules.waterTargetMl)
 
   return (

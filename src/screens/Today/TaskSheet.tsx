@@ -5,7 +5,6 @@ import { Burst } from '../../components/ui/Burst'
 import { DoneBadge } from '../../components/ui/DoneBadge'
 import { Modal } from '../../components/ui/Modal'
 import { TASK_TITLES, type BoardTask } from '../../content/taskStatus'
-import { useHaptics } from '../../hooks/useHaptics'
 import { TASK_ICONS, TASK_TONES } from './taskTones'
 
 export interface TaskSheetContent {
@@ -15,6 +14,8 @@ export interface TaskSheetContent {
   complete: boolean
   /** Flashed when the task completes inside the sheet. */
   cheer?: string
+  /** Closes itself after the cheer; false when there's still something to add once done (a workout's feel). */
+  closesWhenDone: boolean
   body: ReactNode
 }
 
@@ -29,8 +30,9 @@ interface TaskSheetProps {
 
 /**
  * The bottom sheet holding one task's controls, under a header in the task's
- * colour. When the task completes here, the header flips to done (tick,
- * cheer, a short buzz) and the sheet closes on its own after the cheer.
+ * colour. When the task completes here, the header flips to done (tick and
+ * cheer) and, unless `closesWhenDone` is false, the sheet closes on its own
+ * after the cheer.
  */
 export function TaskSheet({ content, onClose }: TaskSheetProps) {
   const headingId = useId()
@@ -44,8 +46,7 @@ export function TaskSheet({ content, onClose }: TaskSheetProps) {
 }
 
 function SheetContent({ content, headingId, onClose }: { content: TaskSheetContent; headingId: string; onClose: () => void }) {
-  const { task, ruleLine, complete, cheer, body } = content
-  const vibrate = useHaptics()
+  const { task, ruleLine, complete, cheer, closesWhenDone, body } = content
   const reduceMotion = useReducedMotion()
   const tone = TASK_TONES[task]
 
@@ -59,11 +60,11 @@ function SheetContent({ content, headingId, onClose }: { content: TaskSheetConte
     setJustDone(complete ? justDone + 1 : 0)
   }
 
-  const celebrate = useEffectEvent(() => vibrate(20))
-  const close = useEffectEvent(() => onClose())
+  const close = useEffectEvent(() => {
+    if (closesWhenDone) onClose()
+  })
   useEffect(() => {
     if (justDone === 0) return
-    celebrate()
     const timer = setTimeout(close, CHEER_VISIBLE_MS)
     return () => clearTimeout(timer)
   }, [justDone])

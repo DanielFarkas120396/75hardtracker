@@ -27,6 +27,8 @@ export interface TaskSheetContext {
   weekRestDay: number | undefined
   /** Only a photo from the library (finishing yesterday). */
   libraryOnly: boolean
+  /** Opens the "Add workout" sheet: the workouts sheet adds through the same form as the tile. */
+  onAddWorkout: () => void
 }
 
 function ruleLine(task: BoardTask, ctx: TaskSheetContext): string {
@@ -57,6 +59,7 @@ function body(task: BoardTask, ctx: TaskSheetContext) {
           rules={ctx.rules}
           restDay={ctx.entry.restDay === true}
           weekRestDay={ctx.weekRestDay}
+          onAdd={ctx.onAddWorkout}
         />
       )
     case 'diet':
@@ -87,6 +90,8 @@ export function describeTask(task: BoardTask, ctx: TaskSheetContext): TaskSheetC
     ruleLine: ruleLine(task, ctx),
     complete: task === 'notes' ? false : ctx.completion[task],
     cheer: task === 'notes' ? undefined : taskCheer(task, ctx.dayNumber, ctx.rules),
+    // A done workout can still get its feel: that sheet stays open.
+    closesWhenDone: task !== 'workouts',
     body: body(task, ctx),
   }
 }

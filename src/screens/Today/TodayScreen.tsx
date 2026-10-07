@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { BackupReminderBanner } from '../../components/BackupReminderBanner'
 import { LockBypassBanner } from '../../components/LockBypassBanner'
-import { planSavedLine } from '../../content/microcopy'
+import { planSavedLine, timeLeftLine } from '../../content/microcopy'
 import type { BoardTask } from '../../content/taskStatus'
 import { VARIANT_NAMES } from '../../content/variants'
 import type { Challenge, DayEntry } from '../../db/types'
+import type { Menace } from '../../logic/menace'
+import type { DayTaskData, TaskId } from '../../logic/types'
 import { useCurrentBook } from '../../hooks/useCurrentBook'
 import { useDayCompletion } from '../../hooks/useDayCompletion'
 import { useEntryPhoto } from '../../hooks/useEntryPhoto'
@@ -18,8 +20,9 @@ import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { TASK_IDS } from '../../logic/dayCompletion'
 import { isChallengeDay } from '../../logic/days'
 import { challengeWeek, rulesFor } from '../../logic/rulesets'
+import { AddWorkoutSheet } from './AddWorkoutSheet'
 import { DayBoard } from './DayBoard'
-import { DuckHeader, type DuckAnnouncement } from './DuckHeader'
+import { useDuck, type DuckAnnouncement } from './DuckHeader'
 import { LateDayCard, LateDayView } from './LateDay'
 import { MenaceAtmosphere } from './MenaceAtmosphere'
 import { PhotoCapture } from './PhotoCapture'
@@ -30,9 +33,27 @@ import { TaskSheet } from './TaskSheet'
 import { describeTask } from './taskSheets'
 import { TodayHero } from './TodayHero'
 
-/** The hero's small round buttons: the social occasion under the duck, the plan under the ring. */
-const HERO_BUTTON =
-  'flex min-h-touch min-w-touch items-center justify-center rounded-full bg-surface text-lg shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink'
+/** The labelled buttons under the board, in thumb reach: the evening plan and the social occasion. */
+const ACTION_BUTTON =
+  'flex min-h-touch flex-1 items-center justify-center gap-2 rounded-full bg-surface px-4 font-rounded text-sm font-extrabold text-ink shadow-sm ring-1 ring-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:ring-0'
+
+/** Late in the evening with tasks left: the duck is tapping or hunting. */
+function isUrgent(menace: Menace, missing: readonly TaskId[]): boolean {
+  return missing.length > 0 && (menace.level === 'tapping' || menace.level === 'hunting')
+}
+
+/** Something is logged today, even if no task is done yet. */
+function hasStarted(data: DayTaskData): boolean {
+  return (
+    data.workouts.length > 0 ||
+    data.water_ml > 0 ||
+    data.pages_read > 0 ||
+    data.dietFollowed ||
+    data.noAlcohol ||
+    data.hasPhoto ||
+    data.restDay === true
+  )
+}
 
 interface TodayScreenProps {
   challenge: Challenge
@@ -97,6 +118,7 @@ function TodayTasks({
   const [planOpen, setPlanOpen] = useState(false)
   const [socialOpen, setSocialOpen] = useState(false)
   const [openTask, setOpenTask] = useState<BoardTask | null>(null)
+  const [addWorkoutOpen, setAddWorkoutOpen] = useState(false)
   const [announcement, setAnnouncement] = useState<DuckAnnouncement>()
 
   if (!entry || !workouts || !completion || !menace) {
@@ -127,7 +149,13 @@ function TodayTasks({
     },
     weekRestDay,
     libraryOnly: false,
+    onAddWorkout: () => {
+      setOpenTask(null)
+      setAddWorkoutOpen(true)
+    },
   }
+  const urgent = isUrgent(menace, completion.missing)
+  const hasPlan = completion.missing.some((task) => entry.plans?.[task])
 
   return (
     <PhotoCapture
@@ -139,48 +167,21 @@ function TodayTasks({
       <div className="min-h-dvh bg-canvas pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
         <MenaceAtmosphere level={menace.level} flashes={lunges} />
         <div className="relative z-10">
-          <TodayHero
+          <Hero
             attemptLine={`${VARIANT_NAMES[rules.variant]} · #${challenge.attemptNumber}`}
             dayNumber={todayDayNumber}
             completedCount={completedCount}
-            taskCount={TASK_IDS.length}
             streak={streak}
             jokersLeft={rules.jokers > 0 ? jokersLeft : undefined}
-            duck={
-              <DuckHeader
-                menace={menace}
-                missing={completion.missing}
-                completion={completion.completion}
-                dayNumber={todayDayNumber}
-                announcement={announcement}
-                name={profile?.name}
-                onLunge={() => setLunges((count) => count + 1)}
-              />
-            }
-            social={
-              sheetContext.canPlanSocial && (
-                <button
-                  type="button"
-                  onClick={() => setSocialOpen(true)}
-                  aria-label="Plan a social occasion"
-                  className={HERO_BUTTON}
-                >
-                  <span aria-hidden="true">🥂</span>
-                </button>
-              )
-            }
-            action={
-              completion.missing.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setPlanOpen(true)}
-                  aria-label={completion.missing.some((task) => entry.plans?.[task]) ? 'Edit plan' : "I've got a plan"}
-                  className={HERO_BUTTON}
-                >
-                  <span aria-hidden="true">🗓️</span>
-                </button>
-              )
-            }
+            countdown={urgent ? timeLeftLine(nowMin) : null}
+            menace={menace}
+            missing={completion.missing}
+            completion={completion.completion}
+            announcement={announcement}
+            name={profile?.name}
+            started={hasStarted(completion.data)}
+            yesterdayOpen={pendingLateDay != null}
+            onLunge={() => setLunges((count) => count + 1)}
           />
           {pendingLateDay != null && <LateDayCard dayNumber={pendingLateDay} onOpen={onOpenLateDay} />}
           <LockBypassBanner />
@@ -195,12 +196,31 @@ function TodayTasks({
               currentBook={currentBook}
               photo={photo?.blob}
               socialToday={socialToday}
+              urgent={urgent}
+              onAddWorkout={sheetContext.onAddWorkout}
               onOpen={setOpenTask}
             />
+            {(completion.missing.length > 0 || sheetContext.canPlanSocial) && (
+              <div className="mt-4 flex gap-3">
+                {completion.missing.length > 0 && (
+                  <button type="button" onClick={() => setPlanOpen(true)} className={ACTION_BUTTON}>
+                    <span aria-hidden="true">🗓️</span>
+                    {hasPlan ? 'Edit my plan' : 'Plan my evening'}
+                  </button>
+                )}
+                {sheetContext.canPlanSocial && (
+                  <button type="button" onClick={() => setSocialOpen(true)} className={ACTION_BUTTON}>
+                    <span aria-hidden="true">🥂</span>
+                    Plan a social occasion
+                  </button>
+                )}
+              </div>
+            )}
           </main>
         </div>
 
         <TaskSheet content={openTask ? describeTask(openTask, sheetContext) : null} onClose={() => setOpenTask(null)} />
+        <AddWorkoutSheet open={addWorkoutOpen} dayEntryId={entry.id} rules={rules} onClose={() => setAddWorkoutOpen(false)} />
 
         <PlanSheet
           open={planOpen}
@@ -235,4 +255,13 @@ function TodayTasks({
       </div>
     </PhotoCapture>
   )
+}
+
+type HeroProps = Omit<Parameters<typeof TodayHero>[0], 'duck' | 'speech' | 'taskCount'> &
+  Parameters<typeof useDuck>[0]
+
+/** The hero with its duck: rendered once the day has loaded, so the duck's hook always has its inputs. */
+function Hero({ menace, missing, completion, dayNumber, announcement, name, started, yesterdayOpen, onLunge, ...hero }: HeroProps) {
+  const { duck, speech } = useDuck({ menace, missing, completion, dayNumber, announcement, name, started, yesterdayOpen, onLunge })
+  return <TodayHero {...hero} dayNumber={dayNumber} taskCount={TASK_IDS.length} duck={duck} speech={speech} />
 }

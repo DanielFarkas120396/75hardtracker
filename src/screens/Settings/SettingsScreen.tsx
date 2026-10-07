@@ -48,7 +48,7 @@ const PAGE_TITLES: Record<PageId, string> = {
   books: 'Books',
   history: 'Attempt history',
   appearance: 'Appearance',
-  sound: 'Sound & haptics',
+  sound: 'Sound',
   companion: 'Companion',
   install: 'Install the app',
   backup: 'Backup & storage',
@@ -89,14 +89,7 @@ export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGi
     window.location.reload()
   }
 
-  const soundValue =
-    settings.soundEnabled && settings.hapticsEnabled
-      ? 'On'
-      : settings.soundEnabled
-        ? 'Sound only'
-        : settings.hapticsEnabled
-          ? 'Haptics only'
-          : 'Off'
+  const soundValue = settings.soundEnabled ? 'On' : 'Off'
 
   return (
     <div className="min-h-dvh bg-canvas pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
@@ -119,7 +112,6 @@ export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGi
           {page === 'sound' && (
             <section className="flex flex-col gap-2 rounded-card bg-surface p-4 shadow-sm ring-1 ring-ink/10 dark:ring-0">
               <Toggle checked={settings.soundEnabled} onChange={settings.setSoundEnabled} label="Sound effects" />
-              <Toggle checked={settings.hapticsEnabled} onChange={settings.setHapticsEnabled} label="Haptic feedback" />
             </section>
           )}
           {page === 'companion' && <CompanionSection bedtime={settings.bedtime} onBedtimeChange={settings.setBedtime} />}
@@ -168,7 +160,7 @@ export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGi
                 value={preference ? THEME_LABELS[preference] : undefined}
                 onClick={() => open('appearance')}
               />
-              <SettingsRow icon="sound" label="Sound & haptics" value={soundValue} onClick={() => open('sound')} />
+              <SettingsRow icon="sound" label="Sound" value={soundValue} onClick={() => open('sound')} />
               <SettingsRow icon="companion" label="Companion" value={`Bedtime ${settings.bedtime}`} onClick={() => open('companion')} />
               <SettingsRow
                 icon="install"

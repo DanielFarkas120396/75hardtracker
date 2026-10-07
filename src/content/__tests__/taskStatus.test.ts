@@ -26,19 +26,19 @@ describe('taskStatusLine', () => {
   })
 
   it('diet: two things to tick, one on a social day', () => {
-    expect(taskStatusLine('diet', empty, hard, false)).toBe('0 of 2')
+    expect(taskStatusLine('diet', empty, hard, false)).toBe('2 to tick')
     expect(taskStatusLine('diet', { ...empty, dietFollowed: true }, hard, false)).toBe('1 of 2')
     expect(taskStatusLine('diet', { ...empty, dietFollowed: true, noAlcohol: true }, hard, true)).toBe('Followed')
     const social = { ...empty, socialDay: true }
-    expect(taskStatusLine('diet', social, strong, false)).toBe('0 of 1')
+    expect(taskStatusLine('diet', social, strong, false)).toBe('1 to tick')
     expect(taskStatusLine('diet', { ...social, dietFollowed: true }, strong, true)).toBe('Followed')
     // Hard has no social days: a stray flag changes nothing.
-    expect(taskStatusLine('diet', social, hard, false)).toBe('0 of 2')
+    expect(taskStatusLine('diet', social, hard, false)).toBe('2 to tick')
   })
 
   it('water: litres against the target, then just the litres', () => {
     expect(taskStatusLine('water', empty, hard, false)).toBe('0 / 3.8 L')
-    expect(taskStatusLine('water', { ...empty, water_ml: 1250 }, medium, false)).toBe('1.3 / 3 L')
+    expect(taskStatusLine('water', { ...empty, water_ml: 1250 }, medium, false)).toBe('1.25 / 3 L')
     expect(taskStatusLine('water', { ...empty, water_ml: 3800 }, hard, true)).toBe('3.8 L')
   })
 

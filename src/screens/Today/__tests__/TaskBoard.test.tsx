@@ -46,7 +46,7 @@ describe('TaskBoard', () => {
     render(board(empty))
 
     expect(screen.getByRole('button', { name: 'Workouts, 0 of 2 · 45 min each' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Diet, 0 of 2' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Diet, 2 to tick' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Water, 0 / 3.8 L' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Reading, 0 of 10 pages' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Photo, No photo yet' })).toBeInTheDocument()
@@ -99,7 +99,7 @@ describe('TaskBoard', () => {
 
     expect(screen.getByRole('button', { name: 'Add 250 ml' })).toHaveTextContent('250 ml')
     expect(screen.getByRole('button', { name: 'Take photo' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /^Add 1 page/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Add the/ })).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Add 250 ml' }))
     expect(onPress).toHaveBeenCalledTimes(1)
@@ -115,5 +115,62 @@ describe('TaskBoard', () => {
 
     rerender(board({ ...empty, water_ml: 3800, pages_read: 10 }))
     expect(screen.getByTestId('burst')).toBeInTheDocument()
+  })
+
+  it('quiets a done tile, and keeps the task colour on the open ones', () => {
+    render(board({ ...empty, water_ml: 3800 }))
+
+    const doneTile = screen.getByRole('button', { name: 'Water, 3.8 L, done' }).parentElement!
+    expect(doneTile).toHaveClass('bg-surface')
+    expect(doneTile).not.toHaveClass('bg-blue-light')
+    expect(screen.getByRole('button', { name: /^Reading,/ }).parentElement!).toHaveClass('bg-yellow-light')
+  })
+
+  it('when it is urgent, folds the done tasks and the notes into chips and lifts the open tiles', () => {
+    const onOpen = vi.fn()
+    render(board({ ...empty, water_ml: 3800, hasPhoto: true }, { urgent: true, onOpen }))
+
+    // Water and Photo are done; with Mood & notes they become chips.
+    for (const name of ['Water, 3.8 L, done', 'Photo, Taken, done', 'Mood & notes, How was today?']) {
+      expect(screen.getByRole('button', { name })).toHaveClass('rounded-full')
+    }
+    const workouts = screen.getByRole('button', { name: /^Workouts,/ }).parentElement!
+    expect(workouts).toHaveClass('ring-danger-ink')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Water, 3.8 L, done' }))
+    expect(onOpen).toHaveBeenCalledWith('water')
+  })
+
+  it('gives the last open task the whole width when it is urgent', () => {
+    const allButReading: DayTaskData = {
+      water_ml: 3800,
+      pages_read: 0,
+      dietFollowed: true,
+      noAlcohol: true,
+      hasPhoto: true,
+      workouts: [
+        { durationMin: 45, isOutdoor: true },
+        { durationMin: 45, isOutdoor: false },
+      ],
+    }
+    render(board(allButReading, { urgent: true }))
+
+    expect(screen.getByRole('button', { name: /^Reading,/ }).parentElement!.parentElement!).toHaveClass('col-span-2')
+  })
+
+  it('keeps the six tiles when it is urgent but everything is done', () => {
+    const all: DayTaskData = {
+      water_ml: 3800,
+      pages_read: 10,
+      dietFollowed: true,
+      noAlcohol: true,
+      hasPhoto: true,
+      workouts: [
+        { durationMin: 45, isOutdoor: true },
+        { durationMin: 45, isOutdoor: false },
+      ],
+    }
+    render(board(all, { urgent: true }))
+    expect(screen.getByRole('button', { name: /^Workouts,.*done$/ })).not.toHaveClass('rounded-full')
   })
 })

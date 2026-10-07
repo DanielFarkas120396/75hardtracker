@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../../db/db'
 import { addChallenge, freshDatabase, TEST_PROFILE } from '../../../db/__tests__/fixtures'
 import { dayEntryRepo } from '../../../db/repositories/dayEntryRepo'
@@ -11,6 +11,10 @@ import { addDaysISO, todayISO } from '../../../lib/dates'
 import type { Profile } from '../../../logic/profile'
 import type { ChallengeVariant } from '../../../logic/rulesets'
 import { TodayScreen } from '../TodayScreen'
+
+// The clock, in minutes since midnight: morning unless a test says otherwise.
+const clock = vi.hoisted(() => ({ nowMin: 9 * 60 }))
+vi.mock('../../../hooks/useNow', () => ({ useNow: () => clock.nowMin }))
 
 /** Seeds an active challenge and today's entry, then renders TodayScreen with the props App passes. */
 async function setup({
@@ -66,7 +70,32 @@ describe('TodayScreen', () => {
     MotionGlobalConfig.skipAnimations = true
   })
 
-  beforeEach(freshDatabase)
+  beforeEach(async () => {
+    clock.nowMin = 9 * 60
+    await freshDatabase()
+  })
+
+  it('in the morning: the duck has his own line, the ring is named, and the plan sits under the board', async () => {
+    await setup({ variant: 'hard', todayDayNumber: 3 })
+
+    const line = await screen.findByText("New day. I'm watching.")
+    expect(line.closest('[aria-live="polite"]')).not.toBeNull()
+    expect(screen.getByRole('img', { name: '0 of 5 tasks done' })).toHaveTextContent('0/5')
+    expect(screen.queryByText(/^\d+h\d\d left$|^\d+ min left$/)).not.toBeInTheDocument()
+    // Day 3 with no streak: no grey "0" flame.
+    expect(screen.queryByText('0')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Plan my evening' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Workouts,/ }).parentElement!).not.toHaveClass('ring-danger-ink')
+  })
+
+  it('at 22:30 with everything left: the time left, and only the open tasks keep a tile', async () => {
+    clock.nowMin = 22 * 60 + 30
+    await setup({ variant: 'hard', todayDayNumber: 3 })
+
+    expect(await screen.findByText('1h30 left')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Workouts,/ }).parentElement!).toHaveClass('ring-danger-ink')
+    expect(screen.getByRole('button', { name: 'Mood & notes, How was today?' })).toHaveClass('rounded-full')
+  })
 
   it("ignores a stray socialDays entry on a Hard row: keeps the alcohol toggle instead of the drink-allowed line", async () => {
     await setup({ variant: 'hard', todayDayNumber: 3, socialDays: [3] })
@@ -110,10 +139,10 @@ describe('TodayScreen', () => {
   it('Strong on Day 3 with a declared occasion: shows the drink-allowed note', async () => {
     await setup({ variant: 'strong', todayDayNumber: 3, socialDays: [3] })
 
-    expect(await screen.findByRole('button', { name: 'Diet, 0 of 1' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Diet, 1 to tick' })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Social occasion today — a drink is allowed' })).toBeInTheDocument()
     expect(screen.queryByRole('switch', { name: 'No alcohol' })).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Diet, 0 of 1' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Diet, 1 to tick' }))
     expect(await screen.findByText('🥂 Social occasion today — a drink is allowed.')).toBeInTheDocument()
   })
 
@@ -149,10 +178,10 @@ describe('TodayScreen', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Add 250 ml' }))
     await waitFor(async () => expect((await entry()).water_ml).toBe(250))
 
-    fireEvent.click(screen.getByRole('button', { name: 'Add 1 page' }))
-    await waitFor(async () => expect((await entry()).pages_read).toBe(1))
+    fireEvent.click(screen.getByRole('button', { name: 'Add the 10 pages left' }))
+    await waitFor(async () => expect((await entry()).pages_read).toBe(10))
 
-    expect(screen.getByRole('button', { name: 'Take photo' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Take photo' })).toHaveTextContent('Snap')
     fireEvent.click(screen.getByRole('button', { name: 'Add workout' }))
     fireEvent.click(within(await screen.findByRole('group', { name: 'Activity' })).getByRole('button', { name: 'Yoga' }))
     fireEvent.click(within(screen.getByRole('group', { name: 'How did it feel?' })).getByRole('button', { name: 'Good' }))

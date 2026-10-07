@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { MoodPicker } from '../../components/MoodPicker'
 import { Button } from '../../components/ui/Button'
 import { Stepper } from '../../components/ui/Stepper'
@@ -20,14 +20,35 @@ interface WorkoutTaskProps {
   restDay: boolean
   /** The day number of another entry in this challenge week that already took the recovery day, if any. */
   weekRestDay: number | undefined
+  /** Opens the "Add workout" form: the sheet adds a session the same way as the tile's shortcut. */
+  onAdd: () => void
 }
 
-/** The workouts sheet's body: the day's sessions, and 75 Soft's recovery day. */
-export function WorkoutTask({ dayEntryId, workouts, complete, rules, restDay, weekRestDay }: WorkoutTaskProps) {
-  const [restDayError, setRestDayError] = useState<string | null>(null)
+/** How long "Workout removed · Undo" stays up. */
+const UNDO_VISIBLE_MS = 5000
 
-  const addWorkout = () => {
-    void workoutRepo.add({ dayEntryId, type: 'Running', durationMin: rules.minWorkoutMin, isOutdoor: false })
+/** The workouts sheet's body: the day's sessions, and 75 Soft's recovery day. */
+export function WorkoutTask({ dayEntryId, workouts, complete, rules, restDay, weekRestDay, onAdd }: WorkoutTaskProps) {
+  const [restDayError, setRestDayError] = useState<string | null>(null)
+  // The last removed session, kept for a moment so Undo can write it back as it was.
+  const [removed, setRemoved] = useState<Workout | null>(null)
+
+  useEffect(() => {
+    if (!removed) return
+    const timer = setTimeout(() => setRemoved(null), UNDO_VISIBLE_MS)
+    return () => clearTimeout(timer)
+  }, [removed])
+
+  const remove = (workout: Workout) => {
+    setRemoved(workout)
+    void workoutRepo.remove(workout.id)
+  }
+
+  const undoRemove = () => {
+    if (!removed) return
+    const { id: _id, ...again } = removed
+    setRemoved(null)
+    void workoutRepo.add(again)
   }
 
   const takeRestDay = async () => {
@@ -47,12 +68,12 @@ export function WorkoutTask({ dayEntryId, workouts, complete, rules, restDay, we
     <div>
       <div className="flex flex-col gap-3">
         {workouts.map((workout) => (
-          <WorkoutRow key={workout.id} workout={workout} />
+          <WorkoutRow key={workout.id} workout={workout} onRemove={() => remove(workout)} />
         ))}
       </div>
 
       {workouts.length < MAX_WORKOUTS && (
-        <Button variant="secondary" className={`w-full ${workouts.length > 0 ? 'mt-4' : ''}`} onClick={addWorkout}>
+        <Button variant="secondary" className={`w-full ${workouts.length > 0 ? 'mt-4' : ''}`} onClick={onAdd}>
           + Add workout
         </Button>
       )}
@@ -86,11 +107,26 @@ export function WorkoutTask({ dayEntryId, workouts, complete, rules, restDay, we
           )}
         </div>
       )}
+
+      <div role="status" aria-live="polite">
+        {removed && (
+          <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl bg-ink px-4 py-2 font-rounded text-sm font-bold text-surface">
+            <span>Workout removed</span>
+            <button
+              type="button"
+              onClick={undoRemove}
+              className="min-h-touch rounded-xl px-3 font-extrabold underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-surface"
+            >
+              Undo
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
 
-function WorkoutRow({ workout }: { workout: Workout }) {
+function WorkoutRow({ workout, onRemove }: { workout: Workout; onRemove: () => void }) {
   const setFeel = (feel: Mood) => {
     void workoutRepo.update(workout.id, { feel: workout.feel === feel ? undefined : feel })
   }
@@ -101,7 +137,7 @@ function WorkoutRow({ workout }: { workout: Workout }) {
         <p className="font-rounded text-lg font-extrabold text-ink">{workout.type}</p>
         <button
           type="button"
-          onClick={() => void workoutRepo.remove(workout.id)}
+          onClick={onRemove}
           aria-label="Remove workout"
           className="flex h-11 w-11 items-center justify-center rounded-xl text-ink-muted"
         >

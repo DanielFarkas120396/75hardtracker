@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../../db/db'
 import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
 import { dayEntryRepo } from '../../../db/repositories/dayEntryRepo'
@@ -29,6 +29,7 @@ describe('WorkoutTask', () => {
         rules={RULESETS.hard}
         restDay={false}
         weekRestDay={undefined}
+        onAdd={vi.fn()}
       />,
     )
 
@@ -47,6 +48,7 @@ describe('WorkoutTask', () => {
         rules={RULESETS.soft}
         restDay={false}
         weekRestDay={undefined}
+        onAdd={vi.fn()}
       />,
     )
     fireEvent.click(screen.getByRole('button', { name: 'Take my recovery day' }))
@@ -68,6 +70,7 @@ describe('WorkoutTask', () => {
         rules={RULESETS.soft}
         restDay={false}
         weekRestDay={undefined}
+        onAdd={vi.fn()}
       />,
     )
     fireEvent.click(screen.getByRole('button', { name: 'Take my recovery day' }))
@@ -88,6 +91,7 @@ describe('WorkoutTask', () => {
         rules={RULESETS.soft}
         restDay
         weekRestDay={undefined}
+        onAdd={vi.fn()}
       />,
     )
 
@@ -109,6 +113,7 @@ describe('WorkoutTask', () => {
         rules={RULESETS.soft}
         restDay={false}
         weekRestDay={2}
+        onAdd={vi.fn()}
       />,
     )
 
@@ -128,6 +133,7 @@ describe('WorkoutTask', () => {
         rules={RULESETS.soft}
         restDay={false}
         weekRestDay={undefined}
+        onAdd={vi.fn()}
       />,
     )
 
@@ -152,6 +158,7 @@ describe('WorkoutTask', () => {
         rules={RULESETS.hard}
         restDay={false}
         weekRestDay={undefined}
+        onAdd={vi.fn()}
       />,
     )
 
@@ -183,5 +190,43 @@ describe('WorkoutTask', () => {
     fireEvent.click(good)
 
     await waitFor(async () => expect((await db.workouts.get(id))?.feel).toBeUndefined())
+  })
+
+  it('adds a session through the "Add workout" form, never by writing a default one', async () => {
+    const { entryId, id } = await dayWithOneWorkout()
+    const onAdd = vi.fn()
+    render(
+      <WorkoutTask
+        dayEntryId={entryId}
+        workouts={[(await db.workouts.get(id))!]}
+        complete={false}
+        rules={RULESETS.hard}
+        restDay={false}
+        weekRestDay={undefined}
+        onAdd={onAdd}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: '+ Add workout' }))
+
+    expect(onAdd).toHaveBeenCalledOnce()
+    expect(await db.workouts.count()).toBe(1)
+  })
+
+  it('removes a session with an Undo that writes it back as it was', async () => {
+    const { entryId, id } = await dayWithOneWorkout({ type: 'Cycling', durationMin: 60, feel: 4 })
+    await renderTask(entryId, id)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove workout' }))
+    await waitFor(async () => expect(await db.workouts.count()).toBe(0))
+    expect(screen.getByRole('status')).toHaveTextContent('Workout removed')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    await waitFor(async () =>
+      expect(await db.workouts.toArray()).toMatchObject([
+        { dayEntryId: entryId, type: 'Cycling', durationMin: 60, isOutdoor: true, feel: 4 },
+      ]),
+    )
+    expect(screen.queryByText('Workout removed')).not.toBeInTheDocument()
   })
 })

@@ -16,8 +16,7 @@ interface ReadingTaskProps {
 
 /** The reading sheet's body: the book being read, and the pages. */
 export function ReadingTask({ entry, rules }: ReadingTaskProps) {
-  const { books, currentBook } = useCurrentBook()
-  const [showAddBook, setShowAddBook] = useState(false)
+  const { currentBook } = useCurrentBook()
 
   const stepPages = (delta: number) => {
     void dayEntryRepo.adjustPages(entry.id, delta)
@@ -27,43 +26,7 @@ export function ReadingTask({ entry, rules }: ReadingTaskProps) {
 
   return (
     <div>
-      <div>
-        {books.length > 0 ? (
-          <>
-            {/* A current book that no longer exists falls back to "Pick a book…". */}
-            <select
-              value={currentBook?.id ?? ''}
-              onChange={(e) => void settingsRepo.set(SETTING_KEYS.currentBookId, Number(e.target.value))}
-              aria-label="Current book"
-              className="min-h-touch w-full rounded-xl bg-canvas px-3 font-rounded font-bold text-ink"
-            >
-              <option value="" disabled>
-                Pick a book…
-              </option>
-              {books.map((book) => (
-                <option key={book.id} value={book.id}>
-                  {book.title} {book.finished ? '✓' : ''}
-                </option>
-              ))}
-            </select>
-            {!currentBook && (
-              <p className="mt-1 text-xs text-ink-muted">
-                Pick the book you're reading, and the pages you log move its bookmark.
-              </p>
-            )}
-          </>
-        ) : (
-          <p className="text-sm text-ink-muted">No books yet — add one below.</p>
-        )}
-
-        {showAddBook ? (
-          <AddBookForm onDone={() => setShowAddBook(false)} />
-        ) : (
-          <Button variant="secondary" className="mt-2 w-full" onClick={() => setShowAddBook(true)}>
-            + Add book
-          </Button>
-        )}
-      </div>
+      <BookPicker />
 
       <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
         <Stepper value={entry.pages_read} onStep={stepPages} step={1} min={0} max={999} unit="pages" />
@@ -74,6 +37,52 @@ export function ReadingTask({ entry, rules }: ReadingTaskProps) {
           </Button>
         )}
       </div>
+    </div>
+  )
+}
+
+/** The book being read, and adding one: in the reading sheet, and before Day 1. */
+export function BookPicker() {
+  const { books, currentBook } = useCurrentBook()
+  const [showAddBook, setShowAddBook] = useState(false)
+
+  return (
+    <div>
+      {books.length > 0 ? (
+        <>
+          {/* A current book that no longer exists falls back to "Pick a book…". */}
+          <select
+            value={currentBook?.id ?? ''}
+            onChange={(e) => void settingsRepo.set(SETTING_KEYS.currentBookId, Number(e.target.value))}
+            aria-label="Current book"
+            className="min-h-touch w-full rounded-xl bg-canvas px-3 font-rounded font-bold text-ink"
+          >
+            <option value="" disabled>
+              Pick a book…
+            </option>
+            {books.map((book) => (
+              <option key={book.id} value={book.id}>
+                {book.title} {book.finished ? '✓' : ''}
+              </option>
+            ))}
+          </select>
+          {!currentBook && (
+            <p className="mt-1 text-xs text-ink-muted">
+              Pick the book you're reading, and the pages you log move its bookmark.
+            </p>
+          )}
+        </>
+      ) : (
+        <p className="text-sm text-ink-muted">No books yet — add one below.</p>
+      )}
+
+      {showAddBook ? (
+        <AddBookForm onDone={() => setShowAddBook(false)} />
+      ) : (
+        <Button variant="secondary" className="mt-2 w-full" onClick={() => setShowAddBook(true)}>
+          + Add book
+        </Button>
+      )}
     </div>
   )
 }

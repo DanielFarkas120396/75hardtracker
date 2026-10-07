@@ -24,10 +24,11 @@ describe('variant copy', () => {
     expect(VARIANT_SUMMARIES.soft).toBe('Like 75 Medium, plus a recovery day a week. Three jokers.')
   })
 
-  it('prints litres without a trailing .0', () => {
+  it('prints litres with up to two decimals and no trailing zeros', () => {
     expect(formatLiters(3800)).toBe('3.8')
     expect(formatLiters(3000)).toBe('3')
-    expect(formatLiters(1250)).toBe('1.3')
+    expect(formatLiters(1250)).toBe('1.25')
+    expect(formatLiters(750)).toBe('0.75')
   })
 
   it('states the card rules per challenge', () => {

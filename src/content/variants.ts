@@ -67,9 +67,9 @@ export function dailyRuleLines(rules: Ruleset): string[] {
   ]
 }
 
-/** Litres for display, without a trailing ".0": 3800 → "3.8", 3000 → "3". */
+/** Litres for display, up to two decimals and no trailing zeros: 3800 → "3.8", 3000 → "3", 750 → "0.75". */
 export function formatLiters(ml: number): string {
-  return String(Number((ml / 1000).toFixed(1)))
+  return String(Number((ml / 1000).toFixed(2)))
 }
 
 export function workoutRuleLine(rules: Ruleset): string {

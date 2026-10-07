@@ -3,7 +3,18 @@ import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { TASK_IDS } from '../../logic/dayCompletion'
 import type { Menace, MenaceLevel, MenaceReason } from '../../logic/menace'
 import { RULESETS, VARIANTS } from '../../logic/rulesets'
-import { duckLine, GLARE_LINE, LUNGE_LINE, planSavedLine, pokeLine, POKE_LINES, taskCheer } from '../microcopy'
+import {
+  CATCHPHRASES,
+  duckLine,
+  GLARE_LINE,
+  LUNGE_LINE,
+  nextCatchphrase,
+  planSavedLine,
+  pokeLine,
+  POKE_LINES,
+  taskCheer,
+  timeLeftLine,
+} from '../microcopy'
 
 describe('taskCheer', () => {
   it('rotates, so consecutive days get different cheers', () => {
@@ -47,6 +58,17 @@ describe('duckLine', () => {
     )
     expect(duckLine({ menace: threat('watching', 'plenty'), missing: ['water', 'reading'], dayNumber: 1 })).toBe(
       "3 down, 2 to go. I'm watching.",
+    )
+  })
+
+  it('stops greeting once something is logged, and puts an unfinished yesterday first', () => {
+    const calm = { menace: threat('watching', 'plenty'), missing: TASK_IDS, dayNumber: 1, name: 'Sam' }
+    expect(duckLine(calm)).toBe("New day, Sam. I'm watching.")
+    expect(duckLine({ ...calm, started: true })).toBe('Started. Not finished.')
+    expect(duckLine({ ...calm, yesterdayOpen: true })).toBe("Yesterday's still open. Noon.")
+    // Only his calm line gives way: a close call still speaks.
+    expect(duckLine({ ...calm, menace: threat('tapping', 'close'), yesterdayOpen: true })).toBe(
+      "Tick. Tock. You're cutting it close.",
     )
   })
 
@@ -102,5 +124,23 @@ describe('reaction lines', () => {
 
   it('confirms the earliest plan', () => {
     expect(planSavedLine(20 * 60 + 5)).toBe('20:05. Not a minute later.')
+  })
+})
+
+describe('nextCatchphrase', () => {
+  it('picks one of his lines for the mood, never the one he just said', () => {
+    for (let i = 0; i < 20; i++) {
+      const line = nextCatchphrase('hunting', 'Run.')
+      expect(CATCHPHRASES.hunting).toContain(line)
+      expect(line).not.toBe('Run.')
+    }
+  })
+})
+
+describe('timeLeftLine', () => {
+  it('counts down to midnight', () => {
+    expect(timeLeftLine(22 * 60 + 30)).toBe('1h30 left')
+    expect(timeLeftLine(21 * 60)).toBe('3h00 left')
+    expect(timeLeftLine(23 * 60 + 15)).toBe('45 min left')
   })
 })

@@ -1,5 +1,5 @@
 import { TASK_IDS } from '../logic/dayCompletion'
-import { formatHHmm, type Menace } from '../logic/menace'
+import { formatHHmm, type Menace, type MenaceLevel } from '../logic/menace'
 import type { Ruleset } from '../logic/rulesets'
 import type { TaskId } from '../logic/types'
 import { formatLiters } from './variants'
@@ -78,6 +78,20 @@ const ONE_LEFT_LINES: Record<TaskId, string> = {
   photo: 'Just the photo left. Smile. Or else.',
 }
 
+/** What the duck says now and then, on his own, by mood: a few lines that rotate. */
+export const CATCHPHRASES: Record<MenaceLevel, readonly string[]> = {
+  content: ['The knife rests. For now.', 'Perfect. Suspiciously perfect.', "Sleep well. I won't."],
+  watching: ["I'm watching.", 'Tick the boxes. Keep your fingers.', 'The knife is sharp. Are you?', 'No excuses. Only tasks.'],
+  tapping: ['Tick. Tock.', "Clock's running. So am I.", 'I can hear the clock. Can you?'],
+  hunting: ["Midnight's coming. So am I.", 'Run.', "I'm sharpening."],
+}
+
+/** The next catchphrase for his mood, never the one he just said. */
+export function nextCatchphrase(level: MenaceLevel, last?: string): string {
+  const lines = CATCHPHRASES[level].filter((line) => line !== last)
+  return lines[Math.floor(Math.random() * lines.length)]
+}
+
 export const POKE_LINES = [
   'Hands off. Hands on your water bottle.',
   'Poke me again. I dare you.',
@@ -99,38 +113,70 @@ export function planSavedLine(at: number): string {
   return `${formatHHmm(at)}. Not a minute later.`
 }
 
-function watchingLine(missing: readonly TaskId[], name?: string): string {
+/** How long until midnight, when every task is due: "1h30 left", "45 min left". */
+export function timeLeftLine(nowMin: number): string {
+  const left = Math.max(24 * 60 - nowMin, 0)
+  const hours = Math.floor(left / 60)
+  const minutes = left % 60
+  return hours > 0 ? `${hours}h${String(minutes).padStart(2, '0')} left` : `${minutes} min left`
+}
+
+/** The calm line while yesterday can still be finished: it outranks today's progress. */
+const YESTERDAY_OPEN_LINE = "Yesterday's still open. Noon."
+
+/** Something is logged today, but no task is done yet. */
+const STARTED_LINE = 'Started. Not finished.'
+
+interface WatchingInput {
+  missing: readonly TaskId[]
+  name?: string
+  started: boolean
+  yesterdayOpen: boolean
+}
+
+function watchingLine({ missing, name, started, yesterdayOpen }: WatchingInput): string {
+  if (yesterdayOpen) return YESTERDAY_OPEN_LINE
   const done = TASK_IDS.length - missing.length
   if (missing.length === 1) return ONE_LEFT_LINES[missing[0]]
+  if (done === 0 && started) return STARTED_LINE
   if (done === 0) return name ? `New day, ${name}. I'm watching.` : "New day. I'm watching."
   return `${done} down, ${missing.length} to go. I'm watching.`
 }
 
-/** The duck's speech bubble on Today, from his menace and the tasks still missing; the player's name starts the day. */
+/**
+ * The duck's line on Today, from his menace and the tasks still missing. The
+ * player's name starts the day, until something is logged; an unfinished
+ * yesterday takes over his calm line.
+ */
 export function duckLine({
   menace,
   missing,
   dayNumber,
   name,
+  started = false,
+  yesterdayOpen = false,
 }: {
   menace: Menace
   missing: readonly TaskId[]
   dayNumber: number
   name?: string
+  started?: boolean
+  yesterdayOpen?: boolean
 }): string {
+  const calm = () => watchingLine({ missing, name, started, yesterdayOpen })
   switch (menace.reason) {
     case 'done':
       return CONTENT_LINES[(dayNumber - 1) % CONTENT_LINES.length]
     case 'plenty':
-      return watchingLine(missing, name)
+      return calm()
     case 'plan-pending':
       return menace.next
         ? `${TASK_NAMES[menace.next.task]} at ${formatHHmm(menace.next.at)}. I'll be there.`
-        : watchingLine(missing, name)
+        : calm()
     case 'plan-due':
       return menace.next
         ? `It's ${formatHHmm(menace.next.at)}. ${TASK_NAMES[menace.next.task]}. I'm watching.`
-        : watchingLine(missing, name)
+        : calm()
     case 'close':
       return "Tick. Tock. You're cutting it close."
     case 'plan-broken':

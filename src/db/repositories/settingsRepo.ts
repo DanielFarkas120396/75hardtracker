@@ -3,6 +3,7 @@ import { db } from '../db'
 /** Keys of the rows in the settings table. */
 export const SETTING_KEYS = {
   soundEnabled: 'soundEnabled',
+  /** No longer read (iPhone can't vibrate); kept so older backups still import. */
   hapticsEnabled: 'hapticsEnabled',
   currentBookId: 'currentBookId',
   /** ISO datetime of the last successful backup export (or of the backup that was imported). */
