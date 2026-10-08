@@ -61,3 +61,11 @@ Vitest fails a run on any unhandled error, even when every test passes.
 - UI tests set `MotionGlobalConfig.skipAnimations = true`.
 - jsdom has no `matchMedia`: stub it.
 - Vitest empties CSS, even through `?raw`: tests that read `index.css` or `index.html` use `fs`, with `/// <reference types="node" />`.
+
+## pstack
+
+The pstack plugin (`poteto-mode` and its skills) is installed. Where it differs, these rules win:
+
+- **Design first.** "Proceed, then present" applies to execution only. A feature still starts with a short design the owner agrees to (see Writing) before any code.
+- **Merge commits, never squash.** PRs land with `gh pr merge <n> --merge`, and only when the owner asks.
+- **No multi-model panels unless the owner asks.** `architect`, `arena` and `interrogate` run several models at once and cost a lot; use them on request only. Prefer one agent at a time.
