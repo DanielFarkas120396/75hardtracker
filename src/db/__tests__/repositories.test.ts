@@ -1,11 +1,13 @@
 // @vitest-environment node
 // (Node's Blob survives IndexedDB's structured clone; jsdom's doesn't.)
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { addDaysISO, todayISO } from '../../lib/dates'
+import { hashPin, verifyPin } from '../../lib/pin'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { resolveChallengeGate } from '../../logic/restart'
 import { RULESETS } from '../../logic/rulesets'
 import { db } from '../db'
+import { appLockRepo } from '../repositories/appLockRepo'
 import { badgeRepo } from '../repositories/badgeRepo'
 import { bookRepo } from '../repositories/bookRepo'
 import { challengeRepo } from '../repositories/challengeRepo'
@@ -835,5 +837,29 @@ describe('the profile', () => {
 
     expect(await profileRepo.save({ name: 'x'.repeat(21), why: 'Clear my head' })).toEqual({ ok: false, reason: 'invalid' })
     expect(await profileRepo.get()).toMatchObject({ name: 'Dan' })
+  })
+})
+
+describe('appLockRepo saves all or nothing', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('leaves the lock off when turning it on fails partway', async () => {
+    await appLockRepo.bypass('2026-10-01T08:00:00.000Z')
+    vi.spyOn(appLockRepo, 'resetFailures').mockRejectedValueOnce(new Error('quota'))
+
+    await expect(appLockRepo.enable(await hashPin('482915', 1_000))).rejects.toThrow('quota')
+    expect(await appLockRepo.get()).toBeNull()
+    expect(await appLockRepo.getBypassedAt()).toBe('2026-10-01T08:00:00.000Z')
+  })
+
+  it('keeps the old PIN when changing it fails partway', async () => {
+    await appLockRepo.enable(await hashPin('482915', 1_000))
+    vi.spyOn(appLockRepo, 'resetFailures').mockRejectedValueOnce(new Error('quota'))
+
+    await expect(appLockRepo.setPin(await hashPin('730264', 1_000))).rejects.toThrow('quota')
+    const config = await appLockRepo.get()
+    expect(await verifyPin('482915', config!.pin!)).toBe(true)
   })
 })

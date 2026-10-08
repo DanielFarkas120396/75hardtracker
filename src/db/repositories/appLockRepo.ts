@@ -1,4 +1,5 @@
 import { verifyPin, waitAfterFailures, type StoredPin } from '../../lib/pin'
+import { db } from '../db'
 import { SETTING_KEYS, settingsRepo } from './settingsRepo'
 
 export interface AppLockConfig {
@@ -33,17 +34,22 @@ export const appLockRepo = {
     return isAppLockConfig(value) ? value : null
   },
 
-  /** Turns the lock on with a PIN (Face ID can be added after). */
+  /** Turns the lock on with a PIN (Face ID can be added after). All or nothing: a failed save leaves it off. */
   async enable(pin: StoredPin, at: string = new Date().toISOString()): Promise<void> {
-    await settingsRepo.set(SETTING_KEYS.appLock, { pin, enabledAt: at } satisfies AppLockConfig)
-    await settingsRepo.set(SETTING_KEYS.appLockBypassedAt, null)
-    await this.resetFailures()
+    await db.transaction('rw', db.settings, async () => {
+      await settingsRepo.set(SETTING_KEYS.appLock, { pin, enabledAt: at } satisfies AppLockConfig)
+      await settingsRepo.set(SETTING_KEYS.appLockBypassedAt, null)
+      await this.resetFailures()
+    })
   },
 
+  /** All or nothing: a failed save keeps the old PIN. */
   async setPin(pin: StoredPin): Promise<void> {
-    const config = await this.get()
-    await settingsRepo.set(SETTING_KEYS.appLock, { ...config, enabledAt: config?.enabledAt ?? new Date().toISOString(), pin })
-    await this.resetFailures()
+    await db.transaction('rw', db.settings, async () => {
+      const config = await this.get()
+      await settingsRepo.set(SETTING_KEYS.appLock, { ...config, enabledAt: config?.enabledAt ?? new Date().toISOString(), pin })
+      await this.resetFailures()
+    })
   },
 
   /** Adds (credential id) or removes (null) Face ID unlocking. */
