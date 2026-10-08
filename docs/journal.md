@@ -1,8 +1,8 @@
 # Project journal
 
-A day-by-day record of what shipped, for note taking and follow-up. Built from the git history and the PRs (merge commits not counted). Newest open items are at the end.
+A day-by-day record of what shipped, for note taking and follow-up. Built from the git history and the PRs (merge commits not counted). A summary of the whole project comes first, then each day; open items are at the end.
 
-**Span:** 2026-09-24 → 2026-10-08 · 13 working days · about 223 commits · about **54 hours** of work · 70 PRs, all merged.
+**Span:** 2026-09-24 → 2026-10-08 · 13 working days · about 225 commits · about **54 hours** of work · 70 PRs, all merged.
 
 | Day | Time | Commits | PRs | Headline |
 |---|---|---|---|---|
@@ -18,10 +18,26 @@ A day-by-day record of what shipped, for note taking and follow-up. Built from t
 | 10-05 (Mon) | ~8h10 | 48 | #20–#38 | v2 features, v2 → main, Today as a task board, workout history |
 | 10-06 (Tue) | ~40 min * | 4 | #39–#40 | Onboarding redesign: sign the deal |
 | 10-07 (Wed) | ~9h00 | 43 | #41–#65 | Onboarding & Today rounds, gauge, draw to commit, Ember v3 → main, Journey day cards |
-| 10-08 (Thu) | ~2h05 † | 3 | #66–#70 | Docs: this journal, Vercel resumed, pstack rules, plainer README |
-| **Total** | **~54h** | **~223** | **70** | |
+| 10-08 (Thu) | ~2h05 † | 5 | #66–#70 | Docs: this journal, Vercel resumed, pstack rules, plainer README |
+| **Total** | **~54h** | **~225** | **70** | |
 
 Time is an estimate; the method and the hour-by-hour stretches are in [Time spent](#time-spent). * = no session transcript that day, so a lower bound from commit times. † = day still in progress.
+
+---
+
+## The whole project in short
+
+In 15 days the app went from a first build to a full 75 Hard companion, now live on Vercel in its third look. The day-by-day detail follows below.
+
+- **Core app (09-24 → 09-25, before PRs):** Today, Journey, Gallery, Stats and Settings; streaks and badges; the strict five-task day; the restart flow; JSON export and import; an installable offline PWA; dark mode; weight logging with a chart; WCAG contrast in both themes; reduced motion honoured.
+- **The duck (09-25 → 09-26, PR #1):** an animated knife-holding duck replaces the blob mascot. He turns menacing only when the tasks left no longer fit before bedtime, backs off when told a plan, has his own lines and a synthesized knife sound, and becomes the app icon.
+- **Four challenges (09-26 → 09-27, PRs #3–#6):** a ruleset engine, then 75 Hard, Strong, Medium and Soft with jokers, recovery days and declared social occasions. Giving up an attempt sits behind four confirmations.
+- **Welcome flow (09-28 → 10-07, PRs #7, #39, #41–#44, #51–#52):** name, challenge, reason and start, one screen at a time, ending on a deal signed by drawing a checkmark. The duck quotes the reason back when it gets hard.
+- **v2, the app wears your world (10-02 → 10-05, PRs #9–#28):** the in-app camera; the Journey as a climb from hell to heaven with three.js effects; world colours across the app; late logging until noon; an app lock with a PIN and Face ID; install-first on phones; password-protected backups. Merged into `main` with #28; tag `v1` keeps the first version.
+- **Today as a task board (10-05 → 10-07, PRs #31–#38, #45–#50):** XP removed; a board of task tiles with one-tap shortcuts; a gauge with a crown in the hero; workouts with activity logos and "how it felt", and a card per activity in Stats.
+- **v3, the Ember look (10-07, PRs #53–#61):** dark first, amber on warm black. Merged into `main` with #60; tag `v2` keeps the version before it.
+- **Journey day cards (10-07, PRs #62–#64):** tap a day to see its photo, notes and workouts.
+- **Docs (10-07 → 10-08, PRs #66–#70):** this journal, Vercel resumed, the pstack rules in CLAUDE.md, a plainer README.
 
 ---
 
