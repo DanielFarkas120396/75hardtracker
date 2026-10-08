@@ -1,6 +1,6 @@
 # Lock offer in onboarding (design)
 
-Date: 2026-10-08 · Status: **approved** by the owner on 2026-10-08. Built on 2026-10-08.
+Date: 2026-10-08 · Status: **approved** by the owner on 2026-10-08. **Merged** into main the same day (PR #71), after the owner tried it on the Vercel preview on their iPhone.
 
 ## Why
 

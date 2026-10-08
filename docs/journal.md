@@ -2,7 +2,7 @@
 
 A day-by-day record of what shipped, for note taking and follow-up. Built from the git history and the PRs (merge commits not counted). A summary of the whole project comes first, then each day; open items are at the end.
 
-**Span:** 2026-09-24 → 2026-10-08 · 13 working days · about 225 commits · about **54 hours** of work · 70 PRs, all merged.
+**Span:** 2026-09-24 → 2026-10-08 · 13 working days · about 225 commits · about **54 hours** of work · 71 PRs, all merged.
 
 | Day | Time | Commits | PRs | Headline |
 |---|---|---|---|---|
@@ -194,7 +194,7 @@ The busiest day by PRs (25). Until about 15:50, five rounds on v2 shipped straig
 
 **8. PR #65 (merged 10-07, 19:12):** two tests failed after 18:00 because of the Tomorrow default; their clock is now frozen at 09:00.
 
-## 2026-10-08: docs only
+## 2026-10-08: docs, Face ID check, lock offer
 
 - **#66–#67:** this journal, with time spent per day.
 - **#68:** Vercel deploys again (resumed by the owner): PRs get preview links, `main` goes to production.
@@ -202,6 +202,7 @@ The busiest day by PRs (25). Until about 15:50, five rounds on v2 shipped straig
 - **#70:** the README rewritten in plainer English: no dashes, short sentences, Today as sub-bullets, a garbled sentence fixed.
 - From now on, small note-taking changes (like this journal) go straight on `main`, without a PR.
 - Face ID tested on the iPhone, on the production domain: all steps passed (set PIN, turn on Face ID, lock on return, cancel then PIN, wrong-PIN waits, "Forgot PIN?", backups without the lock).
+- **#71:** the app lock is offered once, right after signing the deal ("Keep it private?"): a PIN, then Face ID where the phone has it, or "Not now". Tried by the owner on the preview, then merged.
 
 ---
 
