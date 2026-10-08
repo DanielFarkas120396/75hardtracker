@@ -1,6 +1,6 @@
 # Lock offer in onboarding (design)
 
-Date: 2026-10-08 · Status: **approved** by the owner on 2026-10-08. Built on 2026-10-08 (branch `feat/onboarding-lock-offer-impl`).
+Date: 2026-10-08 · Status: **approved** by the owner on 2026-10-08. Built on 2026-10-08.
 
 ## Why
 
