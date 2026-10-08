@@ -2,10 +2,8 @@ import { useState } from 'react'
 import { Mascot } from '../../components/mascot/Mascot'
 import { NewPinFlow } from '../../components/NewPinFlow'
 import { Button } from '../../components/ui/Button'
-import { SAVE_FAILED_LINE } from '../../content/microcopy'
-import { appLockRepo } from '../../db/repositories/appLockRepo'
-import { createLockCredential, isAppLockAvailable } from '../../lib/appLock'
-import { hashPin } from '../../lib/pin'
+import { useLockSetup } from '../../hooks/useLockSetup'
+import { isAppLockAvailable } from '../../lib/appLock'
 import { GateHeading } from '../RestartFlow/GateHeading'
 
 type Stage = 'question' | 'pin' | 'faceId'
@@ -29,43 +27,22 @@ interface LockOfferProps {
  */
 export function LockOffer({ name, onDone }: LockOfferProps) {
   const [stage, setStage] = useState<Stage>('question')
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { busy, error, clearError, turnOn, addFaceId } = useLockSetup({ faceIdFailedLine: FACE_ID_FAILED_LINE })
   // A new key restarts the pad after a failed save.
   const [padKey, setPadKey] = useState(0)
 
   const savePin = async (pin: string) => {
-    setBusy(true)
-    setError(null)
-    try {
-      await appLockRepo.enable(await hashPin(pin))
-      const faceId = await isAppLockAvailable()
-      setBusy(false)
-      if (faceId) setStage('faceId')
-      else onDone()
-    } catch {
-      setBusy(false)
-      setError(SAVE_FAILED_LINE)
+    if (busy) return
+    if (!(await turnOn(pin))) {
       setPadKey((key) => key + 1)
+      return
     }
+    if (await isAppLockAvailable()) setStage('faceId')
+    else onDone()
   }
 
   const turnOnFaceId = async () => {
-    setBusy(true)
-    setError(null)
-    try {
-      const credentialId = await createLockCredential(name)
-      if (credentialId) {
-        await appLockRepo.setFaceId(credentialId)
-        setBusy(false)
-        onDone()
-        return
-      }
-      setError(FACE_ID_FAILED_LINE)
-    } catch {
-      setError(SAVE_FAILED_LINE)
-    }
-    setBusy(false)
+    if (await addFaceId(name)) onDone()
   }
 
   return (
@@ -99,7 +76,7 @@ export function LockOffer({ name, onDone }: LockOfferProps) {
 
           {stage === 'pin' && (
             <div className="mt-4 w-full">
-              <NewPinFlow key={padKey} onDone={(pin) => void (busy ? undefined : savePin(pin))} />
+              <NewPinFlow key={padKey} onDone={(pin) => void savePin(pin)} />
               {busy && <p className="mt-2 text-sm text-ink-muted">Saving…</p>}
               {error && <Alert>{error}</Alert>}
               <Button
@@ -107,7 +84,7 @@ export function LockOffer({ name, onDone }: LockOfferProps) {
                 className="mt-4 w-full"
                 disabled={busy}
                 onClick={() => {
-                  setError(null)
+                  clearError()
                   setStage('question')
                 }}
               >
