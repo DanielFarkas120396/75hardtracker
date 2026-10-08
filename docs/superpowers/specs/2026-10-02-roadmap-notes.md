@@ -1,6 +1,6 @@
 # Roadmap notes
 
-Status: **updated 2026-10-05.** First written on 2026-10-02 from [FEEDBACK.md](../../../FEEDBACK.md), the README and the decisions so far (local-only: see [backend and sign-in notes](2026-10-02-backend-and-sign-in-notes.md); duck animations on hold: see [duck animation notes](2026-10-02-duck-animations-notes.md)).
+Status: **updated 2026-10-08** (Vercel resumed). First written on 2026-10-02 from [FEEDBACK.md](../../../FEEDBACK.md), the README and the decisions so far (local-only: see [backend and sign-in notes](2026-10-02-backend-and-sign-in-notes.md); duck animations on hold: see [duck animation notes](2026-10-02-duck-animations-notes.md)).
 
 The audience for now is **1–5 friends and family**. At that size, a server, accounts, push notifications and the paywall aren't worth it yet.
 
@@ -20,7 +20,7 @@ v2 was merged into `main` on 2026-10-05 (PR #28). The old version stays availabl
 
 ## Next, in order
 
-1. **Share the app with friends and family** and collect their feedback. That needs Vercel turned back on (the owner's call). Then test Face ID on an iPhone.
+1. **Share the app with friends and family** and collect their feedback. Vercel was turned back on by the owner on 2026-10-08. Then test Face ID on an iPhone.
 2. **Progress photo comparison:** Day 1 next to today with a slider, or a short time-lapse. Photos are the most motivating part of 75 Hard.
 3. **Share card:** an image like "Day 32 / 75 🔥" with the duck, shared through the phone's share sheet (Web Share API). Made on the phone; nothing leaves it unless the user shares it.
 4. **Day 75 recap:** a "Wrapped"-style summary: total workouts, litres of water, pages read, before/after photos.
@@ -29,7 +29,7 @@ v2 was merged into `main` on 2026-10-05 (PR #28). The old version stays availabl
 
 ## Still open from the review
 
-- **Security headers on Vercel** (Content-Security-Policy and similar): cheap, to do when Vercel is back.
+- **Security headers on Vercel** (Content-Security-Policy and similar): cheap, and Vercel is back since 2026-10-08.
 - **Imported backups:** import already validates and cleans files (`src/db/exportImport.ts`, `src/db/normalize.ts`), and a protected file can't be altered without failing. A deliberately broken file hasn't been tried by hand.
 
 ## Known limit: reminders

@@ -208,13 +208,15 @@ How it's estimated:
 
 ---
 
-## Open items (as of 2026-10-07)
+## Open items (as of 2026-10-08)
 
 - [x] **Merge PR #65** (test clock freeze): merged 2026-10-07; all 945 tests pass on `main`.
-- [ ] **`.claude/launch.json`** has an uncommitted `dev-phone-main` entry (port 5197, `main-phone` worktree): commit or drop.
+- [x] **`.claude/launch.json`** `dev-phone-main` entry: gone with the `main-phone` worktree; the main checkout is clean.
+- [x] **Vercel resumed** by the owner on 2026-10-08: PRs get preview links again, and `main` deploys to production.
 - [ ] **Phone pass on the Ember screens.** The specs record phone checks for the earlier rounds and the Journey cards, not for the whole v3 look.
 - [ ] **Duck animation around the signature** (draw to commit): still to design.
-- [ ] **Face ID on the iPhone:** untested, needs a real domain (not the Wi-Fi IP).
+- [ ] **Face ID on the iPhone:** untested; now possible on the Vercel domain.
+- [ ] **Security headers on Vercel** (roadmap): now that it's back.
 - [ ] **Roadmap left:** photo compare / share card, paywall.
 - [ ] **Parked:** duck animations (brainstorm notes from 10-02).
 - [ ] **Parked:** per-variant palettes (deferred since the variants work).
