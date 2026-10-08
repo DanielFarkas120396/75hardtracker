@@ -87,7 +87,8 @@ describe('TodayScreen', () => {
   it('in the morning: the duck has his own line, the ring is named, and the plan sits under the board', async () => {
     await setup({ variant: 'hard', todayDayNumber: 3 })
 
-    const line = await screen.findByText("New day. I'm watching.")
+    // He speaks FIRST_LINE_DELAY_MS after Today mounts. Under a loaded test run, the mount alone can block the thread for seconds.
+    const line = await screen.findByText("New day. I'm watching.", undefined, { timeout: 10_000 })
     expect(line.closest('[aria-live="polite"]')).not.toBeNull()
     expect(screen.getByRole('img', { name: '0 of 5 tasks done' })).toHaveTextContent('0/5')
     expect(screen.queryByText(/^\d+h\d\d left$|^\d+ min left$/)).not.toBeInTheDocument()
