@@ -201,6 +201,7 @@ The busiest day by PRs (25). Until about 15:50, five rounds on v2 shipped straig
 - **#69:** pstack rules in CLAUDE.md: design first, merge commits (never squash), no multi-model panels unless asked.
 - **#70:** the README rewritten in plainer English: no dashes, short sentences, Today as sub-bullets, a garbled sentence fixed.
 - From now on, small note-taking changes (like this journal) go straight on `main`, without a PR.
+- Face ID tested on the iPhone, on the production domain: all steps passed (set PIN, turn on Face ID, lock on return, cancel then PIN, wrong-PIN waits, "Forgot PIN?", backups without the lock).
 
 ---
 

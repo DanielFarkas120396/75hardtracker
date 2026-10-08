@@ -1,6 +1,6 @@
 # App lock: PIN and Face ID (design)
 
-Date: 2026-10-05 · Status: **built** (PRs #23 and #24, merged into `v2`). Off by default. Not yet tested on an iPhone with Face ID, which needs a real domain (see Testing).
+Date: 2026-10-05 · Status: **built** (PRs #23 and #24, merged into `v2`). Off by default. Tested on the owner's iPhone with Face ID on 2026-10-08, on the production domain (75hardtracker-one.vercel.app): every step passed.
 
 It started as a Face ID lock (PR #23). The owner then asked for a banking-app style PIN (PR #24): the PIN is now the lock's base, and Face ID the optional shortcut. This document describes the result.
 
