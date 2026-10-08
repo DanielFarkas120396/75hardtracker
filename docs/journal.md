@@ -2,7 +2,7 @@
 
 A day-by-day record of what shipped, for note taking and follow-up. Built from the git history and the PRs (merge commits not counted). Newest open items are at the end.
 
-**Span:** 2026-09-24 → 2026-10-07 · 12 working days · about 220 commits · about **52 hours** of work · 65 PRs, all merged.
+**Span:** 2026-09-24 → 2026-10-08 · 13 working days · about 223 commits · about **54 hours** of work · 70 PRs, all merged.
 
 | Day | Time | Commits | PRs | Headline |
 |---|---|---|---|---|
@@ -18,9 +18,10 @@ A day-by-day record of what shipped, for note taking and follow-up. Built from t
 | 10-05 (Mon) | ~8h10 | 48 | #20–#38 | v2 features, v2 → main, Today as a task board, workout history |
 | 10-06 (Tue) | ~40 min * | 4 | #39–#40 | Onboarding redesign: sign the deal |
 | 10-07 (Wed) | ~9h00 | 43 | #41–#65 | Onboarding & Today rounds, gauge, draw to commit, Ember v3 → main, Journey day cards |
-| **Total** | **~52h** | **~220** | **65** | |
+| 10-08 (Thu) | ~2h05 † | 3 | #66–#70 | Docs: this journal, Vercel resumed, pstack rules, plainer README |
+| **Total** | **~54h** | **~223** | **70** | |
 
-Time is an estimate; the method and the hour-by-hour stretches are in [Time spent](#time-spent). * = no session transcript that day, so a lower bound from commit times.
+Time is an estimate; the method and the hour-by-hour stretches are in [Time spent](#time-spent). * = no session transcript that day, so a lower bound from commit times. † = day still in progress.
 
 ---
 
@@ -177,11 +178,19 @@ The busiest day by PRs (25). Until about 15:50, five rounds on v2 shipped straig
 
 **8. PR #65 (merged 10-07, 19:12):** two tests failed after 18:00 because of the Tomorrow default; their clock is now frozen at 09:00.
 
+## 2026-10-08: docs only
+
+- **#66–#67:** this journal, with time spent per day.
+- **#68:** Vercel deploys again (resumed by the owner): PRs get preview links, `main` goes to production.
+- **#69:** pstack rules in CLAUDE.md: design first, merge commits (never squash), no multi-model panels unless asked.
+- **#70:** the README rewritten in plainer English: no dashes, short sentences, Today as sub-bullets, a garbled sentence fixed.
+- From now on, small note-taking changes (like this journal) go straight on `main`, without a PR.
+
 ---
 
 ## Time spent
 
-**Total: about 52 hours** over 12 working days (2026-09-24 → 2026-10-07, up to 18:29 on the last day).
+**Total: about 54 hours** over 13 working days (2026-09-24 → 2026-10-08, up to 11:50 on the last day).
 
 How it's estimated:
 - The timestamps of every message in the Claude Code sessions for this project (main checkout and worktrees, subagents included), in Brussels time.
@@ -204,7 +213,8 @@ How it's estimated:
 | 10-05 | ~8h10 | 08:54–09:09, 10:27–10:57, 11:08–11:23, 12:52–14:02, 14:11–14:44, 15:03–20:28 |
 | 10-06 | ~40 min * | 16:02–16:43 |
 | 10-07 | ~9h00 | 08:05–10:14, 10:21–11:36, 12:22–12:44, 12:55–13:17, 13:37–16:37, 16:45–18:36 |
-| **Total** | **~52h** | |
+| 10-08 | ~2h05 † | 09:37–09:53, 10:01–11:50 |
+| **Total** | **~54h** | |
 
 ---
 
@@ -220,3 +230,4 @@ How it's estimated:
 - [ ] **Roadmap left:** photo compare / share card, paywall.
 - [ ] **Parked:** duck animations (brainstorm notes from 10-02).
 - [ ] **Parked:** per-variant palettes (deferred since the variants work).
+- [ ] **Flaky test:** TodayScreen "in the morning: the duck has his own line…" failed twice in full runs on 10-08, passes alone.
