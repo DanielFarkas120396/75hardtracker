@@ -8,7 +8,7 @@ A local-first PWA for the 75 Hard challenge (React 19, Vite, TypeScript, Tailwin
 - The tags `v1` (a9f1f1b, the first version) and `v2` (7a2f876, the app just before Ember) keep those versions forever, as fallbacks. Never move or delete them.
 - The `v2` and `v3` branches are kept as records; new work doesn't go there.
 - A big redesign (a "v4") would get its own long-lived branch again, like `v2` and `v3` did, so `main` keeps working.
-- Vercel deployments are paused by the owner: there are no preview links. Don't wait for Vercel checks.
+- Vercel deploys again (resumed by the owner on 2026-10-08): each PR gets a preview link, and a merge into `main` goes to production. A preview is a real HTTPS domain, so Face ID can be tried there.
 
 ## Before every commit or merge
 

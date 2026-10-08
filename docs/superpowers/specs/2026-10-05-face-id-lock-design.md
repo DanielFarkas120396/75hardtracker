@@ -55,4 +55,4 @@ Body photos, weight and notes are private, and anyone holding an unlocked phone 
 - **Hook:** locked at open, PIN unlock, Face ID unlock, the wait surviving a relaunch, Face ID clearing the count, Forgot PIN, relock after more than 1 min but not after a quick switch (with the cover), no lock-out when turning it on, the bypass.
 - **Screens:** the lock screen, Settings (turn on, change, turn off, the Face ID explanation), and backups keeping the lock out of exports and imports.
 - **In the browser:** turning it on, the lock at reopening, a wrong PIN then the right one, the bypass and its notice.
-- **iPhone (to do):** on a real domain (a Vercel preview, once the owner turns Vercel back on), as an installed app: turning Face ID on, unlocking with it, the relock after 1 min, and the app switcher.
+- **iPhone (to do):** on a real domain (a Vercel preview or production; Vercel is back on since 2026-10-08), as an installed app: turning Face ID on, unlocking with it, the relock after 1 min, and the app switcher.
