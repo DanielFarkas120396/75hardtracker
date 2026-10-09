@@ -155,8 +155,8 @@ export function morphIntoChip({ board, box, tile, chip }: MorphParts, reduce: bo
   const animations: Animation[] = []
   const flights: Flight[] = []
   if (reduce) {
-    const fade: KeyframeAnimationOptions = { duration: 250, fill: 'forwards' }
-    animations.push(box.animate([{ opacity: 1 }, { opacity: 0 }], fade), chip.animate([{ opacity: 0 }, { opacity: 1 }], fade))
+    // The chip's fade holds nothing: the board shows the chip in the frame it ends.
+    animations.push(box.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 250, fill: 'forwards' }), chip.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250 }))
   } else {
     const a = boxIn(board, box)
     const b = boxIn(board, chip)
@@ -178,6 +178,8 @@ export function morphIntoChip({ board, box, tile, chip }: MorphParts, reduce: bo
         ],
         timing,
       ),
+      // Landed, the box hides at once and for good: the board may keep it a moment as it leaves, never over the chip.
+      box.animate([{ opacity: 1 }, { opacity: 0 }], { duration: MORPH_MS, easing: 'step-end', fill: 'forwards' }),
     )
     for (const child of Array.from(tile.children)) {
       animations.push(child.animate([{ opacity: getComputedStyle(child).opacity }, { opacity: 0 }], { duration: MORPH_MS * 0.3, easing: 'ease-out', fill: 'forwards' }))

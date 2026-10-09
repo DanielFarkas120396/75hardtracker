@@ -1,5 +1,6 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { BlobImage } from '../../components/BlobImage'
 import { Icon } from '../../components/icons/Icon'
 import { spoken, TASK_TITLES, taskStatusLine, type BoardTask } from '../../content/taskStatus'
@@ -145,7 +146,8 @@ export function TaskBoard(props: TaskBoardProps) {
         void morph.finished.then(() => {
           if (morphs.current[task] !== morph) return
           morphs.current[task] = undefined
-          dispatch({ type: 'landed', task })
+          // In the frame the flight ends: the chip shows as its title and icon land on it, not a frame later.
+          flushSync(() => dispatch({ type: 'landed', task }))
         })
       } else if (phases[task] !== 'morphing' && running) {
         running.cancel()
@@ -206,9 +208,9 @@ export function TaskBoard(props: TaskBoardProps) {
                   type="button"
                   onClick={() => onOpen(task)}
                   aria-label={`${TASK_TITLES[task]}, ${spoken(statusOf(task))}, done`}
-                  // Hidden while its tile flies in: the tile lands exactly on it.
-                  style={{ opacity: phases[task] === 'morphing' ? 0 : 1 }}
-                  className="flex min-h-touch items-center gap-1.5 rounded-full bg-surface px-3 font-rounded text-sm font-semibold text-ink-muted ring-1 ring-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:ring-0"
+                  // Hidden while its tile flies in: the tile lands exactly on it. A class, not a style: React shows it in the
+                  // landing commit itself, where framer would wait for its next frame.
+                  className={`flex min-h-touch items-center gap-1.5 rounded-full bg-surface px-3 font-rounded text-sm font-semibold text-ink-muted ring-1 ring-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:ring-0${phases[task] === 'morphing' ? ' opacity-0' : ''}`}
                 >
                   <span data-chip-icon className="flex">
                     {task === 'photo' && photo ? (

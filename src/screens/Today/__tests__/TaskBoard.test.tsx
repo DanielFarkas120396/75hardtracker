@@ -232,6 +232,33 @@ describe('TaskBoard with fills', () => {
     )
   })
 
+  it('shows the chip in the frame the tile lands on it, with the tile hidden', async () => {
+    MotionGlobalConfig.skipAnimations = false
+    let land = () => {}
+    const landing = new Promise<void>((resolve) => {
+      land = resolve
+    })
+    // What each element keeps once its animations end: the last frame of the ones that hold it.
+    const kept = new Map<Element, Keyframe>()
+    Element.prototype.animate = vi.fn(function (this: Element, keyframes: Keyframe[], options?: number | KeyframeAnimationOptions) {
+      if (typeof options === 'object' && options.fill === 'forwards') kept.set(this, { ...kept.get(this), ...keyframes.at(-1) })
+      return { finished: landing, cancel() {} } as unknown as Animation
+    })
+    const { rerender } = render(board({ ...empty, water_ml: 3550 }))
+    rerender(board({ ...empty, water_ml: 3800 }))
+    const box = screen.getByRole('button', { name: 'Water, 3.8 L' }).parentElement!.parentElement!
+    act(() => handles[0].finish())
+    const chip = await screen.findByRole('button', { name: 'Water, 3.8 L, done' }, { timeout: 2000 })
+    expect(chip).toHaveClass('opacity-0')
+
+    // The flight ends. Only microtasks run before the browser paints that frame.
+    land()
+    for (let i = 0; i < 20; i++) await Promise.resolve()
+    expect(chip).not.toHaveClass('opacity-0')
+    // The tile's box may stay a moment as it leaves the grid: hidden, never over the chip.
+    expect(kept.get(box)).toMatchObject({ opacity: 0 })
+  })
+
   it('makes a chip at once when animations are skipped, fills or not', () => {
     const { rerender } = render(board({ ...empty, water_ml: 3550 }))
     rerender(board({ ...empty, water_ml: 3800 }))
