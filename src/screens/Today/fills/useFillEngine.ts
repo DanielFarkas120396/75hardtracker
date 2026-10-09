@@ -20,7 +20,7 @@ export function useFillEngine(): FillEngine | null {
         if (alive) setEngine(sharedEngine())
       })
       // The fills are decoration: if three.js can't load or start, the tiles keep the thin bar.
-      .catch(() => {})
+      .catch((error: unknown) => console.warn('Tile fills off:', error))
     return () => {
       alive = false
     }

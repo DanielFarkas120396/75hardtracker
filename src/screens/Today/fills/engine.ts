@@ -82,6 +82,16 @@ export function createEngine(): FillEngine {
     }
   })
 
+  // A tile that changes size while nothing moves, or first gets a size, is redrawn at it.
+  const sized = new ResizeObserver((records) => {
+    for (const record of records) {
+      const entry = entries.get(record.target as HTMLCanvasElement)
+      if (!entry) continue
+      entry.dirty = true
+    }
+    kick()
+  })
+
   // A new world or theme recolours every fill.
   new MutationObserver(() => {
     palette = currentPalette()
@@ -197,6 +207,7 @@ export function createEngine(): FillEngine {
       canvas.style.opacity = String(fillOpacity(kind, palette))
       entries.set(canvas, entry)
       seen.observe(canvas)
+      sized.observe(canvas)
       kick()
       return {
         setLevel(level: number, mode: LevelMode) {
@@ -226,6 +237,7 @@ export function createEngine(): FillEngine {
         },
         remove() {
           seen.unobserve(canvas)
+          sized.unobserve(canvas)
           entries.delete(canvas)
           entry.painter.dispose()
         },
