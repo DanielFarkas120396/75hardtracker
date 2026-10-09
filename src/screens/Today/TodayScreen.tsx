@@ -25,6 +25,7 @@ import { challengeWeek, rulesFor } from '../../logic/rulesets'
 import { AddWorkoutSheet } from './AddWorkoutSheet'
 import { DayBoard } from './DayBoard'
 import { useDuck, type DuckAnnouncement } from './DuckHeader'
+import { useFrozenWhile } from './fills/useFrozenWhile'
 import { LateDayCard, LateDayView } from './LateDay'
 import { MenaceAtmosphere } from './MenaceAtmosphere'
 import { PhotoCapture } from './PhotoCapture'
@@ -114,8 +115,11 @@ function TodayTasks({
   const entry = useTodayEntry({ challengeId: challenge.id, dayNumber: todayDayNumber, today, dayEntries })
   const workouts = useWorkoutsForEntry(entry?.id)
   const completion = useDayCompletion(entry, workouts, rules, challenge.socialDays)
+  const [landed, setLanded] = useState<number | null>(null)
+  // At 5/5 the hero, the duck and the buttons keep the day as it was until the board's last chip lands.
+  const shown = useFrozenWhile(completion?.missing.length === 0 && landed !== null && landed < TASK_IDS.length, completion)
   const nowMin = useNow()
-  const menace = useMenace(completion?.data, entry, nowMin, rules)
+  const menace = useMenace(shown?.data, entry, nowMin, rules)
   const profile = useProfile()
   const { currentBook } = useCurrentBook()
   const photo = useEntryPhoto(entry?.photoId)
@@ -125,10 +129,9 @@ function TodayTasks({
   const [openTask, setOpenTask] = useState<BoardTask | null>(null)
   const [addWorkoutOpen, setAddWorkoutOpen] = useState(false)
   const [announcement, setAnnouncement] = useState<DuckAnnouncement>()
-  const [landed, setLanded] = useState<number | null>(null)
   const reduceMotion = useReducedMotion() ?? false
 
-  if (!entry || !workouts || !completion || !menace) {
+  if (!entry || !workouts || !completion || !shown || !menace) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-canvas">
         <p className="font-rounded text-ink-muted">Loading…</p>
@@ -161,12 +164,12 @@ function TodayTasks({
       setAddWorkoutOpen(true)
     },
   }
-  const urgent = isUrgent(menace, completion.missing)
-  const hasPlan = completion.missing.some((task) => entry.plans?.[task])
-  const won = completion.missing.length === 0
+  const urgent = isUrgent(menace, shown.missing)
+  const hasPlan = shown.missing.some((task) => entry.plans?.[task])
+  const won = shown.missing.length === 0
   const minutesLeft = 24 * 60 - nowMin
   // Nothing left to plan once he's hunting: only to do.
-  const canPlan = completion.missing.length > 0 && menace.level !== 'hunting'
+  const canPlan = shown.missing.length > 0 && menace.level !== 'hunting'
   const notesTold = entry.mood !== undefined || (entry.notes ?? '').trim() !== ''
 
   // Under the ring, what matters next: the day won and its closing ritual, the time left, or the next plan.
@@ -206,11 +209,11 @@ function TodayTasks({
             jokersLeft={rules.jokers > 0 ? jokersLeft : undefined}
             below={below}
             menace={menace}
-            missing={completion.missing}
-            completion={completion.completion}
+            missing={shown.missing}
+            completion={shown.completion}
             announcement={announcement}
             name={profile?.name}
-            started={hasStarted(completion.data)}
+            started={hasStarted(shown.data)}
             yesterdayOpen={pendingLateDay != null}
             onLunge={() => setLunges((count) => count + 1)}
           />

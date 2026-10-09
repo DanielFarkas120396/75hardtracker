@@ -184,6 +184,16 @@ describe('TaskBoard', () => {
     rerender(board({ ...empty, water_ml: 3800 }, { paused: false }))
     expect(busy.result.current).toBe(false)
   })
+
+  it('stays busy while the day is saved complete but its last workout has not loaded', () => {
+    const busy = renderHook(() => useBoardBusy())
+    const allButOne: DayTaskData = { water_ml: 3800, pages_read: 10, dietFollowed: true, noAlcohol: true, hasPhoto: true, workouts: [{ durationMin: 45, isOutdoor: true }] }
+    const saved = { entry: { ...entry, completed: true } }
+    const { rerender } = render(board(allButOne, saved))
+    expect(busy.result.current).toBe(true)
+    rerender(board({ ...allButOne, workouts: [...allButOne.workouts, { durationMin: 45, isOutdoor: false }] }, saved))
+    expect(busy.result.current).toBe(false)
+  })
 })
 
 describe('TaskBoard with fills', () => {

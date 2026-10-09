@@ -25,6 +25,7 @@ async function setup({
   profile,
   pendingLateDay = null,
   complete = false,
+  workoutsLogged = 2,
 }: {
   variant?: ChallengeVariant
   todayDayNumber?: number
@@ -34,6 +35,8 @@ async function setup({
   pendingLateDay?: number | null
   /** Every task of today logged. */
   complete?: boolean
+  /** With `complete`: how many of the two workouts are logged. */
+  workoutsLogged?: number
 } = {}) {
   const today = todayISO()
   const startDate = addDaysISO(today, -(todayDayNumber - 1))
@@ -48,7 +51,7 @@ async function setup({
   const todayEntry = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: todayDayNumber, date: today })
   if (complete) {
     await dayEntryRepo.update(todayEntry.id, { water_ml: 3800, pages_read: 10, dietFollowed: true, noAlcohol: true, photoId: 1 })
-    for (const isOutdoor of [true, false]) {
+    for (const isOutdoor of [true, false].slice(0, workoutsLogged)) {
       await workoutRepo.add({ dayEntryId: todayEntry.id, type: 'Running', durationMin: 45, isOutdoor })
     }
   }
@@ -71,7 +74,7 @@ async function setup({
       />
     </ProfileContext.Provider>,
   )
-  return { challenge, today }
+  return { challenge, today, entryId: todayEntry.id }
 }
 
 describe('TodayScreen', () => {
@@ -121,6 +124,26 @@ describe('TodayScreen', () => {
     expect(screen.queryByRole('button', { name: 'Notes' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'How did it go?' }))
     expect(await screen.findByRole('dialog', { name: 'Mood & notes' })).toBeInTheDocument()
+  })
+
+  it('at 5/5: the day is won only once the last chip has landed', async () => {
+    const { entryId } = await setup({ variant: 'hard', todayDayNumber: 3, complete: true, workoutsLogged: 1 })
+    expect(await screen.findByRole('img', { name: '4 of 5 tasks done' })).toBeInTheDocument()
+    // Real animations, with a Web Animations API that finishes at once.
+    MotionGlobalConfig.skipAnimations = false
+    Element.prototype.animate = vi.fn(() => ({ finished: Promise.resolve(), cancel() {} }) as unknown as Animation)
+    try {
+      await workoutRepo.add({ dayEntryId: entryId, type: 'Running', durationMin: 45, isOutdoor: false })
+      // The workouts are done, but their tile hasn't become a chip yet.
+      expect(await screen.findByRole('button', { name: /^Workouts, 2 workouts\b(?!.*done$)/ })).toBeInTheDocument()
+      expect(screen.queryByText('Day 3 won')).not.toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Notes' })).toBeInTheDocument()
+      expect(await screen.findByText('Day 3 won', undefined, { timeout: 3000 })).toBeInTheDocument()
+      expect(screen.getByRole('img', { name: '5 of 5 tasks done' })).toBeInTheDocument()
+    } finally {
+      MotionGlobalConfig.skipAnimations = true
+      delete (Element.prototype as Partial<Element>).animate
+    }
   })
 
   it("ignores a stray socialDays entry on a Hard row: keeps the alcohol toggle instead of the drink-allowed line", async () => {

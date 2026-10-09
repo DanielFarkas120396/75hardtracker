@@ -84,8 +84,8 @@ export function TaskBoard(props: TaskBoardProps) {
 
   const landed = landedCount(phases)
   useEffect(() => onLandedChange?.(landed), [landed, onLandedChange])
-  // Busy from the live day: a task done under a sheet keeps "Day complete!" waiting until its chip lands.
-  const busy = settling(phases, liveCompletion)
+  // Busy from the live day, and while a saved completion hasn't reached this board yet (the workouts load on their own).
+  const busy = settling(phases, liveCompletion) || (entry.completed && !TASK_IDS.every((task) => liveCompletion[task]))
   useEffect(() => setBoardBusy(busy), [busy])
   useEffect(() => () => setBoardBusy(false), [])
 
