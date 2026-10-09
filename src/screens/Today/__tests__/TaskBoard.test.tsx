@@ -1,11 +1,19 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
-import { beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { DayEntry } from '../../../db/types'
 import { RULESETS } from '../../../logic/rulesets'
 import type { DayTaskData } from '../../../logic/types'
 import { taskCompletionMap } from '../../../logic/dayCompletion'
+import type { FillEngine } from '../fills/painter'
 import { TaskBoard } from '../TaskBoard'
+import { fakeEngine, type FakeHandle } from './fakeFillEngine'
+
+const fills = vi.hoisted(() => ({ engine: null as FillEngine | null }))
+vi.mock('../fills/useFillEngine', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../fills/useFillEngine')>()
+  return { ...actual, useFillEngine: () => fills.engine }
+})
 
 const entry: DayEntry = {
   id: 1,
@@ -149,5 +157,54 @@ describe('TaskBoard', () => {
     render(board(all))
     expect(screen.getAllByRole('button', { name: /, done$/ })).toHaveLength(5)
     expect(screen.queryByTestId('progress')).not.toBeInTheDocument()
+  })
+})
+
+describe('TaskBoard with fills', () => {
+  let handles: FakeHandle[]
+  beforeAll(() => {
+    MotionGlobalConfig.skipAnimations = true
+  })
+  beforeEach(() => {
+    handles = []
+    fills.engine = fakeEngine(handles)
+  })
+  afterEach(() => {
+    fills.engine = null
+    MotionGlobalConfig.skipAnimations = true
+    delete (Element.prototype as Partial<Element>).animate
+  })
+
+  it('keeps a done tile until its fill is full, then turns it into its chip', async () => {
+    // Real animations, with a Web Animations API that finishes at once.
+    MotionGlobalConfig.skipAnimations = false
+    Element.prototype.animate = vi.fn(() => ({ finished: Promise.resolve(), cancel() {} }) as unknown as Animation)
+    const { rerender } = render(board({ ...empty, water_ml: 3550 }))
+    rerender(board({ ...empty, water_ml: 3800 }))
+
+    expect(screen.getByRole('button', { name: 'Water, 3.8 L' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Water, 3.8 L, done' })).not.toBeInTheDocument()
+
+    act(() => handles[0].finish())
+    // The chip is in the tree, hidden, while the tile flies in: both must hold at once.
+    await waitFor(
+      () => {
+        expect(screen.getByRole('button', { name: 'Water, 3.8 L, done' })).toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Water, 3.8 L' })).not.toBeInTheDocument()
+      },
+      { timeout: 2000 },
+    )
+  })
+
+  it('makes a chip at once when animations are skipped, fills or not', () => {
+    const { rerender } = render(board({ ...empty, water_ml: 3550 }))
+    rerender(board({ ...empty, water_ml: 3800 }))
+    expect(screen.getByRole('button', { name: 'Water, 3.8 L, done' })).toBeInTheDocument()
+  })
+
+  it('turns a chip back into a tile when the task is undone', () => {
+    const { rerender } = render(board({ ...empty, water_ml: 3800 }))
+    rerender(board({ ...empty, water_ml: 3550 }))
+    expect(screen.getByRole('button', { name: 'Water, 3.55 / 3.8 L' })).toBeInTheDocument()
   })
 })

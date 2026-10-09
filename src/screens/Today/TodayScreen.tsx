@@ -1,3 +1,4 @@
+import { LayoutGroup, motion, useReducedMotion } from 'framer-motion'
 import { useState } from 'react'
 import { BackupReminderBanner } from '../../components/BackupReminderBanner'
 import { LockBypassBanner } from '../../components/LockBypassBanner'
@@ -124,6 +125,7 @@ function TodayTasks({
   const [openTask, setOpenTask] = useState<BoardTask | null>(null)
   const [addWorkoutOpen, setAddWorkoutOpen] = useState(false)
   const [announcement, setAnnouncement] = useState<DuckAnnouncement>()
+  const reduceMotion = useReducedMotion() ?? false
 
   if (!entry || !workouts || !completion || !menace) {
     return (
@@ -216,45 +218,48 @@ function TodayTasks({
           <BackupReminderBanner />
 
           <main className="px-4">
-            <DayBoard
-              entry={entry}
-              data={completion.data}
-              completion={completion.completion}
-              rules={rules}
-              currentBook={currentBook}
-              photo={photo?.blob}
-              socialToday={socialToday}
-              urgent={urgent}
-              minutesLeft={urgent ? minutesLeft : undefined}
-              onAddWorkout={sheetContext.onAddWorkout}
-              onOpen={setOpenTask}
-            />
-            <div className="mt-4 flex flex-wrap gap-2">
-              {canPlan && (
-                <button type="button" onClick={() => setPlanOpen(true)} className={ACTION_BUTTON}>
-                  <span aria-hidden="true">🗓️</span>
-                  {hasPlan ? 'Edit my plan' : 'Plan my evening'}
-                </button>
-              )}
-              {sheetContext.canPlanSocial && (
-                <button
-                  type="button"
-                  onClick={() => setSocialOpen(true)}
-                  aria-label="Plan a social occasion"
-                  className={ACTION_BUTTON}
-                >
-                  <span aria-hidden="true">🥂</span>
-                  Social night
-                </button>
-              )}
-              {/* Once the day is won, the hero's "How did it go?" opens the notes instead. */}
-              {!won && (
-                <button type="button" onClick={() => setOpenTask('notes')} className={ACTION_BUTTON}>
-                  <span aria-hidden="true">📝</span>
-                  Notes
-                </button>
-              )}
-            </div>
+            {/* The buttons under the board slide with it as it closes up. */}
+            <LayoutGroup>
+              <DayBoard
+                entry={entry}
+                data={completion.data}
+                completion={completion.completion}
+                rules={rules}
+                currentBook={currentBook}
+                photo={photo?.blob}
+                socialToday={socialToday}
+                urgent={urgent}
+                minutesLeft={urgent ? minutesLeft : undefined}
+                onAddWorkout={sheetContext.onAddWorkout}
+                onOpen={setOpenTask}
+              />
+              <motion.div layout={reduceMotion ? false : 'position'} className="mt-4 flex flex-wrap gap-2">
+                {canPlan && (
+                  <button type="button" onClick={() => setPlanOpen(true)} className={ACTION_BUTTON}>
+                    <span aria-hidden="true">🗓️</span>
+                    {hasPlan ? 'Edit my plan' : 'Plan my evening'}
+                  </button>
+                )}
+                {sheetContext.canPlanSocial && (
+                  <button
+                    type="button"
+                    onClick={() => setSocialOpen(true)}
+                    aria-label="Plan a social occasion"
+                    className={ACTION_BUTTON}
+                  >
+                    <span aria-hidden="true">🥂</span>
+                    Social night
+                  </button>
+                )}
+                {/* Once the day is won, the hero's "How did it go?" opens the notes instead. */}
+                {!won && (
+                  <button type="button" onClick={() => setOpenTask('notes')} className={ACTION_BUTTON}>
+                    <span aria-hidden="true">📝</span>
+                    Notes
+                  </button>
+                )}
+              </motion.div>
+            </LayoutGroup>
           </main>
         </div>
 
