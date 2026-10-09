@@ -1,6 +1,6 @@
 import { Vector2, Vector3, type WebGLRenderer } from 'three'
 import { outQuart } from './motion'
-import type { FillPalette } from './palette'
+import { mix, type FillPalette } from './palette'
 import type { Painter } from './painter'
 import { shaderQuad } from './quad'
 
@@ -20,12 +20,13 @@ export function inkRadius(level: number, width: number, height: number, origin: 
   return distances[Math.floor(level * distances.length)]
 }
 
+// The pale parts are the palette's top tone; the veins sit halfway between its deep and mid tones (deep alone read too dark on the dark tile).
 // `k * k`, not pow(k, 2.0): GLSL ES leaves pow undefined for a negative base, and `e` is negative across the soft outer fringe.
 const FRAG = /* glsl */ `
   varying vec2 vP;
   uniform float uTime, uR, uSwirl, uSoft, uScale;
   uniform vec2 uO;
-  uniform vec3 uTop, uDeep;
+  uniform vec3 uTop, uVein;
   float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
   float noise(vec2 p) {
     vec2 i = floor(p), f = fract(p);
@@ -42,7 +43,7 @@ const FRAG = /* glsl */ `
     if (a <= 0.0) discard;
     float k = e / (uSoft * 3.0 + 4.0);
     float rim = exp(-k * k), vein = fbm(q * 2.0 + w2 * 2.0);
-    vec3 c = mix(uTop, uDeep, clamp(vein * 1.1 + rim * 0.6, 0.0, 1.0));
+    vec3 c = mix(uTop, uVein, clamp(vein * 1.1 + rim * 0.6, 0.0, 1.0));
     gl_FragColor = vec4(c, a * (0.78 + 0.22 * rim));
   }
 `
@@ -57,7 +58,7 @@ export function createInk(palette: FillPalette): Painter {
     uScale: { value: P.grain },
     uO: { value: new Vector2() },
     uTop: { value: new Vector3() },
-    uDeep: { value: new Vector3() },
+    uVein: { value: new Vector3() },
   }
   const quad = shaderQuad(FRAG, u)
   let from = 0
@@ -101,7 +102,7 @@ export function createInk(palette: FillPalette): Painter {
     },
     setPalette(p2) {
       u.uTop.value.set(...p2.top)
-      u.uDeep.value.set(...p2.deep)
+      u.uVein.value.set(...mix(p2.deep, p2.mid, 0.5))
     },
     dispose: quad.dispose,
   }

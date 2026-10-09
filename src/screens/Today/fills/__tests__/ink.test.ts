@@ -1,20 +1,25 @@
-import type { Mesh, Scene, ShaderMaterial, WebGLRenderer } from 'three'
+import type { Mesh, Scene, ShaderMaterial, Vector3, WebGLRenderer } from 'three'
 import { describe, expect, it } from 'vitest'
 import { WORLD_COLORS } from '../../../../lib/worldColors'
 import { createInk, inkRadius } from '../ink'
 import type { Painter } from '../painter'
-import { fillPalette } from '../palette'
+import { fillPalette, mix } from '../palette'
 
-/** Renders the ink on a 343 × 120 tile through a stand-in renderer and returns the edge's radius it drew. */
-function drawnRadius(ink: Painter): number {
-  let radius = NaN
+/** Renders the ink on a 343 × 120 tile through a stand-in renderer and returns the uniforms it drew with. */
+function drawnUniforms(ink: Painter): ShaderMaterial['uniforms'] {
+  let uniforms: ShaderMaterial['uniforms'] = {}
   const renderer = {
     render(scene: Scene) {
-      radius = ((scene.children[0] as Mesh).material as ShaderMaterial).uniforms.uR.value as number
+      uniforms = ((scene.children[0] as Mesh).material as ShaderMaterial).uniforms
     },
   } as unknown as WebGLRenderer
   ink.render(renderer, 343, 120)
-  return radius
+  return uniforms
+}
+
+/** The edge's radius the ink drew. */
+function drawnRadius(ink: Painter): number {
+  return drawnUniforms(ink).uR.value as number
 }
 
 /** Steps and draws `frames` frames at 60 fps, as the engine does while the ink moves. */
@@ -34,6 +39,14 @@ describe('ink fill', () => {
     expect(inkRadius(0.25, 173, 120, origin, 0)).toBeLessThan(half)
     expect(inkRadius(1, 173, 120, origin, 10)).toBeGreaterThan(Math.hypot(173 / 2 + 50, 60))
     expect(inkRadius(0, 173, 120, origin, 10)).toBeLessThan(0)
+  })
+
+  it('veins halfway between the deep and mid tones, as chosen on the dark tile', () => {
+    const palette = fillPalette(WORLD_COLORS.forest.dark, 'dark')
+    const ink = createInk(palette)
+    const vein = (drawnUniforms(ink).uVein.value as Vector3).toArray()
+    mix(palette.deep, palette.mid, 0.5).forEach((channel, i) => expect(vein[i]).toBeCloseTo(channel))
+    ink.dispose()
   })
 
   it('spreads in the chosen 1.1 s', () => {
