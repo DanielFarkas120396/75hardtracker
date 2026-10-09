@@ -14,7 +14,7 @@ interface DietSwitchesProps {
 /** The diet tile's two switches, stacked on its right, each named by its emoji: the plate, and the crossed-out glass. */
 export function DietSwitches({ entry, rules, socialToday }: DietSwitchesProps) {
   return (
-    <div className="absolute inset-y-0 right-5 flex flex-col items-end justify-center">
+    <div data-fill-anchor className="absolute inset-y-0 right-5 flex flex-col items-end justify-center">
       <MiniSwitch
         label={dietToggleLabel(rules)}
         emoji="🍽️"

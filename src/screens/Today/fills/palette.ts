@@ -32,7 +32,7 @@ export interface FillPalette {
   top: RGB
   /** The world's colour. */
   mid: RGB
-  /** The darkest body tone: deep water, the ink's veins. */
+  /** The darkest body tone: deep water; halfway to mid, the ink's veins. */
   deep: RGB
   /** The world's edge colour: the back of a turning page. */
   edge: RGB
