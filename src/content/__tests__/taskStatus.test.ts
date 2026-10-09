@@ -93,17 +93,23 @@ describe('taskFill', () => {
   it('follows the measurable tasks like the progress bar, capped at 1', () => {
     expect(taskFill('water', { ...empty, water_ml: 1900 }, hard)).toBe(0.5)
     expect(taskFill('water', { ...empty, water_ml: 5000 }, hard)).toBe(1)
+    // Medium and Soft drink 3 L.
+    expect(taskFill('water', { ...empty, water_ml: 1500 }, medium)).toBe(0.5)
+    expect(taskFill('water', { ...empty, water_ml: 3000 }, soft)).toBe(1)
     expect(taskFill('reading', { ...empty, pages_read: 4 }, hard)).toBe(0.4)
     const one = { ...empty, workouts: [{ durationMin: 45, isOutdoor: false }] }
     expect(taskFill('workouts', one, hard)).toBe(0.5)
-    // Medium needs one workout: the same session fills its tile.
+    // Medium and Soft need one workout: the same session fills their tile.
     expect(taskFill('workouts', one, medium)).toBe(1)
+    expect(taskFill('workouts', one, soft)).toBe(1)
   })
 })
 
 describe('countedData', () => {
   it('counts water to the nearest 50 ml and pages one by one, leaving the rest as it is', () => {
     expect(countedData('water', empty, hard, 0.4).water_ml).toBe(1500)
+    // 3 L counts in the same 50 ml steps: 0.41 of it is 1230 ml, shown as 1250.
+    expect(countedData('water', empty, soft, 0.41).water_ml).toBe(1250)
     expect(countedData('reading', empty, hard, 0.36).pages_read).toBe(4)
     const day = { ...empty, water_ml: 1000 }
     expect(countedData('diet', day, hard, 0.5)).toBe(day)

@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { WORLDS } from '../../screens/Journey/worlds'
+import { TILE_INK } from '../../screens/Today/fills/palette'
 import { contrastRatio, isWorldId, SURFACE, WORLD_COLORS } from '../worldColors'
 
 describe('contrastRatio', () => {
@@ -68,5 +69,13 @@ describe('index.css', () => {
   it('defines the danger ink checked above, in both themes', () => {
     expect(block('@theme')).toContain(`--color-danger-ink: ${DANGER_INK.light};`)
     expect(block('.dark')).toContain(`--color-danger-ink: ${DANGER_INK.dark};`)
+  })
+
+  // The fills' opacities are computed for this ink over this surface (palette.ts).
+  it('defines the tile surface and ink the fills are checked against, in both themes', () => {
+    for (const [selector, mode] of [['@theme', 'light'], ['.dark', 'dark']] as const) {
+      expect(block(selector)).toContain(`--color-surface: ${SURFACE[mode]};`)
+      expect(block(selector)).toContain(`--color-ink: ${TILE_INK[mode]};`)
+    }
   })
 })
