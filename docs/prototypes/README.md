@@ -152,4 +152,4 @@ What it showed:
 
 ### Next
 
-All five tiles are chosen. Nothing here is agreed as a feature yet: the next step is the design in `docs/superpowers/specs/` (how the tiles share one WebGL context or not, loading, the "done" moment, and how this replaces the thin progress bar).
+All five tiles are chosen. The design for building them into the app is `docs/superpowers/specs/2026-10-09-task-tile-fills-design.md`.
