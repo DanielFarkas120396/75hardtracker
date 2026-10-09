@@ -14,6 +14,7 @@ import { worldForProgress } from './lib/worldTheme'
 import { OnboardingGate } from './screens/Onboarding/OnboardingGate'
 import { DayCompleteCelebration } from './screens/Today/DayCompleteCelebration'
 import { LockScreen } from './screens/Lock/LockScreen'
+import { useSettledCelebration } from './screens/Today/fills/boardSettle'
 import { TodayScreen } from './screens/Today/TodayScreen'
 
 // Everything but Today loads on first use, keeping the startup bundle small.
@@ -83,6 +84,8 @@ function MainApp({ today }: { today: string }) {
   }
   const gate = useChallengeGate(today)
   const { celebration, dismiss: dismissCelebration } = useDayCompleteCelebration(gate)
+  // "Day complete!" waits for the board's last chip to land (4 s at most).
+  const shownCelebration = useSettledCelebration(celebration)
   const { toasts, dismiss: dismissToast } = useBadgeUnlocks(gate)
   // The app wears the colours of the Journey world you're in.
   useWorldTheme(gate ? worldForProgress(gate.todayDayNumber, gate.kind === 'completed') : undefined)
@@ -191,7 +194,7 @@ function MainApp({ today }: { today: string }) {
       <BottomNav active={screen} onChange={goTo} />
       {import.meta.env.DEV && <TimeTravelBadge />}
 
-      <DayCompleteCelebration celebration={celebration} onDismiss={dismissCelebration} />
+      <DayCompleteCelebration celebration={shownCelebration} onDismiss={dismissCelebration} />
       {/* Badges wait for the day-complete celebration to be dismissed: one peak at a time. */}
       <BadgeUnlockToast badges={celebration ? [] : toasts} onDismiss={dismissToast} />
     </>

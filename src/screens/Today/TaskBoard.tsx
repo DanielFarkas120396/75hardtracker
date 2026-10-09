@@ -10,7 +10,8 @@ import type { Ruleset } from '../../logic/rulesets'
 import type { DayTaskData, TaskId } from '../../logic/types'
 import { DietSwitches } from './DietSwitches'
 import { animateWidth, boxIn, canAnimate, glow, HOLD_MS, morphIntoChip, popTick, type Box, type Morph } from './fills/boardMotion'
-import { initialPhases, phasesReducer, type Phase } from './fills/boardPhases'
+import { initialPhases, landedCount, phasesReducer, settling, type Phase } from './fills/boardPhases'
+import { setBoardBusy } from './fills/boardSettle'
 import { TASK_PAINTER } from './fills/painter'
 import { FillEngineContext, useFillEngine } from './fills/useFillEngine'
 import { useFrozenWhile } from './fills/useFrozenWhile'
@@ -38,6 +39,8 @@ interface TaskBoardProps {
   minutesLeft?: number
   /** A sheet covers the board: it holds still, and plays what changed once the sheet closes. */
   paused?: boolean
+  /** How many chips have landed: the gauge counts these, not the saved completions. */
+  onLandedChange?: (count: number) => void
   onOpen: (task: BoardTask) => void
 }
 
@@ -56,7 +59,7 @@ const useMemoDay = (data: DayTaskData, completion: Record<TaskId, boolean>) => u
  * others close up. Late in the evening the tiles get an edge, red on what no longer fits before midnight.
  */
 export function TaskBoard(props: TaskBoardProps) {
-  const { entry, data: liveData, completion: liveCompletion, rules, bookTitle, photo, quickActions, socialToday, urgent = false, minutesLeft, paused = false, onOpen } = props
+  const { entry, data: liveData, completion: liveCompletion, rules, bookTitle, photo, quickActions, socialToday, urgent = false, minutesLeft, paused = false, onLandedChange, onOpen } = props
   const { data, completion } = useFrozenWhile(paused, useMemoDay(liveData, liveCompletion))
   const reduceMotion = useReducedMotion() ?? false
   const engine = useFillEngine()
@@ -78,6 +81,13 @@ export function TaskBoard(props: TaskBoardProps) {
     engine?.hold(paused)
     return () => engine?.hold(false)
   }, [engine, paused])
+
+  const landed = landedCount(phases)
+  useEffect(() => onLandedChange?.(landed), [landed, onLandedChange])
+  // Busy from the live day: a task done under a sheet keeps "Day complete!" waiting until its chip lands.
+  const busy = settling(phases, liveCompletion)
+  useEffect(() => setBoardBusy(busy), [busy])
+  useEffect(() => () => setBoardBusy(false), [])
 
   // The day is the truth; the board follows it.
   useLayoutEffect(() => dispatch({ type: 'sync', completion, animate }), [completion, animate])

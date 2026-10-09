@@ -1,10 +1,11 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { DayEntry } from '../../../db/types'
 import { RULESETS } from '../../../logic/rulesets'
 import type { DayTaskData } from '../../../logic/types'
 import { taskCompletionMap } from '../../../logic/dayCompletion'
+import { useBoardBusy } from '../fills/boardSettle'
 import type { FillEngine } from '../fills/painter'
 import { TaskBoard } from '../TaskBoard'
 import { fakeEngine, type FakeHandle } from './fakeFillEngine'
@@ -165,6 +166,23 @@ describe('TaskBoard', () => {
     expect(screen.getByRole('button', { name: 'Water, 3.55 / 3.8 L' })).toBeInTheDocument()
     rerender(board({ ...empty, water_ml: 3800 }, { paused: false }))
     expect(screen.getByRole('button', { name: 'Water, 3.8 L, done' })).toBeInTheDocument()
+  })
+
+  it('reports how many chips have landed, for the gauge', () => {
+    const onLandedChange = vi.fn()
+    const { rerender } = render(board(empty, { onLandedChange }))
+    expect(onLandedChange).toHaveBeenLastCalledWith(0)
+    rerender(board({ ...empty, water_ml: 3800 }, { onLandedChange }))
+    expect(onLandedChange).toHaveBeenLastCalledWith(1)
+  })
+
+  it('keeps the board busy while a task done under a sheet waits for its chip', () => {
+    const busy = renderHook(() => useBoardBusy())
+    const { rerender } = render(board({ ...empty, water_ml: 3550 }, { paused: true }))
+    rerender(board({ ...empty, water_ml: 3800 }, { paused: true }))
+    expect(busy.result.current).toBe(true)
+    rerender(board({ ...empty, water_ml: 3800 }, { paused: false }))
+    expect(busy.result.current).toBe(false)
   })
 })
 

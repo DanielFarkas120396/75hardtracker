@@ -125,6 +125,7 @@ function TodayTasks({
   const [openTask, setOpenTask] = useState<BoardTask | null>(null)
   const [addWorkoutOpen, setAddWorkoutOpen] = useState(false)
   const [announcement, setAnnouncement] = useState<DuckAnnouncement>()
+  const [landed, setLanded] = useState<number | null>(null)
   const reduceMotion = useReducedMotion() ?? false
 
   if (!entry || !workouts || !completion || !menace) {
@@ -199,7 +200,7 @@ function TodayTasks({
           <Hero
             attemptLine={`${VARIANT_NAMES[rules.variant]} #${challenge.attemptNumber}`}
             dayNumber={todayDayNumber}
-            completedCount={completedCount}
+            completedCount={landed ?? completedCount}
             celebrating={celebrating}
             streak={streak}
             jokersLeft={rules.jokers > 0 ? jokersLeft : undefined}
@@ -231,6 +232,7 @@ function TodayTasks({
                 urgent={urgent}
                 minutesLeft={urgent ? minutesLeft : undefined}
                 covered={openTask !== null || addWorkoutOpen || planOpen || socialOpen}
+                onLandedChange={setLanded}
                 onAddWorkout={sheetContext.onAddWorkout}
                 onOpen={setOpenTask}
               />
