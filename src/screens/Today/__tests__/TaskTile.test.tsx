@@ -42,7 +42,8 @@ describe('TaskTile', () => {
     act(() => handles[0].show(0.4))
     expect(screen.getByText('1.5 / 3.8 L')).toBeInTheDocument()
     act(() => handles[0].finish())
-    expect(screen.getByText('2 / 3.8 L')).toBeInTheDocument()
+    // The count lands where it was going: no dip, no slide-in.
+    expect(screen.getByText('2 / 3.8 L').getAttribute('style') ?? '').not.toContain('opacity: 0.2')
   })
 
   it('writes the status in the ink colour over a fill', () => {

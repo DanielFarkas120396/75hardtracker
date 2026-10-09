@@ -59,7 +59,13 @@ export function TaskTile({ task, data, rules, complete, bookTitle, urgency, quic
   // The engine reports a new level a frame late: until it has settled at this one, the line keeps counting.
   const counting = hasFill && shown !== null && settledAt !== level
   const status = taskStatusLine(task, counting ? countedData(task, data, rules, shown) : data, rules, complete && !counting, bookTitle)
-  const [firstStatus] = useState(status)
+  // The line that needs no slide-in: the first one, and the one a count-up lands on.
+  const [quiet, setQuiet] = useState(status)
+  const [wasCounting, setWasCounting] = useState(counting)
+  if (counting !== wasCounting) {
+    setWasCounting(counting)
+    if (!counting) setQuiet(status)
+  }
   const progress = taskProgress(task, data, rules)
   // Over a fill (a draining one too) the muted grey would drop under 4.5:1: the line takes the ink colour.
   const statusColor = urgency !== 'none' ? 'font-bold text-ink' : hasFill && (level > 0 || (shown ?? 0) > 0) ? 'text-ink' : 'text-ink-muted'
@@ -99,7 +105,7 @@ export function TaskTile({ task, data, rules, complete, bookTitle, urgency, quic
         ) : (
           <motion.span
             key={status}
-            initial={status !== firstStatus ? { opacity: 0.2, y: 5 } : false}
+            initial={status !== quiet ? { opacity: 0.2, y: 5 } : false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.24, ease: [0.2, 0.8, 0.2, 1] }}
             className={statusClass}
