@@ -63,6 +63,9 @@ export function createInk(palette: FillPalette): Painter {
   let from = 0
   let to = 0
   let p = 1
+  // A spread eases from the radius last drawn, not from its level's: the radius isn't linear in the level, so a tap mid-spread would snap the edge.
+  let fromR: number | null = null
+  let drawnR: number | null = null
   let anchorRight = 56
   let anchorTop = 60
   const shown = () => from + (to - from) * outQuart(p)
@@ -72,6 +75,8 @@ export function createInk(palette: FillPalette): Painter {
       from = instant ? level : shown()
       to = level
       p = instant ? 1 : 0
+      if (instant) drawnR = null
+      fromR = drawnR
     },
     step(dt, drift) {
       p = Math.min(1, p + dt / P.spread)
@@ -89,9 +94,9 @@ export function createInk(palette: FillPalette): Painter {
       quad.fit(width, height)
       const origin: [number, number] = [width / 2 - anchorRight, height / 2 - anchorTop]
       u.uO.value.set(origin[0], origin[1])
-      const a = inkRadius(from, width, height, origin, MARGIN)
       const b = inkRadius(to, width, height, origin, MARGIN)
-      u.uR.value = a + (b - a) * outQuart(p)
+      fromR ??= inkRadius(from, width, height, origin, MARGIN)
+      u.uR.value = drawnR = fromR + (b - fromR) * outQuart(p)
       renderer.render(quad.scene, quad.camera)
     },
     setPalette(p2) {
