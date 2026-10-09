@@ -158,6 +158,14 @@ describe('TaskBoard', () => {
     expect(screen.getAllByRole('button', { name: /, done$/ })).toHaveLength(5)
     expect(screen.queryByTestId('progress')).not.toBeInTheDocument()
   })
+
+  it('holds the board while a sheet covers it, and catches up once it closes', () => {
+    const { rerender } = render(board({ ...empty, water_ml: 3550 }, { paused: true }))
+    rerender(board({ ...empty, water_ml: 3800 }, { paused: true }))
+    expect(screen.getByRole('button', { name: 'Water, 3.55 / 3.8 L' })).toBeInTheDocument()
+    rerender(board({ ...empty, water_ml: 3800 }, { paused: false }))
+    expect(screen.getByRole('button', { name: 'Water, 3.8 L, done' })).toBeInTheDocument()
+  })
 })
 
 describe('TaskBoard with fills', () => {

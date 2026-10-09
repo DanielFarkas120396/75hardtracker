@@ -29,6 +29,8 @@ interface DayBoardProps {
   urgent?: boolean
   /** Minutes until midnight, when urgent. */
   minutesLeft?: number
+  /** A sheet is open over the board. */
+  covered?: boolean
   /** Opens the "Add workout" sheet (the screen owns it, so the workouts sheet can open it too). */
   onAddWorkout: () => void
   onOpen: (task: BoardTask) => void
@@ -101,6 +103,7 @@ export function DayBoard(props: DayBoardProps) {
         socialToday={socialToday}
         urgent={urgent}
         minutesLeft={minutesLeft}
+        paused={(props.covered ?? false) || capture.cameraOpen}
         onOpen={onOpen}
       />
       {/* Portalled: the board sits in a stacking context under the tab bar, and the toast floats just above it. */}

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { BlobImage } from '../../components/BlobImage'
 import { Icon } from '../../components/icons/Icon'
 import { spoken, TASK_TITLES, taskStatusLine, type BoardTask } from '../../content/taskStatus'
@@ -13,6 +13,7 @@ import { animateWidth, boxIn, canAnimate, glow, HOLD_MS, morphIntoChip, popTick,
 import { initialPhases, phasesReducer, type Phase } from './fills/boardPhases'
 import { TASK_PAINTER } from './fills/painter'
 import { FillEngineContext, useFillEngine } from './fills/useFillEngine'
+import { useFrozenWhile } from './fills/useFrozenWhile'
 import { TaskTile, type QuickAction } from './TaskTile'
 import { TASK_ICONS } from './taskTones'
 
@@ -35,6 +36,8 @@ interface TaskBoardProps {
   urgent?: boolean
   /** Minutes until midnight, when urgent: a task that no longer fits gets a red edge. */
   minutesLeft?: number
+  /** A sheet covers the board: it holds still, and plays what changed once the sheet closes. */
+  paused?: boolean
   onOpen: (task: BoardTask) => void
 }
 
@@ -43,6 +46,9 @@ const FRESH_DAY: DayTaskData = { water_ml: 0, pages_read: 0, dietFollowed: false
 
 const inGrid = (phase: Phase) => phase === 'tile' || phase === 'full'
 
+/** One object per day state, so holding it compares by identity. */
+const useMemoDay = (data: DayTaskData, completion: Record<TaskId, boolean>) => useMemo(() => ({ data, completion }), [data, completion])
+
 /**
  * The five tasks of a day (mood and notes live outside the board: they're optional and never "done"). The open ones
  * are tiles, the quickest kind first, each filling as its task progresses and opening its sheet on tap; the done ones
@@ -50,7 +56,8 @@ const inGrid = (phase: Phase) => phase === 'tile' || phase === 'full'
  * others close up. Late in the evening the tiles get an edge, red on what no longer fits before midnight.
  */
 export function TaskBoard(props: TaskBoardProps) {
-  const { entry, data, completion, rules, bookTitle, photo, quickActions, socialToday, urgent = false, minutesLeft, onOpen } = props
+  const { entry, data: liveData, completion: liveCompletion, rules, bookTitle, photo, quickActions, socialToday, urgent = false, minutesLeft, paused = false, onOpen } = props
+  const { data, completion } = useFrozenWhile(paused, useMemoDay(liveData, liveCompletion))
   const reduceMotion = useReducedMotion() ?? false
   const engine = useFillEngine()
   const animate = canAnimate()
@@ -65,6 +72,12 @@ export function TaskBoard(props: TaskBoardProps) {
   const morphs = useRef<Partial<Record<TaskId, Morph>>>({})
   const widths = useRef<Partial<Record<TaskId, number>>>({})
   const previous = useRef(phases)
+
+  // Under a sheet the fills stop too, drift included.
+  useEffect(() => {
+    engine?.hold(paused)
+    return () => engine?.hold(false)
+  }, [engine, paused])
 
   // The day is the truth; the board follows it.
   useLayoutEffect(() => dispatch({ type: 'sync', completion, animate }), [completion, animate])

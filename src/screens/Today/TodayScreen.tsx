@@ -230,6 +230,7 @@ function TodayTasks({
                 socialToday={socialToday}
                 urgent={urgent}
                 minutesLeft={urgent ? minutesLeft : undefined}
+                covered={openTask !== null || addWorkoutOpen || planOpen || socialOpen}
                 onAddWorkout={sheetContext.onAddWorkout}
                 onOpen={setOpenTask}
               />

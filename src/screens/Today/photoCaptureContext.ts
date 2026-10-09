@@ -7,6 +7,8 @@ export interface PhotoCaptureApi {
   error: string | null
   /** The in-app camera couldn't start: "Take photo" opens the phone's camera app instead. */
   cameraFailed: boolean
+  /** The in-app camera sheet is open (it covers the board). */
+  cameraOpen: boolean
   /** Only a photo from the library (finishing yesterday: the camera would take today's). */
   libraryOnly: boolean
   takePhoto: () => void

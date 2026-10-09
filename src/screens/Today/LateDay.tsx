@@ -120,6 +120,7 @@ export function LateDayView({ challenge, dayEntries, dayNumber, date, onBack }: 
             currentBook={currentBook}
             photo={photo?.blob}
             socialToday={socialThatDay}
+            covered={openTask !== null || addWorkoutOpen}
             onAddWorkout={sheetContext.onAddWorkout}
             onOpen={setOpenTask}
           />
