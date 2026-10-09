@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photo tile prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;min-height:100vh;background:#10140F;color:#F6ECDC;font-family:'DM Sans',system-ui,sans-serif;display:flex;justify-content:center}
+.stage{padding:40px 16px;display:flex;flex-direction:column;align-items:center;gap:18px}
+.tile{position:relative;width:300px;height:150px;border-radius:20px;background:#221A15;overflow:hidden;box-shadow:0 0 0 1px rgba(246,236,220,.08)}
+#gl{position:absolute;inset:0;width:300px;height:150px;pointer-events:none;z-index:1}
+.front-layer{position:relative;z-index:2;text-shadow:0 1px 3px rgba(16,20,15,.7)}
+.icon{display:flex;width:36px;height:36px;align-items:center;justify-content:center;border-radius:12px;background:#1C2A20;color:#93C29E}
+.snap{position:absolute;z-index:3;right:4px;top:4px;min-width:48px;min-height:48px;display:flex;align-items:center;justify-content:center;border:0;background:none;color:#F6ECDC;font:inherit;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation}
+.snap span{display:flex;height:32px;align-items:center;gap:4px;padding:0 10px;border-radius:999px;border:1px solid rgba(246,236,220,.15);background:#221A15}
+.btn{font:inherit;font-size:14px;font-weight:600;color:#F6ECDC;background:#221A15;border:1px solid rgba(246,236,220,.15);border-radius:999px;padding:10px 16px;cursor:pointer}
+.row{display:flex;align-items:center;gap:10px;font-size:13px;color:#A1998D}
+.row label{min-width:120px}
+.row input[type=range]{width:160px}
+.row output{min-width:52px}
+</style>
+</head>
+<body>
+<!-- The Photo tile's fill animation: a camera iris. Chosen on 2026-10-09, see README.md beside this file. -->
+<div class="stage">
+  <div class="tile">
+    <canvas id="gl" width="300" height="150"></canvas>
+    <div class="front-layer" style="height:100%;box-sizing:border-box;padding:14px;display:flex;flex-direction:column;align-items:flex-start">
+      <span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 9A2 2 0 0 1 5.5 7h2l1.5-2.5h6L16.5 7h2a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z" fill="currentColor" fill-opacity="0.18"></path><circle cx="12" cy="13" r="3.5"></circle></svg></span>
+      <span style="margin-top:auto;font-size:16px;font-weight:700">Photo</span>
+      <span id="status" style="margin-top:2px;font-size:12px;font-weight:600">No photo yet</span>
+    </div>
+    <button class="snap" id="snap" aria-label="Take the photo"><span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 9A2 2 0 0 1 5.5 7h2l1.5-2.5h6L16.5 7h2a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z" fill="currentColor" fill-opacity="0.18"></path><circle cx="12" cy="13" r="3.5"></circle></svg>Snap</span></button>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center">
+    <button class="btn" id="again">Snap again</button>
+    <button class="btn" id="reset">Reset</button>
+    <label class="btn" for="file" style="display:inline-block">Use my own photo</label>
+    <input type="file" id="file" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0">
+  </div>
+  <label style="font-size:13px;color:#A1998D"><input type="checkbox" id="rm"> Reduce motion</label>
+  <div id="params" style="display:flex;flex-direction:column;gap:8px"></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const W=300,H=150,$=id=>document.getElementById(id);
+const clamp=x=>Math.min(1,Math.max(0,x)),cubicOut=x=>1-Math.pow(1-clamp(x),3);
+const LIGHT=new THREE.Vector3(-200,250,600).normalize();
+
+const renderer=new THREE.WebGLRenderer({canvas:$('gl'),alpha:true,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(W,H,false);
+const scene=new THREE.Scene();
+// One world unit is one CSS pixel on the z=0 plane, as in the reading tile.
+const D=900,camera=new THREE.PerspectiveCamera(2*Math.atan(H/2/D)*180/Math.PI,W/H,100,2000);camera.position.set(0,0,D);
+scene.add(new THREE.AmbientLight(0xffffff,.5));
+const sun=new THREE.DirectionalLight(0xffffff,.9);sun.position.copy(LIGHT).multiplyScalar(1000);scene.add(sun);
+
+const P={blades:8,close:110,open:.9,twist:55,flash:70,colour:30,opacity:85};
+const PARAMS=[
+  {id:'blades',label:'Blades',min:5,max:14,step:1,rebuild:true},
+  {id:'close',label:'Close time',min:30,max:400,step:5,unit:' ms'},
+  {id:'open',label:'Open time',min:.2,max:2.5,step:.05,unit:' s'},
+  {id:'twist',label:'Twist',min:0,max:100,step:1,unit:'%'},
+  {id:'flash',label:'Flash',min:0,max:100,step:1,unit:'%'},
+  {id:'colour',label:'Colour',min:0,max:100,step:1,unit:'%'},
+  {id:'opacity',label:'Opacity',min:20,max:100,step:1,unit:'%'}];
+
+// The photo: a stand-in progress shot at sunset, or the owner's own, drawn to cover a 2:1 canvas.
+const photo=document.createElement('canvas');photo.width=512;photo.height=256;
+const pctx=photo.getContext('2d');
+(function drawStandIn(){
+  const g=pctx.createLinearGradient(0,0,0,256);g.addColorStop(0,'#f4c38c');g.addColorStop(.55,'#e58f72');g.addColorStop(1,'#5b3b3b');pctx.fillStyle=g;pctx.fillRect(0,0,512,256);
+  pctx.fillStyle='rgba(255,243,205,.95)';pctx.beginPath();pctx.arc(130,104,34,0,7);pctx.fill();
+  pctx.fillStyle='#4b5f4c';pctx.beginPath();pctx.moveTo(0,190);pctx.quadraticCurveTo(130,148,256,184);pctx.quadraticCurveTo(384,214,512,172);pctx.lineTo(512,256);pctx.lineTo(0,256);pctx.fill();
+  pctx.fillStyle='#2a2320';pctx.beginPath();pctx.arc(340,100,30,0,7);pctx.fill();
+  pctx.beginPath();pctx.moveTo(276,256);pctx.quadraticCurveTo(280,150,340,146);pctx.quadraticCurveTo(400,150,404,256);pctx.fill();
+  pctx.lineWidth=18;pctx.lineCap='round';pctx.strokeStyle='#2a2320';
+  pctx.beginPath();pctx.moveTo(296,176);pctx.lineTo(262,150);pctx.lineTo(268,110);pctx.stroke();
+  pctx.beginPath();pctx.moveTo(384,176);pctx.lineTo(418,150);pctx.lineTo(412,110);pctx.stroke();
+})();
+const photoTex=new THREE.CanvasTexture(photo);
+$('file').onchange=e=>{const f=e.target.files[0];if(!f)return;const img=new Image();img.onload=()=>{
+  const s=Math.max(512/img.width,256/img.height),w=img.width*s,h=img.height*s;pctx.drawImage(img,(512-w)/2,(256-h)/2,w,h);photoTex.needsUpdate=true;URL.revokeObjectURL(img.src);kick()};img.src=URL.createObjectURL(f)};
+
+// The photo sits behind the iris in the world's green duotone, mixed back towards its real colours by the Colour slider.
+const pm=new THREE.ShaderMaterial({transparent:true,depthWrite:false,uniforms:{uPhoto:{value:photoTex},uColour:{value:.3},uA:{value:0}},
+  vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+  fragmentShader:'uniform sampler2D uPhoto;uniform float uColour;uniform float uA;varying vec2 vUv;void main(){vec3 c=texture2D(uPhoto,vUv).rgb;float l=dot(c,vec3(0.299,0.587,0.114));gl_FragColor=vec4(mix(mix(vec3(0.09,0.15,0.11),vec3(0.72,0.89,0.74),l),c,uColour),uA);}'});
+scene.add(new THREE.Mesh(new THREE.PlaneGeometry(W,H),pm));
+
+// Each blade is a big plate whose inner edge sits at distance r from the centre, so together they leave a polygon of inradius r open.
+// Closed is r below 0; open is r past the tile's corners. The blades turn as they open, which gives the swirl.
+const bgeo=new THREE.PlaneGeometry(800,500);bgeo.translate(0,250,0);
+const egeo=new THREE.PlaneGeometry(800,1.6);egeo.translate(0,.8,0);
+const bmat=new THREE.MeshStandardMaterial({color:0x2b3a2f,metalness:.35,roughness:.38,side:THREE.DoubleSide});
+const emat=new THREE.MeshBasicMaterial({color:0x93c29e,transparent:true,opacity:.55});
+const iris=new THREE.Group();scene.add(iris);
+let blades=[];
+function buildBlades(){
+  blades.forEach(b=>iris.remove(b));blades=[];
+  for(let i=0;i<P.blades;i++){const b=new THREE.Mesh(bgeo,bmat);b.add(new THREE.Mesh(egeo,emat));b.position.z=2+i*.6;b.rotation.x=.04;iris.add(b);blades.push(b)}
+  place(rmax);
+}
+const fm=new THREE.MeshBasicMaterial({color:0xf6fff4,transparent:true,opacity:0,depthTest:false});
+const flash=new THREE.Mesh(new THREE.PlaneGeometry(W,H),fm);flash.position.z=40;flash.renderOrder=9;scene.add(flash);
+const rmax=Math.hypot(W/2,H/2)+12,HOLD=.06;
+function place(r){
+  const open=clamp(r/rmax);
+  blades.forEach((b,i)=>{const phi=i/blades.length*Math.PI*2+P.twist/100*1.4*(1-open);
+    b.position.x=Math.cos(phi)*r;b.position.y=Math.sin(phi)*r;b.rotation.z=phi-Math.PI/2;b.visible=r<rmax});
+}
+
+// The tap snaps the iris shut (ease in), a flash fires as it closes, the photo is set behind it, then it swirls open (ease out).
+let t=-1,taken=false,reduce=matchMedia('(prefers-reduced-motion: reduce)').matches,raf=0,last=0;
+$('rm').checked=reduce;
+function update(dt){
+  if(t<0)return false;t+=dt;
+  const c=P.close/1000;let r;
+  if(t<c){const u=t/c;r=rmax-(rmax+6)*u*u}
+  else if(t<c+HOLD){r=-6;pm.uniforms.uA.value=1}
+  else r=-6+(rmax+6)*cubicOut((t-c-HOLD)/P.open);
+  fm.opacity=t<c?0:P.flash/100*Math.exp(-(t-c)/.12);
+  place(r);
+  if(t>c+HOLD+P.open+.6){t=-1;fm.opacity=0;place(rmax)}
+  return true;
+}
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000||0);last=now;
+  const busy=update(dt);renderer.render(scene,camera);
+  raf=busy?requestAnimationFrame(frame):0;
+}
+function kick(){if(!raf){last=performance.now();raf=requestAnimationFrame(frame)}}
+function paint(){
+  $('status').textContent=taken?'Done':'No photo yet';$('snap').style.display=taken?'none':'flex';
+  $('gl').style.opacity=P.opacity/100;pm.uniforms.uColour.value=P.colour/100;kick();
+}
+// Reduce motion: no iris and no flash, the photo just appears.
+function take(){taken=true;if(reduce){pm.uniforms.uA.value=1}else t=0;paint()}
+function clear(){taken=false;t=-1;pm.uniforms.uA.value=0;fm.opacity=0;place(rmax);paint()}
+
+const fmt=(d,v)=>(Number.isInteger(d.step)?v:v.toFixed(String(d.step).split('.')[1].length))+(d.unit||'');
+PARAMS.forEach(d=>{
+  const row=document.createElement('div');row.className='row';
+  const label=document.createElement('label');label.textContent=d.label;label.htmlFor='p-'+d.id;
+  const input=document.createElement('input');Object.assign(input,{type:'range',min:d.min,max:d.max,step:d.step,value:P[d.id],id:'p-'+d.id});
+  const out=document.createElement('output');out.textContent=fmt(d,P[d.id]);
+  input.oninput=()=>{P[d.id]=Number(input.value);out.textContent=fmt(d,P[d.id]);if(d.rebuild)buildBlades();paint()};
+  row.append(label,input,out);$('params').append(row);
+});
+$('snap').onclick=take;
+$('reset').onclick=clear;
+$('again').onclick=()=>{clear();setTimeout(take,250)};
+$('rm').onchange=e=>{reduce=e.target.checked};
+buildBlades();paint();
+</script>
+</body>
+</html>
