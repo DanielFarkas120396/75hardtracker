@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { cubicOut, inOut, outQuart, spring } from '../motion'
-import { frameDecision } from '../schedule'
+import { frameDecision, frameDt } from '../schedule'
 
 describe('easings', () => {
   it('run from 0 to 1 and clamp outside', () => {
@@ -44,5 +44,15 @@ describe('frameDecision', () => {
     expect(frameDecision({ ...still, drifting: true }, true)).toEqual({ draw: true, again: true })
     expect(frameDecision({ ...still, dirty: true }, false)).toEqual({ draw: true, again: false })
     expect(frameDecision(still, true)).toEqual({ draw: false, again: false })
+  })
+})
+
+describe('frameDt', () => {
+  it('never steps back in time, and caps a long gap', () => {
+    // A frame stamped before the kick's performance.now(): the iris would read t < 0 as idle and never shut.
+    expect(frameDt(1000, 1004)).toBe(0)
+    expect(frameDt(1016, 1000)).toBeCloseTo(0.016)
+    expect(frameDt(5000, 1000)).toBe(0.05)
+    expect(frameDt(NaN, 1000)).toBe(0)
   })
 })
