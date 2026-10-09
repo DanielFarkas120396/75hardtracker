@@ -56,18 +56,23 @@ This only shows on a phone with Reduce Motion turned on.
 
 The prototypes are the forest world in dark. In the app, each fill takes its colours from the world's palette (world, edge, ink, soft) in both themes, like the rest of Ember.
 
-The text on a tile must keep 4.5:1 contrast over a full fill, in every world and both themes. A test checks it, like `worldColors.test.ts`. Where it fails, that fill is made lighter for that theme. The text shadow from the prototypes stays, but the test doesn't count on it.
+The text on a tile must keep 4.5:1 contrast over a full fill, in every world and both themes. A test checks it, like `worldColors.test.ts`. Two rules make that hold (found while planning: the muted status line drops to about 1.7:1 over the forest water):
+
+- Over a fill, the tile's status line uses the ink colour, as it already does late in the evening.
+- Each fill's opacity is the one chosen in the prototypes, lowered only as far as needed so the ink text keeps 4.5:1 over the fill's body tones. This applies to every world and both themes, and it's computed, not hand-tuned.
+
+The thin bright lines (streaks, the water's surface line, bubbles) don't count. The text shadow from the prototypes stays, but the test doesn't count on it.
 
 ## How it's built
 
-- **`src/logic/taskFill.ts`** (pure): `taskFill(task, data, rules, socialToday)` gives 0–1 for all five tasks:
+- **`taskFill(task, data, rules)`** (pure, in `src/content/taskStatus.ts` beside `taskProgress`, which already has the workout counting it needs) gives 0–1 for all five tasks:
   - diet: switches ticked / switches needed (one on a social day)
   - photo: 0 or 1
   - reading: pages / target
   - workouts: done / required (by variant)
   - water: ml / target
 
-  All are capped at 1. It replaces `taskProgress` on the board; the thin-bar fallback uses it too.
+  All are capped at 1. The thin-bar fallback keeps `taskProgress` (bars on the measurable tasks only, as today).
 - **`src/screens/Today/fills/engine.ts`**: the shared renderer and the one frame loop.
   - Tiles register a 2D canvas and a painter. Each frame, the loop steps the moving painters, renders each at its tile's current size and copies it in.
   - It runs only while something moves or drifts: every frame while a fill moves or a tile morphs, 30 frames a second for the idle drift.
