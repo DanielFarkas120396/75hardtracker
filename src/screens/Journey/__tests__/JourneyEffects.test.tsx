@@ -12,6 +12,7 @@ vi.mock('../effects/renderer', () => ({
 
 /** Pretends the browser can (or can't) run WebGL. */
 function fakeWebGL(available: boolean) {
+  if (available) vi.stubGlobal('WebGLRenderingContext', class {})
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(
     () => (available ? { getExtension: () => ({ loseContext() {} }) } : null) as unknown as RenderingContext,
   )

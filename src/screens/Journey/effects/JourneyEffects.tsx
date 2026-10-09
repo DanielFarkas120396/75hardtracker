@@ -1,20 +1,10 @@
 import { useReducedMotionConfig } from 'framer-motion'
 import { useEffect, useRef, useState, type RefObject } from 'react'
+import { supportsWebGL } from '../../../lib/webgl'
 
 interface JourneyEffectsProps {
   /** The element the map scrolls in; the effects follow its scroll position and fill its visible height. */
   scrollRef: RefObject<HTMLElement | null>
-}
-
-function supportsWebGL(): boolean {
-  try {
-    const gl = document.createElement('canvas').getContext('webgl2') ?? document.createElement('canvas').getContext('webgl')
-    // Phones allow only a few WebGL contexts at once, so give this test one back straight away.
-    gl?.getExtension('WEBGL_lose_context')?.loseContext()
-    return gl !== null
-  } catch {
-    return false
-  }
 }
 
 /**
