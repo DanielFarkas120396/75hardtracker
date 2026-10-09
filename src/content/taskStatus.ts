@@ -62,6 +62,11 @@ export function taskStatusLine(task: TaskId, data: DayTaskData, rules: Ruleset, 
   }
 }
 
+/** A status line for VoiceOver: "0 of 2 · 45 min each" reads as "0 of 2, 45 min each". */
+export function spoken(status: string): string {
+  return status.replaceAll(' · ', ', ')
+}
+
 /** The mood tile's status: the mood picked, else whether notes were written. */
 export function notesStatusLine(entry: { mood?: Mood; notes?: string }): string {
   const mood = MOODS.find((m) => m.value === entry.mood)
@@ -82,4 +87,22 @@ export function taskProgress(task: TaskId, data: DayTaskData, rules: Ruleset): n
     case 'photo':
       return null
   }
+}
+
+/** How full a task's tile is, 0–1: what its fill shows. Every task has one, the tick-box ones too. */
+export function taskFill(task: TaskId, data: DayTaskData, rules: Ruleset): number {
+  if (task === 'diet') {
+    const social = rules.socialDaysPerWeek > 0 && data.socialDay === true
+    const ticked = (data.dietFollowed ? 1 : 0) + (!social && data.noAlcohol ? 1 : 0)
+    return Math.min(1, ticked / (social ? 1 : 2))
+  }
+  if (task === 'photo') return data.hasPhoto ? 1 : 0
+  return taskProgress(task, data, rules) ?? 0
+}
+
+/** The day as a tile shows it while its fill still moves: water (to the nearest 50 ml) and pages count up with the fill. */
+export function countedData(task: TaskId, data: DayTaskData, rules: Ruleset, shown: number): DayTaskData {
+  if (task === 'water') return { ...data, water_ml: Math.round((shown * rules.waterTargetMl) / 50) * 50 }
+  if (task === 'reading') return { ...data, pages_read: Math.round(shown * rules.pagesTarget) }
+  return data
 }

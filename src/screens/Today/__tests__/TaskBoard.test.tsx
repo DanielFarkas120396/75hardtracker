@@ -1,11 +1,20 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
-import { beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { DayEntry } from '../../../db/types'
 import { RULESETS } from '../../../logic/rulesets'
 import type { DayTaskData } from '../../../logic/types'
 import { taskCompletionMap } from '../../../logic/dayCompletion'
+import { useBoardBusy } from '../fills/boardSettle'
+import type { FillEngine } from '../fills/painter'
 import { TaskBoard } from '../TaskBoard'
+import { fakeEngine, type FakeHandle } from './fakeFillEngine'
+
+const fills = vi.hoisted(() => ({ engine: null as FillEngine | null }))
+vi.mock('../fills/useFillEngine', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../fills/useFillEngine')>()
+  return { ...actual, useFillEngine: () => fills.engine }
+})
 
 const entry: DayEntry = {
   id: 1,
@@ -149,5 +158,116 @@ describe('TaskBoard', () => {
     render(board(all))
     expect(screen.getAllByRole('button', { name: /, done$/ })).toHaveLength(5)
     expect(screen.queryByTestId('progress')).not.toBeInTheDocument()
+  })
+
+  it('holds the board while a sheet covers it, and catches up once it closes', () => {
+    const { rerender } = render(board({ ...empty, water_ml: 3550 }, { paused: true }))
+    rerender(board({ ...empty, water_ml: 3800 }, { paused: true }))
+    expect(screen.getByRole('button', { name: 'Water, 3.55 / 3.8 L' })).toBeInTheDocument()
+    rerender(board({ ...empty, water_ml: 3800 }, { paused: false }))
+    expect(screen.getByRole('button', { name: 'Water, 3.8 L, done' })).toBeInTheDocument()
+  })
+
+  it('reports how many chips have landed, for the gauge', () => {
+    const onLandedChange = vi.fn()
+    const { rerender } = render(board(empty, { onLandedChange }))
+    expect(onLandedChange).toHaveBeenLastCalledWith(0)
+    rerender(board({ ...empty, water_ml: 3800 }, { onLandedChange }))
+    expect(onLandedChange).toHaveBeenLastCalledWith(1)
+  })
+
+  it('keeps the board busy while a task done under a sheet waits for its chip', () => {
+    const busy = renderHook(() => useBoardBusy())
+    const { rerender } = render(board({ ...empty, water_ml: 3550 }, { paused: true }))
+    rerender(board({ ...empty, water_ml: 3800 }, { paused: true }))
+    expect(busy.result.current).toBe(true)
+    rerender(board({ ...empty, water_ml: 3800 }, { paused: false }))
+    expect(busy.result.current).toBe(false)
+  })
+
+  it('stays busy while the day is saved complete but its last workout has not loaded', () => {
+    const busy = renderHook(() => useBoardBusy())
+    const allButOne: DayTaskData = { water_ml: 3800, pages_read: 10, dietFollowed: true, noAlcohol: true, hasPhoto: true, workouts: [{ durationMin: 45, isOutdoor: true }] }
+    const saved = { entry: { ...entry, completed: true } }
+    const { rerender } = render(board(allButOne, saved))
+    expect(busy.result.current).toBe(true)
+    rerender(board({ ...allButOne, workouts: [...allButOne.workouts, { durationMin: 45, isOutdoor: false }] }, saved))
+    expect(busy.result.current).toBe(false)
+  })
+})
+
+describe('TaskBoard with fills', () => {
+  let handles: FakeHandle[]
+  beforeAll(() => {
+    MotionGlobalConfig.skipAnimations = true
+  })
+  beforeEach(() => {
+    handles = []
+    fills.engine = fakeEngine(handles)
+  })
+  afterEach(() => {
+    fills.engine = null
+    MotionGlobalConfig.skipAnimations = true
+    delete (Element.prototype as Partial<Element>).animate
+  })
+
+  it('keeps a done tile until its fill is full, then turns it into its chip', async () => {
+    // Real animations, with a Web Animations API that finishes at once.
+    MotionGlobalConfig.skipAnimations = false
+    Element.prototype.animate = vi.fn(() => ({ finished: Promise.resolve(), cancel() {} }) as unknown as Animation)
+    const { rerender } = render(board({ ...empty, water_ml: 3550 }))
+    rerender(board({ ...empty, water_ml: 3800 }))
+
+    expect(screen.getByRole('button', { name: 'Water, 3.8 L' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Water, 3.8 L, done' })).not.toBeInTheDocument()
+
+    act(() => handles[0].finish())
+    // The chip is in the tree, hidden, while the tile flies in: both must hold at once.
+    await waitFor(
+      () => {
+        expect(screen.getByRole('button', { name: 'Water, 3.8 L, done' })).toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Water, 3.8 L' })).not.toBeInTheDocument()
+      },
+      { timeout: 2000 },
+    )
+  })
+
+  it('shows the chip in the frame the tile lands on it, with the tile hidden', async () => {
+    MotionGlobalConfig.skipAnimations = false
+    let land = () => {}
+    const landing = new Promise<void>((resolve) => {
+      land = resolve
+    })
+    // What each element keeps once its animations end: the last frame of the ones that hold it.
+    const kept = new Map<Element, Keyframe>()
+    Element.prototype.animate = vi.fn(function (this: Element, keyframes: Keyframe[], options?: number | KeyframeAnimationOptions) {
+      if (typeof options === 'object' && options.fill === 'forwards') kept.set(this, { ...kept.get(this), ...keyframes.at(-1) })
+      return { finished: landing, cancel() {} } as unknown as Animation
+    })
+    const { rerender } = render(board({ ...empty, water_ml: 3550 }))
+    rerender(board({ ...empty, water_ml: 3800 }))
+    const box = screen.getByRole('button', { name: 'Water, 3.8 L' }).parentElement!.parentElement!
+    act(() => handles[0].finish())
+    const chip = await screen.findByRole('button', { name: 'Water, 3.8 L, done' }, { timeout: 2000 })
+    expect(chip).toHaveClass('opacity-0')
+
+    // The flight ends. Only microtasks run before the browser paints that frame.
+    land()
+    for (let i = 0; i < 20; i++) await Promise.resolve()
+    expect(chip).not.toHaveClass('opacity-0')
+    // The tile's box may stay a moment as it leaves the grid: hidden, never over the chip.
+    expect(kept.get(box)).toMatchObject({ opacity: 0 })
+  })
+
+  it('makes a chip at once when animations are skipped, fills or not', () => {
+    const { rerender } = render(board({ ...empty, water_ml: 3550 }))
+    rerender(board({ ...empty, water_ml: 3800 }))
+    expect(screen.getByRole('button', { name: 'Water, 3.8 L, done' })).toBeInTheDocument()
+  })
+
+  it('turns a chip back into a tile when the task is undone', () => {
+    const { rerender } = render(board({ ...empty, water_ml: 3800 }))
+    rerender(board({ ...empty, water_ml: 3550 }))
+    expect(screen.getByRole('button', { name: 'Water, 3.55 / 3.8 L' })).toBeInTheDocument()
   })
 })

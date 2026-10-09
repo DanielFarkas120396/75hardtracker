@@ -1,3 +1,4 @@
+import { LayoutGroup, motion, useReducedMotion } from 'framer-motion'
 import { useState } from 'react'
 import { BackupReminderBanner } from '../../components/BackupReminderBanner'
 import { LockBypassBanner } from '../../components/LockBypassBanner'
@@ -24,6 +25,7 @@ import { challengeWeek, rulesFor } from '../../logic/rulesets'
 import { AddWorkoutSheet } from './AddWorkoutSheet'
 import { DayBoard } from './DayBoard'
 import { useDuck, type DuckAnnouncement } from './DuckHeader'
+import { useFrozenWhile } from './fills/useFrozenWhile'
 import { LateDayCard, LateDayView } from './LateDay'
 import { MenaceAtmosphere } from './MenaceAtmosphere'
 import { PhotoCapture } from './PhotoCapture'
@@ -113,8 +115,11 @@ function TodayTasks({
   const entry = useTodayEntry({ challengeId: challenge.id, dayNumber: todayDayNumber, today, dayEntries })
   const workouts = useWorkoutsForEntry(entry?.id)
   const completion = useDayCompletion(entry, workouts, rules, challenge.socialDays)
+  const [landed, setLanded] = useState<number | null>(null)
+  // At 5/5 the hero, the duck and the buttons keep the day as it was until the board's last chip lands.
+  const shown = useFrozenWhile(completion?.missing.length === 0 && landed !== null && landed < TASK_IDS.length, completion)
   const nowMin = useNow()
-  const menace = useMenace(completion?.data, entry, nowMin, rules)
+  const menace = useMenace(shown?.data, entry, nowMin, rules)
   const profile = useProfile()
   const { currentBook } = useCurrentBook()
   const photo = useEntryPhoto(entry?.photoId)
@@ -124,8 +129,9 @@ function TodayTasks({
   const [openTask, setOpenTask] = useState<BoardTask | null>(null)
   const [addWorkoutOpen, setAddWorkoutOpen] = useState(false)
   const [announcement, setAnnouncement] = useState<DuckAnnouncement>()
+  const reduceMotion = useReducedMotion() ?? false
 
-  if (!entry || !workouts || !completion || !menace) {
+  if (!entry || !workouts || !completion || !shown || !menace) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-canvas">
         <p className="font-rounded text-ink-muted">Loading…</p>
@@ -158,12 +164,12 @@ function TodayTasks({
       setAddWorkoutOpen(true)
     },
   }
-  const urgent = isUrgent(menace, completion.missing)
-  const hasPlan = completion.missing.some((task) => entry.plans?.[task])
-  const won = completion.missing.length === 0
+  const urgent = isUrgent(menace, shown.missing)
+  const hasPlan = shown.missing.some((task) => entry.plans?.[task])
+  const won = shown.missing.length === 0
   const minutesLeft = 24 * 60 - nowMin
   // Nothing left to plan once he's hunting: only to do.
-  const canPlan = completion.missing.length > 0 && menace.level !== 'hunting'
+  const canPlan = shown.missing.length > 0 && menace.level !== 'hunting'
   const notesTold = entry.mood !== undefined || (entry.notes ?? '').trim() !== ''
 
   // Under the ring, what matters next: the day won and its closing ritual, the time left, or the next plan.
@@ -197,17 +203,17 @@ function TodayTasks({
           <Hero
             attemptLine={`${VARIANT_NAMES[rules.variant]} #${challenge.attemptNumber}`}
             dayNumber={todayDayNumber}
-            completedCount={completedCount}
+            completedCount={landed ?? completedCount}
             celebrating={celebrating}
             streak={streak}
             jokersLeft={rules.jokers > 0 ? jokersLeft : undefined}
             below={below}
             menace={menace}
-            missing={completion.missing}
-            completion={completion.completion}
+            missing={shown.missing}
+            completion={shown.completion}
             announcement={announcement}
             name={profile?.name}
-            started={hasStarted(completion.data)}
+            started={hasStarted(shown.data)}
             yesterdayOpen={pendingLateDay != null}
             onLunge={() => setLunges((count) => count + 1)}
           />
@@ -216,45 +222,50 @@ function TodayTasks({
           <BackupReminderBanner />
 
           <main className="px-4">
-            <DayBoard
-              entry={entry}
-              data={completion.data}
-              completion={completion.completion}
-              rules={rules}
-              currentBook={currentBook}
-              photo={photo?.blob}
-              socialToday={socialToday}
-              urgent={urgent}
-              minutesLeft={urgent ? minutesLeft : undefined}
-              onAddWorkout={sheetContext.onAddWorkout}
-              onOpen={setOpenTask}
-            />
-            <div className="mt-4 flex flex-wrap gap-2">
-              {canPlan && (
-                <button type="button" onClick={() => setPlanOpen(true)} className={ACTION_BUTTON}>
-                  <span aria-hidden="true">🗓️</span>
-                  {hasPlan ? 'Edit my plan' : 'Plan my evening'}
-                </button>
-              )}
-              {sheetContext.canPlanSocial && (
-                <button
-                  type="button"
-                  onClick={() => setSocialOpen(true)}
-                  aria-label="Plan a social occasion"
-                  className={ACTION_BUTTON}
-                >
-                  <span aria-hidden="true">🥂</span>
-                  Social night
-                </button>
-              )}
-              {/* Once the day is won, the hero's "How did it go?" opens the notes instead. */}
-              {!won && (
-                <button type="button" onClick={() => setOpenTask('notes')} className={ACTION_BUTTON}>
-                  <span aria-hidden="true">📝</span>
-                  Notes
-                </button>
-              )}
-            </div>
+            {/* The buttons under the board slide with it as it closes up. */}
+            <LayoutGroup>
+              <DayBoard
+                entry={entry}
+                data={completion.data}
+                completion={completion.completion}
+                rules={rules}
+                currentBook={currentBook}
+                photo={photo?.blob}
+                socialToday={socialToday}
+                urgent={urgent}
+                minutesLeft={urgent ? minutesLeft : undefined}
+                covered={openTask !== null || addWorkoutOpen || planOpen || socialOpen}
+                onLandedChange={setLanded}
+                onAddWorkout={sheetContext.onAddWorkout}
+                onOpen={setOpenTask}
+              />
+              <motion.div layout={reduceMotion ? false : 'position'} className="mt-4 flex flex-wrap gap-2">
+                {canPlan && (
+                  <button type="button" onClick={() => setPlanOpen(true)} className={ACTION_BUTTON}>
+                    <span aria-hidden="true">🗓️</span>
+                    {hasPlan ? 'Edit my plan' : 'Plan my evening'}
+                  </button>
+                )}
+                {sheetContext.canPlanSocial && (
+                  <button
+                    type="button"
+                    onClick={() => setSocialOpen(true)}
+                    aria-label="Plan a social occasion"
+                    className={ACTION_BUTTON}
+                  >
+                    <span aria-hidden="true">🥂</span>
+                    Social night
+                  </button>
+                )}
+                {/* Once the day is won, the hero's "How did it go?" opens the notes instead. */}
+                {!won && (
+                  <button type="button" onClick={() => setOpenTask('notes')} className={ACTION_BUTTON}>
+                    <span aria-hidden="true">📝</span>
+                    Notes
+                  </button>
+                )}
+              </motion.div>
+            </LayoutGroup>
           </main>
         </div>
 

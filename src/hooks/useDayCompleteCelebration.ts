@@ -34,7 +34,8 @@ export function useDayCompleteCelebration(gate: ChallengeGate | undefined) {
   if (seen.dayKey !== dayKey || seen.doneDays !== doneDays) {
     setSeen({ dayKey, doneDays })
     const before = seen.doneDays.split(',')
-    const justDone = doneDays.split(',').find((day) => day !== '' && !before.includes(day))
+    const done = doneDays.split(',')
+    const justDone = done.find((day) => day !== '' && !before.includes(day))
     if (gate && seen.dayKey === dayKey && justDone !== undefined) {
       const dayNumber = Number(justDone)
       const streak = streakEndingAt(gate.dayEntries, dayNumber)
@@ -44,6 +45,9 @@ export function useDayCompleteCelebration(gate: ChallengeGate | undefined) {
         isFinalDay: dayNumber === CHALLENGE_LENGTH,
         late: dayNumber !== gate.todayDayNumber,
       })
+    } else if (seen.dayKey === dayKey && celebration && !done.includes(String(celebration.dayNumber))) {
+      // Undone while it still waited for the last chip (an Undo on the toast): a day back at 4/5 has nothing to celebrate.
+      setCelebration(null)
     }
   }
 

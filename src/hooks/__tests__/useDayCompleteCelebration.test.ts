@@ -40,6 +40,14 @@ describe('useDayCompleteCelebration', () => {
     expect(result.current.celebration).toMatchObject({ dayNumber: 5, streak: 5, isFinalDay: false, late: true })
   })
 
+  it('drops a celebration still waiting for the last chip when the day is undone', () => {
+    const { result, rerender } = renderHook(({ g }) => useDayCompleteCelebration(g), { initialProps: { g: gate(true, false, false) } })
+    rerender({ g: gate(true, true, false) })
+    expect(result.current.celebration).not.toBeNull()
+    rerender({ g: gate(true, false, false) })
+    expect(result.current.celebration).toBeNull()
+  })
+
   it('stays quiet when the window closes at noon', () => {
     const { result, rerender } = renderHook(({ g }) => useDayCompleteCelebration(g), { initialProps: { g: gate(true, false, true) } })
     rerender({ g: gate(true, false, false) })

@@ -93,7 +93,7 @@ export function PhotoCapture({
   }
 
   return (
-    <PhotoCaptureContext.Provider value={{ photo, busy, error, cameraFailed, libraryOnly, takePhoto, chooseFromLibrary }}>
+    <PhotoCaptureContext.Provider value={{ photo, busy, error, cameraFailed, cameraOpen, libraryOnly, takePhoto, chooseFromLibrary }}>
       {children}
 
       {/* `capture` opens the camera directly on phones, but also hides the library — so there are two inputs. */}

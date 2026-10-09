@@ -29,6 +29,10 @@ interface DayBoardProps {
   urgent?: boolean
   /** Minutes until midnight, when urgent. */
   minutesLeft?: number
+  /** A sheet is open over the board. */
+  covered?: boolean
+  /** How many chips have landed on the board: the gauge counts these. */
+  onLandedChange?: (count: number) => void
   /** Opens the "Add workout" sheet (the screen owns it, so the workouts sheet can open it too). */
   onAddWorkout: () => void
   onOpen: (task: BoardTask) => void
@@ -41,7 +45,7 @@ interface DayBoardProps {
  * stray tap is one tap to take back. Lives under PhotoCapture, which owns the camera.
  */
 export function DayBoard(props: DayBoardProps) {
-  const { entry, data, completion, rules, currentBook, photo, socialToday, urgent, minutesLeft, onAddWorkout, onOpen } = props
+  const { entry, data, completion, rules, currentBook, photo, socialToday, urgent, minutesLeft, onLandedChange, onAddWorkout, onOpen } = props
   const capture = usePhotoCapture()
   const pagesLeft = Math.max(rules.pagesTarget - data.pages_read, 0)
   const [logged, setLogged] = useState<{ text: string; undo: () => void; id: number } | null>(null)
@@ -101,6 +105,8 @@ export function DayBoard(props: DayBoardProps) {
         socialToday={socialToday}
         urgent={urgent}
         minutesLeft={minutesLeft}
+        paused={(props.covered ?? false) || capture.cameraOpen}
+        onLandedChange={onLandedChange}
         onOpen={onOpen}
       />
       {/* Portalled: the board sits in a stacking context under the tab bar, and the toast floats just above it. */}
