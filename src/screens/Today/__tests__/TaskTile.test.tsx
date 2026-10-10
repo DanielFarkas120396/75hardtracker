@@ -51,4 +51,17 @@ describe('TaskTile', () => {
     expect(screen.getByText('1 / 3.8 L')).toHaveClass('text-ink')
     expect(screen.getByText('1 / 3.8 L')).not.toHaveClass('text-ink-muted')
   })
+
+  it("writes the reading's status in ink at 0 pages too: the open book is drawn at rest", () => {
+    const engine = fakeEngine(handles, ['wave', 'book'])
+    render(
+      <FillEngineContext.Provider value={engine}>
+        <TaskTile task="reading" data={empty} rules={RULESETS.hard} complete={false} urgency="none" onSettledAt={() => {}} onOpen={() => {}} />
+        <TaskTile task="water" data={empty} rules={RULESETS.hard} complete={false} urgency="none" onSettledAt={() => {}} onOpen={() => {}} />
+      </FillEngineContext.Provider>,
+    )
+    expect(screen.getByText('0 of 10 pages')).toHaveClass('text-ink')
+    // An empty wave draws nothing: its line stays muted.
+    expect(screen.getByText('0 / 3.8 L')).toHaveClass('text-ink-muted')
+  })
 })

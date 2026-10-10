@@ -68,7 +68,8 @@ export function TaskTile({ task, data, rules, complete, bookTitle, urgency, quic
   }
   const progress = taskProgress(task, data, rules)
   // Over a fill (a draining one too) the muted grey would drop under 4.5:1: the line takes the ink colour.
-  const statusColor = urgency !== 'none' ? 'font-bold text-ink' : hasFill && (level > 0 || (shown ?? 0) > 0) ? 'text-ink' : 'text-ink-muted'
+  // The book draws its open pages and their shaded gutter at 0 too, so its line is always over a fill.
+  const statusColor = urgency !== 'none' ? 'font-bold text-ink' : hasFill && (kind === 'book' || level > 0 || (shown ?? 0) > 0) ? 'text-ink' : 'text-ink-muted'
   const edge = urgency === 'late' ? 'ring-2 ring-danger-ink' : urgency === 'open' ? 'ring-2 ring-ink/30' : 'ring-1 ring-ink/10 dark:ring-0'
   const statusClass = `mt-0.5 text-xs font-semibold leading-tight ${statusColor}`
 

@@ -9,10 +9,10 @@ export interface FakeHandle extends FillHandle {
   finish(): void
 }
 
-/** A stand-in engine (jsdom has no WebGL): only Water has a fill, and its fills move only when the test says so. */
-export function fakeEngine(handles: FakeHandle[]): FillEngine {
+/** A stand-in engine (jsdom has no WebGL): only the given kinds have a fill (Water's by default), and fills move only when the test says so. */
+export function fakeEngine(handles: FakeHandle[], kinds: PainterKind[] = ['wave']): FillEngine {
   return {
-    supports: (kind: PainterKind) => kind === 'wave',
+    supports: (kind: PainterKind) => kinds.includes(kind),
     lost: () => false,
     subscribe: () => () => {},
     hold() {},
