@@ -3,7 +3,7 @@ import { isWorldId, WORLD_COLORS } from '../../../lib/worldColors'
 import { fillOpacity, fillPalette, type FillPalette, type Mode } from './palette'
 import type { FillEngine, FillHandle, LevelMode, Painter, PainterKind } from './painter'
 import { PAINTERS } from './painters'
-import { DRIFT_MS, frameDecision } from './schedule'
+import { DRIFT_MS, frameDecision, frameDt } from './schedule'
 
 /** Reduce motion's crossfade to a new level. */
 const FADE_S = 0.25
@@ -154,7 +154,7 @@ export function createEngine(): FillEngine {
   function frame(now: number) {
     raf = 0
     if (lost || held) return
-    const dt = Math.min(0.05, (now - last) / 1000 || 0)
+    const dt = frameDt(now, last)
     last = now
     const drift = !motionQuery.matches
     const driftDue = now - lastDrift >= DRIFT_MS

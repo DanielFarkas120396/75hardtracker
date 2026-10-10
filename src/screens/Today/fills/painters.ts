@@ -1,6 +1,7 @@
 import type { FillPalette } from './palette'
 import type { Painter, PainterKind } from './painter'
 import { createInk } from './ink'
+import { createIris } from './iris'
 import { createSprint } from './sprint'
 import { createWave } from './wave'
 
@@ -9,4 +10,5 @@ export const PAINTERS: Partial<Record<PainterKind, (palette: FillPalette) => Pai
   wave: createWave,
   ink: createInk,
   sprint: createSprint,
+  iris: createIris,
 }
