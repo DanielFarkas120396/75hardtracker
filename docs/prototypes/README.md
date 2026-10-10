@@ -139,7 +139,7 @@ The flow, smoothed on 2026-10-09 at the owner's request ("as smooth as possible"
 
 - Every fill starts on the tap. The book's pages lift at once (the chosen 2.1 s of page motion, without the 0.9 s wait it had before lifting), and the sprint leaves at full speed (ease out instead of in-out).
 - Pages and litres count up in the status line with the animation; other status changes slide in. A shortcut that's no longer needed ("10 left", "+ Workout", Snap) shrinks away.
-- Several pages at once riffle through, all landing within about 2.5 s; a single page keeps the calm pace.
+- Several pages at once riffle through, all starting within 2.4 s (for ten, the last one lands at about 4.4 s); a single page keeps the calm pace.
 - When a fill is complete, the tile brightens with a ring and swells slightly (0.38 s), then shrinks into its chip in the row above (0.72 s): its fill fades into the chip's colour, its icon and title fly into the chip's (the photo shrinks into the thumbnail), and on landing the tick pops and the gauge counts it.
 - Meanwhile the other tiles slide to their new places, the buttons under the board too. A tile that changes width (the odd one out takes the whole row) resizes smoothly, its old animation fading out while a new one at the new size fades in.
 - Reduce motion: no glow, no morph, no slides; tiles turn into chips at once.
@@ -152,4 +152,4 @@ What it showed:
 
 ### Next
 
-All five tiles are chosen. The design for building them into the app is `docs/superpowers/specs/2026-10-09-task-tile-fills-design.md`.
+All five tiles are chosen and built into the app, following `docs/superpowers/specs/2026-10-09-task-tile-fills-design.md`: PR #74 (the engine, the board's flow and Water), PR #75 (Diet and Workouts), PR #76 (Photo) and PR #77 (Reading's book).

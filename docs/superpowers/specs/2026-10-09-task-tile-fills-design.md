@@ -1,6 +1,6 @@
 # Task tile fills (design)
 
-Date: 2026-10-09 · Status: **approved** by the owner on 2026-10-09; nothing is built yet. Plan: `docs/superpowers/plans/2026-10-09-task-tile-fills.md`.
+Date: 2026-10-09 · Status: **built**. Approved by the owner on 2026-10-09; PRs #74 (engine, board flow, Water) and #75 (Diet, Workouts) merged on 2026-10-09, #76 (Photo) on 2026-10-10; #77 (Reading's book) is the last. Plan: `docs/superpowers/plans/2026-10-09-task-tile-fills.md`.
 
 On Today, each open task tile fills up with its own animation as the task progresses, in place of the thin progress bar at its bottom, and a full tile turns into its chip. The five fills were chosen one tile at a time in throwaway pages (`docs/prototypes/`, with the exact settings and building notes in its README). `docs/prototypes/today-preview.html` puts all five on the real Today screen with a smoothed flow; the owner approved it on 2026-10-09 ("it looks really good").
 
@@ -21,7 +21,7 @@ The settings in the prototypes' README become constants in the code, with two ch
 As in `today-preview.html`:
 
 1. **A fill starts on the tap**: a quick action ("+ 250 ml", "10 left", "+ Workout", Snap) or a diet switch. Tapping the tile still opens its sheet. A change made in a sheet plays when the sheet closes, from where the tile was, so it is never missed behind the sheet. Opening Today shows every fill at its level at once, and tasks already done as chips; only changes animate.
-2. **The book lifts at once.** The page keeps the chosen 2.1 s of motion but loses the 0.9 s wait it had before lifting. Several pages at once ("10 left") riffle through, all landing within about 2.5 s; one page keeps the calm pace (a new one every 1 s).
+2. **The book lifts at once.** The page keeps the chosen 2.1 s of motion but loses the 0.9 s wait it had before lifting. Several pages at once ("10 left") riffle through as in the preview: they all start within 2.4 s, the count reaches 10 at about 4 s and the last page lands at about 4.4 s. One page keeps the calm pace (a new one every 1 s).
 3. **The sprint leaves at full speed** (ease out instead of ease in-out), so the streaks are longest on the tap and pull in as it stops.
 4. **Counts follow the fill.** Pages and litres count up in the status line with the animation (litres to the nearest 50 ml); other status changes slide in. A shortcut that's no longer needed ("10 left", "+ Workout", Snap) shrinks away.
 5. **A full tile is validated, then becomes its chip.** It brightens with a ring in the world's ink and swells a little (0.38 s). Then it shrinks into its chip in the row above (0.72 s): its fill fades into the chip's colour, and its icon and title fly into the chip's (the photo shrinks into the chip's thumbnail). On landing, the tick pops and the gauge counts it.
@@ -125,3 +125,5 @@ Tiles without their fill yet keep the thin bar.
 - The owner reviews the gentler reduce-motion version above.
 - If copying the fills (option B) is too slow on the iPhone, fall back to option A.
 - The fills in light mode and in each world, seen on the phone.
+- The book's spine crease in light mode: within about 2 to 4 px of it, the ink drops under 4.5:1 (a thin line from the chosen book; its line is in ink at every level, since the open book is drawn at 0 too). If it reads badly, the gutter shade is softened in light mode.
+- When Reading is the day's last task and "10 left" is tapped from 0, "Day complete!" may come while the last page is still turning: the overlay waits 4 s at most, and the riffle lands at about 4.4 s. If it feels early, the wait goes up or the riffle gets shorter.
