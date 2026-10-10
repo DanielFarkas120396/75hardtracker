@@ -152,4 +152,4 @@ What it showed:
 
 ### Next
 
-All five tiles are chosen and built into the app, following `docs/superpowers/specs/2026-10-09-task-tile-fills-design.md`: PR #74 (the engine, the board's flow and Water), PR #75 (Diet and Workouts), PR #76 (Photo), and part 4 (Reading's book).
+All five tiles are chosen and built into the app, following `docs/superpowers/specs/2026-10-09-task-tile-fills-design.md`: PR #74 (the engine, the board's flow and Water), PR #75 (Diet and Workouts), PR #76 (Photo) and PR #77 (Reading's book).

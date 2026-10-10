@@ -1,6 +1,6 @@
 # Task tile fills (design)
 
-Date: 2026-10-09 · Status: **built**. Approved by the owner on 2026-10-09; PRs #74 (engine, board flow, Water) and #75 (Diet, Workouts) merged on 2026-10-09, #76 (Photo) on 2026-10-10; part 4 (Reading's book) is the last PR. Plan: `docs/superpowers/plans/2026-10-09-task-tile-fills.md`.
+Date: 2026-10-09 · Status: **built**. Approved by the owner on 2026-10-09; PRs #74 (engine, board flow, Water) and #75 (Diet, Workouts) merged on 2026-10-09, #76 (Photo) on 2026-10-10; #77 (Reading's book) is the last. Plan: `docs/superpowers/plans/2026-10-09-task-tile-fills.md`.
 
 On Today, each open task tile fills up with its own animation as the task progresses, in place of the thin progress bar at its bottom, and a full tile turns into its chip. The five fills were chosen one tile at a time in throwaway pages (`docs/prototypes/`, with the exact settings and building notes in its README). `docs/prototypes/today-preview.html` puts all five on the real Today screen with a smoothed flow; the owner approved it on 2026-10-09 ("it looks really good").
 
