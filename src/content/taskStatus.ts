@@ -39,6 +39,8 @@ export function taskStatusLine(task: TaskId, data: DayTaskData, rules: Ruleset, 
       }
       const done = workoutsDone(data, rules)
       if (done === 0) return `0 of ${rules.requiredWorkouts} · ${rules.minWorkoutMin} min${rules.requiredWorkouts === 1 ? '' : ' each'}`
+      // Enough sessions, yet not done: none of them was outdoors.
+      if (done >= rules.requiredWorkouts) return 'One must be outdoors'
       return `${done} of ${rules.requiredWorkouts} logged`
     }
     case 'diet': {

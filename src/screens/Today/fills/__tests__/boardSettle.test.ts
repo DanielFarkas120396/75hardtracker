@@ -36,11 +36,13 @@ describe('useSettledCelebration', () => {
     expect(shown).not.toContain('day 30')
   })
 
-  it('waits 4 s at most', () => {
+  it('waits 5 s at most, past the reading riffle (about 4.4 s)', () => {
     vi.useFakeTimers()
     act(() => setBoardBusy(true))
     const { result } = renderHook(() => useSettledCelebration('day 30'))
-    act(() => vi.advanceTimersByTime(4000))
+    act(() => vi.advanceTimersByTime(4500))
+    expect(result.current).toBeNull()
+    act(() => vi.advanceTimersByTime(500))
     expect(result.current).toBe('day 30')
   })
 })

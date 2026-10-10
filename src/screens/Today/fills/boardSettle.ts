@@ -22,7 +22,7 @@ export function useBoardBusy(): boolean {
 }
 
 /** A celebration that waits for the board's last chip to land, `maxWaitMs` at most. */
-export function useSettledCelebration<T>(value: T | null, maxWaitMs = 4000): T | null {
+export function useSettledCelebration<T>(value: T | null, maxWaitMs = 5000): T | null {
   const boardBusy = useBoardBusy()
   const [timedOut, setTimedOut] = useState<T | null>(null)
   // A new value shows one commit late: the board learns of the last task in the same commit as us, and says it's busy

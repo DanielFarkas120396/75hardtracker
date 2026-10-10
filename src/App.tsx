@@ -84,7 +84,7 @@ function MainApp({ today }: { today: string }) {
   }
   const gate = useChallengeGate(today)
   const { celebration, dismiss: dismissCelebration } = useDayCompleteCelebration(gate)
-  // "Day complete!" waits for the board's last chip to land (4 s at most).
+  // "Day complete!" waits for the board's last chip to land (5 s at most).
   const shownCelebration = useSettledCelebration(celebration)
   const { toasts, dismiss: dismissToast } = useBadgeUnlocks(gate)
   // The app wears the colours of the Journey world you're in.
