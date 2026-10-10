@@ -222,13 +222,20 @@ export function createBook(palette: FillPalette): Painter {
     setLevel(level, instant) {
       const pages = Math.round(level * PAGES)
       target = pages
-      if (instant || pages < shown + active.length) {
-        const from = turned()
+      if (instant) {
         active.forEach(dropPage)
         active.length = 0
         shown = pages
-        ebb = instant ? 0 : Math.max(0, from - pages)
+        ebb = 0
         return
+      }
+      if (pages < shown + active.length) {
+        // Keep the pages already turning that still fit; the fill recedes over the rest, never jumping up.
+        const from = turned()
+        while (active.length > 0 && shown + active.length > pages) dropPage(active.pop()!)
+        shown = Math.min(shown, pages)
+        ebb = 0
+        ebb = Math.max(0, from - turned())
       }
       gap = riffleGap(pages - shown - active.length)
     },
