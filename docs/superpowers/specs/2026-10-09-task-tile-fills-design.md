@@ -87,7 +87,7 @@ The thin bright lines (streaks, the water's surface line, bubbles) don't count. 
   - One FLIP helper on the Web Animations API runs the slides, the width changes, the glow and the morph.
   - It replaces framer-motion's `LayoutGroup` on the board, because the morph, the slides and the resizes are measured and timed together.
   - The late and open rings of the evening stay as they are.
-- **Gauge and 5/5**: TodayHero's gauge counts the chips that have landed (the board reports them), not the saved completions. The "Day complete!" overlay waits for the board to settle, 4 s at most.
+- **Gauge and 5/5**: TodayHero's gauge counts the chips that have landed (the board reports them), not the saved completions. The "Day complete!" overlay waits for the board to settle, 5 s at most (raised from 4 s on 2026-10-10, so it never beats the reading riffle).
 
 ## Testing
 
@@ -126,4 +126,3 @@ Tiles without their fill yet keep the thin bar.
 - If copying the fills (option B) is too slow on the iPhone, fall back to option A.
 - The fills in light mode and in each world, seen on the phone.
 - The book's spine crease in light mode: within about 2 to 4 px of it, the ink drops under 4.5:1 (a thin line from the chosen book; its line is in ink at every level, since the open book is drawn at 0 too). If it reads badly, the gutter shade is softened in light mode.
-- When Reading is the day's last task and "10 left" is tapped from 0, "Day complete!" may come while the last page is still turning: the overlay waits 4 s at most, and the riffle lands at about 4.4 s. If it feels early, the wait goes up or the riffle gets shorter.

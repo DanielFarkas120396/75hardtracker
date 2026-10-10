@@ -19,6 +19,9 @@ describe('taskStatusLine', () => {
     expect(taskStatusLine('workouts', { ...empty, workouts: [{ durationMin: 20, isOutdoor: false }] }, hard, false)).toBe(
       '0 of 2 · 45 min each',
     )
+    // Hard wants one of the two outdoors: two indoor sessions don't do it.
+    const indoors = { ...empty, workouts: [{ durationMin: 45, isOutdoor: false }, { durationMin: 50, isOutdoor: false }] }
+    expect(taskStatusLine('workouts', indoors, hard, false)).toBe('One must be outdoors')
     const two = { ...empty, workouts: [{ durationMin: 45, isOutdoor: true }, { durationMin: 50, isOutdoor: false }] }
     expect(taskStatusLine('workouts', two, hard, true)).toBe('2 workouts · 95 min')
     expect(taskStatusLine('workouts', one, medium, true)).toBe('1 workout · 45 min')
