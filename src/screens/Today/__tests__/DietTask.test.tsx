@@ -33,7 +33,7 @@ describe('DietTask', () => {
       />,
     )
 
-    expect(screen.queryByRole('button', { name: '🥂 Plan a social occasion' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Plan a social occasion' })).not.toBeInTheDocument()
     expect(screen.getByRole('switch', { name: 'No alcohol' })).toBeInTheDocument()
   })
 
@@ -49,7 +49,7 @@ describe('DietTask', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: '🥂 Plan a social occasion' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Plan a social occasion' }))
     expect(onPlanSocial).toHaveBeenCalled()
   })
 
@@ -64,7 +64,7 @@ describe('DietTask', () => {
       />,
     )
 
-    expect(screen.getByText('🥂 Social occasion today — a drink is allowed.')).toBeInTheDocument()
+    expect(screen.getByText('Social occasion today — a drink is allowed.')).toBeInTheDocument()
     expect(screen.queryByRole('switch', { name: 'No alcohol' })).not.toBeInTheDocument()
   })
 
@@ -79,6 +79,6 @@ describe('DietTask', () => {
       />,
     )
 
-    expect(screen.queryByRole('button', { name: '🥂 Plan a social occasion' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Plan a social occasion' })).not.toBeInTheDocument()
   })
 })

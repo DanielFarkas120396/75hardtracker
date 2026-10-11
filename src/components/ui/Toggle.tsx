@@ -4,7 +4,7 @@ interface ToggleProps {
   checked: boolean
   onChange: (checked: boolean) => void
   label: string
-  /** A decoration before the label (an emoji); not part of the switch's name. */
+  /** A decoration before the label (a stroke icon); not part of the switch's name. */
   icon?: ReactNode
   /** The world's colour by default; blue where the task is about water or the outdoors. */
   activeColor?: 'world' | 'blue'
@@ -24,7 +24,7 @@ export function Toggle({ checked, onChange, label, icon, activeColor = 'world' }
     >
       <span className="flex items-center gap-2">
         {icon && (
-          <span aria-hidden="true" className="text-xl leading-none">
+          <span aria-hidden="true" className="flex shrink-0">
             {icon}
           </span>
         )}

@@ -19,6 +19,11 @@ describe('fill palette', () => {
     forest.deep.forEach((v, i) => expect(v).toBeCloseTo([0.2, 0.34, 0.25][i], 1))
   })
 
+  it("fills light Hell with a richer amber (its ochre read as grey-brown on the white tile), and leaves dark Hell as approved", () => {
+    expect(toHex(fillPalette(WORLD_COLORS.hell.light, 'light').mid)).toBe('#f0a030')
+    expect(toHex(fillPalette(WORLD_COLORS.hell.dark, 'dark').mid)).toBe(WORLD_COLORS.hell.dark.world)
+  })
+
   for (const mode of ['light', 'dark'] as const) {
     it.each(WORLDS.map((w) => w.id))(`keeps the tile's text at 4.5:1 over every fill in %s (${mode})`, (id) => {
       const palette = fillPalette(WORLD_COLORS[id][mode], mode)

@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useEffectEvent } from 'react'
 import type { BadgeDefinition } from '../logic/badges'
+import { Icon } from './icons/Icon'
 
 interface BadgeUnlockToastProps {
   badges: BadgeDefinition[]
@@ -45,14 +46,14 @@ function ToastItem({ badge, onDismiss }: { badge: BadgeDefinition; onDismiss: (b
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: -40, opacity: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-      className="pointer-events-auto flex w-full max-w-xs items-center gap-3 rounded-xl2 bg-yellow px-4 py-3 shadow-md"
+      className="pointer-events-auto flex w-full max-w-xs items-center gap-3 rounded-card bg-surface px-4 py-3 shadow-lg ring-1 ring-world/30"
     >
-      <span className="text-2xl" role="img" aria-label="badge">
-        🏅
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-world-soft text-world-ink">
+        <Icon name="badge" size={20} />
       </span>
       <div>
-        <p className="font-rounded text-sm font-bold text-on-accent">Badge unlocked: {badge.name}</p>
-        <p className="font-rounded text-xs font-semibold text-on-accent/75">{badge.description}</p>
+        <p className="font-rounded text-sm font-bold text-ink">Badge unlocked: {badge.name}</p>
+        <p className="font-rounded text-xs font-semibold text-ink-muted">{badge.description}</p>
       </div>
     </motion.div>
   )

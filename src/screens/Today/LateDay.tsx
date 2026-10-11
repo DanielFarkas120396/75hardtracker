@@ -129,7 +129,7 @@ export function LateDayView({ challenge, dayEntries, dayNumber, date, onBack }: 
             onClick={() => setOpenTask('notes')}
             className="mt-4 flex min-h-touch w-full items-center justify-center gap-1.5 rounded-full bg-surface px-3 font-rounded text-sm font-bold text-ink ring-1 ring-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:ring-0"
           >
-            <span aria-hidden="true">📝</span>
+            <Icon name="notes" size={18} className="text-world-ink" />
             Notes
           </button>
         </main>

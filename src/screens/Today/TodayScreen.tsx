@@ -1,6 +1,7 @@
 import { LayoutGroup, motion, useReducedMotion } from 'framer-motion'
 import { useState } from 'react'
 import { BackupReminderBanner } from '../../components/BackupReminderBanner'
+import { Icon } from '../../components/icons/Icon'
 import { LockBypassBanner } from '../../components/LockBypassBanner'
 import { planReminderLine, planSavedLine, timeLeftLine } from '../../content/microcopy'
 import { notesStatusLine } from '../../content/taskStatus'
@@ -242,7 +243,7 @@ function TodayTasks({
               <motion.div layout={reduceMotion ? false : 'position'} className="mt-4 flex flex-wrap gap-2">
                 {canPlan && (
                   <button type="button" onClick={() => setPlanOpen(true)} className={ACTION_BUTTON}>
-                    <span aria-hidden="true">🗓️</span>
+                    <Icon name="calendar" size={18} className="text-world-ink" />
                     {hasPlan ? 'Edit my plan' : 'Plan my evening'}
                   </button>
                 )}
@@ -253,14 +254,14 @@ function TodayTasks({
                     aria-label="Plan a social occasion"
                     className={ACTION_BUTTON}
                   >
-                    <span aria-hidden="true">🥂</span>
+                    <Icon name="drink" size={18} className="text-world-ink" />
                     Social night
                   </button>
                 )}
                 {/* Once the day is won, the hero's "How did it go?" opens the notes instead. */}
                 {!won && (
                   <button type="button" onClick={() => setOpenTask('notes')} className={ACTION_BUTTON}>
-                    <span aria-hidden="true">📝</span>
+                    <Icon name="notes" size={18} className="text-world-ink" />
                     Notes
                   </button>
                 )}

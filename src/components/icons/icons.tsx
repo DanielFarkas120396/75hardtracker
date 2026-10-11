@@ -200,6 +200,25 @@ export const ICONS = {
       <path d="M12 14V3.5M8.5 7L12 3.5 15.5 7" />
     </>
   ),
+  calendar: (
+    <>
+      <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" {...SOFT} />
+      <path d="M3.5 10h17M8 3v4M16 3v4" />
+    </>
+  ),
+  // A drink is allowed (a social occasion), and its crossed-out twin: the diet's "No alcohol" switch.
+  drink: (
+    <>
+      <path d="M7 3.5h10V7a5 5 0 0 1-10 0z" {...SOFT} />
+      <path d="M12 12v8M8.5 20.5h7" />
+    </>
+  ),
+  noDrink: (
+    <>
+      <path d="M7 3.5h10V7a5 5 0 0 1-10 0z" {...SOFT} />
+      <path d="M12 12v8M8.5 20.5h7M3.5 3.5l17 17" />
+    </>
+  ),
   plus: <path d="M12 5v14M5 12h14" />,
   minus: <path d="M5 12h14" />,
   close: <path d="M6 6l12 12M18 6L6 18" />,

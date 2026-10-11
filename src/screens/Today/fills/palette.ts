@@ -47,7 +47,7 @@ const TONES: Record<Mode, { light: number; top: number; deep: number }> = {
 }
 
 export function fillPalette(world: WorldPalette, mode: Mode): FillPalette {
-  const base = rgb(world.world)
+  const base = rgb(world.fill ?? world.world)
   const tones = TONES[mode]
   return {
     mode,

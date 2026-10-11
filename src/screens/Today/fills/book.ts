@@ -12,7 +12,7 @@ import {
   type WebGLRenderer,
 } from 'three'
 import { clamp01, inOut, smooth } from './motion'
-import { FILL_LOOK, type FillPalette } from './palette'
+import { FILL_LOOK, type FillPalette, type Mode } from './palette'
 import type { Painter } from './painter'
 import { QUAD_VERT } from './quad'
 
@@ -40,6 +40,14 @@ const EBB = 25
 /** The gap before the next page: the calm pace for one page; several at once riffle through, all starting within 2.4 s. */
 export function riffleGap(pagesToGo: number): number {
   return Math.min(TURN * 0.45, 2.4 / Math.max(1, pagesToGo))
+}
+
+/**
+ * The spine's shade, from 0 to 1. It comes in with the first page and leaves with it on undo: an unread book's dark
+ * crease read as a glitch. In light mode it stays soft, so the tile's ink keeps 4.5:1 across it.
+ */
+export function spineShade(pagesTurned: number, mode: Mode): number {
+  return smooth(pagesTurned) * (mode === 'light' ? 0.5 : 1)
 }
 
 const restAngle = (u: number) => BETA * (1 - smooth(clamp01(u / GUTTER)))
@@ -92,7 +100,7 @@ export function createBook(palette: FillPalette): Painter {
       transparent: true,
       depthWrite: false,
       depthTest: false,
-      uniforms: { flip: { value: flip }, depth: { value: BETA / 0.6 } },
+      uniforms: { flip: { value: flip }, depth: { value: 0 } },
       vertexShader: 'varying float vU; uniform float flip; void main() { vU = flip > 0.5 ? 1.0 - uv.x : uv.x; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
       fragmentShader: `varying float vU; uniform float depth; ${GUTTER_GLSL} void main() { float s = gutterShade(vU, depth), h = gutterLight(vU, depth), a = s + h; gl_FragColor = vec4(vec3(h / max(a, 0.0001)), a); }`,
     })
@@ -159,6 +167,7 @@ export function createBook(palette: FillPalette): Painter {
         }`,
     })
 
+  let mode = palette.mode
   const active: Page[] = []
   let shown = 0
   let target = 0
@@ -267,6 +276,7 @@ export function createBook(palette: FillPalette): Painter {
       camera.aspect = w / h
       camera.updateProjectionMatrix()
       shapeHalves()
+      for (const half of halves) half.material.uniforms.depth.value = spineShade(turned(), mode)
       fill.scale.set(w, h, 1)
       fill.position.z = -1
       const fillPx = (Math.min(PAGES, turned()) / PAGES) * w
@@ -276,6 +286,7 @@ export function createBook(palette: FillPalette): Painter {
       renderer.render(scene, camera)
     },
     setPalette(p) {
+      mode = p.mode
       fillUniforms.uMid.value.set(...p.mid)
       front.set(...p.mid)
       back.set(...p.edge)

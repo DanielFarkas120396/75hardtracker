@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Icon } from '../../components/icons/Icon'
 import { Mascot } from '../../components/mascot/Mascot'
 import { Greeting, WhyQuote } from '../../components/ProfileLines'
 import { Button } from '../../components/ui/Button'
@@ -67,8 +68,9 @@ export function PreStartView({ challenge, todayDayNumber, today }: PreStartViewP
             <BookPicker />
           </section>
           {rules.socialDaysPerWeek > 0 && (
-            <Button variant="secondary" onClick={() => setSocialOpen(true)}>
-              🥂 Plan a social occasion
+            <Button variant="secondary" className="flex items-center justify-center gap-2" onClick={() => setSocialOpen(true)}>
+              <Icon name="drink" size={18} className="text-world-ink" />
+              Plan a social occasion
             </Button>
           )}
         </>
