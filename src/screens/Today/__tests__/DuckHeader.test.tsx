@@ -48,7 +48,8 @@ describe('DuckHeader', () => {
     const duck = screen.getByRole('button', { name: 'Poke the duck' })
 
     fireEvent.click(duck)
-    expect(await screen.findByText('Hands off. Hands on your water bottle.')).toBeInTheDocument()
+    // A poke's answer is for the eyes: VoiceOver isn't interrupted by it.
+    expect((await screen.findByText('Hands off. Hands on your water bottle.')).closest('[aria-live]')).toBeNull()
 
     fireEvent.click(duck)
     fireEvent.click(duck)
@@ -62,7 +63,7 @@ describe('DuckHeader', () => {
       <DuckHeader menace={{ level: 'content', reason: 'done' }} missing={[]} completion={completionOf([])} dayNumber={3} onLunge={onLunge} />,
     )
     rerender(<DuckHeader menace={TAPPING} missing={['water']} completion={completionOf(['water'])} dayNumber={3} onLunge={onLunge} />)
-    expect(await screen.findByText('I saw that.')).toBeInTheDocument()
+    expect((await screen.findByText('I saw that.')).closest('[aria-live="polite"]')).not.toBeNull()
   })
 
   it('does not glare when a new day starts', async () => {
@@ -92,8 +93,9 @@ describe('DuckHeader', () => {
     expect(screen.queryByText("Tick. Tock. You're cutting it close.")).not.toBeInTheDocument()
 
     await act(async () => vi.advanceTimersByTime(CHATTER_MAX_MS))
-    const said = screen.getByRole('paragraph').textContent
-    expect(CATCHPHRASES.tapping).toContain(said)
+    const said = screen.getByRole('paragraph')
+    expect(CATCHPHRASES.tapping).toContain(said.textContent)
+    expect(said.closest('[aria-live]')).toBeNull() // chatter isn't read out
   })
 
   it('falls quiet after a reaction', async () => {
@@ -134,6 +136,6 @@ describe('DuckHeader', () => {
     const props = { menace: TAPPING, missing: ['reading'] as TaskId[], completion: completionOf(['reading']), dayNumber: 3, onLunge: vi.fn() }
     const { rerender } = render(<DuckHeader {...props} />)
     rerender(<DuckHeader {...props} announcement={{ text: '22:30. Not a minute later.', reaction: 'relax', id: 1 }} />)
-    expect(await screen.findByText('22:30. Not a minute later.')).toBeInTheDocument()
+    expect((await screen.findByText('22:30. Not a minute later.')).closest('[aria-live="polite"]')).not.toBeNull()
   })
 })

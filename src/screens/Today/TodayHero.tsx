@@ -39,6 +39,7 @@ export function TodayHero({ attemptLine, dayNumber, completedCount, taskCount, s
       {/* One line, never wrapping: the day, then the attempt. The 75 days are the Journey's to show. */}
       <h1 className="flex items-baseline justify-center gap-2 whitespace-nowrap text-center">
         <span className="font-display text-4xl leading-none font-semibold tracking-wide text-ink">Day {dayNumber}</span>
+        <span className="sr-only">,</span>{' '}
         <span className="font-rounded text-xs font-semibold text-ink-muted">{attemptLine}</span>
       </h1>
 
