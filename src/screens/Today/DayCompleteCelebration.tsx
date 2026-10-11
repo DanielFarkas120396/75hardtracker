@@ -52,7 +52,7 @@ export function DayCompleteCelebration({ celebration, onDismiss }: DayCompleteCe
           {celebration.streak > 1 && (
             <p className="font-rounded font-bold text-on-world">🔥 {celebration.streak}-day streak</p>
           )}
-          <Button variant="secondary" className="mt-4" onClick={onDismiss}>
+          <Button variant="onWorld" className="mt-4" onClick={onDismiss} autoFocus>
             {celebration.isFinalDay ? 'See your victory 🏆' : 'Nice!'}
           </Button>
         </motion.div>

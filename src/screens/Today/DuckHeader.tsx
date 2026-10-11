@@ -70,20 +70,21 @@ export function useDuck({
   const playShing = useKnifeSound()
   const reduceMotion = useReducedMotion()
   const [reaction, setReaction] = useState<{ kind: DuckReaction; id: number }>()
-  const [speech, setSpeech] = useState<{ text: string; ms: number; id: number } | null>(null)
+  const [speech, setSpeech] = useState<{ text: string; ms: number; announce: boolean; id: number } | null>(null)
   // What he said last, so a catchphrase never repeats it.
   const [lastSaid, setLastSaid] = useState<string>()
   const pokes = useRef<number[]>([])
   const pokeCount = useRef(0)
 
-  const say = (text: string, ms = SPEECH_MS) => {
+  // `announce`: VoiceOver reads it out. His lines about the day, a plan or a glare are; chatter and pokes aren't.
+  const say = (text: string, ms = SPEECH_MS, announce = true) => {
     setLastSaid(text)
-    setSpeech((previous) => ({ text, ms, id: (previous?.id ?? 0) + 1 }))
+    setSpeech((previous) => ({ text, ms, announce, id: (previous?.id ?? 0) + 1 }))
   }
 
-  const react = (kind: DuckReaction, text?: string) => {
+  const react = (kind: DuckReaction, text?: string, announce = true) => {
     setReaction((previous) => ({ kind, id: (previous?.id ?? 0) + 1 }))
-    if (text !== undefined) say(text, REACTION_MS)
+    if (text !== undefined) say(text, REACTION_MS, announce)
   }
 
   const line = duckLine({ menace, missing, dayNumber, name, started, yesterdayOpen })
@@ -112,7 +113,7 @@ export function useDuck({
 
   // The day's line, a beat after Today opens; then a catchphrase now and then.
   const greet = useEffectEvent(() => say(line))
-  const chatter = useEffectEvent(() => say(nextCatchphrase(menace.level, lastSaid)))
+  const chatter = useEffectEvent(() => say(nextCatchphrase(menace.level, lastSaid), SPEECH_MS, false))
   useEffect(() => {
     const first = setTimeout(greet, FIRST_LINE_DELAY_MS)
     let next: ReturnType<typeof setTimeout>
@@ -137,13 +138,28 @@ export function useDuck({
     pokes.current = result.recent
     playShing()
     if (result.kind === 'lunge') {
-      react('lunge', LUNGE_LINE)
+      react('lunge', LUNGE_LINE, false)
       onLunge()
     } else {
-      react('poke', pokeLine(pokeCount.current))
+      react('poke', pokeLine(pokeCount.current), false)
       pokeCount.current += 1
     }
   }
+
+  const bubble = (line: { text: string; id: number }) => (
+    <motion.p
+      key={line.id}
+      initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.85, y: reduceMotion ? 0 : 6 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: reduceMotion ? 1 : 0.95 }}
+      transition={{ duration: 0.18, ease: 'easeOut' }}
+      style={{ transformOrigin: '2rem 100%' }}
+      className="relative w-max max-w-full rounded-2xl bg-surface px-2.5 py-1.5 font-rounded text-xs font-bold leading-snug text-ink shadow-md"
+    >
+      <span aria-hidden="true" className="absolute -bottom-1.5 left-5 h-3 w-3 rotate-45 bg-surface" />
+      <span className="relative line-clamp-3">{line.text}</span>
+    </motion.p>
+  )
 
   return {
     duck: (
@@ -157,25 +173,15 @@ export function useDuck({
       </button>
     ),
     // Above the duck, rising from him, and narrow enough to stay in the space beside the ring, never over its count.
-    // The caller places it in the duck's own box. Read by VoiceOver as he says it.
+    // The caller places it in the duck's own box. Two stacked slots, so only the lines worth hearing sit in the live region.
     speech: (
-      <div aria-live="polite" className="pointer-events-none absolute bottom-full left-0 z-20 mb-2 w-max max-w-[7rem]">
-        <AnimatePresence>
-          {speech && (
-            <motion.p
-              key={speech.id}
-              initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.85, y: reduceMotion ? 0 : 6 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: reduceMotion ? 1 : 0.95 }}
-              transition={{ duration: 0.18, ease: 'easeOut' }}
-              style={{ transformOrigin: '2rem 100%' }}
-              className="relative w-max max-w-full rounded-2xl bg-surface px-2.5 py-1.5 font-rounded text-xs font-bold leading-snug text-ink shadow-md"
-            >
-              <span aria-hidden="true" className="absolute -bottom-1.5 left-5 h-3 w-3 rotate-45 bg-surface" />
-              <span className="relative line-clamp-3">{speech.text}</span>
-            </motion.p>
-          )}
-        </AnimatePresence>
+      <div className="pointer-events-none absolute bottom-full left-0 z-20 mb-2 grid w-max max-w-[7rem] grid-cols-[minmax(0,1fr)] items-end">
+        <div aria-live="polite" className="col-start-1 row-start-1">
+          <AnimatePresence>{speech?.announce && bubble(speech)}</AnimatePresence>
+        </div>
+        <div className="col-start-1 row-start-1">
+          <AnimatePresence>{speech && !speech.announce && bubble(speech)}</AnimatePresence>
+        </div>
       </div>
     ),
   }
