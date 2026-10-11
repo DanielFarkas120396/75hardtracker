@@ -113,12 +113,26 @@ export function planSavedLine(at: number): string {
   return `${formatHHmm(at)}. Not a minute later.`
 }
 
-/** How long until the evening's deadline, naming it: "1h30 to bedtime", "45 min to midnight". */
-export function timeLeftLine({ until, minutesLeft }: EveningDeadline): string {
-  const hours = Math.floor(minutesLeft / 60)
-  const minutes = minutesLeft % 60
-  return `${hours > 0 ? `${hours}h${String(minutes).padStart(2, '0')}` : `${minutes} min`} to ${until}`
+/** "1h30", or "45 min" under an hour. */
+function span(total: number): string {
+  const hours = Math.floor(total / 60)
+  const minutes = total % 60
+  return hours > 0 ? `${hours}h${String(minutes).padStart(2, '0')}` : `${minutes} min`
 }
+
+/** The evening's clock under the ring: "1h30 to bedtime"; past bedtime, the day itself is ending: "Day 12 ends in 45 min". */
+export function timeLeftLine({ until, minutesLeft }: EveningDeadline, dayNumber: number): string {
+  return until === 'bedtime' ? `${span(minutesLeft)} to bedtime` : `Day ${dayNumber} ends in ${span(minutesLeft)}`
+}
+
+/** What the tasks left take by the duck's estimates, rounded: "~5h40 of tasks left", "~20 min of tasks left". */
+export function tasksLeftLine(minutes: number): string {
+  const rounded = minutes >= 60 ? Math.round(minutes / 10) * 10 : Math.max(5, Math.round(minutes / 5) * 5)
+  return `~${span(rounded)} of tasks left`
+}
+
+/** Past bedtime, under the clock: a day finished late can still be logged the next morning. */
+export const LATE_GRACE_LINE = 'Logging stays open till noon.'
 
 /** The calm line while yesterday can still be finished: it outranks today's progress. */
 const YESTERDAY_OPEN_LINE = "Yesterday's still open. Noon."

@@ -14,6 +14,7 @@ import {
   pokeLine,
   POKE_LINES,
   taskCheer,
+  tasksLeftLine,
   timeLeftLine,
 } from '../microcopy'
 
@@ -143,9 +144,17 @@ describe('nextCatchphrase', () => {
 })
 
 describe('timeLeftLine', () => {
-  it('names the clock it counts down to', () => {
-    expect(timeLeftLine({ until: 'bedtime', minutesLeft: 90 })).toBe('1h30 to bedtime')
-    expect(timeLeftLine({ until: 'bedtime', minutesLeft: 180 })).toBe('3h00 to bedtime')
-    expect(timeLeftLine({ until: 'midnight', minutesLeft: 45 })).toBe('45 min to midnight')
+  it('counts to bedtime, then says the day itself is ending', () => {
+    expect(timeLeftLine({ until: 'bedtime', minutesLeft: 90 }, 12)).toBe('1h30 to bedtime')
+    expect(timeLeftLine({ until: 'bedtime', minutesLeft: 180 }, 12)).toBe('3h00 to bedtime')
+    expect(timeLeftLine({ until: 'midnight', minutesLeft: 45 }, 12)).toBe('Day 12 ends in 45 min')
+  })
+})
+
+describe('tasksLeftLine', () => {
+  it("rounds the duck's estimate: to 10 minutes from an hour, to 5 under it", () => {
+    expect(tasksLeftLine(342)).toBe('~5h40 of tasks left')
+    expect(tasksLeftLine(22)).toBe('~20 min of tasks left')
+    expect(tasksLeftLine(2)).toBe('~5 min of tasks left')
   })
 })

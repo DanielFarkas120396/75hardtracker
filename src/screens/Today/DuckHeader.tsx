@@ -46,6 +46,8 @@ interface DuckProps {
   yesterdayOpen?: boolean
   /** Three quick pokes make him lunge; the screen flashes red once. */
   onLunge: () => void
+  /** His line is shown under the ring: the bubble doesn't repeat it, and keeps to reactions and chatter. */
+  lineInHero?: boolean
 }
 
 /**
@@ -66,7 +68,8 @@ export function useDuck({
   started = false,
   yesterdayOpen = false,
   onLunge,
-}: DuckProps): { duck: ReactNode; speech: ReactNode } {
+  lineInHero = false,
+}: DuckProps): { duck: ReactNode; speech: ReactNode; line: string } {
   const playShing = useKnifeSound()
   const reduceMotion = useReducedMotion()
   const [reaction, setReaction] = useState<{ kind: DuckReaction; id: number }>()
@@ -100,7 +103,7 @@ export function useDuck({
       react('glare', GLARE_LINE)
     } else {
       if (seen.dayNumber === dayNumber && TASK_IDS.some((task) => !seen.completion[task] && completion[task])) react('approve')
-      if (seen.line !== line) say(line)
+      if (seen.line !== line && !lineInHero) say(line)
     }
   }
 
@@ -112,7 +115,9 @@ export function useDuck({
   }, [speech])
 
   // The day's line, a beat after Today opens; then a catchphrase now and then.
-  const greet = useEffectEvent(() => say(line))
+  const greet = useEffectEvent(() => {
+    if (!lineInHero) say(line)
+  })
   const chatter = useEffectEvent(() => say(nextCatchphrase(menace.level, lastSaid), SPEECH_MS, false))
   useEffect(() => {
     const first = setTimeout(greet, FIRST_LINE_DELAY_MS)
@@ -162,6 +167,7 @@ export function useDuck({
   )
 
   return {
+    line,
     duck: (
       <button
         type="button"
