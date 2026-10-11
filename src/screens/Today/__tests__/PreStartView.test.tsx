@@ -25,7 +25,7 @@ describe('PreStartView', () => {
     render(<PreStartView challenge={challenge} todayDayNumber={todayDayNumber} today={today} />)
 
     expect(screen.getByText('75 Medium #1')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: '🥂 Plan a social occasion' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Plan a social occasion' }))
 
     fireEvent.change(screen.getByLabelText('Day'), { target: { value: startDate } })
     fireEvent.click(screen.getByRole('button', { name: 'Declare' }))
@@ -58,7 +58,7 @@ describe('PreStartView', () => {
     render(<PreStartView challenge={challenge} todayDayNumber={-2} today={today} />)
 
     expect(screen.getByText('75 Hard #1')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '🥂 Plan a social occasion' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Plan a social occasion' })).not.toBeInTheDocument()
   })
 
   it('greets the player by name and quotes their reason before Day 1 too', async () => {

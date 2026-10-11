@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react'
+import { Icon } from '../../components/icons/Icon'
+import type { IconName } from '../../components/icons/icons'
 import { dietToggleLabel } from '../../content/variants'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import type { DayEntry } from '../../db/types'
@@ -7,28 +8,28 @@ import type { Ruleset } from '../../logic/rulesets'
 interface DietSwitchesProps {
   entry: DayEntry
   rules: Ruleset
-  /** A declared social occasion: the glass gives way to a toast. */
+  /** A declared social occasion: the crossed-out glass gives way to a plain one. */
   socialToday: boolean
 }
 
-/** The diet tile's two switches, stacked on its right, each named by its emoji: the plate, and the crossed-out glass. */
+/** The diet tile's two switches, stacked on its right, each named by its icon: the diet's leaf, and the crossed-out glass. */
 export function DietSwitches({ entry, rules, socialToday }: DietSwitchesProps) {
   return (
     <div data-fill-anchor className="absolute inset-y-0 right-5 flex flex-col items-end justify-center">
       <MiniSwitch
         label={dietToggleLabel(rules)}
-        emoji="🍽️"
+        icon="diet"
         checked={entry.dietFollowed}
         onChange={(checked) => void dayEntryRepo.update(entry.id, { dietFollowed: checked })}
       />
       {socialToday ? (
-        <span role="img" aria-label="Social occasion today — a drink is allowed" className="flex h-11 items-center px-2 text-xl leading-none">
-          🥂
+        <span className="flex h-11 items-center px-2 text-ink">
+          <Icon name="drink" size={22} label="Social occasion today — a drink is allowed" />
         </span>
       ) : (
         <MiniSwitch
           label="No alcohol"
-          emoji={<NoDrinkEmoji />}
+          icon="noDrink"
           checked={entry.noAlcohol}
           onChange={(checked) => void dayEntryRepo.update(entry.id, { noAlcohol: checked })}
         />
@@ -39,12 +40,12 @@ export function DietSwitches({ entry, rules, socialToday }: DietSwitchesProps) {
 
 interface MiniSwitchProps {
   label: string
-  emoji: ReactNode
+  icon: IconName
   checked: boolean
   onChange: (checked: boolean) => void
 }
 
-function MiniSwitch({ label, emoji, checked, onChange }: MiniSwitchProps) {
+function MiniSwitch({ label, icon, checked, onChange }: MiniSwitchProps) {
   return (
     <button
       type="button"
@@ -52,11 +53,9 @@ function MiniSwitch({ label, emoji, checked, onChange }: MiniSwitchProps) {
       aria-checked={checked}
       aria-label={label}
       onClick={() => onChange(!checked)}
-      className="flex h-11 touch-manipulation items-center gap-1 rounded-full px-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink"
+      className="flex h-11 touch-manipulation items-center gap-1.5 rounded-full px-1 text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink"
     >
-      <span aria-hidden="true" className="text-xl leading-none">
-        {emoji}
-      </span>
+      <Icon name={icon} size={20} />
       <span
         className={`relative inline-flex h-5 w-8 shrink-0 items-center rounded-full motion-safe:transition-colors ${checked ? 'bg-green-ink' : 'bg-ink-muted'}`}
       >
@@ -65,15 +64,5 @@ function MiniSwitch({ label, emoji, checked, onChange }: MiniSwitchProps) {
         />
       </span>
     </button>
-  )
-}
-
-/** A glass with a small "no" sign over it: there's no such emoji, so two are stacked. */
-export function NoDrinkEmoji() {
-  return (
-    <span className="relative inline-block">
-      🍷
-      <span className="absolute inset-0 flex items-center justify-center text-[0.55em]">🚫</span>
-    </span>
   )
 }

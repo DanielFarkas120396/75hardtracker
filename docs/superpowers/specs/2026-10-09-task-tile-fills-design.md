@@ -124,5 +124,5 @@ Tiles without their fill yet keep the thin bar.
 
 - The owner reviews the gentler reduce-motion version above.
 - If copying the fills (option B) is too slow on the iPhone, fall back to option A.
-- The fills in light mode and in each world, seen on the phone.
-- The book's spine crease in light mode: within about 2 to 4 px of it, the ink drops under 4.5:1 (a thin line from the chosen book; its line is in ink at every level, since the open book is drawn at 0 too). If it reads badly, the gutter shade is softened in light mode.
+- The fills in light mode and in each world, seen on the phone. Light Hell's ochre read as grey-brown dirt, so its fills take a richer amber (`#f0a030`, the `fill` colour in `worldColors.ts`) since 2026-10-11; dark mode and the other worlds are unchanged.
+- The book's spine crease: settled on 2026-10-11. It comes in with the first page (at 0 the dark crease read as a glitch) and stays at half depth in light mode, where a test keeps the ink at 4.5:1 across it.

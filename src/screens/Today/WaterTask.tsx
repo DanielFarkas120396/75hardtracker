@@ -9,7 +9,10 @@ interface WaterTaskProps {
   rules: Ruleset
 }
 
-/** The water sheet's body: the bottle, and the pours. */
+/** One line per label, even on a 320 px phone. Button's own px-6 beats a plain px-* in Tailwind's order, hence the `!`. */
+const POUR = 'whitespace-nowrap px-2!'
+
+/** The water sheet's body: the bottle, and the pours. A glass is the one primary action, like the tile's "+ 250 ml". */
 export function WaterTask({ entry, rules }: WaterTaskProps) {
   const addWater = (deltaMl: number) => {
     void dayEntryRepo.adjustWater(entry.id, deltaMl)
@@ -22,9 +25,9 @@ export function WaterTask({ entry, rules }: WaterTaskProps) {
   return (
     <div>
       <div className="flex items-center gap-4">
-        <div className="relative h-24 w-14 shrink-0 overflow-hidden rounded-2xl border-2 border-blue bg-blue-light">
+        <div className="relative h-24 w-14 shrink-0 overflow-hidden rounded-2xl border-2 border-world bg-world-soft">
           <div
-            className="absolute inset-x-0 bottom-0 bg-blue motion-safe:transition-[height] motion-safe:duration-500"
+            className="absolute inset-x-0 bottom-0 bg-world motion-safe:transition-[height] motion-safe:duration-500"
             style={{ height: `${fillPercent}%` }}
           />
         </div>
@@ -35,13 +38,13 @@ export function WaterTask({ entry, rules }: WaterTaskProps) {
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-2">
-        <Button variant="water" onClick={() => addWater(250)}>
+        <Button className={POUR} onClick={() => addWater(250)}>
           + 250 ml
         </Button>
-        <Button variant="water" onClick={() => addWater(500)}>
+        <Button variant="soft" className={POUR} onClick={() => addWater(500)}>
           + 500 ml
         </Button>
-        <Button variant="secondary" onClick={() => addWater(-250)} disabled={entry.water_ml === 0}>
+        <Button variant="secondary" className={POUR} onClick={() => addWater(-250)} disabled={entry.water_ml === 0}>
           − 250 ml
         </Button>
       </div>

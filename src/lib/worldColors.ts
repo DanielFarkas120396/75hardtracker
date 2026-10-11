@@ -19,6 +19,8 @@ export interface WorldPalette {
   canvas: string
   /** Text on a `world` fill (>= 4.5:1). */
   onWorld: string
+  /** The Today tile fills' colour, where `world` won't do: thinned over light Hell's white tile, its ochre read as grey-brown dirt. */
+  fill?: string
 }
 
 /** The card surface of each theme (--color-surface). */
@@ -35,7 +37,7 @@ const palette = (world: string, edge: string, ink: string, soft: string, canvas:
 
 export const WORLD_COLORS: Record<WorldId, { light: WorldPalette; dark: WorldPalette }> = {
   hell: {
-    light: palette('#c98a3a', '#a06c2a', '#8a5612', '#f6e6cf', '#f9f3ea', '#1f1813'),
+    light: { ...palette('#c98a3a', '#a06c2a', '#8a5612', '#f6e6cf', '#f9f3ea', '#1f1813'), fill: '#f0a030' },
     dark: palette('#e2a45a', '#b07c3c', '#e8b573', '#30241a', '#16110e', '#1f1813'),
   },
   wasteland: {

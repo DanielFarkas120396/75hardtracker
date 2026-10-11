@@ -1,10 +1,10 @@
+import { Icon } from '../../components/icons/Icon'
 import { Button } from '../../components/ui/Button'
 import { Toggle } from '../../components/ui/Toggle'
 import { dietToggleLabel } from '../../content/variants'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import type { DayEntry } from '../../db/types'
 import type { Ruleset } from '../../logic/rulesets'
-import { NoDrinkEmoji } from './DietSwitches'
 
 interface DietTaskProps {
   entry: DayEntry
@@ -24,23 +24,25 @@ export function DietTask({ entry, rules, socialToday, canPlanSocial, onPlanSocia
         checked={entry.dietFollowed}
         onChange={(checked) => void dayEntryRepo.update(entry.id, { dietFollowed: checked })}
         label={dietToggleLabel(rules)}
-        icon="🍽️"
+        icon={<Icon name="diet" size={20} className="text-world-ink" />}
       />
       {socialToday ? (
-        <p className="rounded-xl bg-canvas px-3 py-2 font-rounded text-sm font-bold text-ink">
-          🥂 Social occasion today — a drink is allowed.
+        <p className="flex items-center gap-2 rounded-xl bg-canvas px-3 py-2 font-rounded text-sm font-bold text-ink">
+          <Icon name="drink" size={18} className="shrink-0 text-world-ink" />
+          Social occasion today — a drink is allowed.
         </p>
       ) : (
         <Toggle
           checked={entry.noAlcohol}
           onChange={(checked) => void dayEntryRepo.update(entry.id, { noAlcohol: checked })}
           label="No alcohol"
-          icon={<NoDrinkEmoji />}
+          icon={<Icon name="noDrink" size={20} className="text-world-ink" />}
         />
       )}
       {canPlanSocial && (
-        <Button variant="secondary" className="w-full" onClick={onPlanSocial}>
-          🥂 Plan a social occasion
+        <Button variant="secondary" className="flex w-full items-center justify-center gap-2" onClick={onPlanSocial}>
+          <Icon name="drink" size={18} className="text-world-ink" />
+          Plan a social occasion
         </Button>
       )}
     </div>

@@ -45,7 +45,7 @@ describe('PhotoCapture', () => {
   it('opens the camera sheet, and closes it', async () => {
     const { fileClick, onCameraOpen } = await renderCard()
 
-    fireEvent.click(screen.getByRole('button', { name: '📷 Take photo' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Take photo' }))
 
     expect(await screen.findByTestId('camera-preview')).toBeInTheDocument()
     expect(onCameraOpen).toHaveBeenCalledTimes(1)
@@ -58,7 +58,7 @@ describe('PhotoCapture', () => {
     camera.supported = false
     const { fileClick } = await renderCard()
 
-    fireEvent.click(screen.getByRole('button', { name: '📷 Take photo' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Take photo' }))
 
     expect(fileClick).toHaveBeenCalled()
     expect(screen.queryByTestId('camera-preview')).not.toBeInTheDocument()
@@ -68,13 +68,13 @@ describe('PhotoCapture', () => {
     camera.startCamera.mockRejectedValue(new DOMException('denied', 'NotAllowedError'))
     const { fileClick } = await renderCard()
 
-    fireEvent.click(screen.getByRole('button', { name: '📷 Take photo' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Take photo' }))
     await act(async () => {})
 
     expect(screen.queryByTestId('camera-preview')).not.toBeInTheDocument()
     expect(screen.getByText(/in-app camera isn't available/)).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: '📷 Take photo' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Take photo' }))
     expect(fileClick).toHaveBeenCalled()
   })
 })
