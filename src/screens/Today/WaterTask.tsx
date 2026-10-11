@@ -27,8 +27,8 @@ export function WaterTask({ entry, rules }: WaterTaskProps) {
       <div className="flex items-center gap-4">
         <div className="relative h-24 w-14 shrink-0 overflow-hidden rounded-2xl border-2 border-world bg-world-soft">
           <div
-            className="absolute inset-x-0 bottom-0 bg-world motion-safe:transition-[height] motion-safe:duration-500"
-            style={{ height: `${fillPercent}%` }}
+            className="absolute inset-0 origin-bottom bg-world motion-safe:transition-transform motion-safe:duration-500"
+            style={{ transform: `scaleY(${fillPercent / 100})` }}
           />
         </div>
         <div>

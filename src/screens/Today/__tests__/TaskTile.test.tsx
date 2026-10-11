@@ -27,7 +27,7 @@ describe('TaskTile', () => {
 
   it('keeps the thin bar when there is no fill', () => {
     render(tile({ ...empty, water_ml: 1900 }, null))
-    expect(screen.getByTestId('progress')).toHaveStyle({ width: '50%' })
+    expect(screen.getByTestId('progress')).toHaveStyle({ transform: 'scaleX(0.5)' })
   })
 
   it('counts the water up with its fill, then tells the day as it is', () => {

@@ -36,11 +36,12 @@ export function TodayHero({ attemptLine, dayNumber, completedCount, taskCount, s
     <section className="relative isolate mx-4 mt-3 mb-3 px-3 pt-3 pb-3">
       <span aria-hidden="true" className="world-glow pointer-events-none absolute -inset-x-8 -top-20 -bottom-6 -z-10" />
 
-      {/* One line, never wrapping: the day, then the attempt. The 75 days are the Journey's to show. */}
+      {/* One line, never wrapping: the day, then the attempt. The 75 days are the Journey's to show.
+          The attempt is in full ink: over the glow's core the muted grey falls under 4.5:1 in every world. */}
       <h1 className="flex items-baseline justify-center gap-2 whitespace-nowrap text-center">
         <span className="font-display text-4xl leading-none font-semibold tracking-wide text-ink">Day {dayNumber}</span>
         <span className="sr-only">,</span>{' '}
-        <span className="font-rounded text-xs font-semibold text-ink-muted">{attemptLine}</span>
+        <span className="font-rounded text-xs font-semibold text-ink">{attemptLine}</span>
       </h1>
 
       {/* Three columns, so the gauge sits in the true centre: the duck, the gauge, the streak and jokers. */}

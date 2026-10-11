@@ -27,7 +27,7 @@ interface DayBoardProps {
   socialToday?: boolean
   /** Late in the evening with tasks left: the board brings the open tasks forward. */
   urgent?: boolean
-  /** Minutes until midnight, when urgent. */
+  /** Minutes until the evening's deadline (bedtime, then midnight), when urgent. */
   minutesLeft?: number
   /** A sheet is open over the board. */
   covered?: boolean

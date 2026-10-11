@@ -31,10 +31,11 @@ export function Toggle({ checked, onChange, label, icon, activeColor = 'world' }
         {label}
       </span>
       <span
-        className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full motion-safe:transition-colors ${checked ? activeClasses : 'bg-ink-muted'}`}
+        className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full motion-safe:transition-colors ${checked ? activeClasses : 'bg-ink/20'}`}
       >
+        {/* Off: a light track with a white thumb, so "off" never reads as "on" (the dark surface thumb would vanish on it in dark mode). */}
         <span
-          className={`inline-block h-5 w-5 transform rounded-full bg-surface shadow motion-safe:transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`}
+          className={`inline-block h-5 w-5 transform rounded-full shadow ring-1 ring-black/10 motion-safe:transition-transform ${checked ? 'translate-x-6 bg-surface' : 'translate-x-1 bg-white'}`}
         />
       </span>
     </button>

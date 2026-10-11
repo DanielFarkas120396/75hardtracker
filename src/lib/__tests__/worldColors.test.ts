@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { WORLDS } from '../../screens/Journey/worlds'
-import { TILE_INK } from '../../screens/Today/fills/palette'
+import { mix, rgb, TILE_INK, toHex } from '../../screens/Today/fills/palette'
 import { contrastRatio, isWorldId, SURFACE, WORLD_COLORS } from '../worldColors'
 
 describe('contrastRatio', () => {
@@ -33,8 +33,18 @@ describe('WORLD_COLORS', () => {
       const p = WORLD_COLORS[id][mode]
       for (const bg of [p.canvas, p.soft]) expect(contrastRatio(DANGER_INK[mode], bg)).toBeGreaterThanOrEqual(4.5)
     })
+
+    // Today's "75 Hard #1" line sits on the hero's .world-glow: the world at GLOW_CORE over the canvas, at its core.
+    it.each(WORLDS.map((w) => w.id))(`keeps the hero's text readable over the world glow in %s (${mode})`, (id) => {
+      const p = WORLD_COLORS[id][mode]
+      const core = toHex(mix(rgb(p.canvas), rgb(p.world), GLOW_CORE))
+      expect(contrastRatio(TILE_INK[mode], core)).toBeGreaterThanOrEqual(4.5)
+    })
   }
 })
+
+/** The glow's strength at its core, in index.css's .world-glow (checked below). */
+const GLOW_CORE = 0.42
 
 /** --color-danger-ink, in index.css (checked below). */
 const DANGER_INK = { light: '#c0282e', dark: '#ff6b70' } as const
@@ -64,6 +74,10 @@ describe('index.css', () => {
         expect(body).toContain(`--color-${token}: ${WORLD_COLORS[id][mode][key as keyof typeof TOKENS]};`)
       }
     }
+  })
+
+  it('draws the world glow at the core strength checked above', () => {
+    expect(block('.world-glow')).toContain(`color-mix(in srgb, var(--color-world) ${Math.round(GLOW_CORE * 100)}%, transparent),`)
   })
 
   it('defines the danger ink checked above, in both themes', () => {

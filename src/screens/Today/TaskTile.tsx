@@ -33,7 +33,7 @@ interface TaskTileProps {
   rules: Ruleset
   complete: boolean
   bookTitle?: string
-  /** Late in the evening: 'late' when it no longer fits before midnight (a red edge), 'open' otherwise (a stronger edge). */
+  /** Late in the evening: 'late' when it no longer fits before the deadline, bedtime then midnight (a red edge), 'open' otherwise (a stronger edge). */
   urgency: 'none' | 'open' | 'late'
   quick?: QuickAction
   /** Controls on the tile's right (the diet switches). */
@@ -139,8 +139,8 @@ export function TaskTile({ task, data, rules, complete, bookTitle, urgency, quic
         <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1 bg-black/5 dark:bg-white/10">
           <span
             data-testid="progress"
-            className={`block h-full ${TASK_TONE.bar} motion-safe:transition-[width]`}
-            style={{ width: `${Math.round(progress * 100)}%` }}
+            className={`block h-full origin-left ${TASK_TONE.bar} motion-safe:transition-transform`}
+            style={{ transform: `scaleX(${Math.round(progress * 100) / 100})` }}
           />
         </span>
       )}
