@@ -36,7 +36,7 @@ interface TaskBoardProps {
   socialToday?: boolean
   /** Late in the evening with tasks left (the duck tapping or hunting): the open tiles get an edge. */
   urgent?: boolean
-  /** Minutes until midnight, when urgent: a task that no longer fits gets a red edge. */
+  /** Minutes until the evening's deadline (bedtime, then midnight), when urgent: a task that no longer fits gets a red edge. */
   minutesLeft?: number
   /** A sheet covers the board: it holds still, and plays what changed once the sheet closes. */
   paused?: boolean

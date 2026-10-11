@@ -102,18 +102,30 @@ describe('TodayScreen', () => {
     expect(screen.getByRole('button', { name: /^Workouts,/ }).parentElement!).not.toHaveClass('ring-danger-ink')
   })
 
-  it('at 22:30 with everything left: the time left, and only the open tasks keep a tile', async () => {
+  it('at 22:30 with everything left: the time to bedtime, and only the open tasks keep a tile', async () => {
     clock.nowMin = 22 * 60 + 30
     await setup({ variant: 'hard', todayDayNumber: 3 })
 
-    expect(await screen.findByText('1h30 left')).toBeInTheDocument()
-    // Red only on what no longer fits before midnight: the water (3.8 L) does, two workouts (90 min) just fit.
+    // One clock, the duck's: bedtime (23:00 by default).
+    expect(await screen.findByText('30 min to bedtime')).toBeInTheDocument()
+    expect(await screen.findByText("Bedtime's coming. So am I.", undefined, { timeout: 10_000 })).toBeInTheDocument()
+    // Red on what no longer fits before bedtime: the water and two workouts (90 min). The pages (20 min) still do.
     expect(screen.getByRole('button', { name: /^Water,/ }).parentElement!).toHaveClass('ring-danger-ink')
-    expect(screen.getByRole('button', { name: /^Workouts,/ }).parentElement!).toHaveClass('ring-ink/30')
-    expect(screen.getByRole('button', { name: /^Workouts,/ }).parentElement!).not.toHaveClass('ring-danger-ink')
+    expect(screen.getByRole('button', { name: /^Workouts,/ }).parentElement!).toHaveClass('ring-danger-ink')
+    expect(screen.getByRole('button', { name: /^Reading,/ }).parentElement!).toHaveClass('ring-ink/30')
     // He's hunting: nothing left to plan, only to do.
     expect(screen.queryByRole('button', { name: 'Plan my evening' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Notes' })).toBeInTheDocument()
+  })
+
+  it('past bedtime: the clock turns to midnight, and the tiles are judged against it', async () => {
+    clock.nowMin = 23 * 60 + 15
+    await setup({ variant: 'hard', todayDayNumber: 3 })
+
+    expect(await screen.findByText('45 min to midnight')).toBeInTheDocument()
+    // Two workouts (90 min) won't fit before midnight; the pages (20 min) still will.
+    expect(screen.getByRole('button', { name: /^Workouts,/ }).parentElement!).toHaveClass('ring-danger-ink')
+    expect(screen.getByRole('button', { name: /^Reading,/ }).parentElement!).toHaveClass('ring-ink/30')
   })
 
   it('at 5/5: the day is won, and the hero asks how it went instead of the plan', async () => {

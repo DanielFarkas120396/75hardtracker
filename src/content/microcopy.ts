@@ -1,5 +1,5 @@
 import { TASK_IDS } from '../logic/dayCompletion'
-import { formatHHmm, type Menace, type MenaceLevel } from '../logic/menace'
+import { formatHHmm, type EveningDeadline, type Menace, type MenaceLevel } from '../logic/menace'
 import type { Ruleset } from '../logic/rulesets'
 import type { TaskId } from '../logic/types'
 import { formatLiters } from './variants'
@@ -113,12 +113,11 @@ export function planSavedLine(at: number): string {
   return `${formatHHmm(at)}. Not a minute later.`
 }
 
-/** How long until midnight, when every task is due: "1h30 left", "45 min left". */
-export function timeLeftLine(nowMin: number): string {
-  const left = Math.max(24 * 60 - nowMin, 0)
-  const hours = Math.floor(left / 60)
-  const minutes = left % 60
-  return hours > 0 ? `${hours}h${String(minutes).padStart(2, '0')} left` : `${minutes} min left`
+/** How long until the evening's deadline, naming it: "1h30 to bedtime", "45 min to midnight". */
+export function timeLeftLine({ until, minutesLeft }: EveningDeadline): string {
+  const hours = Math.floor(minutesLeft / 60)
+  const minutes = minutesLeft % 60
+  return `${hours > 0 ? `${hours}h${String(minutes).padStart(2, '0')}` : `${minutes} min`} to ${until}`
 }
 
 /** The calm line while yesterday can still be finished: it outranks today's progress. */
@@ -187,7 +186,7 @@ export function duckLine({
     case 'plan-broken':
       return menace.broken ? `You said ${formatHHmm(menace.broken.at)}.` : "Tick. Tock. You're cutting it close."
     case 'wont-fit':
-      return "Midnight's coming. So am I."
+      return "Bedtime's coming. So am I."
     case 'past-bedtime':
       return 'Past your bedtime. Not mine.'
   }
