@@ -1,6 +1,6 @@
 # One clock in the evening (design)
 
-Date: 2026-10-11 · Status: **built** (PR fix/evening-one-clock). Approved by the owner on 2026-10-10, as item 2 of the Today critique ("The duck, the hero's time left and the red tile edges all count to bedtime"; "keep it harsh").
+Date: 2026-10-11 · Status: **built** (PR #80). Approved by the owner on 2026-10-10, as item 2 of the Today critique ("The duck, the hero's time left and the red tile edges all count to bedtime"; "keep it harsh").
 
 ## The problem
 
