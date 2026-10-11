@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes } from 'react'
 
-type Variant = 'primary' | 'streak' | 'water' | 'danger' | 'secondary' | 'onWorld'
+type Variant = 'primary' | 'streak' | 'water' | 'danger' | 'secondary'
 
 const VARIANT_CLASSES: Record<Variant, string> = {
   primary: 'bg-world text-on-world focus-visible:outline-ink',
@@ -8,8 +8,6 @@ const VARIANT_CLASSES: Record<Variant, string> = {
   water: 'bg-blue text-on-accent focus-visible:outline-ink',
   danger: 'bg-danger-dark text-white focus-visible:outline-ink',
   secondary: 'bg-ink/8 text-ink focus-visible:outline-ink',
-  /** On a world-coloured field (the "Day complete!" overlay), where ink can be too close to the world. */
-  onWorld: 'bg-on-world text-world focus-visible:outline-on-world',
 }
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
