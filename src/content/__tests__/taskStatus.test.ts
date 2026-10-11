@@ -11,13 +11,15 @@ const soft = RULESETS.soft
 
 describe('taskStatusLine', () => {
   it('workouts: the target while nothing is logged, then the count, then the summary', () => {
-    expect(taskStatusLine('workouts', empty, hard, false)).toBe('0 of 2 · 45 min each')
+    // Hard says up front that one must be outdoors; Medium has no such rule.
+    expect(taskStatusLine('workouts', empty, hard, false)).toBe('2 × 45 min · 1 outdoors')
     expect(taskStatusLine('workouts', empty, medium, false)).toBe('0 of 1 · 45 min')
     const one = { ...empty, workouts: [{ durationMin: 45, isOutdoor: false }] }
-    expect(taskStatusLine('workouts', one, hard, false)).toBe('1 of 2 logged')
+    expect(taskStatusLine('workouts', one, hard, false)).toBe('1 of 2 · next outdoors')
+    expect(taskStatusLine('workouts', { ...empty, workouts: [{ durationMin: 45, isOutdoor: true }] }, hard, false)).toBe('1 of 2 logged')
     // A 20-minute session is logged but doesn't count.
     expect(taskStatusLine('workouts', { ...empty, workouts: [{ durationMin: 20, isOutdoor: false }] }, hard, false)).toBe(
-      '0 of 2 · 45 min each',
+      '2 × 45 min · 1 outdoors',
     )
     // Hard wants one of the two outdoors: two indoor sessions don't do it.
     const indoors = { ...empty, workouts: [{ durationMin: 45, isOutdoor: false }, { durationMin: 50, isOutdoor: false }] }

@@ -9,11 +9,16 @@ import { Toggle } from '../../components/ui/Toggle'
 import type { Mood } from '../../content/moods'
 import { workoutRepo } from '../../db/repositories/workoutRepo'
 import type { WorkoutType } from '../../db/types'
+import { useWorkoutsForEntry } from '../../hooks/useWorkoutsForEntry'
+import { isQualifyingWorkout } from '../../logic/dayCompletion'
 import type { Ruleset } from '../../logic/rulesets'
 import { ActivityPicker } from './ActivityPicker'
 import { TASK_ICONS, TASK_TONE } from './taskTones'
 
 const MAX_MIN = 300
+
+/** Activities usually done outside: Outdoor starts on for them while the day still needs its outdoor workout. */
+const OUTSIDE: ReadonlySet<WorkoutType> = new Set(['Running', 'Walking', 'Cycling'])
 
 interface AddWorkoutSheetProps {
   open: boolean
@@ -37,8 +42,13 @@ export function AddWorkoutSheet({ open, dayEntryId, rules, onClose }: AddWorkout
 function AddWorkoutForm({ dayEntryId, rules, onClose }: Omit<AddWorkoutSheetProps, 'open'>) {
   const [type, setType] = useState<WorkoutType>('Running')
   const [durationMin, setDurationMin] = useState(rules.minWorkoutMin)
-  const [isOutdoor, setIsOutdoor] = useState(false)
+  // Until it's switched by hand, Outdoor follows the activity while the day still needs an outdoor session.
+  const [outdoorChoice, setOutdoorChoice] = useState<boolean>()
   const [feel, setFeel] = useState<Mood | undefined>(undefined)
+  const logged = useWorkoutsForEntry(dayEntryId) ?? []
+  const needsOutdoor = rules.requireOutdoor && !logged.some((w) => w.isOutdoor && isQualifyingWorkout(w, rules))
+  const isOutdoor = outdoorChoice ?? (needsOutdoor && OUTSIDE.has(type))
+  const qualifying = logged.filter((w) => isQualifyingWorkout(w, rules)).length
 
   const save = async () => {
     await workoutRepo.add({ dayEntryId, type, durationMin, isOutdoor, ...(feel ? { feel } : {}) })
@@ -79,7 +89,14 @@ function AddWorkoutForm({ dayEntryId, rules, onClose }: Omit<AddWorkoutSheetProp
             unit="min"
           />
         </div>
-        <Toggle checked={isOutdoor} onChange={setIsOutdoor} label="Outdoor" activeColor="blue" />
+        <div className="flex flex-col gap-1">
+          <Toggle checked={isOutdoor} onChange={setOutdoorChoice} label="Outdoor" activeColor="blue" />
+          {needsOutdoor && (
+            <p className="px-1 font-rounded text-sm font-semibold text-ink-muted">
+              {rules.requiredWorkouts - qualifying === 1 ? 'This one must be outdoors.' : "One of today's workouts must be outdoors."}
+            </p>
+          )}
+        </div>
         <div className="flex flex-col gap-1.5">
           {/* The picker's group carries this label for screen readers. */}
           <p aria-hidden="true" className="font-rounded text-sm font-bold text-ink-muted">
