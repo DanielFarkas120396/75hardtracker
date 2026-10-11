@@ -1,6 +1,6 @@
 # "Day complete!" peak (design)
 
-Date: 2026-10-11 · Status: **built** (branch feat/day-complete-peak, on top of PR #79). Item 5 of the Today critique. The owner compared three takes in the app on 2026-10-11 (A Embers, B The stone, C The duck) and chose "combine A and B".
+Date: 2026-10-11 · Status: **built** (PR #82, on top of #79). Item 5 of the Today critique. The owner compared three takes in the app on 2026-10-11 (A Embers, B The stone, C The duck) and chose "combine A and B".
 
 ## Why
 
