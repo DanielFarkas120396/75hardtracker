@@ -1,6 +1,6 @@
 # Guidance under the gauge (design)
 
-Date: 2026-10-11 · Status: **built** (branch fix/today-guidance). Item 2 of the second Today critique (26/40), approved by the owner with "run them all". The duck stays harsh, and "Plan my evening" stays hidden while he hunts (owner's rulings).
+Date: 2026-10-11 · Status: **built** (PR #85). Item 2 of the second Today critique (26/40), approved by the owner with "run them all". The duck stays harsh, and "Plan my evening" stays hidden while he hunts (owner's rulings).
 
 ## The problem
 
