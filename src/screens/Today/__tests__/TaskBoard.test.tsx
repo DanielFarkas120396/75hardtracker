@@ -56,7 +56,7 @@ describe('TaskBoard', () => {
 
     expect(screen.getByRole('button', { name: 'Workouts, 0 of 2, 45 min each' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Diet, 2 to tick' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Water, 0 / 3.8 L' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Water, 0 of 3.8 L' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Reading, 0 of 10 pages' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Photo, No photo yet' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /^Mood/ })).not.toBeInTheDocument()
@@ -143,6 +143,14 @@ describe('TaskBoard', () => {
     expect(screen.getByRole('button', { name: /^Workouts,/ }).parentElement!).not.toHaveClass('ring-2')
   })
 
+  it('tells VoiceOver when a task is done from the board, since its tile (and focus) leaves for a chip', () => {
+    const { rerender, container } = render(board({ ...empty, dietFollowed: true }))
+    const said = () => container.querySelector('[aria-live="polite"]')!.textContent
+    expect(said()).toBe('')
+    rerender(board({ ...empty, dietFollowed: true, noAlcohol: true }))
+    expect(said()).toBe('Diet done.')
+  })
+
   it('shows only chips once everything is done', () => {
     const all: DayTaskData = {
       water_ml: 3800,
@@ -163,7 +171,7 @@ describe('TaskBoard', () => {
   it('holds the board while a sheet covers it, and catches up once it closes', () => {
     const { rerender } = render(board({ ...empty, water_ml: 3550 }, { paused: true }))
     rerender(board({ ...empty, water_ml: 3800 }, { paused: true }))
-    expect(screen.getByRole('button', { name: 'Water, 3.55 / 3.8 L' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Water, 3.55 of 3.8 L' })).toBeInTheDocument()
     rerender(board({ ...empty, water_ml: 3800 }, { paused: false }))
     expect(screen.getByRole('button', { name: 'Water, 3.8 L, done' })).toBeInTheDocument()
   })
@@ -268,6 +276,6 @@ describe('TaskBoard with fills', () => {
   it('turns a chip back into a tile when the task is undone', () => {
     const { rerender } = render(board({ ...empty, water_ml: 3800 }))
     rerender(board({ ...empty, water_ml: 3550 }))
-    expect(screen.getByRole('button', { name: 'Water, 3.55 / 3.8 L' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Water, 3.55 of 3.8 L' })).toBeInTheDocument()
   })
 })

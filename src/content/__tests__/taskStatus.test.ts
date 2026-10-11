@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { RULESETS } from '../../logic/rulesets'
 import type { DayTaskData } from '../../logic/types'
-import { countedData, notesStatusLine, taskFill, taskProgress, taskStatusLine } from '../taskStatus'
+import { countedData, notesStatusLine, spoken, taskFill, taskProgress, taskStatusLine } from '../taskStatus'
 
 const empty: DayTaskData = { water_ml: 0, pages_read: 0, dietFollowed: false, noAlcohol: false, hasPhoto: false, workouts: [] }
 const hard = RULESETS.hard
@@ -116,5 +116,12 @@ describe('countedData', () => {
     expect(countedData('reading', empty, hard, 0.36).pages_read).toBe(4)
     const day = { ...empty, water_ml: 1000 }
     expect(countedData('diet', day, hard, 0.5)).toBe(day)
+  })
+})
+
+describe('spoken', () => {
+  it('reads separators as words', () => {
+    expect(spoken('0 of 2 · 45 min each')).toBe('0 of 2, 45 min each')
+    expect(spoken('0.5 / 3.8 L')).toBe('0.5 of 3.8 L')
   })
 })
