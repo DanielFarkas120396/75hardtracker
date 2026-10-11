@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { RULESETS } from '../rulesets'
 import {
   bedtimeMinutes,
+  eveningDeadline,
   formatHHmm,
   isValidBedtime,
   menace,
@@ -191,5 +192,14 @@ describe('time helpers', () => {
   it('reads a saved plan, skipping malformed times', () => {
     expect(plansToMinutes({ reading: '22:30', photo: 'soon' })).toEqual({ reading: min('22:30') })
     expect(plansToMinutes(undefined)).toEqual({})
+  })
+})
+
+describe('eveningDeadline', () => {
+  it('is bedtime until it passes, then midnight', () => {
+    const bedtime = 23 * 60
+    expect(eveningDeadline(19 * 60 + 30, bedtime)).toEqual({ until: 'bedtime', minutesLeft: 210 })
+    expect(eveningDeadline(bedtime, bedtime)).toEqual({ until: 'midnight', minutesLeft: 60 })
+    expect(eveningDeadline(23 * 60 + 59, 23 * 60 + 59)).toEqual({ until: 'midnight', minutesLeft: 1 })
   })
 })

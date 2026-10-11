@@ -7,7 +7,7 @@ import { notesStatusLine } from '../../content/taskStatus'
 import type { BoardTask } from '../../content/taskStatus'
 import { VARIANT_NAMES } from '../../content/variants'
 import type { Challenge, DayEntry } from '../../db/types'
-import type { Menace } from '../../logic/menace'
+import { bedtimeMinutes, eveningDeadline, type Menace } from '../../logic/menace'
 import type { DayTaskData, TaskId } from '../../logic/types'
 import { useCurrentBook } from '../../hooks/useCurrentBook'
 import { useDayCompletion } from '../../hooks/useDayCompletion'
@@ -15,6 +15,7 @@ import { useEntryPhoto } from '../../hooks/useEntryPhoto'
 import { useMenace } from '../../hooks/useMenace'
 import { useNow } from '../../hooks/useNow'
 import { useProfile } from '../../hooks/useProfile'
+import { useSettings } from '../../hooks/useSettings'
 import { useTodayEntry } from '../../hooks/useTodayEntry'
 import { useWorkoutsForEntry } from '../../hooks/useWorkoutsForEntry'
 import { addDaysISO, dateForDayNumber, formatWeekday } from '../../lib/dates'
@@ -120,6 +121,7 @@ function TodayTasks({
   const shown = useFrozenWhile(completion?.missing.length === 0 && landed !== null && landed < TASK_IDS.length, completion)
   const nowMin = useNow()
   const menace = useMenace(shown?.data, entry, nowMin, rules)
+  const { bedtime } = useSettings()
   const profile = useProfile()
   const { currentBook } = useCurrentBook()
   const photo = useEntryPhoto(entry?.photoId)
@@ -167,7 +169,7 @@ function TodayTasks({
   const urgent = isUrgent(menace, shown.missing)
   const hasPlan = shown.missing.some((task) => entry.plans?.[task])
   const won = shown.missing.length === 0
-  const minutesLeft = 24 * 60 - nowMin
+  const deadline = eveningDeadline(nowMin, bedtimeMinutes(bedtime))
   // Nothing left to plan once he's hunting: only to do.
   const canPlan = shown.missing.length > 0 && menace.level !== 'hunting'
   const notesTold = entry.mood !== undefined || (entry.notes ?? '').trim() !== ''
@@ -185,7 +187,7 @@ function TodayTasks({
       </button>
     </>
   ) : urgent ? (
-    <p className="font-rounded text-sm font-bold text-danger-ink">{timeLeftLine(nowMin)}</p>
+    <p className="font-rounded text-sm font-bold text-danger-ink">{timeLeftLine(deadline)}</p>
   ) : menace.next ? (
     <p className="font-rounded text-xs font-bold text-ink-muted">{planReminderLine(menace.next.task, menace.next.at)}</p>
   ) : null
@@ -233,7 +235,7 @@ function TodayTasks({
                 photo={photo?.blob}
                 socialToday={socialToday}
                 urgent={urgent}
-                minutesLeft={urgent ? minutesLeft : undefined}
+                minutesLeft={urgent ? deadline.minutesLeft : undefined}
                 covered={openTask !== null || addWorkoutOpen || planOpen || socialOpen}
                 onLandedChange={setLanded}
                 onAddWorkout={sheetContext.onAddWorkout}

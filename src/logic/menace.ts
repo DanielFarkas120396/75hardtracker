@@ -89,6 +89,18 @@ export function bedtimeMinutes(value: unknown): number {
   return typeof value === 'string' && isValidBedtime(value) ? parseHHmm(value)! : parseHHmm(DEFAULT_BEDTIME)!
 }
 
+/** The evening's one deadline: bedtime until it passes, then midnight, when the day itself ends. */
+export interface EveningDeadline {
+  until: 'bedtime' | 'midnight'
+  minutesLeft: number
+}
+
+export function eveningDeadline(nowMin: number, bedtimeMin: number): EveningDeadline {
+  return nowMin < bedtimeMin
+    ? { until: 'bedtime', minutesLeft: bedtimeMin - nowMin }
+    : { until: 'midnight', minutesLeft: Math.max(0, MINUTES_PER_DAY - nowMin) }
+}
+
 /** A day's saved plan ("HH:mm" values) as minutes, skipping anything malformed. */
 export function plansToMinutes(plans: Partial<Record<TaskId, string>> | undefined): Partial<Record<TaskId, number>> {
   const result: Partial<Record<TaskId, number>> = {}

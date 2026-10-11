@@ -107,7 +107,7 @@ describe('duckLine', () => {
       "Tick. Tock. You're cutting it close.",
     )
     expect(duckLine({ menace: threat('hunting', 'wont-fit'), missing, dayNumber: 1 })).toBe(
-      "Midnight's coming. So am I.",
+      "Bedtime's coming. So am I.",
     )
     expect(duckLine({ menace: threat('hunting', 'past-bedtime'), missing, dayNumber: 1 })).toBe(
       'Past your bedtime. Not mine.',
@@ -143,9 +143,9 @@ describe('nextCatchphrase', () => {
 })
 
 describe('timeLeftLine', () => {
-  it('counts down to midnight', () => {
-    expect(timeLeftLine(22 * 60 + 30)).toBe('1h30 left')
-    expect(timeLeftLine(21 * 60)).toBe('3h00 left')
-    expect(timeLeftLine(23 * 60 + 15)).toBe('45 min left')
+  it('names the clock it counts down to', () => {
+    expect(timeLeftLine({ until: 'bedtime', minutesLeft: 90 })).toBe('1h30 to bedtime')
+    expect(timeLeftLine({ until: 'bedtime', minutesLeft: 180 })).toBe('3h00 to bedtime')
+    expect(timeLeftLine({ until: 'midnight', minutesLeft: 45 })).toBe('45 min to midnight')
   })
 })

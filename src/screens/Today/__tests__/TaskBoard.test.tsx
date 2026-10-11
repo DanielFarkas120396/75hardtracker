@@ -130,7 +130,7 @@ describe('TaskBoard', () => {
     expect(screen.getByRole('button', { name: 'Water, 3.8 L, done' })).toBeInTheDocument()
   })
 
-  it('when it is urgent, edges the open tiles: red on what no longer fits before midnight', () => {
+  it('when it is urgent, edges the open tiles: red on what no longer fits in the time left', () => {
     render(board({ ...empty, water_ml: 3800, hasPhoto: true }, { urgent: true, minutesLeft: 60 }))
 
     // Two workouts (90 min) don't fit in the hour left; the diet does.
