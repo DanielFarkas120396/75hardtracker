@@ -38,9 +38,15 @@ export function taskStatusLine(task: TaskId, data: DayTaskData, rules: Ruleset, 
         return `${plural(data.workouts.length, 'workout')} · ${minutes} min`
       }
       const done = workoutsDone(data, rules)
-      if (done === 0) return `0 of ${rules.requiredWorkouts} · ${rules.minWorkoutMin} min${rules.requiredWorkouts === 1 ? '' : ' each'}`
+      // The outdoor rule shows from the start, so it never surprises at 21:00.
+      const outdoorsMissing = rules.requireOutdoor && !data.workouts.some((w) => w.isOutdoor && isQualifyingWorkout(w, rules))
+      if (done === 0) {
+        if (rules.requireOutdoor) return `${rules.requiredWorkouts} × ${rules.minWorkoutMin} min · 1 outdoors`
+        return `0 of ${rules.requiredWorkouts} · ${rules.minWorkoutMin} min${rules.requiredWorkouts === 1 ? '' : ' each'}`
+      }
       // Enough sessions, yet not done: none of them was outdoors.
       if (done >= rules.requiredWorkouts) return 'One must be outdoors'
+      if (outdoorsMissing && rules.requiredWorkouts - done === 1) return `${done} of ${rules.requiredWorkouts} · next outdoors`
       return `${done} of ${rules.requiredWorkouts} logged`
     }
     case 'diet': {

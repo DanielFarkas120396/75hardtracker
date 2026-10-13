@@ -54,7 +54,7 @@ describe('TaskBoard', () => {
   it('shows the five open tasks, a tile each, the quickest kind first, named for VoiceOver without the dots', () => {
     render(board(empty))
 
-    expect(screen.getByRole('button', { name: 'Workouts, 0 of 2, 45 min each' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Workouts, 2 × 45 min, 1 outdoors' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Diet, 2 to tick' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Water, 0 / 3.8 L' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Reading, 0 of 10 pages' })).toBeInTheDocument()
