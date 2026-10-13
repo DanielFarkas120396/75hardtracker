@@ -57,7 +57,7 @@ const useMemoDay = (data: DayTaskData, completion: Record<TaskId, boolean>) => u
  * The five tasks of a day (mood and notes live outside the board: they're optional and never "done"). The open ones
  * are tiles, the quickest kind first, each filling as its task progresses and opening its sheet on tap; the done ones
  * are chips above them. A tile whose task gets done fills to the top, glows, and shrinks into its chip while the
- * others close up. Late in the evening the tiles get an edge, red on what no longer fits before midnight.
+ * others close up. Late in the evening the tiles get an edge, red on what no longer fits before the deadline (bedtime, then midnight).
  */
 export function TaskBoard(props: TaskBoardProps) {
   const { entry, data: liveData, completion: liveCompletion, rules, bookTitle, photo, quickActions, socialToday, urgent = false, minutesLeft, paused = false, onLandedChange, onOpen } = props

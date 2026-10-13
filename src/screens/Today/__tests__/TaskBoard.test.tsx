@@ -89,12 +89,19 @@ describe('TaskBoard', () => {
     expect(order).toEqual(['Workouts', 'Water'])
   })
 
+  it('labels the diet switches on screen and keeps their VoiceOver names', () => {
+    render(board(empty))
+
+    expect(screen.getByRole('switch', { name: 'I followed my diet' })).toHaveTextContent('Diet')
+    expect(screen.getByRole('switch', { name: 'No alcohol' })).toHaveTextContent('No drink')
+  })
+
   it('fills the progress bar of a task under way', () => {
     render(board({ ...empty, water_ml: 1900 }))
     const bars = screen.getAllByTestId('progress')
     // Reading, workouts and water have bars, in that order; diet and photo don't.
     expect(bars).toHaveLength(3)
-    expect(bars[2]).toHaveStyle({ width: '50%' })
+    expect(bars[2]).toHaveStyle({ transform: 'scaleX(0.5)' })
   })
 
   it('shows the photo itself on the done photo chip', () => {
