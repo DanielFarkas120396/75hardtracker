@@ -3,12 +3,12 @@ import { useState } from 'react'
 import { BackupReminderBanner } from '../../components/BackupReminderBanner'
 import { Icon } from '../../components/icons/Icon'
 import { LockBypassBanner } from '../../components/LockBypassBanner'
-import { planReminderLine, planSavedLine, timeLeftLine } from '../../content/microcopy'
+import { LATE_GRACE_LINE, planReminderLine, planSavedLine, tasksLeftLine, timeLeftLine } from '../../content/microcopy'
 import { notesStatusLine } from '../../content/taskStatus'
 import type { BoardTask } from '../../content/taskStatus'
 import { VARIANT_NAMES } from '../../content/variants'
 import type { Challenge, DayEntry } from '../../db/types'
-import { bedtimeMinutes, eveningDeadline, type Menace } from '../../logic/menace'
+import { bedtimeMinutes, eveningDeadline, minutesToFinish, type Menace } from '../../logic/menace'
 import type { DayTaskData, TaskId } from '../../logic/types'
 import { useCurrentBook } from '../../hooks/useCurrentBook'
 import { useDayCompletion } from '../../hooks/useDayCompletion'
@@ -176,6 +176,7 @@ function TodayTasks({
   const notesTold = entry.mood !== undefined || (entry.notes ?? '').trim() !== ''
 
   // Under the ring, what matters next: the day won and its closing ritual, the time left, or the next plan.
+  // With none of these, the hero shows the duck's line there instead.
   const below = won ? (
     <>
       <p className="font-rounded text-sm font-bold text-world-ink">Day {todayDayNumber} won</p>
@@ -188,7 +189,14 @@ function TodayTasks({
       </button>
     </>
   ) : urgent ? (
-    <p className="font-rounded text-sm font-bold text-danger-ink">{timeLeftLine(deadline)}</p>
+    <div className="flex flex-col items-center text-center">
+      <p className="font-rounded text-sm font-bold text-danger-ink">{timeLeftLine(deadline, todayDayNumber)}</p>
+      <p className="font-rounded text-xs font-semibold text-ink-muted">
+        {deadline.until === 'bedtime'
+          ? tasksLeftLine(shown.missing.reduce((sum, task) => sum + minutesToFinish(task, shown.data, rules), 0))
+          : LATE_GRACE_LINE}
+      </p>
+    </div>
   ) : menace.next ? (
     <p className="font-rounded text-xs font-bold text-ink-muted">{planReminderLine(menace.next.task, menace.next.at)}</p>
   ) : null
@@ -313,8 +321,29 @@ function TodayTasks({
 type HeroProps = Omit<Parameters<typeof TodayHero>[0], 'duck' | 'speech' | 'taskCount'> &
   Parameters<typeof useDuck>[0]
 
-/** The hero with its duck: rendered once the day has loaded, so the duck's hook always has its inputs. */
-function Hero({ menace, missing, completion, dayNumber, announcement, name, started, yesterdayOpen, onLunge, ...hero }: HeroProps) {
-  const { duck, speech } = useDuck({ menace, missing, completion, dayNumber, announcement, name, started, yesterdayOpen, onLunge })
-  return <TodayHero {...hero} dayNumber={dayNumber} taskCount={TASK_IDS.length} duck={duck} speech={speech} />
+/**
+ * The hero with its duck: rendered once the day has loaded, so the duck's hook always has its inputs. When nothing
+ * else is under the ring, his line stays there (read out as it changes) and his bubble keeps to reactions.
+ */
+function Hero({ menace, missing, completion, dayNumber, announcement, name, started, yesterdayOpen, onLunge, below, ...hero }: HeroProps) {
+  const lineInHero = below === null
+  const { duck, speech, line } = useDuck({ menace, missing, completion, dayNumber, announcement, name, started, yesterdayOpen, onLunge, lineInHero })
+  return (
+    <TodayHero
+      {...hero}
+      dayNumber={dayNumber}
+      taskCount={TASK_IDS.length}
+      duck={duck}
+      speech={speech}
+      below={
+        lineInHero ? (
+          <p aria-live="polite" className="max-w-[11rem] text-center font-rounded text-xs font-bold text-ink-muted">
+            {line}
+          </p>
+        ) : (
+          below
+        )
+      }
+    />
+  )
 }

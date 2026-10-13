@@ -108,6 +108,8 @@ describe('TodayScreen', () => {
 
     // One clock, the duck's: bedtime (23:00 by default).
     expect(await screen.findByText('30 min to bedtime')).toBeInTheDocument()
+    // What's left takes far longer: 2 workouts, 3.8 L, 10 pages, the diet and the photo, by the duck's estimates.
+    expect(screen.getByText('~5h40 of tasks left')).toBeInTheDocument()
     expect(await screen.findByText("Bedtime's coming. So am I.", undefined, { timeout: 10_000 })).toBeInTheDocument()
     // Red on what no longer fits before bedtime: the water and two workouts (90 min). The pages (20 min) still do.
     expect(screen.getByRole('button', { name: /^Water,/ }).parentElement!).toHaveClass('ring-danger-ink')
@@ -122,7 +124,9 @@ describe('TodayScreen', () => {
     clock.nowMin = 23 * 60 + 15
     await setup({ variant: 'hard', todayDayNumber: 3 })
 
-    expect(await screen.findByText('45 min to midnight')).toBeInTheDocument()
+    // The day itself is ending, not a new countdown; and logging stays open till noon.
+    expect(await screen.findByText('Day 3 ends in 45 min')).toBeInTheDocument()
+    expect(screen.getByText('Logging stays open till noon.')).toBeInTheDocument()
     // Two workouts (90 min) won't fit before midnight; the pages (20 min) still will.
     expect(screen.getByRole('button', { name: /^Workouts,/ }).parentElement!).toHaveClass('ring-danger-ink')
     expect(screen.getByRole('button', { name: /^Reading,/ }).parentElement!).toHaveClass('ring-ink/30')
