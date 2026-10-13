@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { useEffect, useEffectEvent, useState } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { FlameStreak } from '../../components/FlameStreak'
 import { Button } from '../../components/ui/Button'
 import { Mascot } from '../../components/mascot/Mascot'
@@ -11,6 +11,9 @@ import { worldForDay } from '../Journey/worlds'
 
 /** When today's stone lights up, once the burst around it has started. */
 export const STONE_LIGHTS_MS = 900
+
+/** The won day's ring and burst: gold in every world, so a grey world's peak still shines (the Journey's Day 75 flag). */
+export const WON_GOLD = '#f3c23a'
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const
 
@@ -28,9 +31,24 @@ export function DayCompleteCelebration({ celebration, onDismiss }: DayCompleteCe
   const visible = celebration !== null
 
   const onShow = useEffectEvent(() => playSound())
+  const dismiss = useEffectEvent(() => onDismiss())
+  const button = useRef<HTMLButtonElement>(null)
 
+  // Like the app's sheets: Escape closes it, focus stays on its one button, and goes back to what had it on close.
   useEffect(() => {
-    if (visible) onShow()
+    if (!visible) return
+    onShow()
+    const opener = document.activeElement
+    button.current?.focus()
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') dismiss()
+      if (event.key === 'Tab') event.preventDefault()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus()
+    }
   }, [visible])
 
   return (
@@ -48,7 +66,8 @@ export function DayCompleteCelebration({ celebration, onDismiss }: DayCompleteCe
           <Sunrise />
           <Embers />
           <div className="relative flex h-full flex-col items-center justify-center gap-3 px-6 pb-[env(safe-area-inset-bottom)] text-center">
-            <div className="flex items-end">
+            {/* For the eyes: the line below says it in words ("One more stone"). */}
+            <div aria-hidden="true" className="flex items-end">
               <div className="mb-8 -mr-2">
                 <Mascot mood="celebrating" size={108} />
               </div>
@@ -74,10 +93,10 @@ export function DayCompleteCelebration({ celebration, onDismiss }: DayCompleteCe
             {celebration.streak > 1 && (
               <div className="flex items-center gap-1 font-rounded font-bold">
                 <FlameStreak streak={celebration.streak} grow={false} />
-                <span>day streak</span>
+                <span aria-hidden="true">day streak</span>
               </div>
             )}
-            <Button className="mt-3" onClick={onDismiss} autoFocus>
+            <Button ref={button} className="mt-3" onClick={onDismiss}>
               {celebration.isFinalDay ? 'See your victory' : 'Nice!'}
             </Button>
           </div>
@@ -191,7 +210,7 @@ function ClimbStretch({ dayNumber, streak }: { dayNumber: number; streak: number
         <motion.circle
           cx={at(dayNumber).x}
           cy={at(dayNumber).y}
-          fill="var(--color-world)"
+          fill={WON_GOLD}
           initial={{ r: 10, opacity: 0 }}
           animate={{ r: [10, 70], opacity: [0.9, 0] }}
           transition={{ duration: 1.3, delay: STONE_LIGHTS_MS / 1000 - 0.2, ease: 'easeOut' }}
@@ -208,6 +227,21 @@ function ClimbStretch({ dayNumber, streak }: { dayNumber: number; streak: number
           flagWaves={false}
         />
       ))}
+      {lit && (
+        <motion.circle
+          data-won-ring
+          cx={at(dayNumber).x}
+          cy={at(dayNumber).y}
+          r={30}
+          fill="none"
+          stroke={WON_GOLD}
+          strokeWidth={3.5}
+          style={{ filter: `drop-shadow(0 0 6px ${WON_GOLD})` }}
+          initial={reduceMotion ? false : { opacity: 0, scale: 1.4 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, ease: EASE_OUT }}
+        />
+      )}
     </svg>
   )
 }

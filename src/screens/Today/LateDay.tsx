@@ -28,7 +28,7 @@ export function LateDayCard({ dayNumber, onOpen }: { dayNumber: number; onOpen: 
       <button
         type="button"
         onClick={onOpen}
-        className="min-h-touch shrink-0 rounded-full bg-world px-4 font-rounded text-sm font-semibold text-on-world active:scale-95 motion-safe:transition-transform"
+        className="min-h-touch shrink-0 rounded-full bg-world px-4 font-rounded text-sm font-semibold text-on-world active:scale-95 motion-safe:transition-transform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
       >
         Finish it
       </button>
@@ -98,7 +98,7 @@ export function LateDayView({ challenge, dayEntries, dayNumber, date, onBack }: 
             <button
               type="button"
               onClick={onBack}
-              className="-ml-2 flex min-h-touch items-center gap-1 rounded-xl px-2 font-rounded font-bold text-world-ink"
+              className="-ml-2 flex min-h-touch items-center gap-1 rounded-xl px-2 font-rounded font-bold text-world-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink"
             >
               <Icon name="chevron" size={18} className="rotate-180" />
               Today

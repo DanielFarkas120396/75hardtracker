@@ -76,6 +76,15 @@ export function TaskBoard(props: TaskBoardProps) {
   const morphs = useRef<Partial<Record<TaskId, Morph>>>({})
   const widths = useRef<Partial<Record<TaskId, number>>>({})
   const previous = useRef(phases)
+  // Read out when a task is done from the board itself (a switch, a shortcut): its tile leaves for a chip, taking focus with it.
+  const [doneLine, setDoneLine] = useState('')
+  const doneNow = TASK_IDS.filter((task) => liveCompletion[task])
+  const [seenDone, setSeenDone] = useState(doneNow.join())
+  if (seenDone !== doneNow.join()) {
+    setSeenDone(doneNow.join())
+    const done = doneNow.find((task) => !seenDone.split(',').includes(task))
+    if (done) setDoneLine(`${TASK_TITLES[done]} done.`)
+  }
 
   // Under a sheet the fills stop too, drift included.
   useEffect(() => {
@@ -194,6 +203,9 @@ export function TaskBoard(props: TaskBoardProps) {
   return (
     <FillEngineContext.Provider value={engine}>
       <section ref={boardRef} aria-label="Tasks" className="relative">
+        <p aria-live="polite" className="sr-only">
+          {doneLine}
+        </p>
         {chips.length > 0 && (
           <div className="mb-3 flex flex-wrap gap-2">
             <AnimatePresence initial={false}>

@@ -70,9 +70,9 @@ export function taskStatusLine(task: TaskId, data: DayTaskData, rules: Ruleset, 
   }
 }
 
-/** A status line for VoiceOver: "0 of 2 · 45 min each" reads as "0 of 2, 45 min each". */
+/** A status line for VoiceOver: "0 of 2 · 45 min each" reads as "0 of 2, 45 min each", and "0 / 3.8 L" as "0 of 3.8 L". */
 export function spoken(status: string): string {
-  return status.replaceAll(' · ', ', ')
+  return status.replaceAll(' · ', ', ').replaceAll(' / ', ' of ')
 }
 
 /** The mood tile's status: the mood picked, else whether notes were written. */
