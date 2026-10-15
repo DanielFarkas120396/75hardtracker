@@ -2,7 +2,7 @@
 
 A day-by-day record of what shipped, for note taking and follow-up. Built from the git history and the PRs (merge commits not counted). A summary of the whole project comes first, then each day; open items are at the end.
 
-**Span:** 2026-09-24 → 2026-10-08 · 13 working days · about 225 commits · about **54 hours** of work · 71 PRs, all merged.
+**Span:** 2026-09-24 → 2026-10-15 · 17 working days · about 285 commits · about **68 hours** of work · 86 PRs, all merged.
 
 | Day | Time | Commits | PRs | Headline |
 |---|---|---|---|---|
@@ -18,16 +18,20 @@ A day-by-day record of what shipped, for note taking and follow-up. Built from t
 | 10-05 (Mon) | ~8h10 | 48 | #20–#38 | v2 features, v2 → main, Today as a task board, workout history |
 | 10-06 (Tue) | ~40 min * | 4 | #39–#40 | Onboarding redesign: sign the deal |
 | 10-07 (Wed) | ~9h00 | 43 | #41–#65 | Onboarding & Today rounds, gauge, draw to commit, Ember v3 → main, Journey day cards |
-| 10-08 (Thu) | ~2h05 † | 5 | #66–#70 | Docs: this journal, Vercel resumed, pstack rules, plainer README |
-| **Total** | **~54h** | **~225** | **70** | |
+| 10-08 (Thu) | ~6h00 | 16 | #66–#73 | Docs, Face ID checked on the iPhone, the lock offered after onboarding |
+| 10-09 (Fri) | ~6h45 * | 26 | #74–#76 | Tile fills: the engine, water's wave, diet's ink, the sprint, the iris |
+| 10-10 (Sat) | ~1h00 * | 6 | #77–#78 | Reading's book; every task has its fill |
+| 10-11 (Sun) | ~55 min * | 12 | #79–#86 | Two Today critiques: the day-complete peak, one evening clock, what's next |
+| 10-15 (Thu) | ~1h25 † | 1 | — | A performance check; this journal brought up to date |
+| **Total** | **~68h** | **~285** | **86** | |
 
-Time is an estimate; the method and the hour-by-hour stretches are in [Time spent](#time-spent). * = no session transcript that day, so a lower bound from commit times. † = day still in progress.
+Time is an estimate; the method and the hour-by-hour stretches are in [Time spent](#time-spent). * = no session transcript for that day (or part of it), so a lower bound from commit times. † = day still in progress.
 
 ---
 
 ## The whole project in short
 
-In 15 days the app went from a first build to a full 75 Hard companion, now live on Vercel in its third look. The day-by-day detail follows below.
+In three weeks the app went from a first build to a full 75 Hard companion, now live on Vercel in its third look. The day-by-day detail follows below.
 
 - **Core app (09-24 → 09-25, before PRs):** Today, Journey, Gallery, Stats and Settings; streaks and badges; the strict five-task day; the restart flow; JSON export and import; an installable offline PWA; dark mode; weight logging with a chart; WCAG contrast in both themes; reduced motion honoured.
 - **The duck (09-25 → 09-26, PR #1):** an animated knife-holding duck replaces the blob mascot. He turns menacing only when the tasks left no longer fit before bedtime, backs off when told a plan, has his own lines and a synthesized knife sound, and becomes the app icon.
@@ -38,6 +42,9 @@ In 15 days the app went from a first build to a full 75 Hard companion, now live
 - **v3, the Ember look (10-07, PRs #53–#61):** dark first, amber on warm black. Merged into `main` with #60; tag `v2` keeps the version before it.
 - **Journey day cards (10-07, PRs #62–#64):** tap a day to see its photo, notes and workouts.
 - **Docs (10-07 → 10-08, PRs #66–#70):** this journal, Vercel resumed, the pstack rules in CLAUDE.md, a plainer README.
+- **The lock, offered (10-08, PRs #71–#73):** a PIN and Face ID offered once, right after signing the deal; Face ID checked on the iPhone.
+- **Tile fills (10-09 → 10-10, PRs #74–#78):** each task tile fills with its own animation as the task progresses: water's wave, diet's ink, the workouts' sprint, the photo's iris, reading's book. A full tile glows, then shrinks into its chip.
+- **Today critiques (10-11, PRs #79–#86):** "Day complete!" lights today's stone on the climb; one clock in the evening; the space under the gauge always says what's next; the outdoor rule up front; VoiceOver and contrast fixes.
 
 ---
 
@@ -203,12 +210,48 @@ The busiest day by PRs (25). Until about 15:50, five rounds on v2 shipped straig
 - From now on, small note-taking changes (like this journal) go straight on `main`, without a PR.
 - Face ID tested on the iPhone, on the production domain: all steps passed (set PIN, turn on Face ID, lock on return, cancel then PIN, wrong-PIN waits, "Forgot PIN?", backups without the lock).
 - **#71:** the app lock is offered once, right after signing the deal ("Keep it private?"): a PIN, then Face ID where the phone has it, or "Not now". Tried by the owner on the preview, then merged.
+- **#72–#73**, from a `/code-review high` of #71: Settings and the offer share one lock setup, and a failed PIN save now says so and starts the pad over instead of hanging on "Saving…". Turning the lock on or changing the PIN saves all or nothing, so a failed save can't leave a half-set lock.
+
+## 2026-10-09: the tiles start to fill
+
+- **Morning:** a Reading tile prototype and notes on filling the task tiles.
+- **Afternoon:** prototypes for Diet, Photo, Workouts and Water, and a full Today preview (`docs/prototypes/`). The design was approved, then planned in four parts.
+- **#74, part 1:** the shared fill engine: one three.js renderer for the whole board, loaded after Today's first paint, copying each tile's fill into the tile's own canvas. Water's wave. The board flow: a full tile glows, then shrinks into its chip; the other tiles slide and widen; the status line counts up with the fill; the board holds still under a sheet; "Day complete!" waits for the last chip.
+- **#75, part 2:** Diet's ink blooms from the switches and keeps drifting; Workouts' sprint races in from the left.
+- **#76, part 3** (merged 10-10): Photo's iris shuts, flashes and opens on the day's photo.
+
+## 2026-10-10: the book
+
+- **#77, part 4:** Reading's book: pages lift, curl over the spine and fade, a tenth of the tile per page; "10 left" riffles through them. Every task now has its fill.
+- **#78:** "Day complete!" waits up to 5 s, so the book's last page lands first. Two indoor workouts on Hard say "One must be outdoors".
+
+## 2026-10-11: two Today critiques
+
+**First critique (`/impeccable critique`, 27/40)**
+- **#79:** "Day complete!" is readable (7.3:1) and takes focus for VoiceOver; the confetti uses the world's shades; the duck speaks to VoiceOver only when it matters.
+- **#80:** one clock in the evening: bedtime first, then midnight. The hero, the duck and the red tile edges now agree.
+- **#81:** Ember kept consistent: stroke icons instead of emoji on Today, world colours instead of sky blue and yellow, the book's spine fades in with the first page, light Hell's fills in a richer amber.
+- **#82:** "Day complete!" lights today's stone on the climb: the sunrise swells behind the duck, embers rise, and a short stretch of the Journey's stones shows today's lit up. The owner combined two of three takes.
+
+**Second critique (26/40)**, built the same day, merged on 10-13
+- **#83:** the outdoor rule said up front on Hard and Strong ("2 × 45 min · 1 outdoors"), and Outdoor starts on for runs, walks and rides.
+- **#84:** today's stone shines gold in every world; the overlay handles focus like a sheet; finishing a task from the board is read out ("Diet done.").
+- **#85:** the space under the gauge always says what's next: the duck's line, the time to bedtime with the tasks' time left, or "Day 12 ends in 45 min".
+- **#86:** labels on the diet switches ("Diet", "No drink"), off switches that look off, "75 Hard #1" in full ink.
+
+## 2026-10-15: a performance check
+
+- After pulling #74–#86, the app was measured before and after them: desktop Chrome at iPhone size, the same seeded day, five runs each.
+- **Startup:** first paint unchanged (152 ms). three.js now loads with Today, just after first paint: about 150 ms more script.
+- **Idle on Today:** three loops redraw 60 times a second: the duck, the flame and, since #74, the fills' drift. With all three, 762 ms of CPU per second; with none, 66 ms. The fills add about 15%.
+- Judged not a big issue: the cost runs only while Today is on screen. The phone check in the fills design ("no heat after a minute on Today") decides whether anything changes.
+- This journal brought up to date.
 
 ---
 
 ## Time spent
 
-**Total: about 54 hours** over 13 working days (2026-09-24 → 2026-10-08, up to 11:50 on the last day).
+**Total: about 68 hours** over 17 working days (2026-09-24 → 2026-10-15, up to 12:23 on the last day).
 
 How it's estimated:
 - The timestamps of every message in the Claude Code sessions for this project (main checkout and worktrees, subagents included), in Brussels time.
@@ -216,6 +259,7 @@ How it's estimated:
 - A gap of more than 20 minutes is a break. Each stretch gets 15 minutes in front, for reading and thinking before the first message.
 - Days without a transcript (*) use commit times instead (a gap of more than an hour is a break). They're lower bounds: the work before the first commit and between commits isn't seen.
 - Work that ran past midnight counts on the day it started.
+- The sessions from the afternoon of 10-09 to 10-11 aren't on this computer any more, so those days use commit times (*). 10-13 had only the merges of #83–#86, so it isn't counted.
 
 | Day | Time | Stretches |
 |---|---|---|
@@ -231,21 +275,26 @@ How it's estimated:
 | 10-05 | ~8h10 | 08:54–09:09, 10:27–10:57, 11:08–11:23, 12:52–14:02, 14:11–14:44, 15:03–20:28 |
 | 10-06 | ~40 min * | 16:02–16:43 |
 | 10-07 | ~9h00 | 08:05–10:14, 10:21–11:36, 12:22–12:44, 12:55–13:17, 13:37–16:37, 16:45–18:36 |
-| 10-08 | ~2h05 † | 09:37–09:53, 10:01–11:50 |
-| **Total** | **~54h** | |
+| 10-08 | ~6h00 | 09:37–09:53, 10:01–11:56, 12:13–12:35, 13:23–14:54, 15:13–17:08 |
+| 10-09 | ~6h45 * | 08:55–09:19, 13:35–19:54 |
+| 10-10 | ~1h00 * | 05:23–06:07, 17:41–17:56 |
+| 10-11 | ~55 min * | 11:14–11:46, 12:43–13:08 |
+| 10-15 | ~1h25 † | 10:37–11:27, 11:49–12:23 |
+| **Total** | **~68h** | |
 
 ---
 
-## Open items (as of 2026-10-08)
+## Open items (as of 2026-10-15)
 
-- [x] **Merge PR #65** (test clock freeze): merged 2026-10-07; all 945 tests pass on `main`.
-- [x] **`.claude/launch.json`** `dev-phone-main` entry: gone with the `main-phone` worktree; the main checkout is clean.
-- [x] **Vercel resumed** by the owner on 2026-10-08: PRs get preview links again, and `main` deploys to production.
+- [x] **Face ID on the iPhone:** tested on the production domain on 10-08; every step passed.
+- [ ] **Phone check of the tile fills** (#74–#78): smooth with several fills moving, no heat after a minute on Today, Reduce Motion on and off, light and dark, a late day. If copying the fills is too slow on the iPhone, the design falls back to one canvas per tile. Also compare the iris blades with `photo-tile.html` (#76: lighter and flatter in three.js 0.186).
+- [ ] **Phone checklists of the Today critiques** (#79–#86): still unticked in the PRs.
+- [ ] **Idle cost on Today** (measured 10-15), only if the phone check says so: the duck, the flame and the fills settle after a few seconds without a tap; the flame at its real 24 fps instead of 60; plain WebGL instead of three.js for the fills.
 - [ ] **Phone pass on the Ember screens.** The specs record phone checks for the earlier rounds and the Journey cards, not for the whole v3 look.
 - [ ] **Duck animation around the signature** (draw to commit): still to design.
-- [ ] **Face ID on the iPhone:** untested; now possible on the Vercel domain.
-- [ ] **Security headers on Vercel** (roadmap): now that it's back.
-- [ ] **Roadmap left:** photo compare / share card, paywall.
+- [ ] **Security headers on Vercel** (roadmap).
+- [ ] **A broken backup file** tried by hand (roadmap, from the review).
+- [ ] **Roadmap left:** share the app with friends and family, photo compare, share card, Day 75 recap, paywall.
 - [ ] **Parked:** duck animations (brainstorm notes from 10-02).
 - [ ] **Parked:** per-variant palettes (deferred since the variants work).
-- [ ] **Flaky test:** TodayScreen "in the morning: the duck has his own line…" failed twice in full runs on 10-08, passes alone.
+- [ ] **Flaky test:** TodayScreen "in the morning: the duck has his own line…". #71 gives the line up to 10 s; it passed in the full run on 10-15 (1067 tests).
