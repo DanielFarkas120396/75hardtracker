@@ -128,12 +128,11 @@ export function weightTrend(points: AttemptWeight[]): TrendWeight[] {
   })
 }
 
-/** The latest weight and the change since the first weigh-in (undefined until there are two). */
-export function weightSummary(points: WeightPoint[]): { latest: WeightPoint; changeKg?: number; since?: string } | undefined {
+/** The latest weight and the change from the starting weight, the first of `attemptWeights` (no change until there are two). */
+export function weightSummary(points: AttemptWeight[]): { latest: AttemptWeight; start: AttemptWeight; changeKg?: number } | undefined {
   if (points.length === 0) return undefined
-  const sorted = [...points].sort((a, b) => a.date.localeCompare(b.date))
-  const first = sorted[0]
-  const latest = sorted[sorted.length - 1]
-  if (sorted.length === 1) return { latest }
-  return { latest, changeKg: roundToTenth(latest.weight_kg - first.weight_kg), since: first.date }
+  const start = points[0]
+  const latest = points[points.length - 1]
+  if (points.length === 1) return { latest, start }
+  return { latest, start, changeKg: roundToTenth(latest.weight_kg - start.weight_kg) }
 }

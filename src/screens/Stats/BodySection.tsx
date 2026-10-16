@@ -6,7 +6,7 @@ import { Modal } from '../../components/ui/Modal'
 import { measurementRepo } from '../../db/repositories/measurementRepo'
 import type { Measurement } from '../../db/types'
 import { formatDisplayDate } from '../../lib/dates'
-import { BODY_MEASUREMENTS, weightSummary, type WeightPoint } from '../../logic/measurements'
+import { attemptWeights, BODY_MEASUREMENTS, weightSummary, weightTrend } from '../../logic/measurements'
 import { MeasurementModal } from './MeasurementModal'
 import { WeightChart } from './WeightChart'
 
@@ -15,6 +15,10 @@ const COLLAPSED_ROWS = 5
 
 interface BodySectionProps {
   today: string
+  /** The attempt's Day 1. */
+  startDate: string
+  /** The day the attempt has reached (1 to 75). */
+  lastDay: number
 }
 
 function formatChange(changeKg: number): string {
@@ -29,8 +33,8 @@ function bodySummary(measurement: Measurement): string {
     .join(' · ')
 }
 
-/** Weigh-ins, folded under their header: the latest weight and its change, a weight chart, and the full editable list (the chart's table view). */
-export function BodySection({ today }: BodySectionProps) {
+/** This attempt's weigh-ins, folded under their header: the latest weight and its change from the start, a chart by challenge day, and the editable list (the chart's table view). */
+export function BodySection({ today, startDate, lastDay }: BodySectionProps) {
   const measurements = useLiveQuery(() => measurementRepo.getAll(), [])
   const [editing, setEditing] = useState<Measurement | null>(null)
   const [formOpen, setFormOpen] = useState(false)
@@ -40,11 +44,13 @@ export function BodySection({ today }: BodySectionProps) {
   const [open, setOpen] = useState(false)
   const panelId = useId()
 
-  const points: WeightPoint[] = (measurements ?? [])
-    .filter((m): m is Measurement & { weight_kg: number } => typeof m.weight_kg === 'number')
-    .map((m) => ({ date: m.date, weight_kg: m.weight_kg }))
-  const summary = weightSummary(points)
-  const newestFirst = [...(measurements ?? [])].reverse()
+  const weighIns = attemptWeights(
+    (measurements ?? []).filter((m): m is Measurement & { weight_kg: number } => typeof m.weight_kg === 'number'),
+    startDate,
+    lastDay,
+  )
+  const summary = weightSummary(weighIns)
+  const newestFirst = [...weighIns].reverse()
   const rows = showAll ? newestFirst : newestFirst.slice(0, COLLAPSED_ROWS)
 
   const openForm = (measurement: Measurement | null) => {
@@ -66,7 +72,10 @@ export function BodySection({ today }: BodySectionProps) {
             <Icon name="scale" className="shrink-0 text-world-ink" />
             Weight
             {!open && summary && (
-              <span className="text-sm font-bold text-ink-muted">{summary.latest.weight_kg.toFixed(1)} kg</span>
+              <span className="text-sm font-bold text-ink-muted">
+                {summary.latest.weight_kg.toFixed(1)} kg
+                {summary.changeKg !== undefined && ` · ${formatChange(summary.changeKg)}`}
+              </span>
             )}
             <Icon name="chevron" size={18} className={`ml-auto shrink-0 text-ink-muted ${open ? '-rotate-90' : 'rotate-90'}`} />
           </button>
@@ -81,9 +90,9 @@ export function BodySection({ today }: BodySectionProps) {
           {summary ? (
             <p className="mt-2 font-rounded">
               <span className="text-3xl font-bold text-ink">{summary.latest.weight_kg.toFixed(1)} kg</span>
-              {summary.changeKg !== undefined && summary.since && (
+              {summary.changeKg !== undefined && (
                 <span className="ml-2 text-sm font-bold text-ink-muted">
-                  {formatChange(summary.changeKg)} since {formatDisplayDate(summary.since)}
+                  {formatChange(summary.changeKg)} since Day {Math.max(1, summary.start.day)}
                 </span>
               )}
             </p>
@@ -93,8 +102,8 @@ export function BodySection({ today }: BodySectionProps) {
             </p>
           )}
 
-          {points.length >= 2 ? (
-            <WeightChart points={points} />
+          {weighIns.length >= 2 ? (
+            <WeightChart points={weightTrend(weighIns)} lastDay={lastDay} />
           ) : (
             summary && <p className="mt-2 text-sm text-ink-muted">Log another weigh-in to see your trend.</p>
           )}
@@ -110,7 +119,7 @@ export function BodySection({ today }: BodySectionProps) {
                     aria-label={`Edit weigh-in of ${formatDisplayDate(m.date)}`}
                   >
                     <span className="block font-rounded font-bold text-ink">
-                      {m.weight_kg !== undefined ? `${m.weight_kg.toFixed(1)} kg` : '—'}
+                      {m.weight_kg.toFixed(1)} kg
                       <span className="ml-2 text-xs font-semibold text-ink-muted">{formatDisplayDate(m.date)}</span>
                     </span>
                     {bodySummary(m) && <span className="block text-xs text-ink-muted">{bodySummary(m)} cm</span>}

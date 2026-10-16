@@ -178,16 +178,20 @@ describe('weightSummary', () => {
   })
 
   it('has no change with a single weigh-in', () => {
-    expect(weightSummary([{ date: today, weight_kg: 82 }])).toEqual({ latest: { date: today, weight_kg: 82 } })
+    const [only] = onDays([1, 82])
+    expect(weightSummary([only])).toEqual({ latest: only, start: only })
   })
 
-  it('reports the latest weight and the change since the first, whatever the input order', () => {
-    expect(
-      weightSummary([
-        { date: '2026-09-24', weight_kg: 80.1 },
-        { date: '2026-09-01', weight_kg: 83.4 },
-        { date: '2026-09-12', weight_kg: 81.9 },
-      ]),
-    ).toEqual({ latest: { date: '2026-09-24', weight_kg: 80.1 }, changeKg: -3.3, since: '2026-09-01' })
+  it('counts the change from the starting weight, not from older weigh-ins', () => {
+    const points = attemptWeights(
+      [weighIn('2026-08-01', 90), weighIn('2026-09-30', 83.4), weighIn('2026-10-12', 81.9), weighIn('2026-10-24', 80.1)],
+      startDate,
+      75,
+    )
+    expect(weightSummary(points)).toMatchObject({
+      start: { date: '2026-09-30', day: 0 },
+      latest: { date: '2026-10-24', weight_kg: 80.1, day: 24 },
+      changeKg: -3.3,
+    })
   })
 })

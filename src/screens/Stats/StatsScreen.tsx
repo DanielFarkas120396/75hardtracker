@@ -51,7 +51,7 @@ export function StatsScreen({ challenge, streak, today, todayDayNumber, complete
           <StatTile art={<BookStackArt pages={stats.pages} />} value={`${stats.pages}`} label="Pages read" tone="text-world-ink" />
         </div>
 
-        <BodySection today={today} />
+        <BodySection today={today} startDate={challenge.startDate} lastDay={daysSoFar} />
         <WorkoutsSection challengeId={challenge.id} />
       </main>
     </div>
