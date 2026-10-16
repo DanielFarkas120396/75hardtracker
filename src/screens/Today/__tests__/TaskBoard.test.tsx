@@ -212,6 +212,8 @@ describe('TaskBoard', () => {
 })
 
 describe('TaskBoard with fills', () => {
+  // A chip lands after a real timer (HOLD_MS) and a few renders, which a loaded test run can stretch to seconds.
+  const LOADED = { timeout: 10_000 }
   let handles: FakeHandle[]
   beforeAll(() => {
     MotionGlobalConfig.skipAnimations = true
@@ -243,7 +245,7 @@ describe('TaskBoard with fills', () => {
         expect(screen.getByRole('button', { name: 'Water, 3.8 L, done' })).toBeInTheDocument()
         expect(screen.queryByRole('button', { name: 'Water, 3.8 L' })).not.toBeInTheDocument()
       },
-      { timeout: 2000 },
+      LOADED,
     )
   })
 
@@ -263,7 +265,7 @@ describe('TaskBoard with fills', () => {
     rerender(board({ ...empty, water_ml: 3800 }))
     const box = screen.getByRole('button', { name: 'Water, 3.8 L' }).parentElement!.parentElement!
     act(() => handles[0].finish())
-    const chip = await screen.findByRole('button', { name: 'Water, 3.8 L, done' }, { timeout: 2000 })
+    const chip = await screen.findByRole('button', { name: 'Water, 3.8 L, done' }, LOADED)
     expect(chip).toHaveClass('opacity-0')
 
     // The flight ends. Only microtasks run before the browser paints that frame.
