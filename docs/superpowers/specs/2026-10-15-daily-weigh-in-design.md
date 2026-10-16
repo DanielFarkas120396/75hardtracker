@@ -1,6 +1,6 @@
 # Daily weigh-in
 
-Date: 2026-10-15 · Status: **agreed** with the owner on 2026-10-15, after a review round that changed the Today card, the starting weight, the end of the attempt and the average line. Being built on `feat/daily-weigh-in`.
+Date: 2026-10-15 · Status: **built** on `feat/daily-weigh-in` (2026-10-16), waiting for review. Agreed with the owner on 2026-10-15, after a review round that changed the Today card, the starting weight, the end of the attempt and the average line.
 
 ## Why
 
