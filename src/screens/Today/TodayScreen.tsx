@@ -37,6 +37,7 @@ import { SocialOccasionSheet } from './SocialOccasionSheet'
 import { TaskSheet } from './TaskSheet'
 import { describeTask } from './taskSheets'
 import { TodayHero } from './TodayHero'
+import { WeighInCard } from './WeighIn'
 
 /** The labelled buttons under the board, in thumb reach: the evening plan, the social night, the notes. Each stays on one line. */
 const ACTION_BUTTON =
@@ -229,6 +230,7 @@ function TodayTasks({
             onLunge={() => setLunges((count) => count + 1)}
           />
           {pendingLateDay != null && <LateDayCard dayNumber={pendingLateDay} onOpen={onOpenLateDay} />}
+          <WeighInCard today={today} dayNumber={todayDayNumber} />
           <LockBypassBanner />
           <BackupReminderBanner />
 
