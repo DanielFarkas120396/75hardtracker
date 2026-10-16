@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { format, parseISO } from 'date-fns'
 import { MotionGlobalConfig } from 'framer-motion'
 import { cloneElement, type ReactElement } from 'react'
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -78,6 +79,25 @@ describe('StatsScreen', () => {
     fireEvent.click(weight)
     expect(screen.getByText('−0.6 kg since Day 5')).toBeInTheDocument()
     expect(within(screen.getByRole('figure', { name: 'Weight by challenge day chart' })).getByText('Day 1')).toBeInTheDocument()
+  })
+
+  it("reads a point: its weight, its day and date, and the week's average", async () => {
+    // Days 1 to 10, losing 0.1 kg a day: Day 10 is 87 kg, and Days 4 to 10 average 87.3 kg.
+    const { startDate } = await renderStats({
+      dayNumber: 10,
+      weighIns: Array.from({ length: 10 }, (_, i): [number, number] => [i + 1, 88 - 0.1 * (i + 1)]),
+    })
+    fireEvent.click(await screen.findByRole('button', { name: /^Weight/ }))
+
+    const chart = (await screen.findByRole('figure', { name: 'Weight by challenge day chart' })).querySelector<HTMLElement>('.recharts-wrapper')!
+    // jsdom lays nothing out: give the chart the size it was drawn at, so the pointer maps to a day.
+    chart.getBoundingClientRect = () => DOMRect.fromRect({ x: 0, y: 0, width: 360, height: 192 })
+    Object.defineProperties(chart, { offsetWidth: { value: 360 }, offsetHeight: { value: 192 } })
+    fireEvent.mouseMove(chart, { clientX: 340, clientY: 96 })
+
+    const readout = await screen.findByText('Day 10 · ' + format(parseISO(addDaysISO(startDate, 9)), 'EEE d MMM'))
+    expect(readout.parentElement).toHaveTextContent('87.0 kg')
+    expect(readout.parentElement).toHaveTextContent('7-day average 87.3 kg')
   })
 
   it('keeps only the water and pages tiles', async () => {
