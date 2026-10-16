@@ -18,7 +18,7 @@
  */
 import { db, DEFAULT_DB_NAME } from '../db/db'
 import { SETTING_KEYS } from '../db/repositories/settingsRepo'
-import type { Challenge, DayEntry, Photo, Workout } from '../db/types'
+import type { Challenge, DayEntry, Measurement, Photo, Workout } from '../db/types'
 import { addDaysISO, todayISO } from '../lib/dates'
 import { CHALLENGE_LENGTH } from '../logic/constants'
 import type { Profile } from '../logic/profile'
@@ -27,6 +27,7 @@ import { RULESETS } from '../logic/rulesets'
 interface SeedChallenge {
   challenge: Omit<Challenge, 'id'>
   days: SeedDay[]
+  weighIns?: Omit<Measurement, 'id'>[]
 }
 
 interface SeedDay {
@@ -114,6 +115,7 @@ async function replaceDatabase(seeds: SeedChallenge[], { withProfile = true }: {
         } as DayEntry)
         await db.workouts.bulkAdd(day.workouts.map((w) => ({ ...w, dayEntryId: entryId }) as Workout))
       }
+      await db.measurements.bulkAdd((seed.weighIns ?? []) as Measurement[])
     }
   })
 }
@@ -355,9 +357,26 @@ export async function seedReturningWithoutProfile(): Promise<void> {
 }
 
 /**
+ * Weigh-ins for an attempt: the evening before Day 1, then most days up to
+ * `lastDay` on a slow, noisy drop from about 88 kg. A few days are skipped,
+ * and Days 30 to 33 (a trip) break the 7-day average. No randomness, so a
+ * reload draws the same chart.
+ */
+function seedWeighIns(startDate: string, lastDay: number): Omit<Measurement, 'id'>[] {
+  const weighIns = [{ date: addDaysISO(startDate, -1), weight_kg: 88.4 }]
+  for (let day = 1; day <= lastDay; day++) {
+    if (day % 9 === 4 || day % 13 === 11 || (day >= 30 && day <= 33)) continue
+    const noise = 0.6 * Math.sin(day * 2.3) * Math.cos(day * 0.7)
+    weighIns.push({ date: addDaysISO(startDate, day - 1), weight_kg: Math.round((88 - 0.06 * day + noise) * 10) / 10 })
+  }
+  return weighIns
+}
+
+/**
  * Time travel: an attempt on Day `day`, every earlier day done and today
- * untouched. Past Day 75, all 75 days are done — the victory screen. With
- * `yesterdayUnfinished`, yesterday is only half logged (late logging).
+ * untouched, with a weigh-in on most days but none today. Past Day 75, all
+ * 75 days are done — the victory screen. With `yesterdayUnfinished`,
+ * yesterday is only half logged (late logging).
  */
 export async function seedTravelDay(day: number, { yesterdayUnfinished = false } = {}): Promise<void> {
   const today = Math.min(Math.max(1, Math.floor(day)), CHALLENGE_LENGTH)
@@ -375,7 +394,7 @@ export async function seedTravelDay(day: number, { yesterdayUnfinished = false }
   }
   if (day > CHALLENGE_LENGTH) days.push(await perfectDay(CHALLENGE_LENGTH))
 
-  await replaceDatabase([
-    { challenge: { startDate: addDaysISO(todayISO(), -(today - 1)), attemptNumber: 1, status: 'active' }, days },
-  ])
+  const startDate = addDaysISO(todayISO(), -(today - 1))
+  const weighIns = seedWeighIns(startDate, day > CHALLENGE_LENGTH ? CHALLENGE_LENGTH : today - 1)
+  await replaceDatabase([{ challenge: { startDate, attemptNumber: 1, status: 'active' }, days, weighIns }])
 }
