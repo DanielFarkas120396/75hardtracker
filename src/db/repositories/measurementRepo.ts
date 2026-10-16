@@ -9,6 +9,20 @@ export const measurementRepo = {
     return db.measurements.orderBy('date').toArray()
   },
 
+  async getByDate(date: string): Promise<Measurement | undefined> {
+    return db.measurements.where('date').equals(date).first()
+  },
+
+  /** The most recent weight logged. */
+  async getLatestWeight(): Promise<number | undefined> {
+    const latest = await db.measurements
+      .orderBy('date')
+      .reverse()
+      .filter((m) => typeof m.weight_kg === 'number')
+      .first()
+    return latest?.weight_kg
+  },
+
   /**
    * Saves a weigh-in, one per date. A new entry (`id` undefined) on a date
    * that already has one replaces that day's values; editing an entry onto

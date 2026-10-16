@@ -4,6 +4,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../../db/db'
 import { addChallenge, freshDatabase, TEST_PROFILE } from '../../../db/__tests__/fixtures'
 import { dayEntryRepo } from '../../../db/repositories/dayEntryRepo'
+import { measurementRepo } from '../../../db/repositories/measurementRepo'
 import { workoutRepo } from '../../../db/repositories/workoutRepo'
 import type { Challenge } from '../../../db/types'
 import { ProfileContext } from '../../../hooks/useProfile'
@@ -258,7 +259,7 @@ describe('TodayScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add workout' }))
     fireEvent.click(within(await screen.findByRole('group', { name: 'Activity' })).getByRole('button', { name: 'Yoga' }))
     fireEvent.click(within(screen.getByRole('group', { name: 'How did it feel?' })).getByRole('button', { name: 'Good' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Save' }))
     await waitFor(async () =>
       expect(await workoutRepo.getForDayEntry((await entry()).id)).toMatchObject([{ type: 'Yoga', durationMin: 45, feel: 4 }]),
     )
@@ -287,5 +288,75 @@ describe('TodayScreen', () => {
     await setup({ variant: 'hard', todayDayNumber: 3 })
     expect(await screen.findByText('75 Hard #1')).toBeInTheDocument()
     expect(screen.queryByText(/isn't finished/)).not.toBeInTheDocument()
+  })
+
+  describe('the weigh-in card', () => {
+    const weighIn = async () => within((await screen.findByRole('heading', { name: 'Weigh in' })).closest('section')!)
+
+    it('asks for the weight until it is logged, without touching the day', async () => {
+      await measurementRepo.save({ date: addDaysISO(todayISO(), -1), weight_kg: 86.2 })
+      const { today } = await setup({ variant: 'hard', todayDayNumber: 3 })
+
+      const card = await weighIn()
+      expect(card.getByText('Before breakfast is best.')).toBeInTheDocument()
+      const field = card.getByRole('textbox', { name: 'Weight in kg' })
+      expect(field).toHaveAttribute('placeholder', '86.2')
+      expect(field).toHaveAttribute('inputmode', 'decimal')
+      expect(screen.getByRole('img', { name: '0 of 5 tasks done' })).toBeInTheDocument()
+
+      fireEvent.change(field, { target: { value: '85,8' } })
+      fireEvent.click(card.getByRole('button', { name: 'Save' }))
+
+      await waitFor(() => expect(screen.queryByRole('heading', { name: 'Weigh in' })).not.toBeInTheDocument())
+      expect(await measurementRepo.getByDate(today)).toMatchObject({ weight_kg: 85.8 })
+      expect(screen.getByRole('img', { name: '0 of 5 tasks done' })).toBeInTheDocument()
+    })
+
+    it('says what is wrong with the number, and saves nothing', async () => {
+      const { today } = await setup({ variant: 'hard', todayDayNumber: 3 })
+      const card = await weighIn()
+
+      fireEvent.change(card.getByRole('textbox', { name: 'Weight in kg' }), { target: { value: '8x' } })
+      fireEvent.click(card.getByRole('button', { name: 'Save' }))
+
+      expect(await card.findByText('Enter a number, like 82.5.')).toBeInTheDocument()
+      expect(await measurementRepo.getByDate(today)).toBeUndefined()
+    })
+
+    it('asks for the starting weight on Day 1', async () => {
+      await setup({ variant: 'hard', todayDayNumber: 1 })
+      const card = await weighIn()
+      expect(card.getByText('Your starting weight.')).toBeInTheDocument()
+      expect(card.getByRole('textbox', { name: 'Weight in kg' })).not.toHaveAttribute('placeholder')
+    })
+
+    it("isn't there before Day 1", async () => {
+      const today = todayISO()
+      const challengeId = await addChallenge({ startDate: addDaysISO(today, 1), attemptNumber: 1, status: 'active' })
+      const challenge = (await db.challenges.get(challengeId)) as Challenge
+      render(<TodayScreen challenge={challenge} dayEntries={[]} today={today} todayDayNumber={0} streak={0} jokersLeft={0} />)
+
+      expect(await screen.findByText('Day 1 starts tomorrow')).toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: 'Weigh in' })).not.toBeInTheDocument()
+    })
+
+    it('stays away once today is weighed', async () => {
+      await measurementRepo.save({ date: todayISO(), weight_kg: 85 })
+      await setup({ variant: 'hard', todayDayNumber: 3 })
+      expect(await screen.findByText('75 Hard #1')).toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: 'Weigh in' })).not.toBeInTheDocument()
+    })
+
+    it("sits under the late-day card, and isn't on yesterday's screen", async () => {
+      await setup({ variant: 'hard', todayDayNumber: 3, pendingLateDay: 2 })
+
+      const late = await screen.findByRole('heading', { name: "Day 2 isn't finished" })
+      const weigh = await screen.findByRole('heading', { name: 'Weigh in' })
+      expect(late.compareDocumentPosition(weigh) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+      fireEvent.click(screen.getByRole('button', { name: 'Finish it' }))
+      expect(await screen.findByRole('heading', { name: 'Finish Day 2' })).toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: 'Weigh in' })).not.toBeInTheDocument()
+    })
   })
 })

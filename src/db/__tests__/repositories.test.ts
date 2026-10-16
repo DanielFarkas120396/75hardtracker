@@ -336,6 +336,19 @@ describe('measurementRepo.save', () => {
   })
 })
 
+describe('measurementRepo reads', () => {
+  it("finds a date's weigh-in, and the latest weight", async () => {
+    expect(await measurementRepo.getByDate('2026-09-02')).toBeUndefined()
+    expect(await measurementRepo.getLatestWeight()).toBeUndefined()
+
+    await measurementRepo.save({ date: '2026-09-08', weight_kg: 83 })
+    await measurementRepo.save({ date: '2026-09-02', weight_kg: 84 })
+
+    expect(await measurementRepo.getByDate('2026-09-02')).toMatchObject({ date: '2026-09-02', weight_kg: 84 })
+    expect(await measurementRepo.getLatestWeight()).toBe(83)
+  })
+})
+
 describe('bookRepo finish tracking', () => {
   it('stamps finishedAt when the last page is reached and clears it when stepping back', async () => {
     const id = await bookRepo.add({ title: 'Deep Work', totalPages: 20, currentPage: 15 })
