@@ -291,7 +291,9 @@ describe('TodayScreen', () => {
   })
 
   describe('the weigh-in card', () => {
-    const weighIn = async () => within((await screen.findByRole('heading', { name: 'Weigh in' })).closest('section')!)
+    // A loaded test run can hold Today's mount for seconds (see the duck's line above).
+    const LOADED = { timeout: 10_000 }
+    const weighIn = async () => within((await screen.findByRole('heading', { name: 'Weigh in' }, LOADED)).closest('section')!)
 
     it('asks for the weight until it is logged, without touching the day', async () => {
       await measurementRepo.save({ date: addDaysISO(todayISO(), -1), weight_kg: 86.2 })
@@ -307,7 +309,7 @@ describe('TodayScreen', () => {
       fireEvent.change(field, { target: { value: '85,8' } })
       fireEvent.click(card.getByRole('button', { name: 'Save' }))
 
-      await waitFor(() => expect(screen.queryByRole('heading', { name: 'Weigh in' })).not.toBeInTheDocument())
+      await waitFor(() => expect(screen.queryByRole('heading', { name: 'Weigh in' })).not.toBeInTheDocument(), LOADED)
       expect(await measurementRepo.getByDate(today)).toMatchObject({ weight_kg: 85.8 })
       expect(screen.getByRole('img', { name: '0 of 5 tasks done' })).toBeInTheDocument()
     })
@@ -336,22 +338,25 @@ describe('TodayScreen', () => {
       const challenge = (await db.challenges.get(challengeId)) as Challenge
       render(<TodayScreen challenge={challenge} dayEntries={[]} today={today} todayDayNumber={0} streak={0} jokersLeft={0} />)
 
-      expect(await screen.findByText('Day 1 starts tomorrow')).toBeInTheDocument()
+      expect(await screen.findByText('Day 1 starts tomorrow', undefined, LOADED)).toBeInTheDocument()
       expect(screen.queryByRole('heading', { name: 'Weigh in' })).not.toBeInTheDocument()
     })
 
-    it('stays away once today is weighed', async () => {
-      await measurementRepo.save({ date: todayISO(), weight_kg: 85 })
+    it('stays away while today has a weigh-in, and asks again if it is deleted', async () => {
+      const saved = await measurementRepo.save({ date: todayISO(), weight_kg: 85 })
       await setup({ variant: 'hard', todayDayNumber: 3 })
-      expect(await screen.findByText('75 Hard #1')).toBeInTheDocument()
+      expect(await screen.findByText('75 Hard #1', undefined, LOADED)).toBeInTheDocument()
       expect(screen.queryByRole('heading', { name: 'Weigh in' })).not.toBeInTheDocument()
+
+      if (saved.ok) await measurementRepo.remove(saved.id)
+      expect(await screen.findByRole('heading', { name: 'Weigh in' }, LOADED)).toBeInTheDocument()
     })
 
     it("sits under the late-day card, and isn't on yesterday's screen", async () => {
       await setup({ variant: 'hard', todayDayNumber: 3, pendingLateDay: 2 })
 
-      const late = await screen.findByRole('heading', { name: "Day 2 isn't finished" })
-      const weigh = await screen.findByRole('heading', { name: 'Weigh in' })
+      const late = await screen.findByRole('heading', { name: "Day 2 isn't finished" }, LOADED)
+      const weigh = await screen.findByRole('heading', { name: 'Weigh in' }, LOADED)
       expect(late.compareDocumentPosition(weigh) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 
       fireEvent.click(screen.getByRole('button', { name: 'Finish it' }))
