@@ -173,6 +173,7 @@ function MainApp({ today }: { today: string }) {
           )}
           {screen === 'gallery' && (
             <GalleryScreen
+              attemptNumber={gate.challenge.attemptNumber}
               onTakePhoto={() => {
                 setScreen('today')
                 setCameraRequested(true)

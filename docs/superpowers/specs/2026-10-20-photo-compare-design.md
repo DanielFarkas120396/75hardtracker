@@ -1,6 +1,6 @@
 # Photo compare
 
-Date: 2026-10-20 · Status: **agreed** with the owner on 2026-10-20 (slider + time-lapse, first vs latest with a day picker, opened from the Gallery). Not built yet. The share card is a separate design, after this one.
+Date: 2026-10-20 · Status: **agreed** with the owner on 2026-10-20 (slider + time-lapse, first vs latest with a day picker, opened from the Gallery). **Built** on `feat/photo-compare` the same day; the iPhone check is still to do. The share card is a separate design, after this one.
 
 ## Why
 
@@ -31,7 +31,7 @@ Two modes, switched by a pair of buttons under the photo: **Slider** (the defaul
 
 - One frame, portrait, as wide as the screen allows (`max-h-[70dvh]`). Both photos are cropped to it the same way (`object-cover`), so lined-up photos stay lined up.
 - The **earlier** photo is underneath and the **later** photo on top, clipped from the left edge to the line. The line starts in the middle.
-- An amber line (the world's accent) with a round handle. Dragging anywhere on the frame moves the line to the finger. The frame has `touch-action: none` and is an HTML element, not an SVG (iOS ignores `touch-action` on SVG; see draw to commit).
+- A line in the world colour with a round handle. Dragging anywhere on the frame moves the line to the finger. The frame has `touch-action: none` and is an HTML element, not an SVG (iOS ignores `touch-action` on SVG; see draw to commit).
 - Labels in the top corners: the earlier day on the left ("Day 1"), the later day on the right ("Day 40"). Under the frame: "Day 1 → Day 40 · 39 days".
 - **Picking a day:** tapping a label opens a strip of this attempt's photos (thumbnails, oldest first, scrolls sideways) under the frame. Tapping a thumbnail sets that side. The current day of that side is marked. The other side's day can't be picked (it's dimmed). If the pick puts the days in the wrong order, the two sides swap, so the earlier day is always underneath and on the left.
 - **VoiceOver:** a native range input (0 to 100, visually hidden) over the frame, named "Compare Day 1 and Day 40", so swiping up or down moves the line. The labels are buttons: "Change the earlier day, Day 1".
@@ -55,11 +55,10 @@ Two modes, switched by a pair of buttons under the photo: **Slider** (the defaul
 ## How it's built
 
 - `src/logic/photoCompare.ts`, pure functions:
-  - `defaultPair(entries)`: the first and the latest photo of the list.
-  - `orderPair(a, b)`: earlier first.
+  - `comparePair(entries, earlierId, laterId)`: the picked photos, earlier first. A picked photo that's gone falls back to the first or the latest, and the same photo is never on both sides.
   - `frameMs(count)`: `clamp(4000 / count, 80, 400)`.
-- `src/screens/Gallery/PhotoCompare.tsx`: the overlay with both modes. It uses `useGalleryPhotos(challengeId)` for this attempt's photos and `BlobImage` to show them.
-- `GalleryScreen.tsx`: the button and the open state.
+- `src/screens/Gallery/PhotoCompare.tsx`: the overlay with both modes, using `BlobImage` for the slider. The time-lapse decodes every photo first, but plays after 3 s anyway, because `decode()` can wait forever (it did once in a hidden browser pane).
+- `GalleryScreen.tsx`: the button and the open state. It takes the current `attemptNumber` from the App and picks this attempt's photos out of the gallery it already loads, so there's no second query.
 - Reduce motion comes from `useReducedMotionConfig()`, as elsewhere.
 - No new dependency.
 

@@ -1,31 +1,44 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Icon } from '../../components/icons/Icon'
 import { Mascot } from '../../components/mascot/Mascot'
 import { Button } from '../../components/ui/Button'
 import { useGalleryPhotos } from '../../hooks/useGalleryPhotos'
 import { groupByWorld } from './groups'
+import { PhotoCompare } from './PhotoCompare'
 import { PhotoLightbox } from './PhotoLightbox'
 import { PhotoThumbnail } from './PhotoThumbnail'
 
 interface GalleryScreenProps {
+  /** The current attempt: Compare shows its photos only. */
+  attemptNumber: number
   /** Goes to Today with its camera open (from the empty state). */
   onTakePhoto: () => void
 }
 
 /** Every progress photo, grouped by the Journey world of its day, each group in that world's colours. */
-export function GalleryScreen({ onTakePhoto }: GalleryScreenProps) {
+export function GalleryScreen({ attemptNumber, onTakePhoto }: GalleryScreenProps) {
   const entries = useGalleryPhotos()
   const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const [comparing, setComparing] = useState(false)
+  // Newest first in the gallery; oldest first for Compare.
+  const attemptPhotos = useMemo(() => (entries ?? []).filter((e) => e.attemptNumber === attemptNumber).reverse(), [entries, attemptNumber])
   const groups = groupByWorld(entries ?? [])
   const attempts = new Set(groups.map((g) => g.attemptNumber)).size
 
   return (
     <div className="min-h-dvh bg-canvas pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
       <header className="px-4 pt-6 pb-4">
-        <h1 className="flex items-center gap-2 font-display text-2xl tracking-wide text-ink">
-          <Icon name="gallery" className="text-world-ink" />
-          Gallery
-        </h1>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="flex items-center gap-2 font-display text-2xl tracking-wide text-ink">
+            <Icon name="gallery" className="text-world-ink" />
+            Gallery
+          </h1>
+          {attemptPhotos.length >= 2 && (
+            <Button variant="soft" onClick={() => setComparing(true)}>
+              Compare
+            </Button>
+          )}
+        </div>
         <p className="font-rounded text-sm text-ink-muted">Every progress photo, across every attempt.</p>
       </header>
 
@@ -76,6 +89,7 @@ export function GalleryScreen({ onTakePhoto }: GalleryScreenProps) {
         onClose={() => setOpenIndex(null)}
         onNavigate={setOpenIndex}
       />
+      <PhotoCompare entries={attemptPhotos} open={comparing} onClose={() => setComparing(false)} />
     </div>
   )
 }
