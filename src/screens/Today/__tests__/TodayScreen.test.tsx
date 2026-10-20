@@ -17,6 +17,9 @@ import { TodayScreen } from '../TodayScreen'
 const clock = vi.hoisted(() => ({ nowMin: 9 * 60 }))
 vi.mock('../../../hooks/useNow', () => ({ useNow: () => clock.nowMin }))
 
+// A loaded test run (the whole suite on a busy machine) can hold Today's renders for seconds.
+const LOADED = { timeout: 10_000 }
+
 /** Seeds an active challenge and today's entry, then renders TodayScreen with the props App passes. */
 async function setup({
   variant = 'hard' as ChallengeVariant,
@@ -146,17 +149,20 @@ describe('TodayScreen', () => {
 
   it('at 5/5: the day is won only once the last chip has landed', async () => {
     const { entryId } = await setup({ variant: 'hard', todayDayNumber: 3, complete: true, workoutsLogged: 1 })
-    expect(await screen.findByRole('img', { name: '4 of 5 tasks done' })).toBeInTheDocument()
+    expect(await screen.findByRole('img', { name: '4 of 5 tasks done' }, LOADED)).toBeInTheDocument()
     // Real animations, with a Web Animations API that finishes at once.
     MotionGlobalConfig.skipAnimations = false
     Element.prototype.animate = vi.fn(() => ({ finished: Promise.resolve(), cancel() {} }) as unknown as Animation)
     try {
       await workoutRepo.add({ dayEntryId: entryId, type: 'Running', durationMin: 45, isOutdoor: false })
-      // The workouts are done, but their tile hasn't become a chip yet.
-      expect(await screen.findByRole('button', { name: /^Workouts, 2 workouts\b(?!.*done$)/ })).toBeInTheDocument()
-      expect(screen.queryByText('Day 3 won')).not.toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Notes' })).toBeInTheDocument()
-      expect(await screen.findByText('Day 3 won', undefined, { timeout: 3000 })).toBeInTheDocument()
+      // The workouts are done, but their tile hasn't become a chip yet. One check: on a loaded run the tile can
+      // become its chip (HOLD_MS) between finding it and looking at the rest.
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /^Workouts, 2 workouts\b(?!.*done$)/ })).toBeInTheDocument()
+        expect(screen.queryByText('Day 3 won')).not.toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Notes' })).toBeInTheDocument()
+      }, LOADED)
+      expect(await screen.findByText('Day 3 won', undefined, LOADED)).toBeInTheDocument()
       expect(screen.getByRole('img', { name: '5 of 5 tasks done' })).toBeInTheDocument()
     } finally {
       MotionGlobalConfig.skipAnimations = true
@@ -291,8 +297,6 @@ describe('TodayScreen', () => {
   })
 
   describe('the weigh-in card', () => {
-    // A loaded test run can hold Today's mount for seconds (see the duck's line above).
-    const LOADED = { timeout: 10_000 }
     const weighIn = async () => within((await screen.findByRole('heading', { name: 'Weigh in' }, LOADED)).closest('section')!)
 
     it('asks for the weight until it is logged, without touching the day', async () => {
