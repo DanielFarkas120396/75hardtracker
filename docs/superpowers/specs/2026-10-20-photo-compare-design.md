@@ -1,6 +1,6 @@
 # Photo compare
 
-Date: 2026-10-20 · Status: **agreed** with the owner on 2026-10-20 (slider + time-lapse, first vs latest with a day picker, opened from the Gallery). **Built** on `feat/photo-compare` the same day; the iPhone check is still to do. The share card is a separate design, after this one.
+Date: 2026-10-20 · Status: **agreed** with the owner on 2026-10-20 (slider + time-lapse, first vs latest with a day picker, opened from the Gallery). **Merged** into `main` on 2026-10-23 (PR #89), after the owner's iPhone check. The share card is a separate design, after this one.
 
 ## Why
 

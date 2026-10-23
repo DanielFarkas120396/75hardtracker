@@ -252,6 +252,11 @@ The busiest day by PRs (25). Until about 15:50, five rounds on v2 shipped straig
 - **#87:** a "Weigh in" card under the hero until today's weight is logged; it never counts toward the day. The Weight card on Stats follows this attempt by challenge day, with a 7-day average from Day 7.
 - **#88** (merged 10-20): two Today tests that failed under load (the chip, and 5/5) now wait up to 10 s. Test code only.
 
+## 2026-10-20: photo compare
+
+- A status review, then the owner picked "Photos" as the next direction: compare first, then the share card.
+- **#89** (merged 10-23, after the owner's iPhone check): Gallery → Compare. A slider lays the latest photo over Day 1, and either side can be set to another day of the attempt. A time-lapse plays every photo in about 4 s. If decoding the photos never finishes, it starts after 3 s anyway.
+
 ---
 
 ## Time spent
@@ -289,7 +294,7 @@ How it's estimated:
 
 ---
 
-## Open items (as of 2026-10-20)
+## Open items (as of 2026-10-23)
 
 - [x] **Face ID on the iPhone:** tested on the production domain on 10-08; every step passed.
 - [ ] **Phone check of the tile fills** (#74–#78): smooth with several fills moving, no heat after a minute on Today, Reduce Motion on and off, light and dark, a late day. If copying the fills is too slow on the iPhone, the design falls back to one canvas per tile. Also compare the iris blades with `photo-tile.html` (#76: lighter and flatter in three.js 0.186).
@@ -300,7 +305,7 @@ How it's estimated:
 - [ ] **Duck animation around the signature** (draw to commit): still to design.
 - [x] **Security headers on Vercel:** declined by the owner after the 10-13 security audit, with the audit's other fixes.
 - [ ] **A broken backup file** tried by hand (roadmap, from the review).
-- [ ] **Roadmap left:** share the app with friends and family, photo compare, share card, Day 75 recap, paywall.
+- [ ] **Roadmap left:** share the app with friends and family, share card (designing on 10-23), Day 75 recap, paywall.
 - [ ] **Parked:** duck animations (brainstorm notes from 10-02).
 - [ ] **Parked:** per-variant palettes (deferred since the variants work).
 - [ ] **Flaky test:** TodayScreen "in the morning: the duck has his own line…". #71 gives the line up to 10 s; it passed in the full run on 10-15 (1067 tests). #88 fixed two other tests that failed under load; 1090 pass on 10-20.
