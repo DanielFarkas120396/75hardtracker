@@ -57,7 +57,7 @@ export function PhotoCapture({
     try {
       await savePhoto(file)
     } catch {
-      setError("Couldn't save that photo — try another one.")
+      setError("Couldn't save that photo. Try again, or free up some space.")
     } finally {
       setBusy(false)
     }

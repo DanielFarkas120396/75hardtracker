@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState } from 'react'
 import { BadgeUnlockToast } from './components/BadgeUnlockToast'
 import { DuckArt } from './components/mascot/duckArt'
+import { SaveErrorToast } from './components/SaveErrorToast'
 import { TimeTravelBadge } from './dev/TimeTravelBadge'
 import { BottomNav, type ScreenId } from './components/ui/BottomNav'
 import { useBadgeUnlocks } from './hooks/useBadgeUnlocks'
@@ -58,6 +59,7 @@ function App() {
           <MainApp today={today} />
         </OnboardingGate>
       </div>
+      <SaveErrorToast />
       {lock.status === 'locked' && (
         <LockScreen
           faceIdEnabled={lock.faceIdEnabled}
