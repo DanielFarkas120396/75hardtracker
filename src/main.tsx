@@ -8,8 +8,10 @@ import { StorageErrorScreen } from './components/StorageErrorScreen'
 import { openDatabase } from './db/openDatabase'
 import { listenForInstallPrompt } from './lib/installPrompt'
 import { unlockAudioOnUserGesture } from './lib/sound'
+import { listenForStaleChunks } from './lib/staleChunks'
 import { requestPersistenceOnce } from './lib/storage'
 
+listenForStaleChunks()
 // Early: the browser can offer installation before the database is open.
 listenForInstallPrompt()
 // The chime plays from effects, outside any gesture; the first taps unlock audio for it.

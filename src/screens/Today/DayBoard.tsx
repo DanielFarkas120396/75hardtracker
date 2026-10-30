@@ -58,9 +58,9 @@ export function DayBoard(props: DayBoardProps) {
 
   const log = (text: string, undo: () => void) => setLogged((previous) => ({ text, undo, id: (previous?.id ?? 0) + 1 }))
 
-  const addPages = (pages: number) => {
-    void dayEntryRepo.adjustPages(entry.id, pages)
-    if (currentBook) void bookRepo.adjustCurrentPage(currentBook.id, pages)
+  const addPages = async (pages: number) => {
+    await dayEntryRepo.adjustPages(entry.id, pages)
+    if (currentBook) await bookRepo.adjustCurrentPage(currentBook.id, pages)
   }
 
   const quickActions: Partial<Record<BoardTask, QuickAction>> = {
@@ -71,8 +71,9 @@ export function DayBoard(props: DayBoardProps) {
       icon: 'plus',
       text: `${QUICK_WATER_ML} ml`,
       onPress: () => {
-        void dayEntryRepo.adjustWater(entry.id, QUICK_WATER_ML)
-        log(`Logged ${QUICK_WATER_ML} ml`, () => void dayEntryRepo.adjustWater(entry.id, -QUICK_WATER_ML))
+        void dayEntryRepo
+          .adjustWater(entry.id, QUICK_WATER_ML)
+          .then(() => log(`Logged ${QUICK_WATER_ML} ml`, () => void dayEntryRepo.adjustWater(entry.id, -QUICK_WATER_ML)))
       },
     },
     reading:
@@ -82,8 +83,9 @@ export function DayBoard(props: DayBoardProps) {
             icon: 'plus',
             text: `${pagesLeft} left`,
             onPress: () => {
-              addPages(pagesLeft)
-              log(`Logged ${pagesLeft} ${pagesLeft === 1 ? 'page' : 'pages'}`, () => addPages(-pagesLeft))
+              void addPages(pagesLeft).then(() =>
+                log(`Logged ${pagesLeft} ${pagesLeft === 1 ? 'page' : 'pages'}`, () => void addPages(-pagesLeft)),
+              )
             },
           }
         : undefined,

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Icon } from '../../components/icons/Icon'
 import { MoodPicker } from '../../components/MoodPicker'
@@ -50,9 +50,18 @@ function AddWorkoutForm({ dayEntryId, rules, onClose }: Omit<AddWorkoutSheetProp
   const isOutdoor = outdoorChoice ?? (needsOutdoor && OUTSIDE.has(type))
   const qualifying = logged.filter((w) => isQualifyingWorkout(w, rules)).length
 
+  const saving = useRef(false)
+
   const save = async () => {
-    await workoutRepo.add({ dayEntryId, type, durationMin, isOutdoor, ...(feel ? { feel } : {}) })
-    onClose()
+    // A double tap reaches here twice before the sheet closes, and two sessions would pass Hard's 2 × 45.
+    if (saving.current) return
+    saving.current = true
+    try {
+      await workoutRepo.add({ dayEntryId, type, durationMin, isOutdoor, ...(feel ? { feel } : {}) })
+      onClose()
+    } finally {
+      saving.current = false
+    }
   }
 
   return (
