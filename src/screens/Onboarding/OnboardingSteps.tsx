@@ -7,7 +7,7 @@ import { Button } from '../../components/ui/Button'
 import { DrawCheckPad } from '../../components/ui/DrawCheckPad'
 import { VariantPicker } from '../../components/VariantPicker'
 import { finishLine, lateStartHint, startsInLine, WHY_IDEAS } from '../../content/onboarding'
-import { dailyRuleLines, stakesLine, VARIANT_NAMES } from '../../content/variants'
+import { dailyRuleLines, NO_REMINDERS_LINE, stakesLine, VARIANT_NAMES } from '../../content/variants'
 import type { StartDateChoiceState } from '../../hooks/useStartDateChoice'
 import { dateForDayNumber, formatShortDay } from '../../lib/dates'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
@@ -347,6 +347,9 @@ export function ReadyStep(props: ReadyStepProps) {
         </ul>
         <motion.p variants={DEAL_LINE} className="mt-4 font-rounded font-bold text-world-ink">
           {stakesLine(rules)}
+        </motion.p>
+        <motion.p variants={DEAL_LINE} className="mt-2 text-sm font-semibold text-ink-muted">
+          {NO_REMINDERS_LINE}
         </motion.p>
         <motion.div variants={DEAL_LINE}>
           <Reason why={why} className="mt-4 border-t border-world-edge/30 pt-4" />

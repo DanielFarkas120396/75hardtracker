@@ -56,6 +56,10 @@ export function stakesLine(rules: Ruleset): string {
   return `${jokers}: ${days} forgiven. Miss one more: back to ${DAY_ONE}.`
 }
 
+export const DAY_END_LINE = 'Every task is due by midnight. Forgot to log? Yesterday stays open until noon.'
+
+export const NO_REMINDERS_LINE = "No reminders. The app can't send notifications, so opening it every day is on you."
+
 /** The daily rules, one short line each, for the deal. */
 export function dailyRuleLines(rules: Ruleset): string[] {
   return [

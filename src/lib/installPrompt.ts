@@ -4,7 +4,7 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
 }
 
-export type InstallState = 'installed' | 'available' | 'ios' | 'unavailable'
+export type InstallState = 'installed' | 'inApp' | 'available' | 'ios' | 'unavailable'
 
 let deferredPrompt: BeforeInstallPromptEvent | null = null
 let justInstalled = false
@@ -39,16 +39,26 @@ function isIos(): boolean {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
 }
 
+/** TikTok, Instagram and the like open links in their own browser, which can't install the app and may lose its data. */
+export function isInAppBrowser(userAgent: string): boolean {
+  return /musical_ly|BytedanceWebview|TikTok|Instagram|FBAN|FBAV|FB_IAB|Snapchat|LinkedInApp|Pinterest|Twitter/i.test(userAgent)
+}
+
+export function isAndroid(): boolean {
+  return /Android/.test(navigator.userAgent)
+}
+
 /** Remembers "Continue in the browser anyway" on the install-first screen, so a reload doesn't ask again. */
 export const INSTALL_SKIPPED_KEY = '75hard-install-skipped'
 
 /** Whether to show the install screen before the welcome flow: a phone browser that can install the app. */
 export function shouldOfferInstallFirst(state: InstallState, skipped: boolean): boolean {
-  return !skipped && (state === 'ios' || state === 'available')
+  return !skipped && (state === 'ios' || state === 'available' || state === 'inApp')
 }
 
 export function getInstallState(): InstallState {
   if (justInstalled || isStandalone()) return 'installed'
+  if (isInAppBrowser(navigator.userAgent)) return 'inApp'
   if (deferredPrompt) return 'available'
   if (isIos()) return 'ios'
   return 'unavailable'

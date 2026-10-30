@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button'
 import {
   getInstallState,
   INSTALL_SKIPPED_KEY,
+  isAndroid,
   promptInstall,
   shouldOfferInstallFirst,
   subscribeToInstallState,
@@ -33,7 +34,6 @@ export function InstallFirst({ children }: { children: ReactNode }) {
   const [done, setDone] = useState(false)
 
   if (!shouldOfferInstallFirst(state, skipped)) return children
-  const browser = state === 'ios' ? 'Safari' : 'the browser'
 
   const skip = () => {
     try {
@@ -43,6 +43,9 @@ export function InstallFirst({ children }: { children: ReactNode }) {
     }
     setSkipped(true)
   }
+
+  if (state === 'inApp') return <OpenInBrowser onSkip={skip} />
+  const browser = state === 'ios' ? 'Safari' : 'the browser'
 
   return (
     <div className="min-h-dvh bg-canvas">
@@ -87,7 +90,51 @@ export function InstallFirst({ children }: { children: ReactNode }) {
         </p>
 
         <button type="button" onClick={skip} className="mt-auto min-h-touch pt-6 font-rounded text-sm font-bold text-ink-muted underline">
-          Continue in {browser} (your data stays here)
+          Continue in {browser} ({state === 'ios' ? 'Safari' : 'It'} can clear your data if you stop opening it)
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/** Inside TikTok, Instagram and the like: this page can't be installed from here, so send it to the real browser. */
+function OpenInBrowser({ onSkip }: { onSkip: () => void }) {
+  const [copied, setCopied] = useState(false)
+  const browser = isAndroid() ? 'Chrome' : 'Safari'
+  const link = window.location.origin
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(link)
+      setCopied(true)
+    } catch {
+      // The link stays on screen to copy by hand.
+    }
+  }
+
+  return (
+    <div className="min-h-dvh bg-canvas">
+      <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center px-6 pt-10 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-center">
+        <Mascot mood="content" size={96} />
+        <h1 className="mt-4 font-display text-2xl tracking-wide text-ink">Open this in {browser}</h1>
+        <p className="mt-3 font-rounded font-bold text-ink">
+          You're inside another app. It can't install 75 Hard, and your days could disappear.
+        </p>
+        <ol className="mt-6 flex w-full flex-col gap-3 text-left">
+          <InstallStep number={1}>
+            Tap <strong className="text-ink">Copy link</strong>.
+          </InstallStep>
+          <InstallStep number={2}>
+            Open <strong className="text-ink">{browser}</strong> and paste it in the address bar.
+          </InstallStep>
+        </ol>
+        <Button className="mt-6 w-full" onClick={() => void copy()}>
+          {copied ? 'Link copied' : 'Copy link'}
+        </Button>
+        <p className="mt-3 select-all break-all text-sm text-ink-muted">{link}</p>
+        <p className="mt-3 text-sm text-ink-muted">Or look for "Open in browser" in this app's menu.</p>
+        <button type="button" onClick={onSkip} className="mt-auto min-h-touch pt-6 font-rounded text-sm font-bold text-ink-muted underline">
+          Continue here anyway (your days could be lost)
         </button>
       </div>
     </div>

@@ -14,6 +14,7 @@ describe('shouldOfferInstallFirst', () => {
   it('asks only in a phone browser that can install, until skipped', () => {
     expect(shouldOfferInstallFirst('ios', false)).toBe(true)
     expect(shouldOfferInstallFirst('available', false)).toBe(true)
+    expect(shouldOfferInstallFirst('inApp', false)).toBe(true)
     expect(shouldOfferInstallFirst('installed', false)).toBe(false)
     expect(shouldOfferInstallFirst('unavailable', false)).toBe(false)
     expect(shouldOfferInstallFirst('ios', true)).toBe(false)
@@ -30,6 +31,24 @@ describe('InstallFirst', () => {
     state.current = 'ios'
   })
 
+  it('inside TikTok or Instagram, sends you to the browser with the link, and lets you continue (remembered)', async () => {
+    state.current = 'inApp'
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+    render(<InstallFirst>Welcome flow</InstallFirst>)
+
+    expect(screen.getByRole('heading', { name: 'Open this in Safari' })).toBeInTheDocument()
+    expect(screen.queryByText('Welcome flow')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy link' }))
+    expect(await screen.findByRole('button', { name: 'Link copied' })).toBeInTheDocument()
+    expect(writeText).toHaveBeenCalledWith(window.location.origin)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue here anyway (your days could be lost)' }))
+    expect(screen.getByText('Welcome flow')).toBeInTheDocument()
+    expect(localStorage.getItem(INSTALL_SKIPPED_KEY)).toBe('1')
+  })
+
   it('on iPhone Safari, shows the 3 steps before the welcome flow, and lets you continue anyway (remembered)', () => {
     const { unmount } = render(<InstallFirst>Welcome flow</InstallFirst>)
     expect(screen.getByRole('heading', { name: 'Add 75 Hard to your Home Screen' })).toBeInTheDocument()
@@ -38,7 +57,7 @@ describe('InstallFirst', () => {
 
     expect(screen.getByText("Set it up in the app, not in Safari. They don't share data.")).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Continue in Safari (your data stays here)' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Continue in Safari (Safari can clear your data if you stop opening it)' }))
     expect(screen.getByText('Welcome flow')).toBeInTheDocument()
     expect(localStorage.getItem(INSTALL_SKIPPED_KEY)).toBe('1')
 

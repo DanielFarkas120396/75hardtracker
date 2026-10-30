@@ -26,6 +26,7 @@ import { ExportImportSection } from './ExportImportSection'
 import { GiveUpFlow } from './GiveUpFlow'
 import { InstallSection } from './InstallSection'
 import { ProfileSection } from './ProfileSection'
+import { RulesSection } from './RulesSection'
 import { SettingsGroup, SettingsPage, SettingsRow } from './SettingsRows'
 import { StartDateSection } from './StartDateSection'
 
@@ -39,12 +40,13 @@ interface SettingsScreenProps {
   canGiveUp: boolean
 }
 
-type PageId = 'profile' | 'badges' | 'challenge' | 'books' | 'history' | 'appearance' | 'sound' | 'companion' | 'install' | 'backup' | 'appLock' | 'timeTravel'
+type PageId = 'profile' | 'badges' | 'challenge' | 'rules' | 'books' | 'history' | 'appearance' | 'sound' | 'companion' | 'install' | 'backup' | 'appLock' | 'timeTravel'
 
 const PAGE_TITLES: Record<PageId, string> = {
   profile: 'Profile',
   badges: 'Badges',
   challenge: 'Challenge',
+  rules: 'Rules',
   books: 'Books',
   history: 'Attempt history',
   appearance: 'Appearance',
@@ -106,6 +108,7 @@ export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGi
               todayDayNumber={todayDayNumber}
             />
           )}
+          {page === 'rules' && <RulesSection challenge={challenge} />}
           {page === 'books' && <BooksSection />}
           {page === 'history' && <AttemptHistorySection today={today} />}
           {page === 'appearance' && <AppearanceSection />}
@@ -144,6 +147,7 @@ export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGi
                   onClick={() => open('challenge')}
                 />
               )}
+              <SettingsRow icon="journey" label="Rules" onClick={() => open('rules')} />
               <SettingsRow
                 icon="reading"
                 label="Books"
