@@ -244,6 +244,19 @@ describe('TodayScreen', () => {
     expect(screen.queryByText('“A fresh start”')).not.toBeInTheDocument()
   })
 
+  it('says "Logged" only once the water is saved', async () => {
+    await setup({ variant: 'hard', todayDayNumber: 3 })
+    let finishSave = () => {}
+    const save = vi.spyOn(dayEntryRepo, 'adjustWater').mockImplementationOnce(() => new Promise<void>((resolve) => (finishSave = resolve)))
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Add 250 ml' }))
+    await waitFor(() => expect(save).toHaveBeenCalled())
+    expect(screen.queryByText('Logged 250 ml')).not.toBeInTheDocument()
+
+    finishSave()
+    expect(await screen.findByText('Logged 250 ml')).toBeInTheDocument()
+  })
+
   it('logs a glass of water, a page and a workout straight from the tiles', async () => {
     // The entries are a static prop here (the gate's live query feeds them in the app), so the stores are checked.
     const { challenge, today } = await setup({ variant: 'hard', todayDayNumber: 3 })

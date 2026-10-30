@@ -276,3 +276,18 @@ describe('missed days and jokers', () => {
     expect(evaluateChallenge({ currentStatus: 'failed', dayEntries: [], todayDayNumber: 9, jokers: 3 }).status).toBe('failed')
   })
 })
+
+describe('finishing Day 75 with Day 74 still open', () => {
+  const lastDays = (day74: boolean) => [...complete(1, 73), { dayNumber: 74, completed: day74 }, { dayNumber: 75, completed: true }]
+
+  it('is not a win until Day 74 is finished', () => {
+    const open = { currentStatus: 'active' as const, todayDayNumber: 75, jokers: 0, lateDay: 74 }
+    expect(evaluateChallenge({ ...open, dayEntries: lastDays(false) }).status).toBe('active')
+    expect(evaluateChallenge({ ...open, dayEntries: lastDays(true) }).status).toBe('completed')
+  })
+
+  it('fails at noon when Day 74 stayed unfinished', () => {
+    const noon = { currentStatus: 'active' as const, todayDayNumber: 75, jokers: 0, lateDay: null }
+    expect(evaluateChallenge({ ...noon, dayEntries: lastDays(false) })).toMatchObject({ status: 'failed', failedDayNumber: 74 })
+  })
+})

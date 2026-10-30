@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
@@ -34,6 +34,19 @@ describe('AddWorkoutSheet', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Weights' }))
     expect(outdoor()).toHaveAttribute('aria-checked', 'false')
+  })
+
+  it('a double tap on Save stores one session', async () => {
+    const dayEntryId = await today()
+    const onClose = vi.fn()
+    render(<AddWorkoutSheet open dayEntryId={dayEntryId} rules={RULESETS.hard} onClose={onClose} />)
+
+    const save = await screen.findByRole('button', { name: 'Save' })
+    fireEvent.click(save)
+    fireEvent.click(save)
+
+    await waitFor(() => expect(onClose).toHaveBeenCalled())
+    expect(await workoutRepo.getForDayEntry(dayEntryId)).toHaveLength(1)
   })
 
   it('after one indoor session, says this one must be outdoors', async () => {
