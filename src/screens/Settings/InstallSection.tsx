@@ -21,6 +21,11 @@ export function InstallSection() {
           </Button>
         </>
       )}
+      {state === 'inApp' && (
+        <p className="mt-1 text-sm text-ink-muted">
+          You're inside another app. Open this page in your phone's browser to install it.
+        </p>
+      )}
       {state === 'ios' && (
         <p className="mt-1 text-sm text-ink-muted">
           In Safari, tap the Share button, then “Add to Home Screen”. It opens full-screen and works offline.
