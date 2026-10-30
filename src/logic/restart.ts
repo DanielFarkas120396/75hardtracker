@@ -49,11 +49,12 @@ export function evaluateChallenge(params: {
   if (params.currentStatus !== 'active') return { status: params.currentStatus, missed }
   if (missed.length > params.jokers) return { status: 'failed', missed, failedDayNumber: missed[params.jokers] }
 
+  // An unfinished yesterday can still fail the attempt at noon, so nothing is won until it's settled.
+  const lateDayOpen = lateDay !== null && !params.dayEntries.some((e) => e.dayNumber === lateDay && e.completed)
   const finalDay = params.dayEntries.find((e) => e.dayNumber === CHALLENGE_LENGTH)
-  const finalDayOpen = lateDay === CHALLENGE_LENGTH && finalDay?.completed !== true
-  const pastTheEnd = params.todayDayNumber > CHALLENGE_LENGTH && !finalDayOpen
+  const pastTheEnd = params.todayDayNumber > CHALLENGE_LENGTH
   const lastDayDone = params.todayDayNumber >= CHALLENGE_LENGTH && finalDay?.completed === true
-  if (pastTheEnd || lastDayDone) return { status: 'completed', missed }
+  if (!lateDayOpen && (pastTheEnd || lastDayDone)) return { status: 'completed', missed }
   return { status: 'active', missed }
 }
 
