@@ -98,7 +98,7 @@ function AttemptDetail({ attempt, open, onClose }: { attempt: AttemptRecord; ope
   const { challenge, summary, days } = attempt
   const photos = useGalleryPhotos(challenge.id)
   const [photoIndex, setPhotoIndex] = useState<number | null>(null)
-  const rows = attemptDayRows(days, summary.reachedDay, rulesFor(challenge))
+  const rows = attemptDayRows(days, summary.reachedDay, rulesFor(challenge), challenge.restoredDays)
 
   return (
     <>

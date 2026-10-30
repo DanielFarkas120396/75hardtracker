@@ -12,10 +12,12 @@ function entry(dayNumber: number, completed: boolean): DayEntry {
 
 /** Day 6, with Days 1–4 done; Day 5 (yesterday) open until noon when `late` is set. */
 function gate(day5Done: boolean, day6Done: boolean, late: boolean): ChallengeGate {
+  const dayEntries = [1, 2, 3, 4].map((d) => entry(d, true)).concat(entry(5, day5Done), entry(6, day6Done))
   return {
     kind: 'active',
     challenge,
-    dayEntries: [1, 2, 3, 4].map((d) => entry(d, true)).concat(entry(5, day5Done), entry(6, day6Done)),
+    dayEntries,
+    daySummaries: dayEntries,
     today: '2026-09-06',
     todayDayNumber: 6,
     streak: 4,

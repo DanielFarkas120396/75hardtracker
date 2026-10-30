@@ -102,7 +102,7 @@ Everything stays on the device, in this browser. The app sends nothing anywhere,
 
 - **Save a backup regularly** from Settings → Backup & storage (the Sunday reminder opens the same sheet). The file is one JSON with every attempt, log and photo inside. Save it to iCloud Drive so it survives losing the phone. The section shows how long ago your last backup was.
 - **Protect it with a password** if you like. The app then encrypts the file (AES-256-GCM), and nobody can open it without the password. A forgotten password can't be recovered.
-- **Restore a backup** from the same section, or from the welcome screen on a new phone. It replaces what's on the device. The app lock's PIN and Face ID are never in a backup.
+- **Restore a backup** from the same section, or from the welcome screen on a new phone. It replaces what's on the device. If the backup stops before today, the app first asks whether you did the days it doesn't contain: "Yes" counts them as done, and "No" applies the normal rules. The app lock's PIN and Face ID are never in a backup.
 - **Install the app** to your Home Screen before setting it up. On iPhone, the installed app keeps its own data, apart from Safari's. Allow persistent storage too (the same section can ask for it), so the browser is much less likely to clear the data.
 - **Save a backup before** clearing browser data, resetting the phone or switching phones.
 

@@ -3,6 +3,7 @@ import { CHALLENGE_LENGTH } from './constants'
 import { isDayComplete, missingTasks, TASK_IDS } from './dayCompletion'
 import { isChallengeDay } from './days'
 import { missedDayNumbers } from './restart'
+import { withRestoredDays } from './restoredDays'
 import type { Ruleset } from './rulesets'
 import type { ChallengeDayData, ChallengeStatus, DayCompletionSummary, TaskId } from './types'
 
@@ -27,9 +28,13 @@ export function summarizeAttempt(params: {
   days: readonly ChallengeDayData[]
   todayDayNumber: number
   rules: Ruleset
+  restoredDays?: readonly number[]
 }): AttemptSummary {
-  const { startDate, status, abandonedOn, days, todayDayNumber, rules } = params
-  const summaries = days.map((d) => ({ dayNumber: d.dayNumber, completed: isDayComplete(d.data, rules) }))
+  const { startDate, status, abandonedOn, days, todayDayNumber, rules, restoredDays } = params
+  const summaries = withRestoredDays(
+    days.map((d) => ({ dayNumber: d.dayNumber, completed: isDayComplete(d.data, rules) })),
+    restoredDays,
+  )
   const reachedDay = reachedDayOf(status, summaries, todayDayNumber, rules.jokers, givenUpDay(startDate, abandonedOn))
 
   return {
@@ -80,13 +85,18 @@ export type AttemptDayRow =
  * days are grouped, and every other day lists what was missed (all five
  * tasks when it has no entry).
  */
-export function attemptDayRows(days: readonly ChallengeDayData[], reachedDay: number, rules: Ruleset): AttemptDayRow[] {
+export function attemptDayRows(
+  days: readonly ChallengeDayData[],
+  reachedDay: number,
+  rules: Ruleset,
+  restoredDays: readonly number[] = [],
+): AttemptDayRow[] {
   const dataByDay = new Map(days.map((d) => [d.dayNumber, d.data]))
   const rows: AttemptDayRow[] = []
 
   for (let dayNumber = 1; dayNumber <= reachedDay; dayNumber++) {
     const data = dataByDay.get(dayNumber)
-    const missing = data ? missingTasks(data, rules) : [...TASK_IDS]
+    const missing = restoredDays.includes(dayNumber) ? [] : data ? missingTasks(data, rules) : [...TASK_IDS]
     const last = rows.at(-1)
 
     if (missing.length > 0) rows.push({ kind: 'incomplete', dayNumber, missing })

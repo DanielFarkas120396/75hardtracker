@@ -18,6 +18,8 @@ export interface Challenge {
   jokersAcknowledged?: number
   /** The local ISO date the attempt was given up on (status 'abandoned'). Set only by challengeRepo.giveUp. */
   abandonedOn?: string
+  /** Days a restored backup didn't contain and the player said they did. They count as done. */
+  restoredDays?: number[]
 }
 
 export interface DayEntry {

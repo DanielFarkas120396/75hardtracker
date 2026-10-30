@@ -14,6 +14,8 @@ export interface OpenDay {
   date: string
   /** The day's entry; none on a day nothing was logged (a joker can forgive one). */
   entry?: DayEntry
+  /** A day the restored backup didn't contain: counted as done, its logs are gone. */
+  restored?: boolean
   /** The stone's centre on screen: the card grows out of it and shrinks back into it. */
   from: { x: number; y: number }
 }
@@ -53,7 +55,12 @@ export function DayCard({ day, open, onClose }: DayCardProps) {
             </button>
           </div>
 
-          {day.entry ? <DayDetails entry={day.entry} /> : <p className="mt-3 text-sm text-ink-muted">Nothing was logged this day.</p>}
+          {day.restored && <p className="mt-3 text-sm text-ink-muted">Not in your backup</p>}
+          {day.entry ? (
+            <DayDetails entry={day.entry} />
+          ) : (
+            !day.restored && <p className="mt-3 text-sm text-ink-muted">Nothing was logged this day.</p>
+          )}
         </>
       )}
     </Modal>,

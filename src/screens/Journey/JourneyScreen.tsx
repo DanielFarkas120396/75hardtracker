@@ -51,15 +51,15 @@ export function JourneyScreen({ challenge, dayEntries, todayDayNumber, streak, c
   const onOpenDay = (dayNumber: number, from: { x: number; y: number }) => {
     const entry = dayEntries.find((e) => e.dayNumber === dayNumber)
     const date = entry?.date ?? dateForDayNumber(challenge.startDate, dayNumber)
-    setOpenDay({ dayNumber, date, entry, from })
+    setOpenDay({ dayNumber, date, entry, from, restored: challenge.restoredDays?.includes(dayNumber) })
     setCardOpen(true)
   }
   // The live entry, so the card follows what's logged while it's open.
   const shownDay = openDay && { ...openDay, entry: dayEntries.find((e) => e.dayNumber === openDay.dayNumber) ?? openDay.entry }
 
   const completedDayNumbers = useMemo(
-    () => new Set(dayEntries.filter((e) => e.completed).map((e) => e.dayNumber)),
-    [dayEntries],
+    () => new Set([...dayEntries.filter((e) => e.completed).map((e) => e.dayNumber), ...(challenge.restoredDays ?? [])]),
+    [dayEntries, challenge.restoredDays],
   )
 
   return (

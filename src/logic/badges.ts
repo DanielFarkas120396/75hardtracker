@@ -1,6 +1,7 @@
 import { MILESTONES } from './constants'
 import { isDayComplete, isQualifyingWorkout } from './dayCompletion'
 import type { Ruleset } from './rulesets'
+import { withRestoredDays } from './restoredDays'
 import { calculateStreak } from './streak'
 import type { ChallengeDayData } from './types'
 
@@ -87,16 +88,18 @@ export function buildBadgeContext(params: {
   todayDayNumber: number
   booksFinished: number
   rules: Ruleset
+  restoredDays?: readonly number[]
 }): BadgeContext {
   const { days, rules } = params
   const allWorkouts = days.flatMap((d) => d.data.workouts)
+  const summaries = withRestoredDays(
+    days.map((d) => ({ dayNumber: d.dayNumber, completed: isDayComplete(d.data, rules) })),
+    params.restoredDays,
+  )
 
   return {
-    streakLength: calculateStreak(
-      days.map((d) => ({ dayNumber: d.dayNumber, completed: isDayComplete(d.data, rules) })),
-      params.todayDayNumber,
-    ),
-    perfectDays: days.filter((d) => isDayComplete(d.data, rules)).length,
+    streakLength: calculateStreak(summaries, params.todayDayNumber),
+    perfectDays: summaries.filter((s) => s.completed).length,
     workoutsLogged: allWorkouts.length,
     outdoorQualifyingWorkouts: allWorkouts.filter((w) => isQualifyingWorkout(w, rules) && w.isOutdoor).length,
     waterGoalDays: days.filter((d) => d.data.water_ml >= rules.waterTargetMl).length,
