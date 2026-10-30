@@ -5,7 +5,8 @@ import { addChallenge, freshDatabase } from '../../db/__tests__/fixtures'
 import { db } from '../../db/db'
 import { exportAll, importAll } from '../../db/exportImport'
 import { encryptBackup } from '../../lib/backupCrypto'
-import { todayISO } from '../../lib/dates'
+import { addDaysISO, todayISO } from '../../lib/dates'
+import { resolveGate } from '../../hooks/useChallengeGate'
 import { BackupRestore } from '../BackupRestore'
 
 // The real import, watched; it reloads the app afterwards, which jsdom can't do.
@@ -78,6 +79,80 @@ describe('BackupRestore', () => {
 
     await waitFor(async () => expect(await attemptNumbers()).toEqual([7]))
     expect(screen.queryByRole('heading', { name: 'Replace all data?' })).not.toBeInTheDocument()
+  })
+
+  describe('a backup older than today', () => {
+    /** A Hard attempt on Day 8 today, with a backup made on Day 3 (Days 1 to 3 complete). */
+    async function oldBackup(): Promise<string> {
+      const startDate = addDaysISO(todayISO(), -7)
+      const challengeId = await addChallenge({ startDate, attemptNumber: 7, status: 'active' })
+      for (let dayNumber = 1; dayNumber <= 3; dayNumber++) {
+        await db.dayEntries.add({ challengeId, dayNumber, date: addDaysISO(startDate, dayNumber - 1), water_ml: 0, pages_read: 0, dietFollowed: false, noAlcohol: false, completed: true } as never)
+      }
+      const payload = await exportAll()
+      await freshDatabase()
+      return JSON.stringify({ ...payload, exportedAt: `${addDaysISO(startDate, 2)}T12:00:00` })
+    }
+
+    const gateOfRestored = async () => {
+      const [challenge] = await db.challenges.toArray()
+      return resolveGate(challenge, await db.dayEntries.toArray(), todayISO())
+    }
+
+    const welcome = () => render(<BackupRestore label="Restore" look="link" confirmReplace={false} />)
+
+    it('asks about the missing days before it restores anything', async () => {
+      const text = await oldBackup()
+      welcome()
+      pickFile(text)
+
+      expect(await screen.findByRole('heading', { name: 'This backup stops at Day 3' })).toBeInTheDocument()
+      expect(screen.getByText(/Today is Day 8\. Days 4 to 7 aren't in it\. Did you do them\?/)).toBeInTheDocument()
+      expect(screen.getByText('Miss a day: back to Day 1.')).toBeInTheDocument()
+      expect(restored).not.toHaveBeenCalled()
+    })
+
+    it('"Yes" keeps the attempt on Day 8 with the streak whole', async () => {
+      const text = await oldBackup()
+      welcome()
+      pickFile(text)
+      fireEvent.click(await screen.findByRole('button', { name: 'Yes, I did them' }))
+
+      await waitFor(async () => expect(await attemptNumbers()).toEqual([7]))
+      const gate = await gateOfRestored()
+      expect(gate.kind).toBe('active')
+      expect(gate.streak).toBe(7)
+    })
+
+    it('"No" restores the backup under the normal rules', async () => {
+      const text = await oldBackup()
+      welcome()
+      pickFile(text)
+      fireEvent.click(await screen.findByRole('button', { name: 'No, count them as missed' }))
+
+      await waitFor(async () => expect(await attemptNumbers()).toEqual([7]))
+      expect((await gateOfRestored()).kind).toBe('needsRestart')
+    })
+
+    it('comes after "Replace all data?" in Settings', async () => {
+      const text = await oldBackup()
+      render(<BackupRestore label="Restore a backup" />)
+      pickFile(text)
+      fireEvent.click(await screen.findByRole('button', { name: 'Replace data' }))
+
+      expect(await screen.findByRole('button', { name: 'Yes, I did them' })).toBeInTheDocument()
+      expect(restored).not.toHaveBeenCalled()
+    })
+
+    it('keeps the restored days through the next backup', async () => {
+      const text = await oldBackup()
+      welcome()
+      pickFile(text)
+      fireEvent.click(await screen.findByRole('button', { name: 'Yes, I did them' }))
+      await waitFor(async () => expect(await attemptNumbers()).toEqual([7]))
+
+      expect((await exportAll()).challenges[0].restoredDays).toEqual([4, 5, 6, 7])
+    })
   })
 
   it('asks for the password of a protected backup, and refuses a wrong one', async () => {

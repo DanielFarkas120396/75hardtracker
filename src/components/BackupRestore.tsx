@@ -1,7 +1,10 @@
 import { useRef, useState } from 'react'
 import { openProtectedBackup, readBackupText } from '../db/backupReading'
-import { importAll, type ExportPayload } from '../db/exportImport'
+import { stakesLine } from '../content/variants'
+import { findBackupGap, importAll, withGapRestored, type BackupGap, type ExportPayload } from '../db/exportImport'
 import type { EncryptedBackup } from '../lib/backupCrypto'
+import { CHALLENGE_LENGTH } from '../logic/constants'
+import { rulesFor } from '../logic/rulesets'
 import { Button } from './ui/Button'
 import { Field } from './ui/Field'
 import { Modal } from './ui/Modal'
@@ -16,8 +19,8 @@ interface BackupRestoreProps {
 
 /**
  * Restoring a backup file: picks it, asks for its password if it's
- * protected, confirms the replacement where there's data to lose, imports it
- * and reloads the app.
+ * protected, confirms the replacement where there's data to lose, asks about
+ * any days the backup can't know about, imports it and reloads the app.
  */
 export function BackupRestore({ label, look = 'button', confirmReplace = true }: BackupRestoreProps) {
   const fileInput = useRef<HTMLInputElement>(null)
@@ -27,6 +30,7 @@ export function BackupRestore({ label, look = 'button', confirmReplace = true }:
   const [password, setPassword] = useState('')
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [pending, setPending] = useState<ExportPayload | null>(null)
+  const [gapped, setGapped] = useState<{ payload: ExportPayload; gap: BackupGap } | null>(null)
 
   const restore = async (payload: ExportPayload) => {
     setBusy(true)
@@ -37,12 +41,20 @@ export function BackupRestore({ label, look = 'button', confirmReplace = true }:
       setError('Restoring failed. Your existing data was not changed.')
       setBusy(false)
       setPending(null)
+      setGapped(null)
     }
+  }
+
+  const restoreOrAsk = (payload: ExportPayload) => {
+    const gap = findBackupGap(payload)
+    setPending(null)
+    if (gap) setGapped({ payload, gap })
+    else void restore(payload)
   }
 
   const accept = (payload: ExportPayload) => {
     if (confirmReplace) setPending(payload)
-    else void restore(payload)
+    else restoreOrAsk(payload)
   }
 
   const onFile = async (file: File) => {
@@ -126,7 +138,7 @@ export function BackupRestore({ label, look = 'button', confirmReplace = true }:
           the contents of the file. This can't be undone.
         </p>
         <div className="mt-4 flex gap-2">
-          <Button variant="danger" className="flex-1" onClick={() => pending && void restore(pending)} disabled={busy}>
+          <Button variant="danger" className="flex-1" onClick={() => pending && restoreOrAsk(pending)} disabled={busy}>
             {busy ? 'Restoring…' : 'Replace data'}
           </Button>
           <Button variant="secondary" className="flex-1" onClick={() => setPending(null)} disabled={busy}>
@@ -134,6 +146,49 @@ export function BackupRestore({ label, look = 'button', confirmReplace = true }:
           </Button>
         </div>
       </Modal>
+
+      <Modal open={gapped !== null} onClose={() => setGapped(null)}>
+        {gapped && (
+          <BackupGapQuestion
+            gap={gapped.gap}
+            busy={busy}
+            onDidThem={() => void restore(withGapRestored(gapped.payload, gapped.gap))}
+            onMissedThem={() => void restore(gapped.payload)}
+          />
+        )}
+      </Modal>
+    </>
+  )
+}
+
+function BackupGapQuestion({ gap, busy, onDidThem, onMissedThem }: {
+  gap: BackupGap
+  busy: boolean
+  onDidThem: () => void
+  onMissedThem: () => void
+}) {
+  const first = gap.days[0]
+  const last = gap.days[gap.days.length - 1]
+  const one = gap.days.length === 1
+  return (
+    <>
+      <h3 className="font-rounded text-lg font-bold text-ink">
+        {gap.backupDay < 1 ? 'This backup is from before Day 1' : `This backup stops at Day ${gap.backupDay}`}
+      </h3>
+      <p className="mt-2 text-sm text-ink-muted">
+        {gap.todayDayNumber <= CHALLENGE_LENGTH && `Today is Day ${gap.todayDayNumber}. `}
+        {one ? `Day ${first} isn't in it. Did you do it?` : `Days ${first} to ${last} aren't in it. Did you do them?`}
+      </p>
+      <p className="mt-2 text-sm text-ink-muted">Their tasks, photos and notes aren't in the backup either way.</p>
+      <div className="mt-4 flex flex-col gap-2">
+        <Button className="w-full" onClick={onDidThem} disabled={busy}>
+          {one ? 'Yes, I did it' : 'Yes, I did them'}
+        </Button>
+        <Button variant="secondary" className="w-full" onClick={onMissedThem} disabled={busy}>
+          {one ? 'No, count it as missed' : 'No, count them as missed'}
+        </Button>
+      </div>
+      <p className="mt-2 text-sm font-semibold text-ink-muted">{stakesLine(rulesFor(gap.challenge))}</p>
     </>
   )
 }

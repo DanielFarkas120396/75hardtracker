@@ -41,6 +41,7 @@ export function useAttemptSummaries(today: string): AttemptRecord[] | undefined 
     return challenges.reverse().map((challenge) => {
       const days = daysByChallenge.get(challenge.id) ?? []
       const summary = summarizeAttempt({
+        restoredDays: challenge.restoredDays,
         startDate: challenge.startDate,
         status: challenge.status,
         abandonedOn: challenge.abandonedOn,

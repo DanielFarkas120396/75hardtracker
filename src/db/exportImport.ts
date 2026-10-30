@@ -1,7 +1,8 @@
-import { isValidISODate, todayISO } from '../lib/dates'
+import { dayNumberForDate, isValidISODate, todayISO } from '../lib/dates'
 import { CHALLENGE_LENGTH, WORKOUT_TYPES } from '../logic/constants'
 import { TASK_IDS } from '../logic/dayCompletion'
 import { parseHHmm } from '../logic/menace'
+import { backupGapDays, withRestoredDays } from '../logic/restoredDays'
 import { isChallengeVariant } from '../logic/rulesets'
 import { db } from './db'
 import { normalizeRecords } from './normalize'
@@ -100,6 +101,47 @@ export async function markExported(at: string = new Date().toISOString()): Promi
 // ---------------------------------------------------------------------------
 // Validation
 
+/** The days a backup can't know about, on the attempt it still has running. */
+export interface BackupGap {
+  challenge: Challenge
+  days: number[]
+  /** The day the backup was made; below 1 when that was before Day 1. */
+  backupDay: number
+  todayDayNumber: number
+}
+
+export function findBackupGap(payload: ExportPayload, today: string = todayISO()): BackupGap | null {
+  const challenge = payload.challenges.reduce<Challenge | undefined>(
+    (newest, c) => (newest && newest.attemptNumber > c.attemptNumber ? newest : c),
+    undefined,
+  )
+  const exportedAt = new Date(payload.exportedAt)
+  if (challenge?.status !== 'active' || Number.isNaN(exportedAt.getTime())) return null
+
+  const backupDate = todayISO(exportedAt)
+  const entries = payload.dayEntries.filter((e) => e.challengeId === challenge.id)
+  const summaries = withRestoredDays(
+    entries.map((e) => ({ dayNumber: e.dayNumber, completed: e.completed })),
+    challenge.restoredDays,
+  )
+  const days = backupGapDays({ startDate: challenge.startDate, backupDate, today, summaries })
+  if (days.length === 0) return null
+  return {
+    challenge,
+    days,
+    backupDay: dayNumberForDate(challenge.startDate, backupDate),
+    todayDayNumber: dayNumberForDate(challenge.startDate, today),
+  }
+}
+
+/** The backup with the gap's days marked as done, for the player who says they did them. */
+export function withGapRestored(payload: ExportPayload, gap: BackupGap): ExportPayload {
+  const challenges = payload.challenges.map((c) =>
+    c.id === gap.challenge.id ? { ...c, restoredDays: [...(c.restoredDays ?? []), ...gap.days] } : c,
+  )
+  return { ...payload, challenges }
+}
+
 export type ExportValidation = { ok: true; payload: ExportPayload } | { ok: false; error: string }
 
 type Row = Record<string, unknown>
@@ -142,6 +184,7 @@ const ROW_CHECKS: Record<Exclude<keyof ExportPayload, 'version' | 'exportedAt'>,
     status: (v) => v === 'active' || v === 'failed' || v === 'completed' || v === 'abandoned',
     variant: isOptional(isChallengeVariant),
     socialDays: isOptional(isDayNumberList),
+    restoredDays: isOptional(isDayNumberList),
     jokersAcknowledged: isOptional(isNonNegativeInteger),
     abandonedOn: isOptional((v) => isString(v) && isValidISODate(v)),
   },

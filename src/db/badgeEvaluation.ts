@@ -32,6 +32,7 @@ export async function loadBadgeEvaluation(challenge: Challenge, todayDayNumber: 
     todayDayNumber,
     booksFinished: books.filter((b) => bookCountsForAttempt(finishedOn(b), challenge.startDate)).length,
     rules,
+    restoredDays: challenge.restoredDays,
   })
 
   return { context, unlockedBadgeIds: new Set(unlocked.map((b) => b.badgeId)) }

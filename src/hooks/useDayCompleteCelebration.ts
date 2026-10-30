@@ -38,7 +38,7 @@ export function useDayCompleteCelebration(gate: ChallengeGate | undefined) {
     const justDone = done.find((day) => day !== '' && !before.includes(day))
     if (gate && seen.dayKey === dayKey && justDone !== undefined) {
       const dayNumber = Number(justDone)
-      const streak = streakEndingAt(gate.dayEntries, dayNumber)
+      const streak = streakEndingAt(gate.daySummaries, dayNumber)
       setCelebration({
         dayNumber,
         streak,

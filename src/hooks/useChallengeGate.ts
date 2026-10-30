@@ -8,12 +8,16 @@ import { isChallengeDay } from '../logic/days'
 import { GRACE_END_MIN, lateDayNumber } from '../logic/lateDay'
 import { resolveChallengeGate } from '../logic/restart'
 import { rulesFor } from '../logic/rulesets'
+import { withRestoredDays } from '../logic/restoredDays'
 import { calculateStreak } from '../logic/streak'
+import type { DayCompletionSummary } from '../logic/types'
 import { useNow } from './useNow'
 
 export interface GateBase {
   challenge: Challenge
   dayEntries: DayEntry[]
+  /** Every day as the rules see it, restored days included. */
+  daySummaries: DayCompletionSummary[]
   today: string
   /** Day number of `today` in this challenge: < 1 before it starts, > 75 after it ends, NaN if the start date is broken. */
   todayDayNumber: number
@@ -84,7 +88,10 @@ export function resolveGate(
 ): ChallengeGate {
   const todayDayNumber = dayNumberForDate(challenge.startDate, today)
   const lateDay = challenge.status === 'active' ? lateDayNumber(todayDayNumber, nowMin) : null
-  const summaries = dayEntries.map((e) => ({ dayNumber: e.dayNumber, completed: e.completed }))
+  const summaries = withRestoredDays(
+    dayEntries.map((e) => ({ dayNumber: e.dayNumber, completed: e.completed })),
+    challenge.restoredDays,
+  )
   const rules = rulesFor(challenge)
   const resolution = resolveChallengeGate({
     currentStatus: challenge.status,
@@ -96,6 +103,7 @@ export function resolveGate(
   const base: GateBase = {
     challenge,
     dayEntries,
+    daySummaries: summaries,
     today,
     todayDayNumber,
     streak: calculateStreak(summaries, todayDayNumber, lateDay),
