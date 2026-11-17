@@ -1,6 +1,6 @@
 # Journey logbook: design
 
-Date: 2026-11-17 · Status: **built** on `feat/journey-logbook`, waiting for the owner's phone check.
+Date: 2026-11-17 · Status: **built** in PR #93 (`feat/journey-logbook`), phone-checked by the owner on 2026-11-17.
 
 ## Why
 
