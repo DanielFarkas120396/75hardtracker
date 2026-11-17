@@ -83,12 +83,12 @@ export interface WeightPoint {
 /** A weigh-in placed in the attempt. `day`: 1..75, or 0 for a starting weigh-in from before Day 1 (the "Start" tick). */
 export type AttemptWeight<T extends WeightPoint = WeightPoint> = T & { day: number }
 
-/** An attempt weigh-in with its 7-day average, when that week has enough weigh-ins for one. */
-export type TrendWeight = AttemptWeight & { average?: number }
+/** An attempt weigh-in with the smoothed trend at that day. */
+export type TrendWeight = AttemptWeight & { trend: number }
 
 const START_WINDOW_DAYS = 7
-const AVERAGE_DAYS = 7
-const AVERAGE_MIN_WEIGH_INS = 4
+/** How much of the trend a day keeps: a weigh-in pulls the line 15% of the way to it per day since the last one. */
+const TREND_KEEP_PER_DAY = 0.85
 
 const byDate = (a: WeightPoint, b: WeightPoint) => a.date.localeCompare(b.date)
 
@@ -115,16 +115,15 @@ export function attemptWeights<T extends WeightPoint>(points: T[], startDate: st
 }
 
 /**
- * Adds the 7-day average (the mean of the weigh-ins from 6 days before up to
- * that day) from Day 7 on. It needs 4 weigh-ins in those days, so the average
- * line breaks across long gaps.
+ * Adds the smoothed trend: it starts at the first weigh-in, and each later one pulls it toward
+ * itself by 15% per day since the one before (after a 3-day gap, 39%). It never breaks across
+ * a gap, and it evens out the day-to-day ups and downs of water and food.
  */
 export function weightTrend(points: AttemptWeight[]): TrendWeight[] {
-  return points.map((point) => {
-    if (point.day < AVERAGE_DAYS) return point
-    const week = points.filter((p) => p.day > point.day - AVERAGE_DAYS && p.day <= point.day)
-    if (week.length < AVERAGE_MIN_WEIGH_INS) return point
-    return { ...point, average: week.reduce((sum, p) => sum + p.weight_kg, 0) / week.length }
+  let trend = points[0]?.weight_kg ?? 0
+  return points.map((point, i) => {
+    if (i > 0) trend += (1 - TREND_KEEP_PER_DAY ** (point.day - points[i - 1].day)) * (point.weight_kg - trend)
+    return { ...point, trend }
   })
 }
 

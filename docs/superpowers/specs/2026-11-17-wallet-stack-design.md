@@ -31,7 +31,8 @@ The plain starred top card looked shorter than the others (it has nothing tucked
 
 | Topic | Decision |
 |---|---|
-| Weight | First on the page, open on its chart; a tap on the header folds it. |
+| Weight | First on the page: the latest weight (big), its change, and the chart (taller, soft fill under the line, scale on the right, a big dot on the latest trend). Only an arrow under it unfolds the weigh-ins: one compact row each (day, date, weight, ▼/▲ since the one before, a ruler icon for body measurements). A row opens the edit sheet, which now holds Delete. |
+| Trend line | A smoothed trend from the first weigh-in (each one pulls it 15% of the way per day since the one before), instead of the 7-day average that only began on Day 7 and broke across gaps. |
 | Workout totals | No more three small cards: the time trained, big ("53h15", "of sweat"), a thin divider, then the sessions and "under the sky" (outdoors) as two lines. Picked ("D") from big-number, hero, ring, sentence, banner and bar ideas, then hybrids. |
 | Day card | The "Day X of 75" climb card leaves Stats: Today and Journey already show the day. Journey keeps it. |
 | Water | A glass bottle with a cap and a highlight, filled against the water owed so far; two waves roll on the water and bubbles rise (still with "reduce motion"). Chosen from four (glass, sport bottle, drop, glass with a goal mark). |
