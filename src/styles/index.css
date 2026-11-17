@@ -95,6 +95,28 @@
 
   --spacing-touch: 3rem;
 
+  /* The Stats shelf: the book in progress floats a hair, its ribbon sways. */
+  --animate-book-float: book-float 3.2s ease-in-out infinite;
+  --animate-ribbon-sway: ribbon-sway 2.6s ease-in-out infinite;
+  @keyframes book-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-1.5px);
+    }
+  }
+  @keyframes ribbon-sway {
+    0%,
+    100% {
+      transform: rotate(-7deg);
+    }
+    50% {
+      transform: rotate(7deg);
+    }
+  }
+
   /* The Stats bottle: its water rolls (one wave each way) and bubbles rise. */
   --animate-wave: wave 3s linear infinite;
   --animate-wave-back: wave 4.5s linear infinite reverse;

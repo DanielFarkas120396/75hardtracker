@@ -165,6 +165,13 @@ function ActivityCard({ activity, first, shade, layer, open, onToggle }: Activit
           </span>
         </span>
         <span className="min-w-7 text-right font-display text-3xl leading-none tracking-wide">{count}</span>
+        {/* A quiet hint that the card unfolds. */}
+        <Icon
+          name="chevron"
+          size={14}
+          strokeWidth={2.5}
+          className={`-mr-1.5 shrink-0 opacity-50 motion-safe:transition-transform ${open ? '-rotate-90' : 'rotate-90'}`}
+        />
       </button>
 
       <AnimatePresence initial={false}>
