@@ -40,11 +40,12 @@ describe('WorkoutsSection', () => {
 
   beforeEach(freshDatabase)
 
-  it('adds up the attempt, with every card closed', async () => {
+  it('adds up the attempt, the most practised activity in front and closed', async () => {
     render(<WorkoutsSection challengeId={await seedAttempt()} />)
 
     expect(await screen.findByRole('button', { name: 'Running, 2 sessions' })).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.getByRole('button', { name: 'Weights, 1 session' })).toHaveAttribute('aria-expanded', 'false')
+    // The others are tabs: tapping one brings it to the front, it doesn't unfold.
+    expect(screen.getByRole('button', { name: 'Weights, 1 session' })).not.toHaveAttribute('aria-expanded')
     expect(screen.queryByRole('list', { name: /sessions$/ })).not.toBeInTheDocument()
 
     const summary = screen.getByRole('list', { name: 'This attempt' })
@@ -73,15 +74,19 @@ describe('WorkoutsSection', () => {
     expect(feels.map((chip) => chip.textContent)).toEqual([expect.stringContaining('Great: 1'), expect.stringContaining('Good: 1')])
   })
 
-  it('opens one card at a time, and closes the open one when tapped', async () => {
+  it('brings a tab to the front, closed, and folds the front card when tapped again', async () => {
     render(<WorkoutsSection challengeId={await seedAttempt()} />)
 
-    const running = await screen.findByRole('button', { name: 'Running, 2 sessions' })
+    fireEvent.click(await screen.findByRole('button', { name: 'Running, 2 sessions' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Weights, 1 session' }))
+
     const weights = screen.getByRole('button', { name: 'Weights, 1 session' })
-    fireEvent.click(running)
+    expect(weights).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.getByRole('button', { name: 'Running, 2 sessions' })).not.toHaveAttribute('aria-expanded')
+
     fireEvent.click(weights)
     expect(weights).toHaveAttribute('aria-expanded', 'true')
-    expect(running).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.getByRole('list', { name: 'Weights sessions' })).toBeInTheDocument()
 
     fireEvent.click(weights)
     expect(weights).toHaveAttribute('aria-expanded', 'false')

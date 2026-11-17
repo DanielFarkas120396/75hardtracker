@@ -14,11 +14,17 @@ const moodFor = (feel: Mood) => MOODS.find((mood) => mood.value === feel)!
 /** The translucent wash for the feel chips and the session list of an open card. */
 const WASH = 'bg-white/55 dark:bg-black/25'
 
-/** Every workout of the attempt, on Stats under Weight: a card per activity, stacked, all folded until one is tapped. */
+const stackColor = (shade: number) => `color-mix(in srgb, var(--color-stack-from), var(--color-stack-to) ${Math.round(shade * 100)}%)`
+
+/**
+ * Every workout of the attempt, on Stats under Weight: a wallet of cards. One activity in front
+ * (most sessions at first), the others as slim tabs tucked under it, highest count first.
+ */
 export function WorkoutsSection({ challengeId }: { challengeId: number }) {
   const history = useWorkoutHistory(challengeId)
   const headingId = useId()
-  const [open, setOpen] = useState<WorkoutType | null>(null)
+  const [front, setFront] = useState<WorkoutType | null>(null)
+  const [open, setOpen] = useState(false)
 
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-4">
@@ -35,17 +41,16 @@ export function WorkoutsSection({ challengeId }: { challengeId: number }) {
         ) : (
           <>
             <Summary history={history} />
-            <div>
-              {history.activities.map((activity, i) => (
-                <ActivityCard
-                  key={activity.type}
-                  activity={activity}
-                  shade={history.activities.length > 1 ? i / (history.activities.length - 1) : 0}
-                  open={activity.type === open}
-                  onToggle={() => setOpen(activity.type === open ? null : activity.type)}
-                />
-              ))}
-            </div>
+            <Wallet
+              activities={history.activities}
+              front={front}
+              open={open}
+              onToggle={() => setOpen(!open)}
+              onPick={(type) => {
+                setFront(type)
+                setOpen(false)
+              }}
+            />
           </>
         ))}
       {history && history.untried.length > 0 && <Untried types={history.untried} />}
@@ -71,28 +76,80 @@ function Summary({ history }: { history: WorkoutHistory }) {
   )
 }
 
-interface ActivityCardProps {
-  activity: ActivityHistory
-  /** Where its colour sits between the stack's strongest shade (0, the top) and its softest (1). */
-  shade: number
+interface WalletProps {
+  activities: readonly ActivityHistory[]
+  /** The activity in front; the first (most sessions) when null or no longer there. */
+  front: WorkoutType | null
   open: boolean
   onToggle: () => void
+  onPick: (type: WorkoutType) => void
 }
 
-/**
- * One activity: a folder-like card drawn over the bottom of the one above, with its logo,
- * count and time. Tapped, it keeps its colour and unfolds its feels and sessions below them.
- */
-function ActivityCard({ activity, shade, open, onToggle }: ActivityCardProps) {
+/** The front card, then the other activities as tabs tucked under it, each narrower and softer than the last. */
+function Wallet({ activities, front, open, onToggle, onPick }: WalletProps) {
+  const reduceMotion = useReducedMotion()
+  const frontCard = activities.find((activity) => activity.type === front) ?? activities[0]
+  const tabs = activities.filter((activity) => activity !== frontCard)
+  const slide = { duration: reduceMotion ? 0 : 0.35, ease: 'easeInOut' } as const
+
+  return (
+    <div className="flex flex-col">
+      {/* Only the cards that change places fade in, not the whole stack when the page opens. */}
+      <AnimatePresence initial={false}>
+        <FrontCard key={frontCard.type} activity={frontCard} open={open} onToggle={onToggle} transition={slide} />
+        {tabs.map((activity, i) => {
+          const count = activity.sessions.length
+          return (
+            <motion.button
+              key={activity.type}
+              layout="position"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={slide}
+              type="button"
+              aria-label={`${activity.type}, ${count} ${sessionsWord(count)}`}
+              onClick={() => onPick(activity.type)}
+              className="relative -mt-6 flex items-center gap-3 rounded-[2rem] px-[1.125rem] pt-[2.125rem] pb-2.5 text-left text-on-stack shadow-[0_6px_16px_rgba(0,0,0,0.2)]"
+              style={{
+                // The inset stops growing after four tabs, so seven activities still fit a phone.
+                marginInline: `${Math.min(i + 1, 4) * 10}px`,
+                zIndex: tabs.length - i,
+                backgroundColor: stackColor((i + 1) / tabs.length),
+              }}
+            >
+              <Icon name={ACTIVITY_ICONS[activity.type]} size={24} strokeWidth={1.8} className="shrink-0" />
+              <span className="flex-1 truncate font-rounded font-bold">{activity.type}</span>
+              <span className="font-rounded text-xs font-bold">{formatMinutes(activity.minutes)}</span>
+              <span className="min-w-6 text-right font-display text-2xl leading-none tracking-wide">{count}</span>
+            </motion.button>
+          )
+        })}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+interface FrontCardProps {
+  activity: ActivityHistory
+  open: boolean
+  onToggle: () => void
+  transition: { duration: number; ease: 'easeInOut' }
+}
+
+/** The activity in front: its logo, count and time. Tapped, it unfolds its feels and sessions below them. */
+function FrontCard({ activity, open, onToggle, transition }: FrontCardProps) {
   const { type, sessions, minutes, feels } = activity
   const panelId = useId()
-  const reduceMotion = useReducedMotion()
   const count = sessions.length
 
   return (
-    <section
-      className="relative overflow-hidden rounded-[2rem] pb-10 text-on-stack shadow-[0_-6px_16px_rgba(0,0,0,0.1)] not-first:-mt-8"
-      style={{ backgroundColor: `color-mix(in srgb, var(--color-stack-from), var(--color-stack-to) ${Math.round(shade * 100)}%)` }}
+    <motion.section
+      layout="position"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={transition}
+      className="relative overflow-hidden rounded-[2rem] text-on-stack shadow-[0_6px_16px_rgba(0,0,0,0.25)]"
+      style={{ zIndex: 10, backgroundColor: stackColor(0) }}
     >
       <button
         type="button"
@@ -100,7 +157,7 @@ function ActivityCard({ activity, shade, open, onToggle }: ActivityCardProps) {
         aria-controls={open ? panelId : undefined}
         aria-label={`${type}, ${count} ${sessionsWord(count)}`}
         onClick={onToggle}
-        className="relative flex w-full items-center gap-4 px-5 pt-5 pb-2 text-left"
+        className="relative flex w-full items-center gap-4 p-5 text-left"
       >
         <Icon name={ACTIVITY_ICONS[type]} size={56} strokeWidth={1.5} className="shrink-0" />
         <span className="flex-1">
@@ -122,14 +179,17 @@ function ActivityCard({ activity, shade, open, onToggle }: ActivityCardProps) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: reduceMotion ? 0 : 0.3, ease: 'easeInOut' }}
+            transition={transition}
             className="overflow-hidden"
           >
-            <div className="px-5 pt-2">
+            <div className="px-5 pb-5">
               {feels.length > 0 && (
                 <ul aria-label="How it felt" className="flex flex-wrap gap-1.5">
                   {feels.map(({ feel, count: times }) => (
-                    <li key={feel} className={`flex items-center gap-1 rounded-full py-0.5 pr-2.5 pl-1.5 font-rounded text-sm font-bold ${WASH}`}>
+                    <li
+                      key={feel}
+                      className={`flex items-center gap-1 rounded-full py-0.5 pr-2.5 pl-1.5 font-rounded text-sm font-bold ${WASH}`}
+                    >
                       <span aria-hidden="true" className="text-lg">
                         {moodFor(feel).emoji}
                       </span>
@@ -164,7 +224,7 @@ function ActivityCard({ activity, shade, open, onToggle }: ActivityCardProps) {
           </motion.div>
         )}
       </AnimatePresence>
-    </section>
+    </motion.section>
   )
 }
 
