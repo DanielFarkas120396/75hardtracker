@@ -26,3 +26,11 @@ The first build brought a tapped tab to the front, with each tab narrower furthe
 The second build kept the top card (and any open card) full size, with a big logo and number. The owner wanted every card the same shape, the top one only starred.
 
 The plain starred top card looked shorter than the others (it has nothing tucked over it), so it grew a little; an outer halo was tried and dropped for a glow inside the card.
+
+## The rest of Stats (same PR)
+
+| Topic | Decision |
+|---|---|
+| Day card | The "Day X of 75" climb card leaves Stats: Today and Journey already show the day. Journey keeps it. |
+| Water | A glass bottle with a cap and a highlight, filled against the water owed so far; two waves roll on the water and bubbles rise (still with "reduce motion"). Chosen from four (glass, sport bottle, drop, glass with a goal mark). |
+| Pages | A wooden shelf, a book for every 100 pages (seven fit, then "+n"). The book in progress sticks out above the others, fills up from the bottom over its 100 pages, and has a red ribbon on top. At 0 pages, a dashed outline. Chosen from shelf, stack, tome and filling-stack ideas, then pulled-out variations and drawing styles. |

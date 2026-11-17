@@ -5,8 +5,7 @@ import { useChallengeStats } from '../../hooks/useChallengeStats'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { rulesFor } from '../../logic/rulesets'
 import { BodySection } from './BodySection'
-import { ClimbCard } from './ClimbCard'
-import { BookStackArt, BottleArt, StatTile } from './StatTiles'
+import { BookShelfArt, BottleArt, StatTile } from './StatTiles'
 import { WorkoutsSection } from './WorkoutsSection'
 
 interface StatsScreenProps {
@@ -17,7 +16,7 @@ interface StatsScreenProps {
   completed: boolean
 }
 
-/** The attempt as a story: how far up the climb, what it took (illustrated totals), then the body and the workouts. */
+/** The attempt as a story: what it took (illustrated totals), then the body and the workouts. Today and Journey show the day. */
 export function StatsScreen({ challenge, streak, today, todayDayNumber, completed }: StatsScreenProps) {
   const stats = useChallengeStats(challenge.id)
   const rules = rulesFor(challenge)
@@ -39,8 +38,6 @@ export function StatsScreen({ challenge, streak, today, todayDayNumber, complete
       </header>
 
       <main className="flex flex-col gap-4 px-4">
-        <ClimbCard dayReached={dayReached} />
-
         <div className="grid grid-cols-2 gap-3">
           <StatTile
             art={<BottleArt fill={stats.water_ml / (rules.waterTargetMl * daysSoFar)} />}
@@ -48,7 +45,7 @@ export function StatsScreen({ challenge, streak, today, todayDayNumber, complete
             label="Water drunk"
             tone="text-blue-ink"
           />
-          <StatTile art={<BookStackArt pages={stats.pages} />} value={`${stats.pages}`} label="Pages read" tone="text-world-ink" />
+          <StatTile art={<BookShelfArt pages={stats.pages} />} value={`${stats.pages}`} label="Pages read" tone="text-world-ink" />
         </div>
 
         <BodySection today={today} startDate={challenge.startDate} lastDay={daysSoFar} />

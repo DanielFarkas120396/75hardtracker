@@ -95,6 +95,29 @@
 
   --spacing-touch: 3rem;
 
+  /* The Stats bottle: its water rolls (one wave each way) and bubbles rise. */
+  --animate-wave: wave 3s linear infinite;
+  --animate-wave-back: wave 4.5s linear infinite reverse;
+  --animate-bubble: bubble 3.5s ease-in infinite;
+  @keyframes wave {
+    to {
+      transform: translateX(-32px);
+    }
+  }
+  @keyframes bubble {
+    0% {
+      transform: translateY(0);
+      opacity: 0;
+    }
+    20% {
+      opacity: 0.7;
+    }
+    100% {
+      transform: translateY(-22px);
+      opacity: 0;
+    }
+  }
+
   /* The favourite card's sparks, drifting up and fading. Each spark sets its own --spark-o and --spark-dx. */
   --animate-ember-rise: ember-rise 4s linear infinite;
   @keyframes ember-rise {
