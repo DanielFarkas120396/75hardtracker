@@ -21,6 +21,8 @@ const PAGES = 10
 /** The chosen book (docs/prototypes/README.md, Reading), lifting at once: 2.1 s of page motion. */
 const TURN = 2.2
 const FADE = 0.7
+/** A new page fades in over 1.5 s (chosen 2026-11-17): a quick fade made its shape pop up over the book. */
+const FADE_IN = 1.5
 const BETA = 0.6
 const BASE = 0.6
 const BLEND = 0.8
@@ -223,7 +225,7 @@ export function createBook(palette: FillPalette): Painter {
     pos.needsUpdate = true
     page.geometry.computeVertexNormals()
     const u = page.material.uniforms
-    u.opacity.value = 0.55 * Math.min(clamp01(page.t / 0.06), 1 - smooth((page.t - FADE) / (1 - FADE)))
+    u.opacity.value = 0.55 * Math.min(smooth((page.t * TURN) / FADE_IN), 1 - smooth((page.t - FADE) / (1 - FADE)))
     u.fillX.value = fillX
   }
 
