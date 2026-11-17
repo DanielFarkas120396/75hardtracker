@@ -60,20 +60,22 @@ export function BadgeUnlockToast({ badges, onDismiss }: BadgeUnlockToastProps) {
               exit={{ y: -40, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 26 }}
               style={{ zIndex: STACK_DEPTH - depth, transformOrigin: 'top center' }}
-              className={`flex w-full items-center gap-3 self-start rounded-card bg-surface px-4 py-3 text-left shadow-lg ring-1 ring-world/30 [grid-area:1/1] ${
-                depth === 0 ? 'pointer-events-auto' : ''
+              // The cards behind are empty and stretch to the front card's height, so every edge peeks out the same.
+              className={`flex w-full items-center gap-3 rounded-card bg-surface px-4 py-3 text-left shadow-lg ring-1 ring-world/30 [grid-area:1/1] ${
+                depth === 0 ? 'pointer-events-auto self-start' : 'self-stretch'
               }`}
             >
-              {/* The cards behind show only their edge: their content stays hidden under the front one. */}
-              <span className={`flex items-center gap-3 ${depth > 0 ? 'invisible' : ''}`}>
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-world-soft text-world-ink">
-                  <Icon name="badge" size={20} />
-                </span>
-                <span>
-                  <span className="block font-rounded text-sm font-bold text-ink">Badge unlocked: {badge.name}</span>
-                  <span className="block font-rounded text-xs font-semibold text-ink-muted">{badge.description}</span>
-                </span>
-              </span>
+              {depth === 0 && (
+                <>
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-world-soft text-world-ink">
+                    <Icon name="badge" size={20} />
+                  </span>
+                  <span>
+                    <span className="block font-rounded text-sm font-bold text-ink">Badge unlocked: {badge.name}</span>
+                    <span className="block font-rounded text-xs font-semibold text-ink-muted">{badge.description}</span>
+                  </span>
+                </>
+              )}
             </motion.button>
           ))}
         </AnimatePresence>

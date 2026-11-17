@@ -22,13 +22,13 @@ describe('BadgeUnlockToast', () => {
   })
 
   it('stacks the badges: the first in front, two more peeking out behind', () => {
-    render(<BadgeUnlockToast badges={[badge('a'), badge('b'), badge('c'), badge('d')]} onDismiss={() => {}} />)
+    const { container } = render(<BadgeUnlockToast badges={[badge('a'), badge('b'), badge('c'), badge('d')]} onDismiss={() => {}} />)
 
     expect(screen.getByRole('button', { name: /Badge unlocked: Badge a/ })).toBeInTheDocument()
-    // The cards behind are there for their edge only: hidden from assistive tech.
+    // The cards behind are empty edges, hidden from assistive tech: three cards in all, one readable.
     expect(screen.getAllByRole('button')).toHaveLength(1)
-    expect(screen.getByText('Badge unlocked: Badge c')).toBeInTheDocument()
-    expect(screen.queryByText('Badge unlocked: Badge d')).not.toBeInTheDocument()
+    expect(container.querySelectorAll('button')).toHaveLength(3)
+    expect(screen.queryByText(/Badge b/)).not.toBeInTheDocument()
   })
 
   it('counts down the front toast only, quicker while others wait', () => {
