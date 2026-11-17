@@ -25,16 +25,18 @@ interface MeasurementModalProps {
   open: boolean
   today: string
   onClose: () => void
+  /** Editing only: offers to delete the weigh-in (the caller confirms). */
+  onDelete?: () => void
 }
 
 const numberText = (value: number | undefined) => (value === undefined ? '' : String(value))
 
 /** Add or edit a weigh-in: date, weight in kg, and optional body measurements in cm. */
-export function MeasurementModal({ measurement, open, today, onClose }: MeasurementModalProps) {
+export function MeasurementModal({ measurement, open, today, onClose, onDelete }: MeasurementModalProps) {
   return (
     <Modal open={open} onClose={onClose}>
       {/* Keyed so each open starts from the entry being edited (or a blank form). */}
-      <MeasurementForm key={measurement?.id ?? 'new'} measurement={measurement} today={today} onDone={onClose} />
+      <MeasurementForm key={measurement?.id ?? 'new'} measurement={measurement} today={today} onDone={onClose} onDelete={onDelete} />
     </Modal>
   )
 }
@@ -43,10 +45,12 @@ function MeasurementForm({
   measurement,
   today,
   onDone,
+  onDelete,
 }: {
   measurement: Measurement | null
   today: string
   onDone: () => void
+  onDelete?: () => void
 }) {
   const [date, setDate] = useState(measurement?.date ?? today)
   const [weight, setWeight] = useState(numberText(measurement?.weight_kg))
@@ -133,6 +137,16 @@ function MeasurementForm({
           Cancel
         </Button>
       </div>
+      {measurement && onDelete && (
+        <button
+          type="button"
+          onClick={onDelete}
+          disabled={saving}
+          className="mt-2 min-h-touch w-full rounded-xl font-rounded text-sm font-bold text-danger-ink"
+        >
+          Delete this weigh-in
+        </button>
+      )}
     </form>
   )
 }

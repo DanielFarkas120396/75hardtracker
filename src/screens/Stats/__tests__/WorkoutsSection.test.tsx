@@ -5,7 +5,7 @@ import { db } from '../../../db/db'
 import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
 import type { DayEntry, Workout } from '../../../db/types'
 import { addDaysISO } from '../../../lib/dates'
-import { WorkoutsSection } from '../WorkoutsSection'
+import { WorkoutsSection, WorkoutTotals } from '../WorkoutsSection'
 
 const START = '2026-09-30'
 
@@ -41,16 +41,26 @@ describe('WorkoutsSection', () => {
   beforeEach(freshDatabase)
 
   it('adds up the attempt, with every card closed', async () => {
-    render(<WorkoutsSection challengeId={await seedAttempt()} />)
+    const challengeId = await seedAttempt()
+    render(
+      <>
+        <WorkoutTotals challengeId={challengeId} />
+        <WorkoutsSection challengeId={challengeId} />
+      </>,
+    )
 
     expect(await screen.findByRole('button', { name: 'Running, 2 sessions' })).toHaveAttribute('aria-expanded', 'false')
     expect(screen.getByRole('button', { name: 'Weights, 1 session' })).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByRole('list', { name: /sessions$/ })).not.toBeInTheDocument()
+    // Only the most practised activity is the favourite.
+    expect(screen.getByRole('button', { name: 'Running, 2 sessions' })).toHaveTextContent('Your favorite')
+    expect(screen.getByRole('button', { name: 'Weights, 1 session' })).not.toHaveTextContent('Your favorite')
 
-    const summary = screen.getByRole('list', { name: 'This attempt' })
-    expect(summary).toHaveTextContent('3sessions')
-    expect(summary).toHaveTextContent('2h 25mof training')
-    expect(summary).toHaveTextContent('2outdoors')
+    const summary = screen.getByRole('group', { name: 'This attempt' })
+    expect(summary).toHaveTextContent('2h 25m')
+    expect(summary).toHaveTextContent('of sweat')
+    expect(summary).toHaveTextContent('3 sessions')
+    expect(summary).toHaveTextContent('2 under the sky')
   })
 
   it('opens a card on its sessions, newest first, and how they felt', async () => {
@@ -73,7 +83,7 @@ describe('WorkoutsSection', () => {
     expect(feels.map((chip) => chip.textContent)).toEqual([expect.stringContaining('Great: 1'), expect.stringContaining('Good: 1')])
   })
 
-  it('opens one card at a time, and closes the open one when tapped', async () => {
+  it('opens a card where it is, one at a time, and closes the open one when tapped', async () => {
     render(<WorkoutsSection challengeId={await seedAttempt()} />)
 
     const running = await screen.findByRole('button', { name: 'Running, 2 sessions' })
@@ -82,6 +92,11 @@ describe('WorkoutsSection', () => {
     fireEvent.click(weights)
     expect(weights).toHaveAttribute('aria-expanded', 'true')
     expect(running).toHaveAttribute('aria-expanded', 'false')
+    // It opens where it is: the most practised activity stays on top.
+    expect(screen.getAllByRole('button', { name: /sessions?$/ }).map((b) => b.getAttribute('aria-label'))).toEqual([
+      'Running, 2 sessions',
+      'Weights, 1 session',
+    ])
 
     fireEvent.click(weights)
     expect(weights).toHaveAttribute('aria-expanded', 'false')

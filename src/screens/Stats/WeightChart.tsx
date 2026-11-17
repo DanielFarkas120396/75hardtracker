@@ -1,6 +1,5 @@
-import { useReducedMotion } from 'framer-motion'
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { format, parseISO } from 'date-fns'
+import { useEffect, useId } from 'react'
+import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { TrendWeight } from '../../logic/measurements'
 
 interface WeightChartProps {
@@ -8,13 +7,8 @@ interface WeightChartProps {
   points: TrendWeight[]
   /** The day the attempt has reached: the axis runs to it. */
   lastDay: number
-}
-
-interface ChartDatum {
-  day: number
-  date: string
-  weight: number
-  average?: number
+  /** The day of the weigh-in under the finger (or pointer) while it reads the chart; null once it lets go. */
+  onRead: (day: number | null) => void
 }
 
 const TICK_STEP = 10
@@ -31,43 +25,51 @@ function dayTicks(hasStart: boolean, lastDay: number): number[] {
 
 const tickLabel = (day: number) => (day === 0 ? 'Start' : day === 1 ? 'Day 1' : String(day))
 
-/** Crosshair readout: the weight leads, then the day and date, then the week's average when there is one. */
-function WeightTooltip({ active, payload }: { active?: boolean; payload?: { payload: ChartDatum }[] }) {
-  const datum = active ? payload?.[0]?.payload : undefined
-  if (!datum) return null
-  return (
-    <div className="rounded-xl bg-surface px-3 py-2 font-rounded shadow-md ring-1 ring-ink/10">
-      <p className="text-base font-bold text-ink">{datum.weight.toFixed(1)} kg</p>
-      <p className="text-xs font-semibold text-ink-muted">
-        {datum.day === 0 ? 'Start' : `Day ${datum.day}`} · {format(parseISO(datum.date), 'EEE d MMM')}
-      </p>
-      {datum.average !== undefined && (
-        <p className="text-xs font-semibold text-ink-muted">7-day average {datum.average.toFixed(1)} kg</p>
-      )}
-    </div>
-  )
+/**
+ * The tooltip draws nothing: it hands the day under the finger to the header, once it has moved
+ * there. Only the day (a number) is passed on, so a re-render with fresh point objects can't loop.
+ */
+function Reader({
+  active,
+  payload,
+  onRead,
+}: {
+  active?: boolean
+  payload?: { payload: TrendWeight }[]
+  onRead: (day: number | null) => void
+}) {
+  const day = active ? (payload?.[0]?.payload.day ?? null) : null
+  useEffect(() => onRead(day), [day, onRead])
+  return null
 }
 
 /**
- * Weight over the attempt, by challenge day: one series, so no legend (the
- * section heading names it). Once the 7-day average exists, it carries the
- * line and the day-to-day weigh-ins drop to faint dots. The list under the
- * chart is its table view.
+ * Weight over the attempt, by challenge day: one series, so no legend. The smoothed trend
+ * carries the line, over a soft fill, from the first weigh-in; the weigh-ins are faint dots and
+ * the latest trend gets a big dot. The scale sits on the right. Reading a point shows a plain
+ * crosshair; the section's header shows the reading (no floating box), and nothing animates,
+ * so the line never redraws while a finger moves over it.
  */
-export function WeightChart({ points, lastDay }: WeightChartProps) {
-  const reduceMotion = useReducedMotion()
-  const data: ChartDatum[] = points.map((p) => ({ day: p.day, date: p.date, weight: p.weight_kg, average: p.average }))
-  const hasStart = data[0]?.day === 0
-  const hasAverage = data.some((d) => d.average !== undefined)
+export function WeightChart({ points, lastDay, onRead }: WeightChartProps) {
+  const fillId = useId()
+  const hasStart = points[0]?.day === 0
+  const last = points.length - 1
 
-  const weights = data.map((d) => d.weight)
+  const weights = points.map((p) => p.weight_kg)
   const yDomain = [Math.floor(Math.min(...weights) - 1), Math.ceil(Math.max(...weights) + 1)]
 
   return (
-    <figure className="mt-3" aria-label="Weight by challenge day chart">
-      <div className="h-48 w-full">
+    // A lifted finger hands the header back to today's weight.
+    <figure className="mt-1 -mx-1" aria-label="Weight by challenge day chart" onTouchEnd={() => onRead(null)}>
+      <div className="h-40 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
+          <ComposedChart data={points} margin={{ top: 8, right: 0, bottom: 0, left: 16 }}>
+            <defs>
+              <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="var(--color-chart-line)" stopOpacity={0.3} />
+                <stop offset="1" stopColor="var(--color-chart-line)" stopOpacity={0} />
+              </linearGradient>
+            </defs>
             <CartesianGrid vertical={false} stroke="var(--color-chart-grid)" strokeWidth={1} />
             <XAxis
               dataKey="day"
@@ -81,51 +83,38 @@ export function WeightChart({ points, lastDay }: WeightChartProps) {
               tickLine={false}
             />
             <YAxis
+              orientation="right"
               domain={yDomain}
               allowDecimals={false}
-              width={34}
+              width={30}
               tick={AXIS_TICK}
               axisLine={false}
               tickLine={false}
             />
-            <Tooltip content={<WeightTooltip />} cursor={{ stroke: 'var(--color-ink-muted)', strokeWidth: 1 }} />
-            {hasAverage ? (
-              <>
-                <Line
-                  type="linear"
-                  dataKey="weight"
-                  stroke="none"
-                  dot={FAINT_DOT}
-                  activeDot={{ ...MARK, r: 5 }}
-                  isAnimationActive={!reduceMotion}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="average"
-                  stroke="var(--color-chart-line)"
-                  strokeWidth={3}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  connectNulls={false}
-                  dot={false}
-                  activeDot={false}
-                  isAnimationActive={!reduceMotion}
-                />
-              </>
-            ) : (
-              <Line
-                type="linear"
-                dataKey="weight"
-                stroke="var(--color-chart-line)"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                dot={{ ...MARK, r: 4 }}
-                activeDot={{ ...MARK, r: 6 }}
-                isAnimationActive={!reduceMotion}
-              />
-            )}
-          </LineChart>
+            <Tooltip content={<Reader onRead={onRead} />} isAnimationActive={false} cursor={{ stroke: 'var(--color-ink-muted)', strokeWidth: 1 }} />
+            <Area
+              type="monotone"
+              dataKey="trend"
+              stroke="var(--color-chart-line)"
+              strokeWidth={3}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill={`url(#${fillId})`}
+              dot={({ cx, cy, index }: { cx?: number; cy?: number; index?: number }) =>
+                index === last ? <circle key="latest" cx={cx} cy={cy} r={6} {...MARK} strokeWidth={3} /> : <g key={index} />
+              }
+              activeDot={false}
+              isAnimationActive={false}
+            />
+            <Line
+              type="linear"
+              dataKey="weight_kg"
+              stroke="none"
+              dot={FAINT_DOT}
+              activeDot={{ ...MARK, r: 5 }}
+              isAnimationActive={false}
+            />
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </figure>

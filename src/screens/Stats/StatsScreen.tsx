@@ -5,9 +5,8 @@ import { useChallengeStats } from '../../hooks/useChallengeStats'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { rulesFor } from '../../logic/rulesets'
 import { BodySection } from './BodySection'
-import { ClimbCard } from './ClimbCard'
-import { BookStackArt, BottleArt, StatTile } from './StatTiles'
-import { WorkoutsSection } from './WorkoutsSection'
+import { BookShelfArt, BottleArt, StatTile } from './StatTiles'
+import { WorkoutsSection, WorkoutTotals } from './WorkoutsSection'
 
 interface StatsScreenProps {
   challenge: Challenge
@@ -17,7 +16,7 @@ interface StatsScreenProps {
   completed: boolean
 }
 
-/** The attempt as a story: how far up the climb, what it took (illustrated totals), then the body and the workouts. */
+/** The attempt as a story: the weight first, the training totals, what else it took (water, pages), then each workout. Today and Journey show the day. */
 export function StatsScreen({ challenge, streak, today, todayDayNumber, completed }: StatsScreenProps) {
   const stats = useChallengeStats(challenge.id)
   const rules = rulesFor(challenge)
@@ -39,7 +38,8 @@ export function StatsScreen({ challenge, streak, today, todayDayNumber, complete
       </header>
 
       <main className="flex flex-col gap-4 px-4">
-        <ClimbCard dayReached={dayReached} />
+        <BodySection today={today} startDate={challenge.startDate} lastDay={daysSoFar} />
+        <WorkoutTotals challengeId={challenge.id} />
 
         <div className="grid grid-cols-2 gap-3">
           <StatTile
@@ -48,10 +48,9 @@ export function StatsScreen({ challenge, streak, today, todayDayNumber, complete
             label="Water drunk"
             tone="text-blue-ink"
           />
-          <StatTile art={<BookStackArt pages={stats.pages} />} value={`${stats.pages}`} label="Pages read" tone="text-world-ink" />
+          <StatTile art={<BookShelfArt pages={stats.pages} />} value={`${stats.pages}`} label="Pages read" tone="text-world-ink" />
         </div>
 
-        <BodySection today={today} startDate={challenge.startDate} lastDay={daysSoFar} />
         <WorkoutsSection challengeId={challenge.id} />
       </main>
     </div>

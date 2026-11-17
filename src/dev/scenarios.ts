@@ -360,7 +360,7 @@ export async function seedReturningWithoutProfile(): Promise<void> {
  * Weigh-ins for an attempt: the evening before Day 1 (Day 1 itself is
  * skipped, so that one is the starting weight, on the "Start" tick), then
  * most days up to `lastDay` on a slow, noisy drop from about 88 kg. A few
- * days are skipped, and Days 30 to 33 (a trip) break the 7-day average. No randomness, so a
+ * days are skipped, and Days 30 to 33 (a trip) leave a gap in the trend. No randomness, so a
  * reload draws the same chart.
  */
 function seedWeighIns(startDate: string, lastDay: number): Omit<Measurement, 'id'>[] {

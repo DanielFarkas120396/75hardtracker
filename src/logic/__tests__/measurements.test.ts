@@ -80,39 +80,25 @@ describe('attemptWeights', () => {
 })
 
 describe('weightTrend', () => {
-  it('starts the 7-day average on Day 7, over that day and the 6 before it', () => {
-    const trend = weightTrend(onDays([1, 88], [2, 86], [3, 89], [4, 85], [5, 88], [6, 86], [7, 87], [8, 81]))
-    expect(trend.slice(0, 6).map((p) => p.average)).toEqual([undefined, undefined, undefined, undefined, undefined, undefined])
-    expect(trend[6].average).toBe(87)
-    expect(trend[7].average).toBe(86)
+  it('starts at the first weigh-in, the starting one from before Day 1 included', () => {
+    const trend = weightTrend(onDays([0, 90], [1, 88]))
+    expect(trend[0].trend).toBe(90)
+    expect(trend[1].trend).toBeCloseTo(89.7)
   })
 
-  it('leaves the starting weigh-in from before Day 1 out of every average', () => {
-    const trend = weightTrend(onDays([0, 100], [1, 80], [2, 80], [3, 80], [4, 80], [5, 80], [6, 80], [7, 80]))
-    expect(trend[7].average).toBe(80)
+  it('pulls toward each weigh-in by 15% a day', () => {
+    const trend = weightTrend(onDays([1, 88], [2, 86], [3, 86]))
+    expect(trend.map((p) => p.trend)).toEqual([88, expect.closeTo(87.7), expect.closeTo(87.445)])
   })
 
-  it('needs 4 weigh-ins in those 7 days', () => {
-    const trend = weightTrend(onDays([7, 88], [9, 87], [11, 86], [13, 85]))
-    expect(trend.map((p) => p.average)).toEqual([undefined, undefined, undefined, 86.5])
+  it('pulls harder after a gap, and never breaks', () => {
+    const trend = weightTrend(onDays([1, 88], [4, 85]))
+    // Three days keep 0.85³ ≈ 61% of the trend.
+    expect(trend[1].trend).toBeCloseTo(88 - 3 * (1 - 0.85 ** 3))
   })
 
-  it('breaks across a gap, and comes back once the week fills up again', () => {
-    const daily = Array.from({ length: 7 }, (_, i): [number, number] => [i + 1, 88])
-    const trend = weightTrend(onDays(...daily, [15, 86], [16, 86], [17, 86], [18, 86]))
-    expect(trend.map((p) => [p.day, p.average])).toEqual([
-      [1, undefined],
-      [2, undefined],
-      [3, undefined],
-      [4, undefined],
-      [5, undefined],
-      [6, undefined],
-      [7, 88],
-      [15, undefined],
-      [16, undefined],
-      [17, undefined],
-      [18, 86],
-    ])
+  it('is empty without weigh-ins', () => {
+    expect(weightTrend([])).toEqual([])
   })
 })
 
