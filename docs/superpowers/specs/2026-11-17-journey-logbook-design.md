@@ -40,7 +40,7 @@ Rows:
 
 - **Cover:** the world's own picture (the ones from the old map), darkened into the canvas so the name reads on it, in the world's colour.
 - **Colour:** each row wears its world's colours (`data-world`), so scrolling back the screen goes green, forest green, grey, amber: the colour shift is the descent. Each day's card has a faint wash of its world's colour, strongest on the photo side and fading across (asked by the owner on 2026-11-17: "very subtle").
-- **Altitude rail:** one thin bar fixed on the left edge, Hell at the bottom and Heaven at the top, filled up to today. Its colour flows from world to world: each world's colour fades in over the one below it across a few days, with no gaps or marks. No duck on it (owner, 2026-11-17). Tapping a stretch jumps to that world's cover (a world ahead jumps to the top).
+- **Altitude rail:** a thin bar fixed on the left edge, one section per world, Hell at the bottom and Heaven at the top. No duck on it (owner, 2026-11-17). The fill follows the scroll: it reaches the day under a line a little above the middle of the screen, so it stands at today at the top of the page and sinks through the worlds as you scroll back, smoothly. Each section's colour rises out of the world below it (a gradient from the lower world's colour to its own). Tapping a section jumps to that world's cover (a world ahead jumps to the top).
 
 ## Edge cases
 

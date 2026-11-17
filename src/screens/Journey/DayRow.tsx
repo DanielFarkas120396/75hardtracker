@@ -33,6 +33,7 @@ export function DayRow({ dayNumber, date, status, world, entry, onOpen }: DayRow
       <button
         type="button"
         data-world={world}
+        data-log-day={dayNumber}
         onClick={onClick}
         className="flex w-full items-center justify-between rounded-2xl border border-dashed border-ink/20 px-4 py-3 text-left font-rounded text-sm text-ink-muted"
       >
@@ -49,6 +50,7 @@ export function DayRow({ dayNumber, date, status, world, entry, onOpen }: DayRow
     <button
       type="button"
       data-world={world}
+      data-log-day={dayNumber}
       onClick={onClick}
       className={`flex w-full items-center gap-3 rounded-card p-2.5 text-left motion-safe:transition-transform active:scale-[0.98] ${
         // A faint wash of the world's colour from the photo side, so each chapter reads as its world.

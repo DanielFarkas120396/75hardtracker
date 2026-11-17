@@ -1,4 +1,4 @@
-import { CHALLENGE_LENGTH } from '../../logic/constants'
+import { useEffect, useRef, type CSSProperties } from 'react'
 import { WORLDS, type World } from './worlds'
 
 interface AltitudeRailProps {
@@ -8,57 +8,92 @@ interface AltitudeRailProps {
   onJump: (world: World) => void
 }
 
-/** How far, in days, each world's colour fades in over the one below it. */
-const BLEND_DAYS = 4
-
-const percent = (days: number) => `${(days / CHALLENGE_LENGTH) * 100}%`
+/** Where on the screen the rail reads which day you're looking at: a little above the middle. */
+const READ_LINE = 0.45
 
 /**
- * The climb as one thin bar down the left edge: Hell at the bottom, Heaven
- * at the top, filled up to the day reached, its colour flowing from world to
- * world. Each world's band fades in over the one below it (in its own
- * data-world colour, so it follows the theme). Over the bar, each world's
- * stretch is a button to its chapter.
+ * The day under the read line, with a fraction for how far through its row
+ * the line is, so the fill moves smoothly. Above the first row (the top of
+ * the page) it's the day reached; past the last row, the climb's foot.
+ */
+function dayInView(dayReached: number): number {
+  const rows = document.querySelectorAll<HTMLElement>('[data-log-day]')
+  if (rows.length === 0) return dayReached
+  const line = window.innerHeight * READ_LINE
+  for (const row of rows) {
+    const box = row.getBoundingClientRect()
+    if (box.bottom <= line) continue
+    const day = Number(row.dataset.logDay)
+    if (box.top > line) return row === rows[0] ? dayReached : day + 0.5
+    return day + 0.5 - (line - box.top) / box.height
+  }
+  return 0
+}
+
+/**
+ * The climb as a thin bar down the left edge, one section per world, Hell
+ * at the bottom. The fill follows the scroll: it reaches the day you're
+ * looking at, climbing to today at the top of the page and sinking towards
+ * Hell as you scroll back. Each section's colour rises out of the world
+ * below it. Each section is a button to its chapter.
  */
 export function AltitudeRail({ dayReached, onJump }: AltitudeRailProps) {
-  const day = Math.min(CHALLENGE_LENGTH, Math.max(0, dayReached))
+  const railRef = useRef<HTMLElement>(null)
+
+  // Written straight to a CSS variable, once a frame at most: no re-render while scrolling.
+  useEffect(() => {
+    const rail = railRef.current
+    if (!rail) return
+    let frame = 0
+    const update = () => {
+      frame = 0
+      rail.style.setProperty('--rail-day', String(Math.min(dayReached, dayInView(dayReached))))
+    }
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update)
+    }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+    }
+  }, [dayReached])
 
   return (
     <nav
+      ref={railRef}
       aria-label="The climb, by world"
-      className="fixed top-[calc(env(safe-area-inset-top)+6rem)] bottom-[calc(6.5rem+env(safe-area-inset-bottom))] left-1 z-10 w-7"
+      className="fixed top-[calc(env(safe-area-inset-top)+6rem)] bottom-[calc(6.5rem+env(safe-area-inset-bottom))] left-1 z-10 flex w-7 flex-col-reverse gap-1"
+      style={{ '--rail-day': dayReached } as CSSProperties}
     >
-      <div aria-hidden="true" className="absolute inset-y-0 left-1/2 w-1 -translate-x-1/2 overflow-hidden rounded-full bg-ink/15">
-        <div className="absolute inset-0" style={{ clipPath: `inset(${100 - (day / CHALLENGE_LENGTH) * 100}% 0 0 0)` }}>
-          {WORLDS.map((world, i) => {
-            const blend = i === 0 ? 0 : BLEND_DAYS
-            const from = world.firstDay - 1 - blend / 2
-            // Up to the top: the next world's band covers the rest. The fade's stop is a share of this band's height.
-            const span = CHALLENGE_LENGTH - from
-            const fade = blend ? `linear-gradient(to top, transparent, black ${(blend / span) * 100}%)` : undefined
-            return (
-              <div
-                key={world.id}
-                data-world={world.id}
-                className="absolute inset-x-0 bg-world"
-                style={{ bottom: percent(from), height: percent(span), maskImage: fade, WebkitMaskImage: fade }}
-              />
-            )
-          })}
-        </div>
-      </div>
-
-      <div className="absolute inset-0 flex flex-col-reverse">
-        {WORLDS.map((world) => (
+      {WORLDS.map((world, i) => {
+        const length = world.lastDay - world.firstDay + 1
+        return (
           <button
             key={world.id}
             type="button"
+            // The world below, read here so the section's colour can rise out of it.
+            data-world={WORLDS[Math.max(0, i - 1)].id}
             aria-label={`Go to ${world.name}`}
             onClick={() => onJump(world)}
-            style={{ flexGrow: world.lastDay - world.firstDay + 1, flexBasis: 0 }}
-          />
-        ))}
-      </div>
+            className="relative flex justify-center"
+            style={{ flexGrow: length, flexBasis: 0, '--below': 'var(--color-world)' } as CSSProperties}
+          >
+            <span data-world={world.id} className="relative h-full w-1 overflow-hidden rounded-full bg-ink/15">
+              <span
+                className="absolute inset-x-0 bottom-0 rounded-full motion-safe:transition-[height] motion-safe:duration-300 motion-safe:ease-out"
+                style={{
+                  height: `calc(clamp(0, (var(--rail-day) - ${world.firstDay - 1}) / ${length}, 1) * 100%)`,
+                  background: 'linear-gradient(to top, var(--below), var(--color-world) 70%)',
+                }}
+              />
+            </span>
+          </button>
+        )
+      })}
     </nav>
   )
 }
