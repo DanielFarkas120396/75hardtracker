@@ -51,7 +51,10 @@ export function DayRow({ dayNumber, date, status, world, entry, onOpen }: DayRow
       data-world={world}
       onClick={onClick}
       className={`flex w-full items-center gap-3 rounded-card p-2.5 text-left motion-safe:transition-transform active:scale-[0.98] ${
-        today ? 'bg-world-soft ring-2 ring-world' : 'bg-surface'
+        // A faint wash of the world's colour from the photo side, so each chapter reads as its world.
+        today
+          ? 'bg-world-soft ring-2 ring-world'
+          : 'bg-linear-to-r from-[color-mix(in_srgb,var(--color-world)_14%,var(--color-surface))] to-[color-mix(in_srgb,var(--color-world)_4%,var(--color-surface))]'
       }`}
     >
       <Thumbnail photoId={entry?.photoId} dayNumber={dayNumber} />
