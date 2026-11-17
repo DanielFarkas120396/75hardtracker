@@ -31,7 +31,7 @@ interface TaskBoardProps {
   /** The day's photo: the iris opens on it, and it's the done photo chip's thumbnail. */
   photo?: Blob
   /** Shortcuts on the tiles that have one. */
-  quickActions?: Partial<Record<BoardTask, QuickAction>>
+  quickActions?: Partial<Record<BoardTask, QuickAction | QuickAction[]>>
   /** A declared social occasion today: the diet tile shows a toast instead of the alcohol switch. */
   socialToday?: boolean
   /** Late in the evening with tasks left (the duck tapping or hunting): the open tiles get an edge. */
