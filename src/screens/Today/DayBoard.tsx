@@ -40,7 +40,7 @@ interface DayBoardProps {
 
 /**
  * A day's TaskBoard with its shortcuts wired up: a workout, a glass of water,
- * 10 or 1 pages, and the camera (or the library, when only that's
+ * 1 or 10 pages, and the camera (or the library, when only that's
  * allowed). A glass or the pages show "Logged … · Undo" for a moment, so a
  * stray tap is one tap to take back. Lives under PhotoCapture, which owns the camera.
  */
@@ -68,7 +68,7 @@ export function DayBoard(props: DayBoardProps) {
     return {
       label: `Add ${words}`,
       icon: 'plus',
-      text: String(pages),
+      text: words,
       onPress: () => void addPages(pages).then(() => log(`Logged ${words}`, () => void addPages(-pages))),
     }
   }
@@ -86,7 +86,7 @@ export function DayBoard(props: DayBoardProps) {
           .then(() => log(`Logged ${QUICK_WATER_ML} ml`, () => void dayEntryRepo.adjustWater(entry.id, -QUICK_WATER_ML)))
       },
     },
-    reading: pagesLeft > 0 ? [pagesShortcut(10), pagesShortcut(1)] : undefined,
+    reading: pagesLeft > 0 ? [pagesShortcut(1), pagesShortcut(10)] : undefined,
     photo: capture.libraryOnly
       ? { label: 'Choose from library', icon: 'gallery', text: 'Pick', onPress: capture.chooseFromLibrary }
       : { label: 'Take photo', icon: 'photo', text: 'Snap', onPress: capture.takePhoto },

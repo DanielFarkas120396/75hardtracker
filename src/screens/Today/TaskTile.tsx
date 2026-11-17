@@ -35,7 +35,7 @@ interface TaskTileProps {
   bookTitle?: string
   /** Late in the evening: 'late' when it no longer fits before the deadline, bedtime then midnight (a red edge), 'open' otherwise (a stronger edge). */
   urgency: 'none' | 'open' | 'late'
-  /** One shortcut, or a row of them ("+10", "+1"). */
+  /** One shortcut, or several stacked in the corner ("+1 page" over "+10 pages"). */
   quick?: QuickAction | QuickAction[]
   /** Controls on the tile's right (the diet switches). */
   controls?: ReactNode
@@ -118,7 +118,7 @@ export function TaskTile({ task, data, rules, complete, bookTitle, urgency, quic
       </button>
       {controls}
       {/* A full 48 px touch target around a small chip, so the shortcut never outshines the tile's title. A shortcut no longer needed shrinks away. */}
-      <div className="absolute top-1 right-1 flex">
+      <div className="absolute top-1 right-1 flex flex-col items-end">
         <AnimatePresence initial={false}>
           {(quick ? [quick].flat() : []).map((action) => (
             <motion.button
