@@ -11,10 +11,15 @@ interface AltitudeRailProps {
 /** Where on the screen the rail reads which day you're looking at: a little above the middle. */
 const READ_LINE = 0.45
 
+/** How much of the way to its target the fill moves each frame. */
+const EASE = 0.2
+
 /**
- * The day under the read line, with a fraction for how far through its row
- * the line is, so the fill moves smoothly. Above the first row (the top of
- * the page) it's the day reached; past the last row, the climb's foot.
+ * How far up the climb the read line is: a day counts in full once the line
+ * reaches the top of its row, and empties as the line goes down through it.
+ * Between two rows (over a world's cover) it rests on the day below, so a
+ * world's section is full before the next one starts. Above the first row
+ * (the top of the page) it's the day reached; past the last row, nothing.
  */
 function dayInView(dayReached: number): number {
   const rows = document.querySelectorAll<HTMLElement>('[data-log-day]')
@@ -24,8 +29,8 @@ function dayInView(dayReached: number): number {
     const box = row.getBoundingClientRect()
     if (box.bottom <= line) continue
     const day = Number(row.dataset.logDay)
-    if (box.top > line) return row === rows[0] ? dayReached : day + 0.5
-    return day + 0.5 - (line - box.top) / box.height
+    if (box.top > line) return row === rows[0] ? dayReached : day
+    return day - (line - box.top) / box.height
   }
   return 0
 }
@@ -40,14 +45,20 @@ function dayInView(dayReached: number): number {
 export function AltitudeRail({ dayReached, onJump }: AltitudeRailProps) {
   const railRef = useRef<HTMLElement>(null)
 
-  // Written straight to a CSS variable, once a frame at most: no re-render while scrolling.
+  // One value eases towards the day in view, so the sections fill strictly one after another.
+  // Written straight to a CSS variable each frame: no re-render while scrolling.
   useEffect(() => {
     const rail = railRef.current
     if (!rail) return
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    let shown = dayReached
     let frame = 0
     const update = () => {
       frame = 0
-      rail.style.setProperty('--rail-day', String(Math.min(dayReached, dayInView(dayReached))))
+      const target = Math.min(dayReached, dayInView(dayReached))
+      shown = reduceMotion || Math.abs(target - shown) < 0.01 ? target : shown + (target - shown) * EASE
+      rail.style.setProperty('--rail-day', String(shown))
+      if (shown !== target) frame = requestAnimationFrame(update)
     }
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(update)
@@ -84,7 +95,7 @@ export function AltitudeRail({ dayReached, onJump }: AltitudeRailProps) {
           >
             <span data-world={world.id} className="relative h-full w-1 overflow-hidden rounded-full bg-ink/15">
               <span
-                className="absolute inset-x-0 bottom-0 rounded-full motion-safe:transition-[height] motion-safe:duration-300 motion-safe:ease-out"
+                className="absolute inset-x-0 bottom-0 rounded-full"
                 style={{
                   height: `calc(clamp(0, (var(--rail-day) - ${world.firstDay - 1}) / ${length}, 1) * 100%)`,
                   background: 'linear-gradient(to top, var(--below), var(--color-world) 70%)',
