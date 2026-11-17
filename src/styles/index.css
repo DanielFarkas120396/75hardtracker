@@ -90,8 +90,26 @@
   --color-stack-from: #e08a4a;
   --color-stack-to: #f3d9c0;
   --color-on-stack: #3d1a05;
+  /* The favourite card's warmth, rising from below it. Faint where the text sits. */
+  --color-stack-glow: #f3a865;
 
   --spacing-touch: 3rem;
+
+  /* The favourite card's sparks, drifting up and fading. Each spark sets its own --spark-o and --spark-dx. */
+  --animate-ember-rise: ember-rise 4s linear infinite;
+  @keyframes ember-rise {
+    0% {
+      transform: translate(0, 40px);
+      opacity: 0;
+    }
+    20% {
+      opacity: var(--spark-o);
+    }
+    100% {
+      transform: translate(var(--spark-dx), -70px);
+      opacity: 0;
+    }
+  }
 }
 
 .dark {
@@ -126,6 +144,7 @@
   --color-stack-from: #8a5a2a;
   --color-stack-to: #3a2a1e;
   --color-on-stack: #fff1e6;
+  --color-stack-glow: #b8733a;
 }
 
 /* The world you're in (data-world on <html>, set by useWorldTheme) colours the app. An element can

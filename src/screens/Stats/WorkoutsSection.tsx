@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { useId, useState } from 'react'
+import { useId, useState, type CSSProperties } from 'react'
 import { Icon } from '../../components/icons/Icon'
 import { ACTIVITY_ICONS, formatMinutes } from '../../content/activities'
 import { MOODS, type Mood } from '../../content/moods'
@@ -13,6 +13,17 @@ const moodFor = (feel: Mood) => MOODS.find((mood) => mood.value === feel)!
 
 /** The translucent wash for the feel chips and the session list of an open card. */
 const WASH = 'bg-white/55 dark:bg-black/25'
+
+/** The favourite card's tiny sparks: fixed spots (no randomness), each with its own pace. */
+const SPARKS = Array.from({ length: 16 }, (_, i) => ({
+  left: ((i * 61 + 7) % 96) + 2,
+  top: 30 + ((i * 43) % 70),
+  size: 1 + (i % 2),
+  opacity: 0.45 + ((i * 7) % 5) / 10,
+  duration: 3 + ((i * 5) % 7) / 2,
+  delay: (i * 0.7) % 6,
+  dx: ((i * 13) % 25) - 12,
+}))
 
 const stackColor = (shade: number) => `color-mix(in srgb, var(--color-stack-from), var(--color-stack-to) ${Math.round(shade * 100)}%)`
 
@@ -80,7 +91,7 @@ function Summary({ history }: { history: WorkoutHistory }) {
 
 interface ActivityCardProps {
   activity: ActivityHistory
-  /** The top card, the most practised activity: it gets the star. */
+  /** The top card, the most practised activity: a little bigger, starred, glowing with sparks. */
   first: boolean
   /** Where its colour sits between the stack's strongest shade (0, the top) and its softest (1). */
   shade: number
@@ -105,6 +116,7 @@ function ActivityCard({ activity, first, shade, layer, open, onToggle }: Activit
       className="relative overflow-hidden rounded-[2rem] text-on-stack shadow-[0_6px_16px_rgba(0,0,0,0.25)] not-first:-mt-6"
       style={{ zIndex: layer, backgroundColor: stackColor(shade) }}
     >
+      {first && <Embers />}
       <button
         type="button"
         aria-expanded={open}
@@ -112,7 +124,7 @@ function ActivityCard({ activity, first, shade, layer, open, onToggle }: Activit
         aria-label={`${type}, ${count} ${sessionsWord(count)}`}
         onClick={onToggle}
         // A tucked card's top 24 px hide under the card above it, so its content starts lower.
-        className={`relative flex w-full items-center gap-3.5 px-5 pb-3 text-left ${first ? 'pt-3' : 'pt-9'}`}
+        className={`relative flex w-full items-center gap-3.5 px-5 text-left ${first ? 'py-7' : 'pt-9 pb-3'}`}
       >
         <Icon name={ACTIVITY_ICONS[type]} size={30} strokeWidth={1.8} className="shrink-0" />
         <span className="min-w-0 flex-1">
@@ -180,6 +192,34 @@ function ActivityCard({ activity, first, shade, layer, open, onToggle }: Activit
         )}
       </AnimatePresence>
     </section>
+  )
+}
+
+/** A warm glow rising from below the favourite card, with tiny sparks drifting up (still with "reduce motion"). */
+function Embers() {
+  return (
+    <span aria-hidden="true" className="pointer-events-none absolute inset-0">
+      <span className="absolute inset-0 bg-[radial-gradient(130%_90%_at_50%_120%,var(--color-stack-glow),transparent_70%)]" />
+      {SPARKS.map((spark, i) => (
+        <span
+          key={i}
+          className="absolute rounded-full bg-[#ffd59a] shadow-[0_0_4px_1px_rgba(255,180,100,0.75)] motion-safe:animate-ember-rise"
+          style={
+            {
+              left: `${spark.left}%`,
+              top: `${spark.top}%`,
+              width: spark.size,
+              height: spark.size,
+              opacity: spark.opacity,
+              animationDuration: `${spark.duration}s`,
+              animationDelay: `-${spark.delay}s`,
+              '--spark-o': spark.opacity,
+              '--spark-dx': `${spark.dx}px`,
+            } as CSSProperties
+          }
+        />
+      ))}
+    </span>
   )
 }
 
