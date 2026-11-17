@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { BadgeDefinition } from '../../logic/badges'
@@ -21,31 +21,43 @@ describe('BadgeUnlockToast', () => {
     vi.useRealTimers()
   })
 
-  it('shows at most two badges at a time, in queue order', () => {
-    render(<BadgeUnlockToast badges={[badge('a'), badge('b'), badge('c')]} onDismiss={() => {}} />)
+  it('stacks the badges: the first in front, two more peeking out behind', () => {
+    render(<BadgeUnlockToast badges={[badge('a'), badge('b'), badge('c'), badge('d')]} onDismiss={() => {}} />)
 
-    expect(screen.getByText('Badge unlocked: Badge a')).toBeInTheDocument()
-    expect(screen.getByText('Badge unlocked: Badge b')).toBeInTheDocument()
-    expect(screen.queryByText('Badge unlocked: Badge c')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Badge unlocked: Badge a/ })).toBeInTheDocument()
+    // The cards behind are there for their edge only: hidden from assistive tech.
+    expect(screen.getAllByRole('button')).toHaveLength(1)
+    expect(screen.getByText('Badge unlocked: Badge c')).toBeInTheDocument()
+    expect(screen.queryByText('Badge unlocked: Badge d')).not.toBeInTheDocument()
   })
 
-  it('dismisses each toast after a few seconds, and the next one takes its place', () => {
+  it('counts down the front toast only, quicker while others wait', () => {
     const onDismiss = vi.fn()
-    const { rerender } = render(<BadgeUnlockToast badges={[badge('a'), badge('b'), badge('c')]} onDismiss={onDismiss} />)
+    const { rerender } = render(<BadgeUnlockToast badges={[badge('a'), badge('b')]} onDismiss={onDismiss} />)
 
     act(() => {
-      vi.advanceTimersByTime(4500)
+      vi.advanceTimersByTime(3000)
     })
+    expect(onDismiss).toHaveBeenCalledTimes(1)
     expect(onDismiss).toHaveBeenCalledWith('a')
-    expect(onDismiss).toHaveBeenCalledWith('b')
-    expect(onDismiss).not.toHaveBeenCalledWith('c')
 
-    rerender(<BadgeUnlockToast badges={[badge('c')]} onDismiss={onDismiss} />)
-    expect(screen.getByText('Badge unlocked: Badge c')).toBeInTheDocument()
-
+    rerender(<BadgeUnlockToast badges={[badge('b')]} onDismiss={onDismiss} />)
     act(() => {
-      vi.advanceTimersByTime(4500)
+      vi.advanceTimersByTime(3000)
     })
-    expect(onDismiss).toHaveBeenCalledWith('c')
+    expect(onDismiss).not.toHaveBeenCalledWith('b')
+    act(() => {
+      vi.advanceTimersByTime(1500)
+    })
+    expect(onDismiss).toHaveBeenCalledWith('b')
+  })
+
+  it('sends the front toast away on a tap', () => {
+    const onDismiss = vi.fn()
+    render(<BadgeUnlockToast badges={[badge('a'), badge('b')]} onDismiss={onDismiss} />)
+
+    fireEvent.click(screen.getByRole('button', { name: /Badge a/ }))
+
+    expect(onDismiss).toHaveBeenCalledWith('a')
   })
 })
