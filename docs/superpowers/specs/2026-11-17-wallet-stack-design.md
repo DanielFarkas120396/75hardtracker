@@ -1,6 +1,6 @@
 # Wallet stack — design
 
-Date: 2026-11-17 · Status: **built** (PR #94), phone check pending.
+Date: 2026-11-17 · Status: **merged** (PR #94, 2026-11-17), phone check pending.
 
 ## Why
 

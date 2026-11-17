@@ -300,6 +300,7 @@ How it's estimated:
 - [ ] **Phone check of the tile fills** (#74–#78): smooth with several fills moving, no heat after a minute on Today, Reduce Motion on and off, light and dark, a late day. If copying the fills is too slow on the iPhone, the design falls back to one canvas per tile. Also compare the iris blades with `photo-tile.html` (#76: lighter and flatter in three.js 0.186).
 - [ ] **Phone checklists of the Today critiques** (#79–#86): still unticked in the PRs.
 - [ ] **Weigh-in on the iPhone** (#87): the decimal keypad on the card.
+- [ ] **Phone check of the Stats rework** (#94, merged 11-17): the sparks on the favourite card and the bottle waves (smooth, Reduce Motion), reading the weight chart with a finger (the header follows, letting go brings today back), the compact weigh-in list and Delete in the edit sheet.
 - [ ] **Idle cost on Today** (measured 10-15), only if the phone check says so: the duck, the flame and the fills settle after a few seconds without a tap; the flame at its real 24 fps instead of 60; plain WebGL instead of three.js for the fills.
 - [ ] **Phone pass on the Ember screens.** The specs record phone checks for the earlier rounds and the Journey cards, not for the whole v3 look.
 - [ ] **Duck animation around the signature** (draw to commit): still to design.
