@@ -33,7 +33,7 @@ The plain starred top card looked shorter than the others (it has nothing tucked
 |---|---|
 | Weight | First on the page: the latest weight (big), its change, and the chart (taller, soft fill under the line, scale on the right, a big dot on the latest trend). Only an arrow under it unfolds the weigh-ins: one compact row each (day, date, weight, ▼/▲ since the one before, a ruler icon for body measurements). A row opens the edit sheet, which now holds Delete. |
 | Compact weight | The "Weight" title goes (kept for screen readers): icon, latest weight, change (no "since Day 1") and "+ Log" share one line; a shorter chart; the arrow tight under it. |
-| Reading the chart | No floating box and no animation: the header line shows the weigh-in under the finger (weight, day, date, trend) with a plain crosshair; letting go brings back today's weight. |
+| Reading the chart | No floating box and no animation: a finger anywhere on the chart (not just on a dot) puts a plain cursor on the closest weigh-in by day, and dragging moves it; the header line shows it (weight, day, date, trend). The cursor stays where the finger lets go (owner, after the merge; PR follow-up). Vertical swipes still scroll the page. |
 | Order | Weight, the training totals, water and pages, then the workout cards. |
 | Trend line | A smoothed trend from the first weigh-in (each one pulls it 15% of the way per day since the one before), instead of the 7-day average that only began on Day 7 and broke across gaps. |
 | Workout totals | No more three small cards: the time trained, big ("53h15", "of sweat"), a thin divider, then the sessions and "under the sky" (outdoors) as two lines. Picked ("D") from big-number, hero, ring, sentence, banner and bar ideas, then hybrids. |

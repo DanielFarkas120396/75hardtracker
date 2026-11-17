@@ -36,7 +36,7 @@ function bodySummary(measurement: Measurement): string {
 
 /**
  * This attempt's weight, compact: one line with the latest weight and its change from the start
- * (or, while a finger reads the chart, that weigh-in), then the chart. The arrow
+ * (or, once a finger has read the chart, that weigh-in), then the chart. The arrow
  * under it unfolds the weigh-ins, one compact row each (day, date, weight, change since the one
  * before); a row opens the weigh-in to edit or delete it.
  */
@@ -99,7 +99,7 @@ export function BodySection({ today, startDate, lastDay }: BodySectionProps) {
       )}
 
       {weighIns.length >= 2 ? (
-        <WeightChart points={trend} lastDay={lastDay} onRead={setReadingDay} />
+        <WeightChart points={trend} lastDay={lastDay} readDay={readingDay} onRead={setReadingDay} />
       ) : (
         summary && <p className="mt-2 text-sm text-ink-muted">Log another weigh-in to see your trend.</p>
       )}
