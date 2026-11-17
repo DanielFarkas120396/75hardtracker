@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { comparePair, frameMs } from '../photoCompare'
+import { comparePair, frameMs, frameMsToSpeed, speedToFrameMs } from '../photoCompare'
 
 const photos = [1, 3, 5, 7].map((dayNumber) => ({ dayNumber, photo: { id: dayNumber * 10 } }))
 const days = (pair: readonly { dayNumber: number }[]) => pair.map((p) => p.dayNumber)
@@ -36,5 +36,18 @@ describe('frameMs', () => {
   it('keeps each photo on screen between 80 and 400 ms', () => {
     expect(frameMs(2)).toBe(400)
     expect(frameMs(75)).toBe(80)
+  })
+})
+
+describe('the speed slider', () => {
+  it('goes from 1 s per photo when slow to 50 ms when fast', () => {
+    expect(speedToFrameMs(0)).toBe(1000)
+    expect(speedToFrameMs(100)).toBe(50)
+  })
+
+  it('puts a time per photo back on the slider', () => {
+    expect(frameMsToSpeed(1000)).toBe(0)
+    expect(frameMsToSpeed(50)).toBe(100)
+    expect(frameMsToSpeed(speedToFrameMs(40))).toBe(40)
   })
 })

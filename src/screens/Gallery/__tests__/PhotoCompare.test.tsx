@@ -106,6 +106,16 @@ describe('PhotoCompare', () => {
       expect(screen.getByRole('img', { name: 'Day 5 progress' })).toBeInTheDocument()
     })
 
+    it('plays faster from the next photo when the speed goes up', async () => {
+      vi.useFakeTimers()
+      renderCompare()
+      fireEvent.click(screen.getByRole('button', { name: 'Time-lapse' }))
+      await play(100)
+      fireEvent.change(screen.getByRole('slider', { name: 'Speed' }), { target: { value: '100' } })
+      await play(60)
+      expect(screen.getByRole('img', { name: 'Day 3 progress' })).toBeInTheDocument()
+    })
+
     it('plays anyway when decoding the photos never finishes', async () => {
       vi.useFakeTimers()
       vi.spyOn(HTMLImageElement.prototype, 'decode').mockReturnValue(new Promise(() => {}))
@@ -125,6 +135,7 @@ describe('PhotoCompare', () => {
       await play(5000)
       expect(screen.getByRole('img', { name: 'Day 7 progress' })).toBeInTheDocument()
       expect(screen.queryByRole('button', { name: 'Replay' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('slider', { name: 'Speed' })).not.toBeInTheDocument()
 
       fireEvent.change(screen.getByRole('slider', { name: 'Day' }), { target: { value: '0' } })
       expect(screen.getByRole('img', { name: 'Day 1 progress' })).toBeInTheDocument()

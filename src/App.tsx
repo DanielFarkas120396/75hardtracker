@@ -217,7 +217,7 @@ function MainApp({ today, onBadgeFeed }: { today: string; onBadgeFeed: (feed: Ba
           )}
           {screen === 'gallery' && (
             <GalleryScreen
-              attemptNumber={gate.challenge.attemptNumber}
+              challengeId={gate.challenge.id}
               onTakePhoto={() => {
                 setScreen('today')
                 setCameraRequested(true)

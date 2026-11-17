@@ -3,7 +3,7 @@ import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState, type Poin
 import { BlobImage } from '../../components/BlobImage'
 import { Icon } from '../../components/icons/Icon'
 import type { GalleryEntry } from '../../hooks/useGalleryPhotos'
-import { comparePair, frameMs } from '../../logic/photoCompare'
+import { comparePair, frameMs, frameMsToSpeed, speedToFrameMs } from '../../logic/photoCompare'
 
 interface PhotoCompareProps {
   /** This attempt's photos, oldest first: at least two. */
@@ -217,15 +217,16 @@ function TimeLapse({ entries }: { entries: readonly GalleryEntry[] }) {
   const urls = useDecodedUrls(entries)
   const [index, setIndex] = useState(reduceMotion ? last : 0)
   const [playing, setPlaying] = useState(!reduceMotion)
+  const [ms, setMs] = useState(() => frameMs(entries.length))
   const at = Math.min(index, last)
   const running = playing && at < last
   const entry = entries[at]
 
   useEffect(() => {
     if (!urls || !running) return
-    const timer = setTimeout(() => setIndex(at + 1), frameMs(entries.length))
+    const timer = setTimeout(() => setIndex(at + 1), ms)
     return () => clearTimeout(timer)
-  }, [urls, running, at, entries.length])
+  }, [urls, running, at, ms])
 
   return (
     <>
@@ -268,6 +269,24 @@ function TimeLapse({ entries }: { entries: readonly GalleryEntry[] }) {
           </button>
         )}
       </div>
+
+      {!reduceMotion && (
+        <label className="flex w-full items-center gap-3 font-rounded text-sm font-bold text-white/70">
+          Slow
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={frameMsToSpeed(ms)}
+            onChange={(e) => setMs(speedToFrameMs(Number(e.target.value)))}
+            aria-label="Speed"
+            aria-valuetext={`${(ms / 1000).toFixed(2)} seconds per photo`}
+            className="min-h-touch flex-1 accent-world"
+          />
+          Fast
+        </label>
+      )}
     </>
   )
 }
