@@ -259,6 +259,8 @@ html[data-covered] #root {
   html {
     font-family: var(--font-rounded);
     color-scheme: light;
+    /* No rubber-band bounce at the page's ends: on iOS it drags the fixed toasts and nav along with the page. */
+    overscroll-behavior-y: none;
   }
   html.dark {
     color-scheme: dark;

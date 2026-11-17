@@ -26,7 +26,7 @@ export function SaveErrorToast() {
 
   if (failures === 0) return null
   return (
-    <div role="alert" className="pointer-events-none fixed inset-x-0 top-4 z-[70] flex justify-center px-4">
+    <div role="alert" className="pointer-events-none fixed inset-x-0 top-[calc(1rem+env(safe-area-inset-top))] z-[70] flex justify-center px-4">
       <p className="w-full max-w-xs rounded-card bg-surface px-4 py-3 font-rounded text-sm font-semibold text-ink shadow-lg ring-1 ring-danger-ink">
         Couldn't save that. Try again. If it keeps happening, your phone may be full.
       </p>

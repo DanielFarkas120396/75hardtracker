@@ -19,7 +19,8 @@ export function BadgeUnlockToast({ badges, onDismiss }: BadgeUnlockToastProps) {
     <div
       role="status"
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-0 top-4 z-[60] flex flex-col items-center gap-2 px-4"
+      // Below the status bar and the Dynamic Island, not under them.
+      className="pointer-events-none fixed inset-x-0 top-[calc(1rem+env(safe-area-inset-top))] z-[60] flex flex-col items-center gap-2 px-4"
     >
       <AnimatePresence>
         {badges.slice(0, MAX_VISIBLE).map((badge) => (
