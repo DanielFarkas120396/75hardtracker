@@ -303,6 +303,7 @@ How it's estimated:
 - [ ] **Phone check of the Stats rework** (#94, #95 and #96, merged 11-17): the sparks on the favourite card and the bottle waves (smooth, Reduce Motion), reading the weight chart with a finger anywhere (#95: the cursor follows and stays where you let go), the shelf's swaying light beam and dust (#96), and the card arrows, the compact weigh-in list and Delete in the edit sheet.
 - [ ] **Phone check of the Gallery library** (#97, merged 11-17): one grid of this attempt, the Compare pill with its two thumbnails, and the time-lapse speed slider (Slow to Fast, hidden with Reduce Motion).
 - [ ] **Phone check of the reading shortcuts** (#98, merged 11-17): the +10 and +1 chips side by side on the reading tile, each easy to tap, and the fill starting from them.
+- [ ] **Phone check of the weigh-in exit** (#99, merged 11-17): after Save, the keyboard goes, the ✓ pops and "kg logged." shows, then the card folds away and the tiles slide up without a jump; only a fade with Reduce Motion.
 - [ ] **Idle cost on Today** (measured 10-15), only if the phone check says so: the duck, the flame and the fills settle after a few seconds without a tap; the flame at its real 24 fps instead of 60; plain WebGL instead of three.js for the fills.
 - [ ] **Phone pass on the Ember screens.** The specs record phone checks for the earlier rounds and the Journey cards, not for the whole v3 look.
 - [ ] **Duck animation around the signature** (draw to commit): still to design.

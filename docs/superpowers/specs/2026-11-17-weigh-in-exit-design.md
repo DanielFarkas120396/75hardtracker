@@ -1,6 +1,6 @@
 # Weigh-in card exit
 
-Date: 2026-11-17 · Status: **in review** (PR open). Agreed with the owner on 2026-11-17: option A, picked from a live preview of A and B.
+Date: 2026-11-17 · Status: **merged** into `main` on 2026-11-17 (PR #99); phone check pending. Agreed with the owner on 2026-11-17: option A, picked from a live preview of A and B.
 
 ## Why
 
