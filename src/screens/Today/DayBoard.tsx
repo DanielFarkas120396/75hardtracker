@@ -40,7 +40,7 @@ interface DayBoardProps {
 
 /**
  * A day's TaskBoard with its shortcuts wired up: a workout, a glass of water,
- * the pages still to read, and the camera (or the library, when only that's
+ * 10 or 1 pages, and the camera (or the library, when only that's
  * allowed). A glass or the pages show "Logged … · Undo" for a moment, so a
  * stray tap is one tap to take back. Lives under PhotoCapture, which owns the camera.
  */
@@ -63,7 +63,17 @@ export function DayBoard(props: DayBoardProps) {
     if (currentBook) await bookRepo.adjustCurrentPage(currentBook.id, pages)
   }
 
-  const quickActions: Partial<Record<BoardTask, QuickAction>> = {
+  const pagesShortcut = (pages: number): QuickAction => {
+    const words = `${pages} ${pages === 1 ? 'page' : 'pages'}`
+    return {
+      label: `Add ${words}`,
+      icon: 'plus',
+      text: String(pages),
+      onPress: () => void addPages(pages).then(() => log(`Logged ${words}`, () => void addPages(-pages))),
+    }
+  }
+
+  const quickActions: Partial<Record<BoardTask, QuickAction | QuickAction[]>> = {
     workouts:
       data.workouts.length < MAX_WORKOUTS ? { label: 'Add workout', icon: 'plus', text: 'Workout', onPress: onAddWorkout } : undefined,
     water: {
@@ -76,19 +86,7 @@ export function DayBoard(props: DayBoardProps) {
           .then(() => log(`Logged ${QUICK_WATER_ML} ml`, () => void dayEntryRepo.adjustWater(entry.id, -QUICK_WATER_ML)))
       },
     },
-    reading:
-      pagesLeft > 0
-        ? {
-            label: `Add the ${pagesLeft} ${pagesLeft === 1 ? 'page' : 'pages'} left`,
-            icon: 'plus',
-            text: `${pagesLeft} left`,
-            onPress: () => {
-              void addPages(pagesLeft).then(() =>
-                log(`Logged ${pagesLeft} ${pagesLeft === 1 ? 'page' : 'pages'}`, () => void addPages(-pagesLeft)),
-              )
-            },
-          }
-        : undefined,
+    reading: pagesLeft > 0 ? [pagesShortcut(10), pagesShortcut(1)] : undefined,
     photo: capture.libraryOnly
       ? { label: 'Choose from library', icon: 'gallery', text: 'Pick', onPress: capture.chooseFromLibrary }
       : { label: 'Take photo', icon: 'photo', text: 'Snap', onPress: capture.takePhoto },

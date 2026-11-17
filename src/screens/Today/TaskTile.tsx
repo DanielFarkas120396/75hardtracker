@@ -35,7 +35,8 @@ interface TaskTileProps {
   bookTitle?: string
   /** Late in the evening: 'late' when it no longer fits before the deadline, bedtime then midnight (a red edge), 'open' otherwise (a stronger edge). */
   urgency: 'none' | 'open' | 'late'
-  quick?: QuickAction
+  /** One shortcut, or a row of them ("+10", "+1"). */
+  quick?: QuickAction | QuickAction[]
   /** Controls on the tile's right (the diet switches). */
   controls?: ReactNode
   /** The day's photo, for the iris. */
@@ -117,24 +118,26 @@ export function TaskTile({ task, data, rules, complete, bookTitle, urgency, quic
       </button>
       {controls}
       {/* A full 48 px touch target around a small chip, so the shortcut never outshines the tile's title. A shortcut no longer needed shrinks away. */}
-      <AnimatePresence initial={false}>
-        {quick && (
-          <motion.button
-            key="quick"
-            exit={{ opacity: 0, scale: 0.7 }}
-            transition={{ duration: 0.2 }}
-            type="button"
-            aria-label={quick.label}
-            onClick={quick.onPress}
-            className="group absolute top-1 right-1 flex min-h-touch min-w-touch touch-manipulation items-center justify-center rounded-full font-rounded text-xs font-bold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
-          >
-            <span data-fill-anchor className="flex h-8 items-center gap-1 rounded-full border border-ink/15 bg-surface px-2.5 motion-safe:transition-transform motion-safe:group-active:scale-90">
-              <Icon name={quick.icon} size={14} />
-              {quick.text}
-            </span>
-          </motion.button>
-        )}
-      </AnimatePresence>
+      <div className="absolute top-1 right-1 flex">
+        <AnimatePresence initial={false}>
+          {(quick ? [quick].flat() : []).map((action) => (
+            <motion.button
+              key={action.label}
+              exit={{ opacity: 0, scale: 0.7 }}
+              transition={{ duration: 0.2 }}
+              type="button"
+              aria-label={action.label}
+              onClick={action.onPress}
+              className="group flex min-h-touch min-w-touch touch-manipulation items-center justify-center rounded-full font-rounded text-xs font-bold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            >
+              <span data-fill-anchor className="flex h-8 items-center gap-1 rounded-full border border-ink/15 bg-surface px-2.5 motion-safe:transition-transform motion-safe:group-active:scale-90">
+                <Icon name={action.icon} size={14} />
+                {action.text}
+              </span>
+            </motion.button>
+          ))}
+        </AnimatePresence>
+      </div>
       {!hasFill && progress !== null && (
         <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1 bg-black/5 dark:bg-white/10">
           <span

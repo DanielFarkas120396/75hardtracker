@@ -270,8 +270,11 @@ describe('TodayScreen', () => {
     await waitFor(async () => expect((await entry()).water_ml).toBe(0))
     expect(screen.queryByRole('button', { name: 'Undo' })).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Add the 10 pages left' }))
-    await waitFor(async () => expect((await entry()).pages_read).toBe(10))
+    fireEvent.click(screen.getByRole('button', { name: 'Add 1 page' }))
+    await waitFor(async () => expect((await entry()).pages_read).toBe(1))
+    expect(screen.getByRole('status')).toHaveTextContent('Logged 1 page')
+    fireEvent.click(screen.getByRole('button', { name: 'Add 10 pages' }))
+    await waitFor(async () => expect((await entry()).pages_read).toBe(11))
     expect(screen.getByRole('status')).toHaveTextContent('Logged 10 pages')
 
     expect(screen.getByRole('button', { name: 'Take photo' })).toHaveTextContent('Snap')
