@@ -75,24 +75,28 @@ const WOOD = '#8a5a2a'
 /** The shelf's top edge: the tallest book still clears the top of the drawing. */
 const SHELF = 56
 
+/** Dust gathers with the books: two specks a book, two on an empty shelf. */
+const DUST_PER_BOOK = 2
+
 /**
  * Specks of dust drifting in the light: fixed spots and paces (no randomness), each fading in,
  * floating a little and fading out. They stand still with "reduce motion".
  */
-const DUST = Array.from({ length: 24 }, (_, i) => ({
-  x: 8 + ((i * 37) % 104),
-  y: 6 + ((i * 23) % 46),
-  r: 0.45 + (i % 3) * 0.3,
-  opacity: 0.3 + ((i * 7) % 5) / 10,
-  duration: 7 + ((i * 5) % 7),
-  delay: (i * 1.3) % 9,
-  dx: ((i * 11) % 13) - 6,
-  dy: -4 - ((i * 7) % 11),
+const DUST = Array.from({ length: 8 * DUST_PER_BOOK }, (_, i) => ({
+  x: 10 + ((i * 37) % 100),
+  y: 8 + ((i * 23) % 42),
+  r: 0.5 + (i % 3) * 0.3,
+  opacity: 0.35 + ((i * 7) % 5) / 12,
+  duration: 8 + ((i * 5) % 6),
+  delay: (i * 1.7) % 9,
+  dx: ((i * 11) % 9) - 4,
+  dy: -4 - ((i * 7) % 8),
 }))
 
 /**
  * A wooden shelf with a book for every 100 pages read (eight fit, then "+n"), under a faint beam
- * of warm light with dust slowly floating in it. Before the first 100 pages, the shelf waits.
+ * of warm light that slowly sways, with dust floating in it: the more books, the more dust.
+ * Before the first 100 pages, the shelf waits.
  */
 export function BookShelfArt({ pages }: { pages: number }) {
   const beamId = useId()
@@ -105,14 +109,16 @@ export function BookShelfArt({ pages }: { pages: number }) {
     <svg width="100%" height="64" viewBox="0 0 120 64" preserveAspectRatio="xMinYMax meet" aria-hidden="true">
       <defs>
         <linearGradient id={beamId} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="var(--color-dust)" stopOpacity="0.09" />
+          <stop offset="0" stopColor="var(--color-dust)" stopOpacity="0.14" />
           <stop offset="1" stopColor="var(--color-dust)" stopOpacity="0" />
         </linearGradient>
         <filter id={`${beamId}soft`} x="-20%" y="-20%" width="140%" height="140%">
           <feGaussianBlur stdDeviation="2.5" />
         </filter>
       </defs>
-      <path d={`M72 0H98L64 ${SHELF}H26Z`} fill={`url(#${beamId})`} filter={`url(#${beamId}soft)`} />
+      <g className="origin-[85px_0] [transform-box:view-box] motion-safe:animate-beam-sway">
+        <path d={`M72 0H98L64 ${SHELF}H26Z`} fill={`url(#${beamId})`} filter={`url(#${beamId}soft)`} />
+      </g>
 
       <rect x="0" y={SHELF} width="120" height="4" rx="1.5" fill={WOOD} />
       <rect x="0" y={SHELF + 4} width="120" height="2" fill="black" opacity="0.25" />
@@ -142,7 +148,7 @@ export function BookShelfArt({ pages }: { pages: number }) {
         </text>
       )}
 
-      {DUST.map((speck, i) => (
+      {DUST.slice(0, Math.max(1, shown) * DUST_PER_BOOK).map((speck, i) => (
         <circle
           key={i}
           cx={speck.x}

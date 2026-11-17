@@ -97,7 +97,18 @@
 
   --spacing-touch: 3rem;
 
-  /* The Stats shelf: dust drifting in the light. Each speck sets its own --dust-o, --dust-dx and --dust-dy. */
+  /* The Stats shelf: the light beam sways like the sun shifting, and dust drifts in it.
+     Each speck sets its own --dust-o, --dust-dx and --dust-dy. */
+  --animate-beam-sway: beam-sway 9s ease-in-out infinite;
+  @keyframes beam-sway {
+    0%,
+    100% {
+      transform: rotate(-5deg);
+    }
+    50% {
+      transform: rotate(5deg);
+    }
+  }
   --animate-dust: dust 9s linear infinite;
   @keyframes dust {
     0% {
