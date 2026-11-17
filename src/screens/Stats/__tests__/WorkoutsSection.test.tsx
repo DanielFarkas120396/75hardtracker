@@ -46,6 +46,9 @@ describe('WorkoutsSection', () => {
     expect(await screen.findByRole('button', { name: 'Running, 2 sessions' })).toHaveAttribute('aria-expanded', 'false')
     expect(screen.getByRole('button', { name: 'Weights, 1 session' })).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByRole('list', { name: /sessions$/ })).not.toBeInTheDocument()
+    // Only the most practised activity is the favourite.
+    expect(screen.getByRole('button', { name: 'Running, 2 sessions' })).toHaveTextContent('Your favorite')
+    expect(screen.getByRole('button', { name: 'Weights, 1 session' })).not.toHaveTextContent('Your favorite')
 
     const summary = screen.getByRole('list', { name: 'This attempt' })
     expect(summary).toHaveTextContent('3sessions')

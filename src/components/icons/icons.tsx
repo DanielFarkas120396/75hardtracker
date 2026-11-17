@@ -223,6 +223,7 @@ export const ICONS = {
   minus: <path d="M5 12h14" />,
   close: <path d="M6 6l12 12M18 6L6 18" />,
   chevron: <path d="M9 5l7 7-7 7" />,
+  star: <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" {...SOFT} />,
   joker: (
     <>
       <rect x="5.5" y="3" width="13" height="18" rx="2.5" {...SOFT} />

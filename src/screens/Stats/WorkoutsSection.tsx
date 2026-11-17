@@ -80,7 +80,7 @@ function Summary({ history }: { history: WorkoutHistory }) {
 
 interface ActivityCardProps {
   activity: ActivityHistory
-  /** The top card: always full size. The others are tabs until opened. */
+  /** The top card, the most practised activity: it gets the star. */
   first: boolean
   /** Where its colour sits between the stack's strongest shade (0, the top) and its softest (1). */
   shade: number
@@ -91,17 +91,14 @@ interface ActivityCardProps {
 }
 
 /**
- * One activity, tucked under the card above it: the top one full size (logo, count, time), the others
- * slim tabs. Tapped, a card opens where it is, full size, and unfolds its feels and sessions.
+ * One activity, tucked under the card above it: its logo, name, time and count. Every card looks the same,
+ * the top one starred. Tapped, a card unfolds its feels and sessions where it is.
  */
 function ActivityCard({ activity, first, shade, layer, open, onToggle }: ActivityCardProps) {
   const { type, sessions, feels } = activity
   const panelId = useId()
   const reduceMotion = useReducedMotion()
   const count = sessions.length
-  const full = first || open
-  // A tucked card's top 24 px hide under the card above it, so its content starts lower.
-  const top = first ? 'pt-5' : full ? 'pt-11' : 'pt-[2.125rem]'
 
   return (
     <section
@@ -114,9 +111,23 @@ function ActivityCard({ activity, first, shade, layer, open, onToggle }: Activit
         aria-controls={open ? panelId : undefined}
         aria-label={`${type}, ${count} ${sessionsWord(count)}`}
         onClick={onToggle}
-        className={`relative flex w-full items-center text-left ${top} ${full ? 'gap-4 px-5 pb-5' : 'gap-3 px-[1.125rem] pb-2.5'}`}
+        // A tucked card's top 24 px hide under the card above it, so its content starts lower.
+        className={`relative flex w-full items-center gap-3.5 px-5 pb-3 text-left ${first ? 'pt-3' : 'pt-9'}`}
       >
-        {full ? <FullHeader activity={activity} open={open} /> : <TabHeader activity={activity} />}
+        <Icon name={ACTIVITY_ICONS[type]} size={30} strokeWidth={1.8} className="shrink-0" />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate font-rounded text-lg leading-tight font-bold">{type}</span>
+          <span className="flex items-center gap-1 font-rounded text-xs font-bold">
+            {first && (
+              <>
+                <Icon name="star" size={14} strokeWidth={2} className="shrink-0" />
+                Your favorite ·
+              </>
+            )}{' '}
+            {formatMinutes(activity.minutes)}
+          </span>
+        </span>
+        <span className="min-w-7 text-right font-display text-3xl leading-none tracking-wide">{count}</span>
       </button>
 
       <AnimatePresence initial={false}>
@@ -129,7 +140,7 @@ function ActivityCard({ activity, first, shade, layer, open, onToggle }: Activit
             transition={{ duration: reduceMotion ? 0 : 0.3, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
-            <div className="px-5 pb-5">
+            <div className="px-5 pb-4">
               {feels.length > 0 && (
                 <ul aria-label="How it felt" className="flex flex-wrap gap-1.5">
                   {feels.map(({ feel, count: times }) => (
@@ -169,37 +180,6 @@ function ActivityCard({ activity, first, shade, layer, open, onToggle }: Activit
         )}
       </AnimatePresence>
     </section>
-  )
-}
-
-function FullHeader({ activity, open }: { activity: ActivityHistory; open: boolean }) {
-  const count = activity.sessions.length
-  return (
-    <>
-      <Icon name={ACTIVITY_ICONS[activity.type]} size={56} strokeWidth={1.5} className="shrink-0" />
-      <span className="flex-1">
-        <span className="block font-rounded text-lg font-bold">{activity.type}</span>
-        <span className="block font-display text-4xl leading-none tracking-wide">{count}</span>
-        <span className="block font-rounded text-sm font-bold">
-          {sessionsWord(count)} · {formatMinutes(activity.minutes)}
-        </span>
-      </span>
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center self-start rounded-full">
-        <Icon name="chevron" size={20} className={`motion-safe:transition-transform ${open ? '-rotate-90' : 'rotate-90'}`} />
-      </span>
-    </>
-  )
-}
-
-/** A tucked card: its logo, name, time and count on one line. */
-function TabHeader({ activity }: { activity: ActivityHistory }) {
-  return (
-    <>
-      <Icon name={ACTIVITY_ICONS[activity.type]} size={24} strokeWidth={1.8} className="shrink-0" />
-      <span className="flex-1 truncate font-rounded font-bold">{activity.type}</span>
-      <span className="font-rounded text-xs font-bold">{formatMinutes(activity.minutes)}</span>
-      <span className="min-w-6 text-right font-display text-2xl leading-none tracking-wide">{activity.sessions.length}</span>
-    </>
   )
 }
 

@@ -8,17 +8,19 @@ The owner likes the Workouts activity cards in Stats but finds they take too muc
 
 ## Decisions
 
-Chosen from mockups in the app's real tokens (slim tabs, wallet, deck; then four wallet variations): **front card first, tabs tucked under**.
+Chosen from mockups in the app's real tokens (slim tabs, wallet, deck; then four wallet variations): **front card first, tabs tucked under**, then every card the same shape.
 
 | Topic | Decision |
 |---|---|
 | Order | Most sessions first (the number of times the activity was done, not the time spent); ties keep the app's list order. |
-| Top card | The first activity, full size as before: big logo, name, big number, sessions and time. |
-| Tabs | Every other activity is a slim tab tucked under the card above it, full width: small logo, name, time, count. Each a shade softer than the one above. |
-| Tap a card | It opens where it is, full size, with its feels and sessions; the cards below move down. One open at a time; tapping it again folds it. |
+| Cards | Every card has the same shape and look, each tucked under the one above: logo, name, time, count. Each a shade softer than the one above. |
+| Favourite | The top card (most sessions) adds a star and "Your favorite" before its time. |
+| Tap a card | It unfolds its feels and sessions where it is; the cards below move down. One open at a time; tapping it again folds it. |
 
-Height with six activities: about 340 px.
+Height with six activities: about 320 px.
 
 ## Tried and dropped
 
 The first build brought a tapped tab to the front, with each tab narrower further back ("depth"). The owner found it worse: a card should open where it is.
+
+The second build kept the top card (and any open card) full size, with a big logo and number. The owner wanted every card the same shape, the top one only starred.
