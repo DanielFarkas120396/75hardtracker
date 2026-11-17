@@ -26,3 +26,17 @@ export function comparePair<T extends ComparablePhoto>(oldestFirst: readonly T[]
 export function frameMs(count: number): number {
   return Math.min(MAX_FRAME_MS, Math.max(MIN_FRAME_MS, TIMELAPSE_MS / count))
 }
+
+/** The speed slider's slow and fast ends, in ms per photo. */
+const SLOWEST_MS = 1000
+const FASTEST_MS = 50
+
+/** The time per photo at a speed slider position (0 = slow, 100 = fast), on a log scale so each step feels the same. */
+export function speedToFrameMs(position: number): number {
+  return Math.round(SLOWEST_MS * (FASTEST_MS / SLOWEST_MS) ** (position / 100))
+}
+
+/** The speed slider position for a time per photo: the inverse of `speedToFrameMs`. */
+export function frameMsToSpeed(ms: number): number {
+  return Math.round((Math.log(SLOWEST_MS / ms) / Math.log(SLOWEST_MS / FASTEST_MS)) * 100)
+}
