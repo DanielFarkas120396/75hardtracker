@@ -33,15 +33,15 @@ function bodySummary(measurement: Measurement): string {
     .join(' · ')
 }
 
-/** This attempt's weigh-ins, folded under their header: the latest weight and its change from the start, a chart by challenge day, and the editable list (the chart's table view). */
+/** This attempt's weigh-ins, open under their header (a tap folds them): the latest weight and its change from the start, a chart by challenge day, and the editable list (the chart's table view). */
 export function BodySection({ today, startDate, lastDay }: BodySectionProps) {
   const measurements = useLiveQuery(() => measurementRepo.getAll(), [])
   const [editing, setEditing] = useState<Measurement | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [deleting, setDeleting] = useState<Measurement | null>(null)
   const [showAll, setShowAll] = useState(false)
-  // Folded until the player opens it; "+ Log" works either way.
-  const [open, setOpen] = useState(false)
+  // Open on the chart; a tap on the header folds it. "+ Log" works either way.
+  const [open, setOpen] = useState(true)
   const panelId = useId()
 
   const weighIns = attemptWeights(

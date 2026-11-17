@@ -50,10 +50,11 @@ describe('WorkoutsSection', () => {
     expect(screen.getByRole('button', { name: 'Running, 2 sessions' })).toHaveTextContent('Your favorite')
     expect(screen.getByRole('button', { name: 'Weights, 1 session' })).not.toHaveTextContent('Your favorite')
 
-    const summary = screen.getByRole('list', { name: 'This attempt' })
-    expect(summary).toHaveTextContent('3sessions')
-    expect(summary).toHaveTextContent('2h 25mof training')
-    expect(summary).toHaveTextContent('2outdoors')
+    const summary = screen.getByRole('group', { name: 'This attempt' })
+    expect(summary).toHaveTextContent('2h 25m')
+    expect(summary).toHaveTextContent('of sweat')
+    expect(summary).toHaveTextContent('3 sessions')
+    expect(summary).toHaveTextContent('2 under the sky')
   })
 
   it('opens a card on its sessions, newest first, and how they felt', async () => {

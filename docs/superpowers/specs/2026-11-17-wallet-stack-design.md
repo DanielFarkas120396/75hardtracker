@@ -31,6 +31,8 @@ The plain starred top card looked shorter than the others (it has nothing tucked
 
 | Topic | Decision |
 |---|---|
+| Weight | First on the page, open on its chart; a tap on the header folds it. |
+| Workout totals | No more three small cards: the time trained, big ("53h15", "of sweat"), a thin divider, then the sessions and "under the sky" (outdoors) as two lines. Picked ("D") from big-number, hero, ring, sentence, banner and bar ideas, then hybrids. |
 | Day card | The "Day X of 75" climb card leaves Stats: Today and Journey already show the day. Journey keeps it. |
 | Water | A glass bottle with a cap and a highlight, filled against the water owed so far; two waves roll on the water and bubbles rise (still with "reduce motion"). Chosen from four (glass, sport bottle, drop, glass with a goal mark). |
 | Pages | A wooden shelf, a book for every 100 pages (seven fit, then "+n"). The book in progress sticks out above the others, fills up from the bottom over its 100 pages, and has a red ribbon on top. At 0 pages, a dashed outline. Chosen from shelf, stack, tome and filling-stack ideas, then pulled-out variations and drawing styles. |

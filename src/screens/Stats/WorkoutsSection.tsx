@@ -71,21 +71,42 @@ export function WorkoutsSection({ challengeId }: { challengeId: number }) {
   )
 }
 
+/** The attempt in numbers: the time trained, big, then the sessions and how many were outdoors. */
 function Summary({ history }: { history: WorkoutHistory }) {
-  const tiles = [
-    { value: `${history.sessions}`, label: sessionsWord(history.sessions) },
-    { value: formatMinutes(history.minutes), label: 'of training' },
-    { value: `${history.outdoors}`, label: 'outdoors' },
-  ]
+  const hours = Math.floor(history.minutes / 60)
+  const minutes = history.minutes % 60
   return (
-    <ul aria-label="This attempt" className="grid grid-cols-3 gap-2.5">
-      {tiles.map((tile) => (
-        <li key={tile.label} className="rounded-[1.25rem] bg-surface px-3.5 py-3 ring-1 ring-ink/10 dark:ring-0">
-          <span className="block font-display text-xl leading-tight tracking-wide text-world-ink">{tile.value}</span>
-          <span className="font-rounded text-xs font-bold text-ink-muted">{tile.label}</span>
-        </li>
-      ))}
-    </ul>
+    <div role="group" aria-label="This attempt" className="flex items-center gap-4 px-1">
+      <p>
+        <span className="sr-only">{formatMinutes(history.minutes)}</span>
+        <span aria-hidden="true" className="block font-display text-7xl leading-[0.9] font-bold tracking-wide text-world-ink">
+          {hours > 0 ? (
+            <>
+              {hours}
+              <span className="text-4xl">h</span>
+              {String(minutes).padStart(2, '0')}
+            </>
+          ) : (
+            <>
+              {minutes}
+              <span className="text-4xl">min</span>
+            </>
+          )}
+        </span>
+        <span className="mt-1 block font-quote text-base text-ink italic"> of sweat</span>
+      </p>
+      <span aria-hidden="true" className="w-px self-stretch bg-ink/15" />
+      <div className="flex flex-col gap-2.5">
+        <p>
+          <span className="font-display text-4xl leading-none font-bold tracking-wide text-ink">{history.sessions}</span>{' '}
+          <span className="font-rounded text-sm font-semibold text-ink-muted">{sessionsWord(history.sessions)}</span>
+        </p>
+        <p>
+          <span className="font-display text-4xl leading-none font-bold tracking-wide text-ink">{history.outdoors}</span>{' '}
+          <span className="font-quote text-sm text-ink italic">under the sky</span>
+        </p>
+      </div>
+    </div>
   )
 }
 

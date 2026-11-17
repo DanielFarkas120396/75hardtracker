@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { format, parseISO } from 'date-fns'
 import { MotionGlobalConfig } from 'framer-motion'
 import { cloneElement, type ReactElement } from 'react'
@@ -34,16 +34,18 @@ describe('StatsScreen', () => {
 
   beforeEach(freshDatabase)
 
-  it('keeps Weight folded until it is opened', async () => {
+  it('opens on Weight, first on the page, and folds it when tapped', async () => {
     await renderStats()
 
     const weight = screen.getByRole('button', { name: 'Weight' })
-    expect(weight).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.queryByText(/No weigh-ins yet/)).not.toBeInTheDocument()
-
-    fireEvent.click(weight)
     expect(weight).toHaveAttribute('aria-expanded', 'true')
     expect(await screen.findByText(/No weigh-ins yet/)).toBeInTheDocument()
+    const water = screen.getByText('Water drunk')
+    expect(weight.compareDocumentPosition(water) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    fireEvent.click(weight)
+    expect(weight).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByText(/No weigh-ins yet/)).not.toBeInTheDocument()
   })
 
   it('shows the workouts right under Weight', async () => {
@@ -59,25 +61,23 @@ describe('StatsScreen', () => {
     // Months before (an earlier attempt), the evening before Day 1, Day 5, today.
     const { startDate } = await renderStats({ dayNumber: 11, weighIns: [[-90, 95], [0, 88.4], [5, 87.1], [11, 85.8]] })
 
-    const weight = screen.getByRole('button', { name: /^Weight/ })
-    await waitFor(() => expect(weight).toHaveTextContent('85.8 kg · −2.6 kg'))
-    fireEvent.click(weight)
-    expect(screen.getByText('−2.6 kg since Day 1')).toBeInTheDocument()
+    expect(await screen.findByText('−2.6 kg since Day 1')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: `Edit weigh-in of ${formatDisplayDate(addDaysISO(startDate, -1))}` })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: `Edit weigh-in of ${formatDisplayDate(addDaysISO(startDate, -91))}` })).not.toBeInTheDocument()
 
     const axis = within(screen.getByRole('figure', { name: 'Weight by challenge day chart' }))
     for (const tick of ['Start', '10']) expect(axis.getByText(tick)).toBeInTheDocument()
     expect(axis.queryByText('Day 1')).not.toBeInTheDocument()
+
+    const weight = screen.getByRole('button', { name: /^Weight/ })
+    fireEvent.click(weight)
+    expect(weight).toHaveTextContent('85.8 kg · −2.6 kg')
   })
 
   it('counts from the first weigh-in when none came by Day 1', async () => {
     await renderStats({ dayNumber: 9, weighIns: [[5, 87], [9, 86.4]] })
 
-    const weight = screen.getByRole('button', { name: /^Weight/ })
-    await waitFor(() => expect(weight).toHaveTextContent('86.4 kg · −0.6 kg'))
-    fireEvent.click(weight)
-    expect(screen.getByText('−0.6 kg since Day 5')).toBeInTheDocument()
+    expect(await screen.findByText('−0.6 kg since Day 5')).toBeInTheDocument()
     expect(within(screen.getByRole('figure', { name: 'Weight by challenge day chart' })).getByText('Day 1')).toBeInTheDocument()
   })
 
@@ -87,8 +87,6 @@ describe('StatsScreen', () => {
       dayNumber: 10,
       weighIns: Array.from({ length: 10 }, (_, i): [number, number] => [i + 1, 88 - 0.1 * (i + 1)]),
     })
-    fireEvent.click(await screen.findByRole('button', { name: /^Weight/ }))
-
     const chart = (await screen.findByRole('figure', { name: 'Weight by challenge day chart' })).querySelector<HTMLElement>('.recharts-wrapper')!
     // jsdom lays nothing out: give the chart the size it was drawn at, so the pointer maps to a day.
     chart.getBoundingClientRect = () => DOMRect.fromRect({ x: 0, y: 0, width: 360, height: 192 })

@@ -16,7 +16,7 @@ interface StatsScreenProps {
   completed: boolean
 }
 
-/** The attempt as a story: what it took (illustrated totals), then the body and the workouts. Today and Journey show the day. */
+/** The attempt as a story: the weight first, then what it took (illustrated totals) and the workouts. Today and Journey show the day. */
 export function StatsScreen({ challenge, streak, today, todayDayNumber, completed }: StatsScreenProps) {
   const stats = useChallengeStats(challenge.id)
   const rules = rulesFor(challenge)
@@ -38,6 +38,8 @@ export function StatsScreen({ challenge, streak, today, todayDayNumber, complete
       </header>
 
       <main className="flex flex-col gap-4 px-4">
+        <BodySection today={today} startDate={challenge.startDate} lastDay={daysSoFar} />
+
         <div className="grid grid-cols-2 gap-3">
           <StatTile
             art={<BottleArt fill={stats.water_ml / (rules.waterTargetMl * daysSoFar)} />}
@@ -48,7 +50,6 @@ export function StatsScreen({ challenge, streak, today, todayDayNumber, complete
           <StatTile art={<BookShelfArt pages={stats.pages} />} value={`${stats.pages}`} label="Pages read" tone="text-world-ink" />
         </div>
 
-        <BodySection today={today} startDate={challenge.startDate} lastDay={daysSoFar} />
         <WorkoutsSection challengeId={challenge.id} />
       </main>
     </div>
