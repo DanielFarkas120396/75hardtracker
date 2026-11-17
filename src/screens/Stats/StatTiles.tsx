@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from 'react'
+import { useId, type CSSProperties, type ReactNode } from 'react'
 
 /** A stats tile: a small illustration, the number, and what it counts. */
 export function StatTile({ art, value, label, tone }: { art: ReactNode; value: string; label: string; tone: string }) {
@@ -69,99 +69,99 @@ const BOOK_COLORS = [
   'var(--color-blue-dark)',
 ]
 const BOOK_WIDTHS = [11, 9, 12, 10, 13, 9, 11, 12]
-const BOOK_HEIGHTS = [42, 36, 46, 39, 44, 34, 41, 45]
+const BOOK_HEIGHTS = [36, 31, 39, 33, 38, 30, 35, 38]
 /** The shelf is wood whatever the world, so the books carry the colour. */
 const WOOD = '#8a5a2a'
-/** The shelf's top edge, and how far the book in progress sticks out above the others. */
-const SHELF = 55
-const PULLED = 9
-/** Room for seven finished books; more show as "+n". */
-const SHELF_ROOM = 7
+/** The shelf's top edge: the tallest book still clears the top of the drawing. */
+const SHELF = 56
 
 /**
- * A wooden shelf with a book for every 100 pages read. The book in progress is pulled out, fills
- * up from the bottom as its 100 pages go by, and has a red ribbon on top. It floats a hair up and
- * down while its ribbon sways (both still with "reduce motion").
+ * Specks of dust drifting in the light: fixed spots and paces (no randomness), each fading in,
+ * floating a little and fading out. They stand still with "reduce motion".
+ */
+const DUST = Array.from({ length: 24 }, (_, i) => ({
+  x: 8 + ((i * 37) % 104),
+  y: 6 + ((i * 23) % 46),
+  r: 0.45 + (i % 3) * 0.3,
+  opacity: 0.3 + ((i * 7) % 5) / 10,
+  duration: 7 + ((i * 5) % 7),
+  delay: (i * 1.3) % 9,
+  dx: ((i * 11) % 13) - 6,
+  dy: -4 - ((i * 7) % 11),
+}))
+
+/**
+ * A wooden shelf with a book for every 100 pages read (eight fit, then "+n"), under a faint beam
+ * of warm light with dust slowly floating in it. Before the first 100 pages, the shelf waits.
  */
 export function BookShelfArt({ pages }: { pages: number }) {
+  const beamId = useId()
   const finished = Math.floor(pages / 100)
-  const shown = Math.min(SHELF_ROOM, finished)
-  const progress = (pages % 100) / 100
-
+  const shown = Math.min(BOOK_COLORS.length, finished)
   // Each book starts where the ones before it end, 0.6 apart.
   const xAt = (i: number) => 6 + BOOK_WIDTHS.slice(0, i).reduce((sum, w) => sum + w + 0.6, 0)
-  const books = Array.from({ length: shown }, (_, i) => ({ i, x: xAt(i), w: BOOK_WIDTHS[i], h: BOOK_HEIGHTS[i] }))
-  const current = { x: xAt(shown), w: BOOK_WIDTHS[shown], h: BOOK_HEIGHTS[shown], color: BOOK_COLORS[shown] }
-  const top = SHELF - PULLED - current.h
-  const bookend = current.x + current.w + 3.5
 
   return (
     <svg width="100%" height="64" viewBox="0 0 120 64" preserveAspectRatio="xMinYMax meet" aria-hidden="true">
-      <rect x="2" y={SHELF} width="116" height="4" rx="1.5" fill={WOOD} stroke="currentColor" />
-      <path
-        d={`M14 ${SHELF + 4}v5l5 -5M106 ${SHELF + 4}v5l-5 -5`}
-        fill={WOOD}
-        stroke="currentColor"
-        strokeLinejoin="round"
-      />
+      <defs>
+        <linearGradient id={beamId} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="var(--color-dust)" stopOpacity="0.09" />
+          <stop offset="1" stopColor="var(--color-dust)" stopOpacity="0" />
+        </linearGradient>
+        <filter id={`${beamId}soft`} x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="2.5" />
+        </filter>
+      </defs>
+      <path d={`M72 0H98L64 ${SHELF}H26Z`} fill={`url(#${beamId})`} filter={`url(#${beamId}soft)`} />
 
-      {books.map(({ i, x, w, h }) => (
-        <g key={i}>
-          <rect x={x} y={SHELF - h} width={w} height={h} rx="1.5" fill={BOOK_COLORS[i]} stroke="currentColor" />
-          <path d={`M${x} ${SHELF - h + 4}h${w}M${x} ${SHELF - 5}h${w}`} stroke="black" strokeWidth="1.2" opacity="0.3" />
-          <rect x={x + w / 2 - 1.5} y={SHELF - h + 8} width="3" height={h * 0.3} rx="1" fill="white" opacity="0.55" />
-        </g>
-      ))}
+      <rect x="0" y={SHELF} width="120" height="4" rx="1.5" fill={WOOD} />
+      <rect x="0" y={SHELF + 4} width="120" height="2" fill="black" opacity="0.25" />
 
-      {pages === 0 ? (
-        <rect
-          x={current.x}
-          y={SHELF - current.h}
-          width={current.w}
-          height={current.h}
-          rx="1.5"
-          fill="none"
-          stroke="currentColor"
-          strokeDasharray="2 2"
-          opacity="0.5"
-        />
-      ) : (
-        <g className="motion-safe:animate-book-float">
-          <rect
-            x={current.x}
-            y={top}
-            width={current.w}
-            height={current.h}
-            rx="1.5"
-            fill={current.color}
-            fillOpacity="0.25"
-            stroke="currentColor"
-            strokeDasharray="2 1.5"
-          />
-          <rect
-            x={current.x}
-            y={SHELF - PULLED - current.h * progress}
-            width={current.w}
-            height={current.h * progress}
-            rx="1.5"
-            fill={current.color}
-          />
-          <path
-            d={`M${current.x + current.w / 2} ${top}v-6`}
-            stroke="var(--color-danger)"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            className="origin-bottom [transform-box:fill-box] motion-safe:animate-ribbon-sway"
-          />
-        </g>
-      )}
+      {Array.from({ length: shown }, (_, i) => {
+        const x = xAt(i)
+        const w = BOOK_WIDTHS[i]
+        const h = BOOK_HEIGHTS[i]
+        return (
+          <g key={i}>
+            <rect x={x} y={SHELF - h} width={w} height={h} rx="1.5" fill={BOOK_COLORS[i]} />
+            <rect x={x} y={SHELF - h} width="2" height={h} fill="black" opacity="0.15" />
+            <path d={`M${x} ${SHELF - h + 4}h${w}M${x} ${SHELF - 4}h${w}`} stroke="black" strokeWidth="1.2" opacity="0.22" />
+            <rect x={x + w / 2 - 1.2} y={SHELF - h + 8} width="2.4" height={h * 0.3} rx="1" fill="white" opacity="0.5" />
+          </g>
+        )
+      })}
 
-      <path d={`M${bookend} ${SHELF}v-16h3v13h7v3z`} fill="var(--color-ink-muted)" stroke="currentColor" strokeLinejoin="round" />
-      {finished > SHELF_ROOM && (
-        <text x="117" y="10" textAnchor="end" fontSize="9" fontWeight="700" fontFamily="var(--font-rounded)" fill="currentColor">
-          +{finished - SHELF_ROOM}
+      {shown === 0 && (
+        <text x="60" y={SHELF - 14} textAnchor="middle" fontFamily="var(--font-quote)" fontStyle="italic" fontSize="9" fill="var(--color-ink-muted)">
+          first book at 100
         </text>
       )}
+      {finished > shown && (
+        <text x="117" y="10" textAnchor="end" fontSize="9" fontWeight="700" fontFamily="var(--font-rounded)" fill="currentColor">
+          +{finished - shown}
+        </text>
+      )}
+
+      {DUST.map((speck, i) => (
+        <circle
+          key={i}
+          cx={speck.x}
+          cy={speck.y}
+          r={speck.r}
+          fill="var(--color-dust)"
+          className="motion-safe:animate-dust"
+          style={
+            {
+              opacity: speck.opacity,
+              animationDuration: `${speck.duration}s`,
+              animationDelay: `-${speck.delay}s`,
+              '--dust-o': speck.opacity,
+              '--dust-dx': `${speck.dx}px`,
+              '--dust-dy': `${speck.dy}px`,
+            } as CSSProperties
+          }
+        />
+      ))}
     </svg>
   )
 }

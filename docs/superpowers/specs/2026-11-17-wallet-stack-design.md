@@ -33,7 +33,7 @@ The plain starred top card looked shorter than the others (it has nothing tucked
 |---|---|
 | Weight | First on the page: the latest weight (big), its change, and the chart (taller, soft fill under the line, scale on the right, a big dot on the latest trend). Only an arrow under it unfolds the weigh-ins: one compact row each (day, date, weight, ▼/▲ since the one before, a ruler icon for body measurements). A row opens the edit sheet, which now holds Delete. |
 | Compact weight | The "Weight" title goes (kept for screen readers): icon, latest weight, change (no "since Day 1") and "+ Log" share one line; a shorter chart; the arrow tight under it. |
-| Shelf motion | The book in progress floats 1.5 px up and down and its ribbon sways (still with "reduce motion"). |
+| Shelf (redone after #95) | Only full books, one per 100 pages (eight fit, then "+n"; before 100, "first book at 100"). No book in progress: the pulled-out book was cut off at the top of the tile and the owner disliked its floating. Now a very faint, soft-edged beam of warm light with 24 specks of dust drifting in it (still with "reduce motion"). Chosen from light-and-dust, drifting letters, gold glints and dust-only mockups. |
 | Card arrow | A small, faint chevron after each card's count hints that it unfolds; it turns when open. |
 | Reading the chart | No floating box and no animation: a finger anywhere on the chart (not just on a dot) puts a plain cursor on the closest weigh-in by day, and dragging moves it; the header line shows it (weight, day, date, trend). The cursor stays where the finger lets go (owner, after the merge; PR follow-up). Vertical swipes still scroll the page. |
 | Order | Weight, the training totals, water and pages, then the workout cards. |

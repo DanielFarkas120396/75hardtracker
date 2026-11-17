@@ -92,28 +92,25 @@
   --color-on-stack: #3d1a05;
   /* The favourite card's warmth, rising from below it. Faint where the text sits. */
   --color-stack-glow: #f3a865;
+  /* The Stats shelf's dust and light beam. */
+  --color-dust: #c08a48;
 
   --spacing-touch: 3rem;
 
-  /* The Stats shelf: the book in progress floats a hair, its ribbon sways. */
-  --animate-book-float: book-float 3.2s ease-in-out infinite;
-  --animate-ribbon-sway: ribbon-sway 2.6s ease-in-out infinite;
-  @keyframes book-float {
-    0%,
+  /* The Stats shelf: dust drifting in the light. Each speck sets its own --dust-o, --dust-dx and --dust-dy. */
+  --animate-dust: dust 9s linear infinite;
+  @keyframes dust {
+    0% {
+      transform: translate(0, 0);
+      opacity: 0;
+    }
+    20%,
+    80% {
+      opacity: var(--dust-o);
+    }
     100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-1.5px);
-    }
-  }
-  @keyframes ribbon-sway {
-    0%,
-    100% {
-      transform: rotate(-7deg);
-    }
-    50% {
-      transform: rotate(7deg);
+      transform: translate(var(--dust-dx), var(--dust-dy));
+      opacity: 0;
     }
   }
 
@@ -190,6 +187,7 @@
   --color-stack-to: #3a2a1e;
   --color-on-stack: #fff1e6;
   --color-stack-glow: #b8733a;
+  --color-dust: #f6e3c0;
 }
 
 /* The world you're in (data-world on <html>, set by useWorldTheme) colours the app. An element can
