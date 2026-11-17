@@ -1,6 +1,6 @@
 # Journey logbook: design
 
-Date: 2026-11-17 · Status: **built** in PR #93 (`feat/journey-logbook`), phone-checked by the owner on 2026-11-17.
+Date: 2026-11-17 · Status: **merged into `main`** (PR #93, 2026-11-17), phone-checked by the owner.
 
 ## Why
 
