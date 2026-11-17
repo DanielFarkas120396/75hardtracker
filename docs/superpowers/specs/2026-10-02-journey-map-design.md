@@ -1,6 +1,6 @@
 # Journey map: the climb from hell to heaven (design)
 
-Date: 2026-10-02 · Status: **built** (PR #14, merged into main on 2026-10-02). Written down afterwards, on 2026-10-05, from the decisions made in conversation.
+Date: 2026-10-02 · Status: **built** (PR #14, merged into main on 2026-10-02), then **replaced** by the [Journey logbook](2026-11-17-journey-logbook-design.md) on 2026-11-17. Written down afterwards, on 2026-10-05, from the decisions made in conversation.
 
 ## Why
 

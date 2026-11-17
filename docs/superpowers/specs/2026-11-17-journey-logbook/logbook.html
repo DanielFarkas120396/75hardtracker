@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Journey logbook — worlds</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root { --canvas: #121410; --surface: #1d211a; --surface-2: #2a2e25; --ink: #f6ecdc; --muted: #a1998d; --amber: #e2a45a; --nav: #1a1d16; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0b0a09; color: var(--ink); font-family: "DM Sans", system-ui, sans-serif; padding: 24px 16px 48px; }
+  h1.board { font: 700 28px "Barlow Condensed"; text-transform: uppercase; text-align: center; margin-bottom: 4px; }
+  p.sub { text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+  .row { display: flex; gap: 28px; justify-content: center; flex-wrap: wrap; }
+  .col { width: 340px; }
+  .label { font: 700 20px "Barlow Condensed"; text-transform: uppercase; margin-bottom: 2px; }
+  .label span { color: var(--amber); margin-right: 6px; }
+  .blurb { color: var(--muted); font-size: 13px; line-height: 1.45; min-height: 40px; margin-bottom: 12px; }
+  .phone { width: 340px; height: 736px; border-radius: 44px; background: var(--canvas); position: relative; overflow: hidden; box-shadow: 0 0 0 8px #2a2622, 0 30px 60px rgba(0,0,0,.5); }
+  .scroll { position: absolute; inset: 0; overflow-y: auto; padding: 54px 16px 110px 40px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .glow { position: absolute; inset: 0 0 auto; height: 340px; background: radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--w) 22%, transparent), transparent 70%); pointer-events: none; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+  .eyebrow { color: var(--muted); font-size: 12px; font-weight: 500; letter-spacing: .03em; }
+  .title { font: 700 30px/1 "Barlow Condensed"; text-transform: uppercase; }
+  .streak { font: 700 26px "Barlow Condensed"; color: var(--amber); }
+  .card { background: var(--surface); border-radius: 20px; padding: 16px; }
+  .seg { display: flex; gap: 4px; margin: 12px 0 8px; } .seg i { flex: 1; height: 6px; border-radius: 3px; }
+  .nav { position: absolute; left: 12px; right: 12px; bottom: 14px; height: 64px; border-radius: 24px; background: var(--nav); display: flex; justify-content: space-around; align-items: center; font-size: 11px; color: var(--muted); z-index: 5; }
+  .nav div { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 7px 12px; border-radius: 16px; }
+  .nav .on { background: color-mix(in srgb, var(--w) 16%, transparent); color: var(--w); }
+  .nav i { width: 18px; height: 18px; border: 2.25px solid currentColor; border-radius: 6px; display: block; }
+
+  /* the altitude rail */
+  .rail { position: absolute; left: 14px; top: 64px; bottom: 96px; width: 14px; z-index: 4; }
+  .rail .track { position: absolute; left: 5px; top: 0; bottom: 0; width: 4px; border-radius: 2px; background: var(--surface-2); overflow: hidden; }
+  .rail .tick { position: absolute; left: 0; width: 14px; height: 2px; border-radius: 1px; }
+  .rail .me { position: absolute; left: -3px; width: 20px; height: 20px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #fff3c4, #f2cf6a 60%, #c99a3a); filter: sepia(.35) saturate(.9); transform: translateY(50%); box-shadow: 0 0 0 3px var(--canvas); }
+
+  /* chapter covers */
+  .cover { position: relative; height: 112px; border-radius: 20px; overflow: hidden; margin: 22px 0 10px; display: flex; flex-direction: column; justify-content: flex-end; padding: 14px 16px; background-size: cover; background-position: center 45%; }
+  .cover::before { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, var(--canvas) 0%, color-mix(in srgb, var(--canvas) 70%, transparent) 55%, color-mix(in srgb, var(--canvas) 35%, transparent) 100%); }
+  .cover > * { position: relative; }
+  .cover b { font: 700 24px/1 "Barlow Condensed"; text-transform: uppercase; letter-spacing: .03em; color: var(--c); }
+  .cover small { color: var(--ink); opacity: .8; font-size: 12px; margin-top: 4px; display: block; }
+  .cover .badge { position: absolute; right: 14px; top: 12px; font: 700 13px "Barlow Condensed"; text-transform: uppercase; letter-spacing: .05em; color: #1f1813; background: var(--c); padding: 3px 9px; border-radius: 99px; }
+  .cover.locked { filter: grayscale(.85) brightness(.7); height: 84px; }
+  .cover.locked .badge { background: var(--surface-2); color: var(--muted); }
+
+  .entry { display: flex; gap: 12px; align-items: center; padding: 10px; border-radius: 18px; background: var(--surface); margin-bottom: 8px; }
+  .entry .thumb { width: 56px; height: 70px; border-radius: 12px; flex: none; background: linear-gradient(160deg, #75604f, #2c221b); }
+  .entry b { font: 700 18px/1 "Barlow Condensed"; text-transform: uppercase; color: var(--c); }
+  .entry .meta { color: var(--muted); font-size: 12px; margin: 3px 0 5px; }
+  .entry .note { font-size: 13px; opacity: .88; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+  .chip { display: inline-flex; gap: 4px; align-items: center; font-size: 11px; color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); padding: 2px 8px; border-radius: 99px; margin: 5px 4px 0 0; }
+  .today { box-shadow: inset 0 0 0 2px var(--c); background: color-mix(in srgb, var(--c) 10%, var(--surface)); }
+  .joker { display: flex; justify-content: space-between; padding: 10px 14px; border-radius: 14px; background: transparent; border: 1px dashed var(--surface-2); color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+  .callout { position: absolute; z-index: 6; font-size: 11px; line-height: 1.3; color: #1f1813; background: #f6ecdc; padding: 4px 8px; border-radius: 8px; max-width: 150px; box-shadow: 0 4px 12px rgba(0,0,0,.4); }
+</style>
+</head>
+<body>
+<h1 class="board">C · The logbook, with the worlds</h1>
+<p class="sub">Each world is a chapter: a cover, its own colour, a stretch of the altitude rail</p>
+<div class="row">
+  <div class="col">
+    <div class="label"><span>1</span>Opening the Journey</div>
+    <p class="blurb">Day 46, in the Meadows. The next world waits locked at the top; the current chapter is open below.</p>
+    <div class="phone" id="p1"></div>
+  </div>
+  <div class="col">
+    <div class="label"><span>2</span>Scrolling back</div>
+    <p class="blurb">Crossing into an earlier world: its cover closes the chapter with a score, and the colour changes with it.</p>
+    <div class="phone" id="p2"></div>
+  </div>
+</div>
+
+<script>
+const W = [
+  { id: 'hell', name: 'Hell', first: 1, last: 10, c: '#e2a45a', img: 'hell' },
+  { id: 'wasteland', name: 'The Wasteland', first: 11, last: 22, c: '#b8a995', img: 'wasteland' },
+  { id: 'forest', name: 'The Dark Forest', first: 23, last: 37, c: '#7fb08a', img: 'forest' },
+  { id: 'meadow', name: 'The Meadows', first: 38, last: 50, c: '#9bc27a', img: 'meadow' },
+  { id: 'mountains', name: 'The Mountains', first: 51, last: 64, c: '#8fb6d6', img: 'mountains' },
+  { id: 'heaven', name: 'Heaven', first: 65, last: 75, c: '#e8c76a', img: 'heaven-gates' },
+];
+const TODAY = 46, JOKER = 31;
+const cur = W.find((w) => TODAY <= w.last);
+const notes = ['Legs were dead but did it anyway.', 'Rain walk, felt great after.', 'Finished reading at 23:10.', 'New PR on the deadlift.', 'Skipped dessert at the party.'];
+const date = (d) => new Date(2026, 10, 17 - (TODAY - d)).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+
+function cover(w) {
+  const len = w.last - w.first + 1;
+  if (w.first > TODAY) return `<div class="cover locked" style="--c:${w.c};background-image:url(/journey/${w.img}.webp)"><span class="badge">In ${w.first - TODAY} days</span><b>${w.name}</b><small>Days ${w.first}–${w.last}</small></div>`;
+  if (w.last >= TODAY) return `<div class="cover" style="--c:${w.c};background-image:url(/journey/${w.img}.webp)"><span class="badge">${TODAY - w.first}/${len}</span><b>${w.name}</b><small>Days ${w.first}–${w.last} · ${w.last - TODAY + 1} to go</small></div>`;
+  const jokers = JOKER >= w.first && JOKER <= w.last ? ' · 1 joker' : '';
+  return `<div class="cover" style="--c:${w.c};background-image:url(/journey/${w.img}.webp)"><span class="badge">Cleared</span><b>${w.name}</b><small>Days ${w.first}–${w.last} · ${len}/${len}${jokers} · done ${date(w.last)}</small></div>`;
+}
+function entry(d, w) {
+  if (d === JOKER) return `<div class="joker"><span>Day ${d} · forgiven with a joker</span><span>🃏</span></div>`;
+  return `<div class="entry" style="--c:${w.c}"><div class="thumb"></div><div style="min-width:0"><b>Day ${d}</b><p class="meta">${date(d)}</p><p class="note">${notes[d % 5]}</p><span class="chip">🚲 55 min</span><span class="chip">🏋 1h</span></div></div>`;
+}
+function rail() {
+  let h = '<div class="rail"><div class="track">';
+  W.forEach((w) => {
+    const len = w.last - w.first + 1, f = Math.max(0, Math.min(1, (TODAY - w.first) / len));
+    h += `<div style="position:absolute;left:0;right:0;bottom:${(w.first - 1) / 75 * 100}%;height:${len / 75 * 100}%;background:linear-gradient(0deg, ${w.c} ${f * 100}%, transparent ${f * 100}%)"></div>`;
+  });
+  h += '</div>';
+  W.slice(1).forEach((w) => (h += `<div class="tick" style="bottom:${(w.first - 1) / 75 * 100}%;background:${w.c};opacity:${w.first <= TODAY ? 1 : .35}"></div>`));
+  h += `<div class="me" style="bottom:${(TODAY - .5) / 75 * 100}%"></div></div>`;
+  return h;
+}
+function phone(content) {
+  return `<div class="glow" style="--w:${cur.c}"></div><div class="scroll">${content}</div>${rail()}<div class="nav" style="--w:${cur.c}"><div><i></i>Today</div><div class="on"><i></i>Journey</div><div><i></i>Stats</div><div><i></i>Gallery</div><div><i></i>Settings</div></div>`;
+}
+
+let h = `<div class="top"><div><p class="eyebrow">Attempt #1</p><h1 class="title">Journey</h1></div><div class="streak">🔥 45</div></div>`;
+h += `<div class="card"><p class="eyebrow" style="color:${cur.c}">THE MEADOWS</p><p class="title" style="font-size:40px">Day 46 <span style="font-size:20px;color:var(--muted)">of 75</span></p><div class="seg">${W.map((w) => { const f = Math.max(0, Math.min(1, (TODAY - w.first) / (w.last - w.first + 1))); return `<i style="background:linear-gradient(90deg, ${w.c} ${f * 100}%, #2a2e25 ${f * 100}%)"></i>`; }).join('')}</div><p class="eyebrow">Hell to Heaven · 61% climbed</p></div>`;
+h += cover(W[4]);
+h += cover(cur);
+h += `<div class="entry today" style="--c:${cur.c}"><div class="thumb" style="background:#2a2e25;display:grid;place-items:center;color:${cur.c};font-size:22px">+</div><div><b>Today · Day 46</b><p class="meta">${date(46)} · 2 of 5 done</p><span class="chip">🏋 45 min</span></div></div>`;
+for (let d = 45; d >= 38; d--) h += entry(d, cur);
+h += cover(W[2]);
+for (let d = 37; d >= 23; d--) h += entry(d, W[2]);
+h += cover(W[1]);
+document.getElementById('p1').innerHTML = phone(h);
+document.getElementById('p2').innerHTML = phone(h);
+document.getElementById('p1').insertAdjacentHTML('beforeend', `<div class="callout" style="left:150px;top:470px">Cover: the world's own picture, darkened into the canvas</div><div class="callout" style="left:36px;top:640px;max-width:120px">Rail: you on the climb. Tap = jump to a world</div>`);
+requestAnimationFrame(() => {
+  const s = document.querySelector('#p2 .scroll');
+  const covers = s.querySelectorAll('.cover');
+  s.scrollTop = covers[2].offsetTop - 330;
+  document.getElementById('p2').insertAdjacentHTML('beforeend', `<div class="callout" style="left:170px;top:120px">The colour of each day is its world's</div>`);
+});
+</script>
+</body>
+</html>
