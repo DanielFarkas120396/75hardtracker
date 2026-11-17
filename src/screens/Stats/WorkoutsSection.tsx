@@ -50,7 +50,6 @@ export function WorkoutsSection({ challengeId }: { challengeId: number }) {
           </div>
         ) : (
           <>
-            <Summary history={history} />
             <div className="flex flex-col">
               {history.activities.map((activity, i) => (
                 <ActivityCard
@@ -71,7 +70,12 @@ export function WorkoutsSection({ challengeId }: { challengeId: number }) {
   )
 }
 
-/** The attempt in numbers: the time trained, big, then the sessions and how many were outdoors. */
+/** The attempt's training in numbers, high on Stats: the time trained, big, then the sessions and how many were outdoors. Nothing before the first workout. */
+export function WorkoutTotals({ challengeId }: { challengeId: number }) {
+  const history = useWorkoutHistory(challengeId)
+  return history && history.sessions > 0 ? <Summary history={history} /> : null
+}
+
 function Summary({ history }: { history: WorkoutHistory }) {
   const hours = Math.floor(history.minutes / 60)
   const minutes = history.minutes % 60

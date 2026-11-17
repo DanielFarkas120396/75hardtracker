@@ -1,7 +1,5 @@
-import { useReducedMotion } from 'framer-motion'
-import { useId } from 'react'
+import { useEffect, useId } from 'react'
 import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { format, parseISO } from 'date-fns'
 import type { TrendWeight } from '../../logic/measurements'
 
 interface WeightChartProps {
@@ -9,13 +7,8 @@ interface WeightChartProps {
   points: TrendWeight[]
   /** The day the attempt has reached: the axis runs to it. */
   lastDay: number
-}
-
-interface ChartDatum {
-  day: number
-  date: string
-  weight: number
-  trend: number
+  /** The day of the weigh-in under the finger (or pointer) while it reads the chart; null once it lets go. */
+  onRead: (day: number | null) => void
 }
 
 const TICK_STEP = 10
@@ -32,41 +25,45 @@ function dayTicks(hasStart: boolean, lastDay: number): number[] {
 
 const tickLabel = (day: number) => (day === 0 ? 'Start' : day === 1 ? 'Day 1' : String(day))
 
-/** Crosshair readout: the weight leads, then the day and date, then the trend there. */
-function WeightTooltip({ active, payload }: { active?: boolean; payload?: { payload: ChartDatum }[] }) {
-  const datum = active ? payload?.[0]?.payload : undefined
-  if (!datum) return null
-  return (
-    <div className="rounded-xl bg-surface px-3 py-2 font-rounded shadow-md ring-1 ring-ink/10">
-      <p className="text-base font-bold text-ink">{datum.weight.toFixed(1)} kg</p>
-      <p className="text-xs font-semibold text-ink-muted">
-        {datum.day === 0 ? 'Start' : `Day ${datum.day}`} · {format(parseISO(datum.date), 'EEE d MMM')}
-      </p>
-      <p className="text-xs font-semibold text-ink-muted">Trend {datum.trend.toFixed(1)} kg</p>
-    </div>
-  )
+/**
+ * The tooltip draws nothing: it hands the day under the finger to the header, once it has moved
+ * there. Only the day (a number) is passed on, so a re-render with fresh point objects can't loop.
+ */
+function Reader({
+  active,
+  payload,
+  onRead,
+}: {
+  active?: boolean
+  payload?: { payload: TrendWeight }[]
+  onRead: (day: number | null) => void
+}) {
+  const day = active ? (payload?.[0]?.payload.day ?? null) : null
+  useEffect(() => onRead(day), [day, onRead])
+  return null
 }
 
 /**
- * Weight over the attempt, by challenge day: one series, so no legend (the section heading
- * names it). The smoothed trend carries the line, over a soft fill, from the first weigh-in;
- * the weigh-ins are faint dots and the latest trend gets a big dot. The scale sits on the right.
+ * Weight over the attempt, by challenge day: one series, so no legend. The smoothed trend
+ * carries the line, over a soft fill, from the first weigh-in; the weigh-ins are faint dots and
+ * the latest trend gets a big dot. The scale sits on the right. Reading a point shows a plain
+ * crosshair; the section's header shows the reading (no floating box), and nothing animates,
+ * so the line never redraws while a finger moves over it.
  */
-export function WeightChart({ points, lastDay }: WeightChartProps) {
-  const reduceMotion = useReducedMotion()
+export function WeightChart({ points, lastDay, onRead }: WeightChartProps) {
   const fillId = useId()
-  const data: ChartDatum[] = points.map((p) => ({ day: p.day, date: p.date, weight: p.weight_kg, trend: p.trend }))
-  const hasStart = data[0]?.day === 0
-  const last = data.length - 1
+  const hasStart = points[0]?.day === 0
+  const last = points.length - 1
 
-  const weights = data.map((d) => d.weight)
+  const weights = points.map((p) => p.weight_kg)
   const yDomain = [Math.floor(Math.min(...weights) - 1), Math.ceil(Math.max(...weights) + 1)]
 
   return (
-    <figure className="mt-3 -mx-1" aria-label="Weight by challenge day chart">
-      <div className="h-56 w-full">
+    // A lifted finger hands the header back to today's weight.
+    <figure className="mt-1 -mx-1" aria-label="Weight by challenge day chart" onTouchEnd={() => onRead(null)}>
+      <div className="h-40 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data} margin={{ top: 10, right: 0, bottom: 0, left: 16 }}>
+          <ComposedChart data={points} margin={{ top: 8, right: 0, bottom: 0, left: 16 }}>
             <defs>
               <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0" stopColor="var(--color-chart-line)" stopOpacity={0.3} />
@@ -94,7 +91,7 @@ export function WeightChart({ points, lastDay }: WeightChartProps) {
               axisLine={false}
               tickLine={false}
             />
-            <Tooltip content={<WeightTooltip />} cursor={{ stroke: 'var(--color-ink-muted)', strokeWidth: 1 }} />
+            <Tooltip content={<Reader onRead={onRead} />} isAnimationActive={false} cursor={{ stroke: 'var(--color-ink-muted)', strokeWidth: 1 }} />
             <Area
               type="monotone"
               dataKey="trend"
@@ -107,15 +104,15 @@ export function WeightChart({ points, lastDay }: WeightChartProps) {
                 index === last ? <circle key="latest" cx={cx} cy={cy} r={6} {...MARK} strokeWidth={3} /> : <g key={index} />
               }
               activeDot={false}
-              isAnimationActive={!reduceMotion}
+              isAnimationActive={false}
             />
             <Line
               type="linear"
-              dataKey="weight"
+              dataKey="weight_kg"
               stroke="none"
               dot={FAINT_DOT}
               activeDot={{ ...MARK, r: 5 }}
-              isAnimationActive={!reduceMotion}
+              isAnimationActive={false}
             />
           </ComposedChart>
         </ResponsiveContainer>

@@ -35,7 +35,8 @@ function bodySummary(measurement: Measurement): string {
 }
 
 /**
- * This attempt's weight: the latest and its change from the start, then the chart, big. The arrow
+ * This attempt's weight, compact: one line with the latest weight and its change from the start
+ * (or, while a finger reads the chart, that weigh-in), then the chart. The arrow
  * under it unfolds the weigh-ins, one compact row each (day, date, weight, change since the one
  * before); a row opens the weigh-in to edit or delete it.
  */
@@ -47,6 +48,7 @@ export function BodySection({ today, startDate, lastDay }: BodySectionProps) {
   const [showAll, setShowAll] = useState(false)
   // Just the chart until the arrow is tapped. "+ Log" works either way.
   const [open, setOpen] = useState(false)
+  const [readingDay, setReadingDay] = useState<number | null>(null)
   const panelId = useId()
 
   const weighIns = attemptWeights(
@@ -55,6 +57,8 @@ export function BodySection({ today, startDate, lastDay }: BodySectionProps) {
     lastDay,
   )
   const summary = weightSummary(weighIns)
+  const trend = weightTrend(weighIns)
+  const reading = readingDay === null ? undefined : trend.find((p) => p.day === readingDay)
   const newestFirst = [...weighIns].reverse()
   const rows = showAll ? newestFirst : newestFirst.slice(0, COLLAPSED_ROWS)
 
@@ -64,35 +68,38 @@ export function BodySection({ today, startDate, lastDay }: BodySectionProps) {
   }
 
   return (
-    <section className="rounded-card bg-surface px-4 pt-4 pb-1 ring-1 ring-ink/10 dark:ring-0">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="flex items-center gap-2 font-rounded text-lg font-bold text-ink">
-          <Icon name="scale" className="shrink-0 text-world-ink" />
-          Weight
-        </h2>
+    <section className="rounded-card bg-surface px-4 pt-3 pb-0.5 ring-1 ring-ink/10 dark:ring-0">
+      <h2 className="sr-only">Weight</h2>
+      <div className="flex items-center gap-2">
+        <Icon name="scale" className="shrink-0 text-world-ink" />
+        {summary ? (
+          <p className="flex min-w-0 flex-1 items-baseline gap-x-2">
+            <span className="font-display text-3xl leading-none font-bold tracking-wide whitespace-nowrap text-ink">
+              {(reading ?? summary.latest).weight_kg.toFixed(1)}
+              <span className="text-lg"> kg</span>
+            </span>
+            <span className="truncate font-rounded text-xs font-bold text-ink-muted">
+              {reading
+                ? `${reading.day === 0 ? 'Start' : `Day ${reading.day}`} · ${format(parseISO(reading.date), 'EEE d MMM')} · trend ${reading.trend.toFixed(1)}`
+                : summary.changeKg !== undefined && formatChange(summary.changeKg)}
+            </span>
+          </p>
+        ) : (
+          <p className="flex-1 font-rounded text-lg font-bold text-ink">Weight</p>
+        )}
         <Button variant="secondary" className="px-4 py-2" onClick={() => openForm(null)}>
           + Log
         </Button>
       </div>
 
-      {summary ? (
-        <p className="mt-2 flex flex-wrap items-baseline gap-x-1.5">
-          <span className="font-display text-5xl leading-none font-bold tracking-wide text-ink">{summary.latest.weight_kg.toFixed(1)}</span>
-          <span className="font-display text-2xl font-bold text-ink">kg</span>
-          {summary.changeKg !== undefined && (
-            <span className="ml-2 font-rounded text-sm font-bold text-ink-muted">
-              {formatChange(summary.changeKg)} since Day {Math.max(1, summary.start.day)}
-            </span>
-          )}
-        </p>
-      ) : (
-        <p className="mt-2 pb-3 text-sm text-ink-muted">
+      {!summary && (
+        <p className="mt-1 pb-3 text-sm text-ink-muted">
           No weigh-ins yet. Log your weight — and waist, chest, hips or arms if you like — to see your trend.
         </p>
       )}
 
       {weighIns.length >= 2 ? (
-        <WeightChart points={weightTrend(weighIns)} lastDay={lastDay} />
+        <WeightChart points={trend} lastDay={lastDay} onRead={setReadingDay} />
       ) : (
         summary && <p className="mt-2 text-sm text-ink-muted">Log another weigh-in to see your trend.</p>
       )}
@@ -146,7 +153,7 @@ export function BodySection({ today, startDate, lastDay }: BodySectionProps) {
           aria-controls={open ? panelId : undefined}
           aria-label="Weigh-ins"
           onClick={() => setOpen((value) => !value)}
-          className="mx-auto flex min-h-touch w-16 items-center justify-center text-ink-muted"
+          className="mx-auto flex h-9 w-16 items-center justify-center text-ink-muted"
         >
           <Icon name="chevron" size={20} className={`motion-safe:transition-transform ${open ? '-rotate-90' : 'rotate-90'}`} />
         </button>

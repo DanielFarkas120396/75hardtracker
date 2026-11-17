@@ -5,7 +5,7 @@ import { db } from '../../../db/db'
 import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
 import type { DayEntry, Workout } from '../../../db/types'
 import { addDaysISO } from '../../../lib/dates'
-import { WorkoutsSection } from '../WorkoutsSection'
+import { WorkoutsSection, WorkoutTotals } from '../WorkoutsSection'
 
 const START = '2026-09-30'
 
@@ -41,7 +41,13 @@ describe('WorkoutsSection', () => {
   beforeEach(freshDatabase)
 
   it('adds up the attempt, with every card closed', async () => {
-    render(<WorkoutsSection challengeId={await seedAttempt()} />)
+    const challengeId = await seedAttempt()
+    render(
+      <>
+        <WorkoutTotals challengeId={challengeId} />
+        <WorkoutsSection challengeId={challengeId} />
+      </>,
+    )
 
     expect(await screen.findByRole('button', { name: 'Running, 2 sessions' })).toHaveAttribute('aria-expanded', 'false')
     expect(screen.getByRole('button', { name: 'Weights, 1 session' })).toHaveAttribute('aria-expanded', 'false')

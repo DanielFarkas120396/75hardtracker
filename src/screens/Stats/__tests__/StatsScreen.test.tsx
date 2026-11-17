@@ -86,7 +86,8 @@ describe('StatsScreen', () => {
     // Months before (an earlier attempt), the evening before Day 1, Day 5, today.
     const { startDate } = await renderStats({ dayNumber: 11, weighIns: [[-90, 95], [0, 88.4], [5, 87.1], [11, 85.8]] })
 
-    expect(await screen.findByText('−2.6 kg since Day 1')).toBeInTheDocument()
+    expect(await screen.findByText('−2.6 kg')).toBeInTheDocument()
+    expect(screen.getByText('85.8')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Weigh-ins' }))
     expect(screen.getByRole('button', { name: `Edit weigh-in of ${formatDisplayDate(addDaysISO(startDate, -1))}` })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: `Edit weigh-in of ${formatDisplayDate(addDaysISO(startDate, -91))}` })).not.toBeInTheDocument()
@@ -99,11 +100,11 @@ describe('StatsScreen', () => {
   it('counts from the first weigh-in when none came by Day 1', async () => {
     await renderStats({ dayNumber: 9, weighIns: [[5, 87], [9, 86.4]] })
 
-    expect(await screen.findByText('−0.6 kg since Day 5')).toBeInTheDocument()
+    expect(await screen.findByText('−0.6 kg')).toBeInTheDocument()
     expect(within(screen.getByRole('figure', { name: 'Weight by challenge day chart' })).getByText('Day 1')).toBeInTheDocument()
   })
 
-  it('reads a point: its weight, its day and date, and the trend there', async () => {
+  it('reads a point in the header: its weight, its day and date, and the trend there', async () => {
     // Days 1 to 10, losing 0.1 kg a day: Day 10 is 87 kg, and the trend, lagging behind, is at 87.4 kg.
     const { startDate } = await renderStats({
       dayNumber: 10,
@@ -115,9 +116,12 @@ describe('StatsScreen', () => {
     Object.defineProperties(chart, { offsetWidth: { value: 360 }, offsetHeight: { value: 192 } })
     fireEvent.mouseMove(chart, { clientX: 325, clientY: 96 })
 
-    const readout = await screen.findByText('Day 10 · ' + format(parseISO(addDaysISO(startDate, 9)), 'EEE d MMM'))
+    // The header shows the reading in place of today's weight: no floating box.
+    const readout = await screen.findByText(`Day 10 · ${format(parseISO(addDaysISO(startDate, 9)), 'EEE d MMM')} · trend 87.4`)
     expect(readout.parentElement).toHaveTextContent('87.0 kg')
-    expect(readout.parentElement).toHaveTextContent('Trend 87.4 kg')
+
+    fireEvent.mouseLeave(chart)
+    await waitFor(() => expect(screen.queryByText(/· trend/)).not.toBeInTheDocument())
   })
 
   it('keeps only the water and pages tiles', async () => {
