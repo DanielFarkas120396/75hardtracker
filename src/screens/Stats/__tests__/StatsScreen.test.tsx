@@ -104,24 +104,28 @@ describe('StatsScreen', () => {
     expect(within(screen.getByRole('figure', { name: 'Weight by challenge day chart' })).getByText('Day 1')).toBeInTheDocument()
   })
 
-  it('reads a point in the header: its weight, its day and date, and the trend there', async () => {
+  it('reads the chart from a finger anywhere on it, and keeps the reading once let go', async () => {
     // Days 1 to 10, losing 0.1 kg a day: Day 10 is 87 kg, and the trend, lagging behind, is at 87.4 kg.
     const { startDate } = await renderStats({
       dayNumber: 10,
       weighIns: Array.from({ length: 10 }, (_, i): [number, number] => [i + 1, 88 - 0.1 * (i + 1)]),
     })
-    const chart = (await screen.findByRole('figure', { name: 'Weight by challenge day chart' })).querySelector<HTMLElement>('.recharts-wrapper')!
-    // jsdom lays nothing out: give the chart the size it was drawn at, so the pointer maps to a day.
-    chart.getBoundingClientRect = () => DOMRect.fromRect({ x: 0, y: 0, width: 360, height: 192 })
-    Object.defineProperties(chart, { offsetWidth: { value: 360 }, offsetHeight: { value: 192 } })
-    fireEvent.mouseMove(chart, { clientX: 325, clientY: 96 })
+    // The touch area wraps the chart: jsdom lays nothing out, so give it the size it was drawn at.
+    const area = (await screen.findByRole('figure', { name: 'Weight by challenge day chart' })).firstElementChild as HTMLElement
+    area.getBoundingClientRect = () => DOMRect.fromRect({ x: 0, y: 0, width: 360, height: 160 })
+    const day = (n: number) => `Day ${n} · ${format(parseISO(addDaysISO(startDate, n - 1)), 'EEE d MMM')}`
 
-    // The header shows the reading in place of today's weight: no floating box.
-    const readout = await screen.findByText(`Day 10 · ${format(parseISO(addDaysISO(startDate, 9)), 'EEE d MMM')} · trend 87.4`)
+    // A finger anywhere (here at the very top, far from the line) takes the closest weigh-in by day.
+    fireEvent.pointerDown(area, { pointerType: 'touch', buttons: 1, clientX: 325, clientY: 2 })
+    const readout = await screen.findByText(`${day(10)} · trend 87.4`)
     expect(readout.parentElement).toHaveTextContent('87.0 kg')
 
-    fireEvent.mouseLeave(chart)
-    await waitFor(() => expect(screen.queryByText(/· trend/)).not.toBeInTheDocument())
+    // Dragging moves it; letting go leaves it there.
+    fireEvent.pointerMove(area, { pointerType: 'touch', buttons: 1, clientX: 16, clientY: 150 })
+    expect(await screen.findByText(`${day(1)} · trend 87.9`)).toBeInTheDocument()
+    fireEvent.pointerUp(area, { pointerType: 'touch', buttons: 0, clientX: 16, clientY: 150 })
+    fireEvent.pointerMove(area, { pointerType: 'touch', buttons: 0, clientX: 325, clientY: 150 })
+    expect(screen.getByText(`${day(1)} · trend 87.9`)).toBeInTheDocument()
   })
 
   it('keeps only the water and pages tiles', async () => {

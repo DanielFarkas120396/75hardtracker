@@ -80,7 +80,8 @@ const SHELF_ROOM = 7
 
 /**
  * A wooden shelf with a book for every 100 pages read. The book in progress is pulled out, fills
- * up from the bottom as its 100 pages go by, and has a red ribbon on top.
+ * up from the bottom as its 100 pages go by, and has a red ribbon on top. It floats a hair up and
+ * down while its ribbon sways (both still with "reduce motion").
  */
 export function BookShelfArt({ pages }: { pages: number }) {
   const finished = Math.floor(pages / 100)
@@ -125,7 +126,7 @@ export function BookShelfArt({ pages }: { pages: number }) {
           opacity="0.5"
         />
       ) : (
-        <g>
+        <g className="motion-safe:animate-book-float">
           <rect
             x={current.x}
             y={top}
@@ -145,7 +146,13 @@ export function BookShelfArt({ pages }: { pages: number }) {
             rx="1.5"
             fill={current.color}
           />
-          <path d={`M${current.x + current.w / 2} ${top}v-6`} stroke="var(--color-danger)" strokeWidth="2.2" strokeLinecap="round" />
+          <path
+            d={`M${current.x + current.w / 2} ${top}v-6`}
+            stroke="var(--color-danger)"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            className="origin-bottom [transform-box:fill-box] motion-safe:animate-ribbon-sway"
+          />
         </g>
       )}
 
