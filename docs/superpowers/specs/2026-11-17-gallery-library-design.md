@@ -1,6 +1,6 @@
 # Gallery library
 
-Date: 2026-11-17 · Status: **agreed** with the owner on 2026-11-17 (mockups seen in chat). Built on `feat/gallery-library`, PR open; phone check pending.
+Date: 2026-11-17 · Status: **agreed** with the owner on 2026-11-17 (mockups seen in chat). **Merged** into `main` on 2026-11-17 (PR #97); iPhone check pending.
 
 ## Why
 
