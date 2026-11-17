@@ -1,6 +1,5 @@
 import { motion, useReducedMotion } from 'framer-motion'
-import type { KeyboardEvent, MouseEvent } from 'react'
-import type { World, WorldId } from './worlds'
+import type { World, WorldId } from '../Journey/worlds'
 
 export type NodeState = 'completed' | 'today' | 'locked' | 'missed'
 
@@ -13,17 +12,12 @@ const STATE_LABELS: Record<NodeState, string> = {
   missed: 'forgiven with a joker',
 }
 
-interface JourneyStoneProps {
+interface ClimbStoneProps {
   x: number
   y: number
   dayNumber: number
   state: NodeState
   world: World
-  isMilestone: boolean
-  /** A milestone already passed: its flag waves. */
-  flagWaves: boolean
-  /** Opens the day's card, from the point tapped; days not reached yet can't be opened. */
-  onOpen?: (dayNumber: number, from: { x: number; y: number }) => void
 }
 
 /** The texture that makes a stone belong to its world, drawn over the stone's face. */
@@ -79,16 +73,6 @@ function Halo({ world }: { world: World }) {
   return null
 }
 
-/** A small flag planted beside a milestone; it waves once the milestone is behind you. */
-function Flag({ waves, color }: { waves: boolean; color: string }) {
-  return (
-    <g transform={`translate(${RADIUS - 2} ${-RADIUS + 4})`}>
-      <path d="M0 0 V-30" stroke="#3b2614" strokeWidth={2.5} strokeLinecap="round" />
-      <path d="M1 -30 L19 -25 L1 -19 Z" fill={color} className={waves ? 'journey-wave' : undefined} />
-    </g>
-  )
-}
-
 /** A padlock on the stone's lower-right edge, for days not reached yet. */
 function LockBadge() {
   const offset = RADIUS * 0.72
@@ -101,41 +85,14 @@ function LockBadge() {
   )
 }
 
-/** One day on the Journey: a stepping stone in its world's style. */
-export function JourneyStone({ x, y, dayNumber, state, world, isMilestone, flagWaves, onOpen }: JourneyStoneProps) {
-  const stone = <Stone x={x} y={y} dayNumber={dayNumber} state={state} world={world} isMilestone={isMilestone} flagWaves={flagWaves} />
-  if (!onOpen || state === 'locked') return stone
-
-  const centre = (target: Element) => {
-    const box = target.getBoundingClientRect()
-    return { x: box.left + box.width / 2, y: box.top + box.height / 2 }
-  }
-  // A tap grows the card from the finger; the keyboard, from the stone's middle.
-  const onClick = (e: MouseEvent<SVGGElement>) =>
-    onOpen(dayNumber, e.clientX || e.clientY ? { x: e.clientX, y: e.clientY } : centre(e.currentTarget))
-  const onKeyDown = (e: KeyboardEvent<SVGGElement>) => {
-    if (e.key !== 'Enter' && e.key !== ' ') return
-    e.preventDefault()
-    onOpen(dayNumber, centre(e.currentTarget))
-  }
-
-  return (
-    <g role="button" tabIndex={0} aria-label={`Open Day ${dayNumber}`} onClick={onClick} onKeyDown={onKeyDown} className="cursor-pointer">
-      {/* A touch target a little wider than the stone. */}
-      <circle cx={x} cy={y} r={RADIUS + 6} fill="transparent" />
-      {stone}
-    </g>
-  )
-}
-
-function Stone({ x, y, dayNumber, state, world, isMilestone, flagWaves }: Omit<JourneyStoneProps, 'onOpen'>) {
+/** One day of the climb as a stepping stone in its world's style: the day-complete celebration's stretch of road. */
+export function ClimbStone({ x, y, dayNumber, state, world }: ClimbStoneProps) {
   const reduceMotion = useReducedMotion()
   const { face, rim, ink } = world.stone
   const dim = state === 'locked' || state === 'missed'
 
   return (
     <g transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`} role="img" aria-label={`Day ${dayNumber}, ${STATE_LABELS[state]}`}>
-      {isMilestone && <Flag waves={flagWaves} color={dayNumber === 75 ? '#f3c23a' : '#e2412f'} />}
       <ellipse cy={RADIUS - 2} rx={RADIUS} ry={7} fill="#000000" opacity={0.22} />
       {state === 'today' &&
         (reduceMotion ? (
@@ -172,14 +129,6 @@ function Stone({ x, y, dayNumber, state, world, isMilestone, flagWaves }: Omit<J
         >
           {dayNumber}
         </text>
-      )}
-      {isMilestone && (
-        <g transform={`translate(0 ${RADIUS + 20})`}>
-          <rect x={-24} y={-9} width={48} height={18} rx={9} fill="#ffffff" opacity={0.9} />
-          <text textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={800} fill="#3b2614">
-            Day {dayNumber}
-          </text>
-        </g>
       )}
       {state === 'locked' && <LockBadge />}
     </g>

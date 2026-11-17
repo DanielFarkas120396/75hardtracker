@@ -1,16 +1,17 @@
-import { lazy, Suspense, useState } from 'react'
-import { BadgeUnlockToast } from './components/BadgeUnlockToast'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { DuckArt } from './components/mascot/duckArt'
-import { SaveErrorToast } from './components/SaveErrorToast'
+import { ToastStack, type Toast } from './components/ToastStack'
 import { TimeTravelBadge } from './dev/TimeTravelBadge'
 import { BottomNav, type ScreenId } from './components/ui/BottomNav'
 import { useBadgeUnlocks } from './hooks/useBadgeUnlocks'
+import { useSaveFailure } from './hooks/useSaveFailure'
 import { canGiveUp, useChallengeGate } from './hooks/useChallengeGate'
 import { useDayCompleteCelebration } from './hooks/useDayCompleteCelebration'
 import { useAppLock } from './hooks/useAppLock'
 import { useApplyTheme } from './hooks/useThemePreference'
 import { useToday } from './hooks/useToday'
 import { useWorldTheme } from './hooks/useWorldTheme'
+import type { BadgeDefinition } from './logic/badges'
 import { worldForProgress } from './lib/worldTheme'
 import { OnboardingGate } from './screens/Onboarding/OnboardingGate'
 import { DayCompleteCelebration } from './screens/Today/DayCompleteCelebration'
@@ -45,10 +46,47 @@ function LoadingScreen() {
   )
 }
 
+/** The badges waiting to be shown, reported up by MainApp so they share one stack with the app-wide toasts. */
+interface BadgeFeed {
+  badges: BadgeDefinition[]
+  dismiss: (badgeId: string) => void
+}
+const NO_BADGES: BadgeFeed = { badges: [], dismiss: () => {} }
+
+const SAVE_ERROR_ID = 'save-error'
+const BADGE_PREFIX = 'badge:'
+
 function App() {
   useApplyTheme()
   const today = useToday()
   const lock = useAppLock()
+  const saveFailure = useSaveFailure()
+  const [badgeFeed, setBadgeFeed] = useState<BadgeFeed>(NO_BADGES)
+
+  // One stack for every toast: a failed save in front, then the badges. Badges stay hidden under the lock.
+  const toasts: Toast[] = [
+    ...(saveFailure.failures > 0
+      ? [
+          {
+            id: SAVE_ERROR_ID,
+            title: "Couldn't save that",
+            detail: 'Try again. If it keeps happening, your phone may be full.',
+            error: true,
+            durationMs: 6000,
+            stamp: saveFailure.failures,
+          },
+        ]
+      : []),
+    ...(lock.status === 'locked'
+      ? []
+      : badgeFeed.badges.map((badge) => ({
+          id: BADGE_PREFIX + badge.id,
+          title: `Badge unlocked: ${badge.name}`,
+          detail: badge.description,
+          durationMs: 4500,
+        }))),
+  ]
+  const dismissToast = (id: string) => (id === SAVE_ERROR_ID ? saveFailure.dismiss() : badgeFeed.dismiss(id.slice(BADGE_PREFIX.length)))
 
   if (lock.status === 'loading') return <LoadingScreen />
   return (
@@ -56,10 +94,10 @@ function App() {
       {/* Under the app lock the app stays mounted (you come back where you were) but hidden and inert. */}
       <div inert={lock.status === 'locked'} className={lock.status === 'locked' ? 'invisible' : undefined}>
         <OnboardingGate today={today} loading={<LoadingScreen />}>
-          <MainApp today={today} />
+          <MainApp today={today} onBadgeFeed={setBadgeFeed} />
         </OnboardingGate>
       </div>
-      <SaveErrorToast />
+      <ToastStack toasts={toasts} onDismiss={dismissToast} />
       {lock.status === 'locked' && (
         <LockScreen
           faceIdEnabled={lock.faceIdEnabled}
@@ -76,7 +114,7 @@ function App() {
 }
 
 /** The app once the player has a profile: the challenge gate, the screens and the bottom nav. */
-function MainApp({ today }: { today: string }) {
+function MainApp({ today, onBadgeFeed }: { today: string; onBadgeFeed: (feed: BadgeFeed) => void }) {
   const [screen, setScreen] = useState<ScreenId>('today')
   // Set by the Gallery's "take a photo": Today opens its camera once, then clears it.
   const [cameraRequested, setCameraRequested] = useState(false)
@@ -89,6 +127,10 @@ function MainApp({ today }: { today: string }) {
   // "Day complete!" waits for the board's last chip to land (5 s at most).
   const shownCelebration = useSettledCelebration(celebration)
   const { toasts, dismiss: dismissToast } = useBadgeUnlocks(gate)
+  // Badges wait for the day-complete celebration to be dismissed: one peak at a time.
+  const badgesPaused = celebration !== null
+  useEffect(() => onBadgeFeed({ badges: badgesPaused ? [] : toasts, dismiss: dismissToast }), [toasts, badgesPaused, dismissToast, onBadgeFeed])
+  useEffect(() => () => onBadgeFeed(NO_BADGES), [onBadgeFeed])
   // The app wears the colours of the Journey world you're in.
   useWorldTheme(gate ? worldForProgress(gate.todayDayNumber, gate.kind === 'completed') : undefined)
 
@@ -198,8 +240,6 @@ function MainApp({ today }: { today: string }) {
       {import.meta.env.DEV && <TimeTravelBadge />}
 
       <DayCompleteCelebration celebration={shownCelebration} onDismiss={dismissCelebration} />
-      {/* Badges wait for the day-complete celebration to be dismissed: one peak at a time. */}
-      <BadgeUnlockToast badges={celebration ? [] : toasts} onDismiss={dismissToast} />
     </>
   )
 }

@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Journey redesign — board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --canvas: #121410; --surface: #1d211a; --surface-2: #262b22; --ink: #f6ecdc; --muted: #a1998d;
+    --world: #9bc27a; --world-ink: #abd08c; --world-soft: #22291b; --amber: #e2a45a; --nav: #1a1d16;
+    --hell: #e2a45a; --waste: #b8a995; --forest: #7fb08a; --meadow: #9bc27a; --mount: #8fb6d6; --heaven: #e8c76a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0b0a09; color: var(--ink); font-family: "DM Sans", system-ui, sans-serif; padding: 24px 16px 48px; }
+  h1.board { font: 700 28px "Barlow Condensed"; text-transform: uppercase; letter-spacing: .02em; text-align: center; margin-bottom: 4px; }
+  p.sub { text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+  .row { display: flex; gap: 28px; justify-content: center; flex-wrap: wrap; }
+  .col { width: 340px; }
+  .label { font: 700 22px "Barlow Condensed"; text-transform: uppercase; margin-bottom: 2px; }
+  .label span { color: var(--amber); margin-right: 6px; }
+  .blurb { color: var(--muted); font-size: 13px; line-height: 1.45; min-height: 58px; margin-bottom: 12px; }
+  .phone { width: 340px; height: 736px; border-radius: 44px; background: var(--canvas); position: relative; overflow: hidden; box-shadow: 0 0 0 8px #2a2622, 0 30px 60px rgba(0,0,0,.5); }
+  .scroll { position: absolute; inset: 0; overflow-y: auto; padding: 54px 16px 110px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .glow { position: absolute; inset: 0 0 auto; height: 340px; background: radial-gradient(120% 80% at 50% -10%, rgba(155,194,122,.22), transparent 70%); pointer-events: none; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; position: relative; }
+  .eyebrow { color: var(--muted); font-size: 13px; font-weight: 500; }
+  .title { font: 700 30px/1 "Barlow Condensed"; text-transform: uppercase; letter-spacing: .01em; }
+  .streak { font: 700 26px "Barlow Condensed"; color: var(--amber); display: flex; align-items: center; gap: 4px; }
+  .card { background: var(--surface); border-radius: 20px; padding: 16px; }
+  .nav { position: absolute; left: 12px; right: 12px; bottom: 14px; height: 64px; border-radius: 24px; background: var(--nav); display: flex; justify-content: space-around; align-items: center; font-size: 11px; color: var(--muted); }
+  .nav div { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 7px 12px; border-radius: 16px; }
+  .nav .on { background: rgba(155,194,122,.16); color: var(--world); }
+  .nav i { width: 18px; height: 18px; border: 2.25px solid currentColor; border-radius: 6px; display: block; }
+  .duck { width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #fff3c4, #f2cf6a 60%, #c99a3a); filter: sepia(.35) saturate(.9); }
+  .tap { position: absolute; font-size: 11px; color: var(--ink); background: rgba(0,0,0,.6); padding: 3px 8px; border-radius: 99px; pointer-events: none; }
+  /* fake progress photos */
+  .ph { background: linear-gradient(160deg, var(--a), var(--b)); }
+  .ph1 { --a: #6b5444; --b: #2e231c; } .ph2 { --a: #7a6150; --b: #3a2b22; } .ph3 { --a: #5e4a3d; --b: #241b16; }
+  .ph4 { --a: #806656; --b: #33271f; } .ph5 { --a: #6e5848; --b: #2a201a; }
+
+  /* A — trail */
+  .worldhead { display: flex; align-items: baseline; justify-content: space-between; margin: 26px 4px 8px; }
+  .worldhead b { font: 700 18px "Barlow Condensed"; text-transform: uppercase; letter-spacing: .04em; }
+  .worldhead small { color: var(--muted); font-size: 12px; }
+  .trail { position: relative; height: 0; }
+  .node { position: absolute; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font: 600 16px "Barlow Condensed"; transform: translate(-50%, -50%); }
+  .node.done { background: var(--world-soft); color: var(--wc); box-shadow: inset 0 0 0 2px var(--wc); }
+  .node.ahead { background: var(--surface); color: var(--muted); }
+  .node.today { background: var(--wc); color: #1f1813; box-shadow: 0 0 0 5px rgba(155,194,122,.18), 0 0 24px rgba(155,194,122,.45); }
+
+  /* B — grid */
+  .seg { display: flex; gap: 4px; margin: 12px 0 8px; } .seg i { flex: 1; height: 6px; border-radius: 3px; background: var(--surface-2); }
+  .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 12px; }
+  .cell { aspect-ratio: 1; border-radius: 12px; position: relative; overflow: hidden; display: grid; place-items: center; font: 600 15px "Barlow Condensed"; }
+  .cell .n { position: absolute; left: 6px; bottom: 4px; font: 600 12px "Barlow Condensed"; color: rgba(246,236,220,.85); }
+  .cell.ahead { background: var(--surface-2); color: var(--muted); }
+  .cell.today { box-shadow: inset 0 0 0 2px var(--world); color: var(--world); background: var(--world-soft); }
+  .cell.joker { background: var(--surface-2); color: var(--amber); }
+  .wcard { margin-top: 12px; }
+  .wcard header { display: flex; justify-content: space-between; align-items: baseline; }
+  .wcard header b { font: 700 18px "Barlow Condensed"; text-transform: uppercase; letter-spacing: .04em; }
+  .wcard header small { color: var(--muted); font-size: 12px; }
+  .folded { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 14px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+
+  /* C — logbook */
+  .rail { position: absolute; left: 16px; top: 120px; bottom: 100px; width: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+  .entry { display: flex; gap: 12px; align-items: center; padding: 10px; border-radius: 18px; background: var(--surface); margin-bottom: 8px; }
+  .entry .thumb { width: 56px; height: 70px; border-radius: 12px; flex: none; }
+  .entry b { font: 700 18px/1 "Barlow Condensed"; text-transform: uppercase; }
+  .entry .meta { color: var(--muted); font-size: 12px; margin: 3px 0 6px; }
+  .entry .note { font-size: 13px; color: var(--ink); opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 190px; }
+  .chip { display: inline-flex; gap: 4px; align-items: center; font-size: 11px; color: var(--world-ink); background: var(--world-soft); padding: 2px 8px; border-radius: 99px; margin-right: 4px; }
+  .divider { display: flex; align-items: center; gap: 10px; margin: 18px 0 10px; font: 700 15px "Barlow Condensed"; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .divider::after { content: ""; flex: 1; height: 1px; background: var(--surface-2); }
+  .todayrow { box-shadow: inset 0 0 0 2px var(--world); background: var(--world-soft); }
+</style>
+</head>
+<body>
+<h1 class="board">Journey · three directions</h1>
+<p class="sub">Ember tokens · Day 46 in the Meadows · tap a done day = today's day card (photo, notes, workouts)</p>
+
+<div class="row">
+
+<!-- A -->
+<div class="col">
+  <div class="label"><span>A</span>The trail</div>
+  <p class="blurb">Keep the climb, lose the picture book. A quiet line through 75 dots on the warm black, each world a chapter with its own accent. Today glows; the duck stands on it.</p>
+  <div class="phone">
+    <div class="glow"></div>
+    <div class="scroll" id="a"></div>
+    <div class="nav"><div><i></i>Today</div><div class="on"><i></i>Journey</div><div><i></i>Stats</div><div><i></i>Gallery</div><div><i></i>Settings</div></div>
+  </div>
+</div>
+
+<!-- B -->
+<div class="col">
+  <div class="label"><span>B</span>The wall</div>
+  <p class="blurb">All 75 days at a glance, grouped by world. Each done day shows its progress photo, so the screen fills up with you. Past worlds fold away; worlds ahead wait greyed.</p>
+  <div class="phone">
+    <div class="glow"></div>
+    <div class="scroll" id="b"></div>
+    <div class="nav"><div><i></i>Today</div><div class="on"><i></i>Journey</div><div><i></i>Stats</div><div><i></i>Gallery</div><div><i></i>Settings</div></div>
+  </div>
+</div>
+
+<!-- C -->
+<div class="col">
+  <div class="label"><span>C</span>The logbook</div>
+  <p class="blurb">A diary of the attempt, newest day first: photo, date, the first line of the notes, the workouts. A thin altitude rail on the side fills with each world's colour as you climb.</p>
+  <div class="phone">
+    <div class="glow"></div>
+    <div class="scroll" id="c" style="padding-left:34px"></div>
+    <div class="rail" id="rail"></div>
+    <div class="nav"><div><i></i>Today</div><div class="on"><i></i>Journey</div><div><i></i>Stats</div><div><i></i>Gallery</div><div><i></i>Settings</div></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const WORLDS = [
+  { name: 'Hell', first: 1, last: 10, c: 'var(--hell)' },
+  { name: 'The Wasteland', first: 11, last: 22, c: 'var(--waste)' },
+  { name: 'The Dark Forest', first: 23, last: 37, c: 'var(--forest)' },
+  { name: 'The Meadows', first: 38, last: 50, c: 'var(--meadow)' },
+  { name: 'The Mountains', first: 51, last: 64, c: 'var(--mount)' },
+  { name: 'Heaven', first: 65, last: 75, c: 'var(--heaven)' },
+];
+const TODAY = 46, JOKER = 19;
+const header = (title) => `<div class="top"><div><p class="eyebrow">Attempt #1</p><h1 class="title">${title}</h1></div><div class="streak">🔥 45</div></div>`;
+const ph = (d) => `ph ph${(d % 5) + 1}`;
+const notes = ['Legs were dead but did it anyway.', 'Rain walk, felt great after.', 'Hard to read tonight, finished at 23:10.', 'New PR on the deadlift.', 'Skipped dessert at the party.'];
+
+/* A */
+(() => {
+  let h = header('Journey');
+  h += `<div class="card" style="display:flex;justify-content:space-between;align-items:center;position:relative"><div><p class="eyebrow" style="color:var(--world)">THE MEADOWS</p><p class="title" style="font-size:40px">Day 46 <span style="font-size:20px;color:var(--muted)">of 75</span></p></div><div style="text-align:right"><p class="title" style="font-size:28px">4</p><p class="eyebrow">days to the<br>Mountains</p></div></div>`;
+  [...WORLDS].reverse().forEach((w) => {
+    const days = []; for (let d = w.last; d >= w.first; d--) days.push(d);
+    if (w.first > 52) { h += `<div class="worldhead" style="opacity:.55"><b style="color:${w.c}">${w.name}</b><small>Days ${w.first}–${w.last}</small></div>`; return; }
+    h += `<div class="worldhead"><b style="color:${w.c}">${w.name}</b><small>Days ${w.first}–${w.last}</small></div>`;
+    const H = days.length * 52;
+    let svg = `<svg width="308" height="${H}" style="display:block;overflow:visible">`;
+    const pts = days.map((d, i) => [154 + 70 * Math.sin(d / 2.2), 26 + i * 52, d]);
+    for (let i = 0; i < pts.length - 1; i++) {
+      const [x1, y1, d1] = pts[i], [x2, y2] = pts[i + 1];
+      const walked = d1 <= TODAY;
+      svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${walked ? w.c : '#3a3a32'}" stroke-width="${walked ? 3 : 2}" stroke-dasharray="${walked ? '0' : '2 6'}" stroke-linecap="round" opacity="${walked ? .7 : 1}"/>`;
+    }
+    svg += `</svg>`;
+    h += `<div style="position:relative;--wc:${w.c}">${svg}`;
+    pts.forEach(([x, y, d]) => {
+      const cls = d === TODAY ? 'today' : d < TODAY ? 'done' : 'ahead';
+      const lab = d < TODAY ? (d === JOKER ? '🃏' : '✓') : d;
+      h += `<div class="node ${cls}" style="left:${x}px;top:${y}px">${lab}</div>`;
+      if (d === TODAY) h += `<div class="duck" style="position:absolute;left:${x + 26}px;top:${y - 40}px"></div>`;
+    });
+    h += `</div>`;
+  });
+  document.getElementById('a').innerHTML = h;
+  const el = document.getElementById('a'); el.scrollTop = el.querySelector('.node.today').offsetTop + el.querySelector('.node.today').offsetParent.offsetTop - 330;
+})();
+
+/* B */
+(() => {
+  let h = header('Journey');
+  h += `<div class="card" style="position:relative"><p class="eyebrow" style="color:var(--world)">THE MEADOWS</p><p class="title" style="font-size:40px">Day 46 <span style="font-size:20px;color:var(--muted)">of 75</span></p><div class="seg">${WORLDS.map((w) => { const f = Math.max(0, Math.min(1, (TODAY - w.first) / (w.last - w.first + 1))); return `<i style="background:linear-gradient(90deg, ${w.c} ${f * 100}%, var(--surface-2) ${f * 100}%)"></i>`; }).join('')}</div><p class="eyebrow">45 days done · 1 joker · 29 to go</p></div>`;
+  h += `<div class="card wcard folded"><span><span class="dot" style="background:var(--heaven)"></span><span class="dot" style="background:var(--mount)"></span>Mountains, Heaven</span><span>29 days ahead</span></div>`;
+  [...WORLDS].reverse().forEach((w) => {
+    if (w.first > TODAY) return;
+    const done = Math.min(w.last, TODAY - 1) - w.first + 1;
+    h += `<div class="card wcard"><header><b style="color:${w.c}">${w.name}</b><small>${done} / ${w.last - w.first + 1}</small></header><div class="grid">`;
+    for (let d = w.first; d <= w.last; d++) {
+      if (d === TODAY) h += `<div class="cell today">${d}</div>`;
+      else if (d === JOKER) h += `<div class="cell joker">🃏<span class="n">${d}</span></div>`;
+      else if (d < TODAY) h += `<div class="cell ${ph(d)}"><span class="n">${d}</span></div>`;
+      else h += `<div class="cell ahead">${d}</div>`;
+    }
+    h += `</div></header></div>`;
+  });
+  document.getElementById('b').innerHTML = h;
+})();
+
+/* C */
+(() => {
+  let h = header('Journey');
+  h += `<div class="card" style="margin-bottom:6px"><p class="eyebrow" style="color:var(--world)">THE MEADOWS · 4 DAYS TO THE MOUNTAINS</p><p class="title" style="font-size:40px">Day 46 <span style="font-size:20px;color:var(--muted)">of 75</span></p></div>`;
+  h += `<div class="entry todayrow"><div class="thumb" style="background:var(--surface-2);display:grid;place-items:center;color:var(--world);font-size:22px">+</div><div><b style="color:var(--world)">Today · Day 46</b><p class="meta">Tue 17 Nov · 2 of 5 done</p><span class="chip">Workout 45 min</span></div></div>`;
+  let world = null;
+  for (let d = TODAY - 1; d >= 36; d--) {
+    const w = WORLDS.find((x) => d <= x.last);
+    if (w !== world) { world = w; h += `<div class="divider" style="color:${w.c}">${w.name}</div>`; }
+    if (d === JOKER) continue;
+    const date = new Date(2026, 10, 17 - (TODAY - d)).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+    h += `<div class="entry"><div class="thumb ${ph(d)}"></div><div style="min-width:0"><b>Day ${d}</b><p class="meta">${date}</p><p class="note">${notes[d % 5]}</p><div style="margin-top:6px"><span class="chip">🚲 55 min</span><span class="chip">🏋 1h</span></div></div></div>`;
+  }
+  document.getElementById('c').innerHTML = h;
+  let r = '';
+  WORLDS.forEach((w) => {
+    const len = w.last - w.first + 1, f = Math.max(0, Math.min(1, (TODAY - w.first) / len));
+    r += `<div style="position:absolute;left:0;right:0;bottom:${(w.first - 1) / 75 * 100}%;height:${len / 75 * 100}%;background:linear-gradient(0deg, ${w.c} ${f * 100}%, transparent ${f * 100}%)"></div>`;
+  });
+  document.getElementById('rail').innerHTML = r;
+})();
+</script>
+</body>
+</html>

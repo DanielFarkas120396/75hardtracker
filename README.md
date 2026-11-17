@@ -1,6 +1,6 @@
 # 75 Hard Companion
 
-A PWA for the 75 Hard challenge. It tracks workouts, diet, water, reading and progress photos, and shows your days on a Duolingo-style Journey map with streaks and badges. It's built for phones, installs to the Home Screen and works offline.
+A PWA for the 75 Hard challenge. It tracks workouts, diet, water, reading and progress photos, and keeps your days in a Journey logbook with streaks and badges. It's built for phones, installs to the Home Screen and works offline.
 
 There's no backend. All data, photos included, lives in the browser's IndexedDB (through Dexie), and you can export or import it as a single JSON file.
 
@@ -31,7 +31,7 @@ There's no backend. All data, photos included, lives in the browser's IndexedDB 
 - **The duck.** Your companion is a knife-holding duck, drawn in code and animated. He breathes, blinks, watches what you touch and answers pokes. He only turns menacing when the tasks left no longer fit before your bedtime (Settings → Companion), and he backs off once you tell him your plan ("Plan my evening" on Today). With "reduce motion" on, he holds still.
 - **Strict rules.** A day only completes with all five tasks. If you forgot to log, yesterday stays open until noon. Today shows "Day N isn't finished" and opens that day's tasks (the photo comes from the library), so a logging slip doesn't cost the attempt. On 75 Hard and 75 Strong, a missed day ends the attempt. The app shows what you missed and restarts from Day 1 once you confirm. 75 Medium forgives one missed day and 75 Soft forgives three, each with a joker, before ending the attempt the same way. The start date can be today or later, and it locks on Day 2.
 - **Giving up.** Settings → Danger zone → Give up this challenge ends the running attempt for good (from Day 1). It takes four confirmations: what it means, what you built, a five-second last warning, and typing GIVE UP. The attempt stays in the history as Abandoned, and you pick your next challenge and when it starts.
-- **Journey.** All 75 days sit on a winding path. Future days are locked, and 🃏 marks a day a joker forgave. Tapping a past day (or today) grows a small card out of its stone, centred on the screen, with the day's photo, its notes, and its workouts by logo. Tapping outside, tapping ×, or swiping down shrinks it back.
+- **Journey.** A logbook of the attempt, newest day first: each day's progress photo, the first line of its notes, and its workouts. The days come in chapters by world, each under its cover picture, with a faint wash of its colour on every day, with the next world waiting locked on top. A rail down the left edge shows the climb from Hell to Heaven, one section per world; its fill follows the scroll, sinking through the worlds to the day you're looking at. Tapping a stretch jumps to that world. Tapping a day (or today) grows a small card with the day's photo, its notes, and its workouts by logo. 🃏 marks a day a joker forgave.
 - **Streaks and badges.** A flame shows the streak. Badges come at 7, 14, 21, 30, 50 and 75 days in a row, and for firsts. Each completed day gets a full-screen celebration: the world's glow rises behind the duck, embers drift up, and today's stone lights up on a short stretch of the climb. A victory screen follows Day 75.
 - **Stats.** From the top: the climb, totals for the attempt (water, pages), the weight, and Workouts. The weight stays folded until you tap it, with the latest weight and the change from the start in its header ("85.8 kg · −2.6 kg"). It covers this attempt only, from the starting weight (Day 1 or the week before it) to the day reached. Inside are the weight chart by challenge day, with a 7-day average line from Day 7, and the weigh-ins with their body measurements. Tap a point to read its weight, day and average. Workouts shows every session of the attempt as a stack of cards, one per activity with its logo. The cards stay closed until you tap one, which opens it on its sessions (day, minutes, outdoors, how it felt).
 - **Gallery.** Every progress photo across all attempts. Once this attempt has two photos, Compare puts them side by side in time:
@@ -116,7 +116,7 @@ Everything stays on the device, in this browser. The app sends nothing anywhere,
 - `src/lib/` holds helpers for dates, theme, sound, confetti, storage and installing.
 - `src/screens/` and `src/components/` hold the UI.
 - `src/components/mascot/` is the duck: the traced SVG art, the pure motion rig (`rig.ts`) and the `Mascot` component. The design is in `docs/superpowers/specs/2026-09-25-knife-duck-companion-design.md`.
-- `src/screens/Journey/` is the climb from hell to heaven: the worlds (`worlds.ts`), the map, and the three.js particle effects (`effects/`).
+- `src/screens/Journey/` is the logbook: the worlds (`worlds.ts`), the chapters (`chapters.ts`), the covers, the day rows, the altitude rail and the day card.
 - `src/dev/` holds the dev-only seeded scenarios (the app never imports them) and time travel (shown only in the dev server).
 - `src/assets/animations/` holds the Lottie animations, which `lottie-web` (light SVG build) loads on demand.
 

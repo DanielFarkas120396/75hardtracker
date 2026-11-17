@@ -6,7 +6,7 @@ import { Mascot } from '../../components/mascot/Mascot'
 import type { DayCelebration } from '../../hooks/useDayCompleteCelebration'
 import { useSound } from '../../hooks/useSound'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
-import { JourneyStone, type NodeState } from '../Journey/JourneyStone'
+import { ClimbStone, type NodeState } from './ClimbStone'
 import { worldForDay } from '../Journey/worlds'
 
 /** When today's stone lights up, once the burst around it has started. */
@@ -217,15 +217,7 @@ function ClimbStretch({ dayNumber, streak }: { dayNumber: number; streak: number
         />
       )}
       {days.map((day) => (
-        <JourneyStone
-          key={day}
-          {...at(day)}
-          dayNumber={day}
-          state={stateOf(day)}
-          world={worldForDay(day)}
-          isMilestone={false}
-          flagWaves={false}
-        />
+        <ClimbStone key={day} {...at(day)} dayNumber={day} state={stateOf(day)} world={worldForDay(day)} />
       ))}
       {lit && (
         <motion.circle
