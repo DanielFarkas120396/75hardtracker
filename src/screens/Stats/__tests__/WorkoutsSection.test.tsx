@@ -40,12 +40,11 @@ describe('WorkoutsSection', () => {
 
   beforeEach(freshDatabase)
 
-  it('adds up the attempt, the most practised activity in front and closed', async () => {
+  it('adds up the attempt, with every card closed', async () => {
     render(<WorkoutsSection challengeId={await seedAttempt()} />)
 
     expect(await screen.findByRole('button', { name: 'Running, 2 sessions' })).toHaveAttribute('aria-expanded', 'false')
-    // The others are tabs: tapping one brings it to the front, it doesn't unfold.
-    expect(screen.getByRole('button', { name: 'Weights, 1 session' })).not.toHaveAttribute('aria-expanded')
+    expect(screen.getByRole('button', { name: 'Weights, 1 session' })).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByRole('list', { name: /sessions$/ })).not.toBeInTheDocument()
 
     const summary = screen.getByRole('list', { name: 'This attempt' })
@@ -74,19 +73,20 @@ describe('WorkoutsSection', () => {
     expect(feels.map((chip) => chip.textContent)).toEqual([expect.stringContaining('Great: 1'), expect.stringContaining('Good: 1')])
   })
 
-  it('brings a tab to the front, closed, and folds the front card when tapped again', async () => {
+  it('opens a card where it is, one at a time, and closes the open one when tapped', async () => {
     render(<WorkoutsSection challengeId={await seedAttempt()} />)
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Running, 2 sessions' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Weights, 1 session' }))
-
+    const running = await screen.findByRole('button', { name: 'Running, 2 sessions' })
     const weights = screen.getByRole('button', { name: 'Weights, 1 session' })
-    expect(weights).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.getByRole('button', { name: 'Running, 2 sessions' })).not.toHaveAttribute('aria-expanded')
-
+    fireEvent.click(running)
     fireEvent.click(weights)
     expect(weights).toHaveAttribute('aria-expanded', 'true')
-    expect(screen.getByRole('list', { name: 'Weights sessions' })).toBeInTheDocument()
+    expect(running).toHaveAttribute('aria-expanded', 'false')
+    // It opens where it is: the most practised activity stays on top.
+    expect(screen.getAllByRole('button', { name: /sessions?$/ }).map((b) => b.getAttribute('aria-label'))).toEqual([
+      'Running, 2 sessions',
+      'Weights, 1 session',
+    ])
 
     fireEvent.click(weights)
     expect(weights).toHaveAttribute('aria-expanded', 'false')

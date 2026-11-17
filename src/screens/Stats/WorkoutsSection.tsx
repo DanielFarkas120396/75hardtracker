@@ -17,14 +17,13 @@ const WASH = 'bg-white/55 dark:bg-black/25'
 const stackColor = (shade: number) => `color-mix(in srgb, var(--color-stack-from), var(--color-stack-to) ${Math.round(shade * 100)}%)`
 
 /**
- * Every workout of the attempt, on Stats under Weight: a wallet of cards. One activity in front
- * (most sessions at first), the others as slim tabs tucked under it, highest count first.
+ * Every workout of the attempt, on Stats under Weight: the most practised activity as a full card,
+ * the others as slim tabs tucked under it, most sessions first. A tapped card opens where it is.
  */
 export function WorkoutsSection({ challengeId }: { challengeId: number }) {
   const history = useWorkoutHistory(challengeId)
   const headingId = useId()
-  const [front, setFront] = useState<WorkoutType | null>(null)
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState<WorkoutType | null>(null)
 
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-4">
@@ -41,16 +40,19 @@ export function WorkoutsSection({ challengeId }: { challengeId: number }) {
         ) : (
           <>
             <Summary history={history} />
-            <Wallet
-              activities={history.activities}
-              front={front}
-              open={open}
-              onToggle={() => setOpen(!open)}
-              onPick={(type) => {
-                setFront(type)
-                setOpen(false)
-              }}
-            />
+            <div className="flex flex-col">
+              {history.activities.map((activity, i) => (
+                <ActivityCard
+                  key={activity.type}
+                  activity={activity}
+                  first={i === 0}
+                  shade={history.activities.length > 1 ? i / (history.activities.length - 1) : 0}
+                  layer={history.activities.length - i}
+                  open={activity.type === open}
+                  onToggle={() => setOpen(activity.type === open ? null : activity.type)}
+                />
+              ))}
+            </div>
           </>
         ))}
       {history && history.untried.length > 0 && <Untried types={history.untried} />}
@@ -76,80 +78,35 @@ function Summary({ history }: { history: WorkoutHistory }) {
   )
 }
 
-interface WalletProps {
-  activities: readonly ActivityHistory[]
-  /** The activity in front; the first (most sessions) when null or no longer there. */
-  front: WorkoutType | null
-  open: boolean
-  onToggle: () => void
-  onPick: (type: WorkoutType) => void
-}
-
-/** The front card, then the other activities as tabs tucked under it, each narrower and softer than the last. */
-function Wallet({ activities, front, open, onToggle, onPick }: WalletProps) {
-  const reduceMotion = useReducedMotion()
-  const frontCard = activities.find((activity) => activity.type === front) ?? activities[0]
-  const tabs = activities.filter((activity) => activity !== frontCard)
-  const slide = { duration: reduceMotion ? 0 : 0.35, ease: 'easeInOut' } as const
-
-  return (
-    <div className="flex flex-col">
-      {/* Only the cards that change places fade in, not the whole stack when the page opens. */}
-      <AnimatePresence initial={false}>
-        <FrontCard key={frontCard.type} activity={frontCard} open={open} onToggle={onToggle} transition={slide} />
-        {tabs.map((activity, i) => {
-          const count = activity.sessions.length
-          return (
-            <motion.button
-              key={activity.type}
-              layout="position"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={slide}
-              type="button"
-              aria-label={`${activity.type}, ${count} ${sessionsWord(count)}`}
-              onClick={() => onPick(activity.type)}
-              className="relative -mt-6 flex items-center gap-3 rounded-[2rem] px-[1.125rem] pt-[2.125rem] pb-2.5 text-left text-on-stack shadow-[0_6px_16px_rgba(0,0,0,0.2)]"
-              style={{
-                // The inset stops growing after four tabs, so seven activities still fit a phone.
-                marginInline: `${Math.min(i + 1, 4) * 10}px`,
-                zIndex: tabs.length - i,
-                backgroundColor: stackColor((i + 1) / tabs.length),
-              }}
-            >
-              <Icon name={ACTIVITY_ICONS[activity.type]} size={24} strokeWidth={1.8} className="shrink-0" />
-              <span className="flex-1 truncate font-rounded font-bold">{activity.type}</span>
-              <span className="font-rounded text-xs font-bold">{formatMinutes(activity.minutes)}</span>
-              <span className="min-w-6 text-right font-display text-2xl leading-none tracking-wide">{count}</span>
-            </motion.button>
-          )
-        })}
-      </AnimatePresence>
-    </div>
-  )
-}
-
-interface FrontCardProps {
+interface ActivityCardProps {
   activity: ActivityHistory
+  /** The top card: always full size. The others are tabs until opened. */
+  first: boolean
+  /** Where its colour sits between the stack's strongest shade (0, the top) and its softest (1). */
+  shade: number
+  /** Its z-index: each card lies over the top of the next one. */
+  layer: number
   open: boolean
   onToggle: () => void
-  transition: { duration: number; ease: 'easeInOut' }
 }
 
-/** The activity in front: its logo, count and time. Tapped, it unfolds its feels and sessions below them. */
-function FrontCard({ activity, open, onToggle, transition }: FrontCardProps) {
-  const { type, sessions, minutes, feels } = activity
+/**
+ * One activity, tucked under the card above it: the top one full size (logo, count, time), the others
+ * slim tabs. Tapped, a card opens where it is, full size, and unfolds its feels and sessions.
+ */
+function ActivityCard({ activity, first, shade, layer, open, onToggle }: ActivityCardProps) {
+  const { type, sessions, feels } = activity
   const panelId = useId()
+  const reduceMotion = useReducedMotion()
   const count = sessions.length
+  const full = first || open
+  // A tucked card's top 24 px hide under the card above it, so its content starts lower.
+  const top = first ? 'pt-5' : full ? 'pt-11' : 'pt-[2.125rem]'
 
   return (
-    <motion.section
-      layout="position"
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={transition}
-      className="relative overflow-hidden rounded-[2rem] text-on-stack shadow-[0_6px_16px_rgba(0,0,0,0.25)]"
-      style={{ zIndex: 10, backgroundColor: stackColor(0) }}
+    <section
+      className="relative overflow-hidden rounded-[2rem] text-on-stack shadow-[0_6px_16px_rgba(0,0,0,0.25)] not-first:-mt-6"
+      style={{ zIndex: layer, backgroundColor: stackColor(shade) }}
     >
       <button
         type="button"
@@ -157,19 +114,9 @@ function FrontCard({ activity, open, onToggle, transition }: FrontCardProps) {
         aria-controls={open ? panelId : undefined}
         aria-label={`${type}, ${count} ${sessionsWord(count)}`}
         onClick={onToggle}
-        className="relative flex w-full items-center gap-4 p-5 text-left"
+        className={`relative flex w-full items-center text-left ${top} ${full ? 'gap-4 px-5 pb-5' : 'gap-3 px-[1.125rem] pb-2.5'}`}
       >
-        <Icon name={ACTIVITY_ICONS[type]} size={56} strokeWidth={1.5} className="shrink-0" />
-        <span className="flex-1">
-          <span className="block font-rounded text-lg font-bold">{type}</span>
-          <span className="block font-display text-4xl leading-none tracking-wide">{count}</span>
-          <span className="block font-rounded text-sm font-bold">
-            {sessionsWord(count)} · {formatMinutes(minutes)}
-          </span>
-        </span>
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center self-start rounded-full">
-          <Icon name="chevron" size={20} className={`motion-safe:transition-transform ${open ? '-rotate-90' : 'rotate-90'}`} />
-        </span>
+        {full ? <FullHeader activity={activity} open={open} /> : <TabHeader activity={activity} />}
       </button>
 
       <AnimatePresence initial={false}>
@@ -179,17 +126,14 @@ function FrontCard({ activity, open, onToggle, transition }: FrontCardProps) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={transition}
+            transition={{ duration: reduceMotion ? 0 : 0.3, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
             <div className="px-5 pb-5">
               {feels.length > 0 && (
                 <ul aria-label="How it felt" className="flex flex-wrap gap-1.5">
                   {feels.map(({ feel, count: times }) => (
-                    <li
-                      key={feel}
-                      className={`flex items-center gap-1 rounded-full py-0.5 pr-2.5 pl-1.5 font-rounded text-sm font-bold ${WASH}`}
-                    >
+                    <li key={feel} className={`flex items-center gap-1 rounded-full py-0.5 pr-2.5 pl-1.5 font-rounded text-sm font-bold ${WASH}`}>
                       <span aria-hidden="true" className="text-lg">
                         {moodFor(feel).emoji}
                       </span>
@@ -224,7 +168,38 @@ function FrontCard({ activity, open, onToggle, transition }: FrontCardProps) {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.section>
+    </section>
+  )
+}
+
+function FullHeader({ activity, open }: { activity: ActivityHistory; open: boolean }) {
+  const count = activity.sessions.length
+  return (
+    <>
+      <Icon name={ACTIVITY_ICONS[activity.type]} size={56} strokeWidth={1.5} className="shrink-0" />
+      <span className="flex-1">
+        <span className="block font-rounded text-lg font-bold">{activity.type}</span>
+        <span className="block font-display text-4xl leading-none tracking-wide">{count}</span>
+        <span className="block font-rounded text-sm font-bold">
+          {sessionsWord(count)} · {formatMinutes(activity.minutes)}
+        </span>
+      </span>
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center self-start rounded-full">
+        <Icon name="chevron" size={20} className={`motion-safe:transition-transform ${open ? '-rotate-90' : 'rotate-90'}`} />
+      </span>
+    </>
+  )
+}
+
+/** A tucked card: its logo, name, time and count on one line. */
+function TabHeader({ activity }: { activity: ActivityHistory }) {
+  return (
+    <>
+      <Icon name={ACTIVITY_ICONS[activity.type]} size={24} strokeWidth={1.8} className="shrink-0" />
+      <span className="flex-1 truncate font-rounded font-bold">{activity.type}</span>
+      <span className="font-rounded text-xs font-bold">{formatMinutes(activity.minutes)}</span>
+      <span className="min-w-6 text-right font-display text-2xl leading-none tracking-wide">{activity.sessions.length}</span>
+    </>
   )
 }
 
