@@ -16,6 +16,7 @@ import { DrawCheckPad } from '../components/ui/DrawCheckPad'
 import { TimeField } from '../components/ui/PickerField'
 import { settingsRepo } from '../db/repositories/settingsRepo'
 import { useLiveQuery } from '../db/useLiveQuery'
+import { useAnnounceChanges } from '../hooks/useAnnounce'
 import { useReduceMotion } from '../hooks/useReduceMotion'
 import { useTheme } from '../theme/ThemeProvider'
 import { withAlpha } from '../theme/tokens'
@@ -221,6 +222,8 @@ interface StartStepProps {
 export function StartStep({ start, today, variant, nowMin, onNext }: StartStepProps) {
   const { colors, fonts } = useTheme()
   const lateHint = start.choice === 'today' ? lateStartHint(nowMin, RULESETS[variant]) : null
+  const finish = start.dateError ? '' : finishLine(start.startDate)
+  useAnnounceChanges(lateHint ? `${finish} ${lateHint}` : finish)
   return (
     <>
       <StepTitle>When do you start?</StepTitle>
@@ -231,14 +234,11 @@ export function StartStep({ start, today, variant, nowMin, onNext }: StartStepPr
       {start.dateError ? (
         <Alert>{start.dateError}</Alert>
       ) : (
-        <Text accessibilityLiveRegion="polite" style={[styles.finish, { color: colors.ink, fontFamily: fonts.rounded.bold }]}>
-          {finishLine(start.startDate)}
-        </Text>
+        <Text style={[styles.finish, { color: colors.ink, fontFamily: fonts.rounded.bold }]}>{finish}</Text>
       )}
       {lateHint && (
         <View
           accessible
-          accessibilityLiveRegion="polite"
           style={[styles.warning, { borderColor: withAlpha(colors.dangerInk, 0.3), backgroundColor: colors.worldSoft }]}
         >
           <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={colors.dangerInk} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -273,6 +273,8 @@ interface ReadyStepProps {
   onFinish: () => void
   /** Where the signature block sits, so the flow can say "Sign below" while it is out of view. */
   onSigningLayout?: (event: LayoutChangeEvent) => void
+  /** A finger is on the signature pad (true) or has left it (false). */
+  onDrawingChange?: (drawing: boolean) => void
 }
 
 /**
@@ -286,6 +288,8 @@ export function ReadyStep(props: ReadyStepProps) {
   const alert = dateError ?? error
   const valid = isValidName(name) && isValidWhy(why)
   const [checked, setChecked] = useState(false)
+  const watching = `I'm watching, ${cleanText(name)}.`
+  useAnnounceChanges(signed ? watching : '')
 
   if (mode === 'returning') {
     return (
@@ -357,11 +361,9 @@ export function ReadyStep(props: ReadyStepProps) {
       {alert && <Alert>{alert}</Alert>}
       {dateError && <Button label="Change start date" variant="secondary" onPress={onChangeStart} style={styles.gapSmall} />}
       {/* After the whole card, not pinned over it: the player reads every rule before they reach the signature. */}
-      <View onLayout={props.onSigningLayout} style={styles.signing}>
+      <View testID="signing" onLayout={props.onSigningLayout} style={styles.signing}>
         {signed ? (
-          <Text accessibilityLiveRegion="polite" style={[styles.watching, { color: colors.ink, fontFamily: fonts.display.semibold }]}>
-            I&apos;m watching, {cleanText(name)}.
-          </Text>
+          <Text style={[styles.watching, { color: colors.ink, fontFamily: fonts.display.semibold }]}>{watching}</Text>
         ) : (
           <>
             <Text style={[styles.prompt, { color: colors.ink, fontFamily: fonts.rounded.bold }]}>
@@ -371,6 +373,7 @@ export function ReadyStep(props: ReadyStepProps) {
               <DrawCheckPad
                 label="Sign the deal: draw a checkmark."
                 onChange={setChecked}
+                onDrawingChange={props.onDrawingChange}
                 disabled={busy || dateError !== null || !valid}
               />
             </View>

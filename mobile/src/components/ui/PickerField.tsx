@@ -12,9 +12,8 @@ const dateFromISO = (iso: string) => {
 
 const timeFromHHmm = (value: string) => {
   const minutes = parseHHmm(value) ?? 0
-  const date = new Date()
-  date.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0)
-  return date
+  // Only the time matters; a fixed day keeps the clock out of rendering.
+  return new Date(2000, 0, 1, Math.floor(minutes / 60), minutes % 60)
 }
 
 interface DateFieldProps {

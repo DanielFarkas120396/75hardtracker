@@ -1,5 +1,4 @@
-import type { OnboardingDraft } from '@logic/onboardingDraft'
-import { useEffect, useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { View } from 'react-native'
 import { challengeRepo } from '../db/repositories/challengeRepo'
 import { profileRepo } from '../db/repositories/profileRepo'
@@ -18,31 +17,19 @@ import { OnboardingFlow } from './OnboardingFlow'
 export function OnboardingGate({ children }: { children: ReactNode }) {
   const { colors } = useTheme()
   const today = useToday()
-  const state = useLiveQuery(
-    async () => ({
-      hasProfile: (await profileRepo.get()) !== undefined,
+  // The draft is read with the rest, every time: one kept from the launch would bring old answers
+  // back after "Erase everything". The flow only looks at it when it opens. A draft that can't be
+  // read only costs retyping.
+  const state = useLiveQuery(async () => {
+    const hasProfile = (await profileRepo.get()) !== undefined
+    return {
+      hasProfile,
       hasAttempts: (await challengeRepo.getAll()).length > 0,
-    }),
-    [],
-  )
-  const [draft, setDraft] = useState<OnboardingDraft | null | undefined>(undefined)
-  useEffect(() => {
-    let gone = false
-    loadDraft().then(
-      (loaded) => {
-        if (!gone) setDraft(loaded)
-      },
-      () => {
-        if (!gone) setDraft(null)
-      },
-    )
-    return () => {
-      gone = true
+      draft: hasProfile ? null : await loadDraft().catch(() => null),
     }
   }, [])
 
   if (state === undefined) return <View style={{ flex: 1, backgroundColor: colors.canvas }} />
   if (state.hasProfile) return children
-  if (draft === undefined) return <View style={{ flex: 1, backgroundColor: colors.canvas }} />
-  return <OnboardingFlow mode={state.hasAttempts ? 'returning' : 'new'} today={today} draft={draft} />
+  return <OnboardingFlow mode={state.hasAttempts ? 'returning' : 'new'} today={today} draft={state.draft} />
 }

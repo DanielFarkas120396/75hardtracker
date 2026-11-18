@@ -25,25 +25,14 @@ function writeProfile(db: Db, profile: Profile) {
   ])
 }
 
-/** The player's profile. Same calls and behaviour as the web app's profileRepo (src/db/repositories/profileRepo.ts). */
+/**
+ * The player's profile. Same calls and behaviour as the web app's profileRepo
+ * (src/db/repositories/profileRepo.ts). `save` arrives with Settings → Profile.
+ */
 export const profileRepo = {
   /** The player's profile, or undefined before the welcome flow is done (or when the stored one is unusable). */
   async get(): Promise<Profile | undefined> {
     return readProfile(getDb())
-  },
-
-  /** Updates the name and the reason (Settings → Profile), keeping when the welcome flow was done. */
-  async save(input: ProfileInput, now: Date = new Date()): Promise<ProfileResult> {
-    if (!isValidName(input.name) || !isValidWhy(input.why)) return { ok: false, reason: 'invalid' }
-    await transaction(async (db) => {
-      const current = await readProfile(db)
-      await writeProfile(db, {
-        name: cleanText(input.name),
-        why: cleanText(input.why),
-        onboardedAt: current?.onboardedAt ?? now.toISOString(),
-      })
-    })
-    return { ok: true }
   },
 
   /**

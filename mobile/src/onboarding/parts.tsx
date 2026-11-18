@@ -42,8 +42,12 @@ export function MissingHint({ children }: { children: ReactNode }) {
   return <Text style={[styles.hint, { color: colors.inkMuted, fontFamily: fonts.rounded.regular }]}>{children}</Text>
 }
 
-export function Alert({ children }: { children: ReactNode }) {
+/** What went wrong, in red, and said aloud as it appears (the role alone is silent on the iPhone). */
+export function Alert({ children }: { children: string }) {
   const { colors, fonts } = useTheme()
+  useEffect(() => {
+    AccessibilityInfo.announceForAccessibility(children)
+  }, [children])
   return (
     <Text accessibilityRole="alert" style={[styles.alert, { color: colors.dangerInk, fontFamily: fonts.rounded.semibold }]}>
       {children}

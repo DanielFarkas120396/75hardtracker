@@ -66,15 +66,3 @@ it('creates one attempt even when the deal is signed twice at once', async () =>
   await Promise.all([sign(), sign()])
   expect(await challengeRepo.getAll()).toHaveLength(1)
 })
-
-it('updates the name and the reason, keeping when the flow was done', async () => {
-  await profileRepo.completeOnboarding({ name: 'Daniel', why: 'A fresh start' }, undefined, now)
-
-  expect(await profileRepo.save({ name: 'Dan', why: 'Clear my head' }, new Date('2026-10-01T08:00:00.000Z'))).toEqual({
-    ok: true,
-  })
-  expect(await profileRepo.get()).toEqual({ name: 'Dan', why: 'Clear my head', onboardedAt: now.toISOString() })
-
-  expect(await profileRepo.save({ name: 'x'.repeat(21), why: 'Clear my head' })).toEqual({ ok: false, reason: 'invalid' })
-  expect(await profileRepo.get()).toMatchObject({ name: 'Dan' })
-})

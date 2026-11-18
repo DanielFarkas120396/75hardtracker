@@ -2,6 +2,7 @@ import { typedStroke, type Point } from '@logic/checkmark'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import * as Font from 'expo-font'
 import type { ReactElement, ReactNode } from 'react'
+import { AccessibilityInfo } from 'react-native'
 import { freshDatabase } from '../../../db/__tests__/fixtures'
 import { ThemeProvider } from '../../../theme/ThemeProvider'
 import { DrawCheckPad } from '../DrawCheckPad'
@@ -10,6 +11,10 @@ jest.mock('expo-font', () => ({ ...jest.requireActual('expo-font'), useFonts: je
 
 const Providers = ({ children }: { children: ReactNode }) => <ThemeProvider>{children}</ThemeProvider>
 const show = (ui: ReactElement) => render(ui, { wrapper: Providers })
+
+afterEach(() => {
+  jest.restoreAllMocks()
+})
 
 beforeEach(async () => {
   jest.mocked(Font.useFonts).mockReturnValue([true, null])
@@ -75,10 +80,49 @@ it('signs for VoiceOver users without drawing', async () => {
   expect(screen.getByText('Signed.')).toBeOnTheScreen()
 })
 
-it('keeps the touch while drawing, so the page under it can’t scroll away', async () => {
+it('tells the page when a stroke starts and ends, so the page can hold still under the finger', async () => {
+  const onDrawingChange = jest.fn()
+  await show(<DrawCheckPad label="Sign the deal: draw a checkmark." onChange={jest.fn()} onDrawingChange={onDrawingChange} />)
+  await fireEvent(pad(), 'responderGrant', at(CHECK[0]))
+  expect(onDrawingChange).toHaveBeenLastCalledWith(true)
+  await fireEvent(pad(), 'responderRelease', at(CHECK[1]))
+  expect(onDrawingChange).toHaveBeenLastCalledWith(false)
+  // The phone takes the touch away (a call comes in): the stroke is over too.
+  await fireEvent(pad(), 'responderGrant', at(CHECK[0]))
+  await fireEvent(pad(), 'responderTerminate', at(CHECK[1]))
+  expect(onDrawingChange.mock.calls).toEqual([[true], [false], [true], [false]])
+})
+
+it('never takes a touch that started elsewhere, so the × button keeps its own', async () => {
   await showPad()
   expect(pad().props.onStartShouldSetResponder()).toBe(true)
-  expect(pad().props.onResponderTerminationRequest()).toBe(false)
+  expect(pad().props.onMoveShouldSetResponder).toBeUndefined()
+})
+
+it('signs on VoiceOver’s double tap', async () => {
+  const onChange = await showPad()
+  await fireEvent(pad(), 'accessibilityTap')
+  expect(onChange).toHaveBeenLastCalledWith(true)
+  expect(screen.getByText('Signed.')).toBeOnTheScreen()
+})
+
+it('says the result aloud: VoiceOver reads no silent line', async () => {
+  const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility')
+  await showPad()
+  await draw(FLAT_LINE)
+  expect(announce).toHaveBeenLastCalledWith('Not quite a checkmark. Try again.')
+  await draw(CHECK)
+  expect(announce).toHaveBeenLastCalledWith('Signed.')
+})
+
+it('leaves the × button reachable by VoiceOver: it is not inside the pad', async () => {
+  await showPad()
+  await draw(FLAT_LINE)
+  let node = screen.getByLabelText('Clear the drawing').parent
+  while (node) {
+    expect(node).not.toBe(pad())
+    node = node.parent
+  }
 })
 
 it('ignores touches and VoiceOver while disabled', async () => {

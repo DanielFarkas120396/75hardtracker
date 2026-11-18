@@ -113,7 +113,13 @@ export function OnboardingFlow({ mode, today, draft, nowMin: nowMinProp }: Onboa
 
   // "Sign below": the deal card fills the phone, so a pill says there is more until the signature is in view.
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null)
-  const [view, setView] = useState({ offset: 0, height: 0 })
+  const [viewHeight, setViewHeight] = useState(0)
+  // Each step has its own scroll view, opening at its top: how far another step was scrolled says nothing here.
+  const [scrolled, setScrolled] = useState({ step, offset: 0 })
+  if (scrolled.step !== step) setScrolled({ step, offset: 0 })
+  const view = { height: viewHeight, offset: scrolled.offset }
+  // A finger is on the signature pad: the page must not scroll under it.
+  const [drawing, setDrawing] = useState(false)
   const [signing, setSigning] = useState<{ y: number; height: number } | null>(null)
   const [stepTop, setStepTop] = useState(0)
   const signingVisible =
@@ -129,20 +135,17 @@ export function OnboardingFlow({ mode, today, draft, nowMin: nowMinProp }: Onboa
           <TopBar index={clamp(index)} total={steps.length} onBack={() => back(step)} hideBack={signed} />
         </View>
         <ScrollView
+          key={step}
           ref={scroll}
+          testID="flow-scroll"
+          scrollEnabled={!drawing}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.content}
           scrollEventThrottle={32}
-          onLayout={(event) => {
-            const { height } = event.nativeEvent.layout
-            setView((current) => ({ ...current, height }))
-          }}
-          onScroll={(event) => {
-            const offset = event.nativeEvent.contentOffset.y
-            setView((current) => ({ ...current, offset }))
-          }}
+          onLayout={(event) => setViewHeight(event.nativeEvent.layout.height)}
+          onScroll={(event) => setScrolled({ step, offset: event.nativeEvent.contentOffset.y })}
         >
-          <StepTransition key={step}>
+          <StepTransition>
             <View
               style={styles.step}
               onLayout={(event) => {
@@ -176,6 +179,7 @@ export function OnboardingFlow({ mode, today, draft, nowMin: nowMinProp }: Onboa
                   onSign={sign}
                   onChangeStart={() => setIndex(Math.max(steps.indexOf('start'), 0))}
                   onFinish={() => void finish()}
+                  onDrawingChange={setDrawing}
                   onSigningLayout={(event) => {
                     const { y, height } = event.nativeEvent.layout
                     setSigning({ y, height })

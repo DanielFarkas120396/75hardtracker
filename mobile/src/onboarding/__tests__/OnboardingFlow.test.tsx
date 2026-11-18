@@ -7,17 +7,24 @@ import { SETTING_KEYS } from '@logic/settingKeys'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import * as Font from 'expo-font'
 import type { ReactNode } from 'react'
-import { Text } from 'react-native'
+import { mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { AccessibilityInfo, Text } from 'react-native'
+import { pickBackupFile } from '../../backup/pickBackupFile'
 import { addChallenge, freshDatabase } from '../../db/__tests__/fixtures'
+import { eraseEverything } from '../../db/erase'
 import { challengeRepo } from '../../db/repositories/challengeRepo'
 import { profileRepo } from '../../db/repositories/profileRepo'
 import { settingsRepo } from '../../db/repositories/settingsRepo'
+import { nodeStore } from '../../files/__tests__/nodeStore'
 import { ThemeProvider } from '../../theme/ThemeProvider'
-import { loadDraft } from '../draftStore'
+import { loadDraft, saveDraft } from '../draftStore'
 import { OnboardingFlow } from '../OnboardingFlow'
 import { OnboardingGate } from '../OnboardingGate'
 
 jest.mock('expo-font', () => ({ ...jest.requireActual('expo-font'), useFonts: jest.fn() }))
+jest.mock('../../backup/pickBackupFile', () => ({ pickBackupFile: jest.fn(async () => null) }))
 jest.mock('expo-haptics', () => ({ impactAsync: jest.fn(async () => {}), ImpactFeedbackStyle: { Light: 'light' } }))
 // The duck redraws every frame (he has his own tests): here a line of text says which mood he is in.
 jest.mock('../../components/mascot/Mascot', () => ({
@@ -72,6 +79,27 @@ const draftAt = (step: OnboardingDraft['step'], changes: Partial<OnboardingDraft
   pickedDate: addDaysISO(TODAY, 1),
   ...changes,
 })
+
+/** From the first screen to "When do you start?", with no saved choice (a draft's own start choice would win over the default). */
+async function walkToStart() {
+  await press('Get started')
+  await fireEvent.changeText(await screen.findByLabelText('What should the duck call you?'), 'Daniel')
+  await pressContinue()
+  await fireEvent.press(await screen.findByRole('radio', { name: /^75 Hard/ }))
+  await pressContinue()
+  await press(WHY_IDEAS[0])
+  await pressContinue()
+  await screen.findByText('When do you go to bed?')
+  await pressContinue()
+  await screen.findByText('When do you start?')
+}
+
+const layout = (box: { y?: number; height: number }) => ({ nativeEvent: { layout: { x: 0, y: 0, width: 390, ...box } } })
+/** The deal on a 600-point page, with the signature starting 900 points down. */
+async function layOutTheDeal() {
+  await fireEvent(await screen.findByTestId('flow-scroll'), 'layout', layout({ height: 600 }))
+  await fireEvent(screen.getByTestId('signing'), 'layout', layout({ y: 900, height: 300 }))
+}
 
 /** Signs the deal the way VoiceOver does (the pad's own tests cover a drawn stroke), then commits. */
 async function signTheDeal() {
@@ -155,10 +183,9 @@ describe('a new player', () => {
     expect(screen.getByText('100/140')).toBeOnTheScreen()
   })
 
-  it('starts today by default in the morning, tomorrow from 18:00', async () => {
-    const morning = await show({ draft: null, nowMin: MORNING })
-    await morning.unmount()
-    await show({ draft: { ...draftAt('start'), startChoice: 'today' }, nowMin: MORNING })
+  it('starts today by default in the morning', async () => {
+    await show({ nowMin: MORNING })
+    await walkToStart()
     expect(await screen.findByRole('radio', { name: 'Today' })).toBeChecked()
   })
 
@@ -166,15 +193,7 @@ describe('a new player', () => {
     // No saved choice: the draft's own start choice would win over the evening default.
     await settingsRepo.set(SETTING_KEYS.bedtime, '23:00')
     const view = await show({ nowMin: EVENING })
-    await press('Get started')
-    await fireEvent.changeText(await screen.findByLabelText('What should the duck call you?'), 'Daniel')
-    await pressContinue()
-    await fireEvent.press(await screen.findByRole('radio', { name: /^75 Hard/ }))
-    await pressContinue()
-    await press(WHY_IDEAS[0])
-    await pressContinue()
-    await screen.findByText('When do you go to bed?')
-    await pressContinue()
+    await walkToStart()
     expect(await screen.findByRole('radio', { name: 'Tomorrow' })).toBeChecked()
 
     await fireEvent.press(screen.getByRole('radio', { name: 'Today' }))
@@ -182,6 +201,59 @@ describe('a new player', () => {
     expect(warning).not.toBeNull()
     expect(await screen.findByText(warning!)).toBeOnTheScreen()
     await view.unmount()
+  })
+
+  it('shows how far along the flow is, with Back from the second screen on', async () => {
+    await show()
+    const progress = () => screen.getByRole('progressbar', { name: 'Setup progress' })
+    await screen.findByText('Get started')
+    expect(progress()).toHaveAccessibilityValue({ text: 'Step 1 of 7' })
+    expect(screen.queryByLabelText('Back')).toBeNull()
+
+    await press('Get started')
+    await screen.findByText('What should the duck call you?')
+    expect(progress()).toHaveAccessibilityValue({ text: 'Step 2 of 7' })
+    expect(screen.getByLabelText('Back')).toBeOnTheScreen()
+  })
+
+  it('moves on with Return from the name and from the reason, once they are usable', async () => {
+    await show({ draft: draftAt('name', { name: '' }) })
+    const name = await screen.findByLabelText('What should the duck call you?')
+    await fireEvent(name, 'submitEditing')
+    expect(screen.getByText('What should the duck call you?')).toBeOnTheScreen()
+    await fireEvent.changeText(name, 'Daniel')
+    await fireEvent(screen.getByLabelText('What should the duck call you?'), 'submitEditing')
+    expect(await screen.findByText('Pick your challenge')).toBeOnTheScreen()
+    await pressContinue()
+    await fireEvent(await screen.findByLabelText('Your why'), 'submitEditing')
+    expect(await screen.findByText('When do you go to bed?')).toBeOnTheScreen()
+  })
+
+  it('moves VoiceOver to each step’s title as it appears', async () => {
+    const focus = jest.spyOn(AccessibilityInfo, 'sendAccessibilityEvent')
+    await show()
+    await screen.findByText('Get started')
+    expect(focus).toHaveBeenLastCalledWith(expect.anything(), 'focus')
+    const before = focus.mock.calls.length
+    await press('Get started')
+    await screen.findByText('What should the duck call you?')
+    expect(focus.mock.calls.length).toBeGreaterThan(before)
+  })
+
+  it('opens the file picker from "Already have a backup? Restore it"', async () => {
+    await show()
+    await press('Already have a backup? Restore it')
+    await waitFor(() => expect(pickBackupFile).toHaveBeenCalledTimes(1))
+    // Nothing picked: the welcome screen is still there.
+    expect(screen.getByText('Get started')).toBeOnTheScreen()
+  })
+
+  it('refuses a start more than 60 days ahead', async () => {
+    await show({ draft: draftAt('start', { startChoice: 'pick', pickedDate: addDaysISO(TODAY, 3) }) })
+    const [year, month, day] = addDaysISO(TODAY, 61).split('-').map(Number)
+    await fireEvent(await screen.findByTestId('date-field'), 'valueChange', {}, new Date(year, month - 1, day, 12))
+    expect(await screen.findByText('Start within the next 60 days.')).toBeOnTheScreen()
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled()
   })
 
   it('refuses a picked date in the past', async () => {
@@ -257,6 +329,56 @@ describe('the deal', () => {
     expect(await challengeRepo.getAll()).toEqual([])
   })
 
+  it('holds the page still while the signature is drawn', async () => {
+    await show({ draft: draftAt('ready') })
+    const pad = await screen.findByRole('button', { name: 'Sign the deal: draw a checkmark.' })
+    const page = () => screen.getByTestId('flow-scroll')
+    expect(page().props.scrollEnabled).not.toBe(false)
+    await fireEvent(pad, 'responderGrant', { nativeEvent: { locationX: 20, locationY: 90 } })
+    expect(page().props.scrollEnabled).toBe(false)
+    await fireEvent(pad, 'responderRelease', { nativeEvent: { locationX: 60, locationY: 120 } })
+    expect(page().props.scrollEnabled).not.toBe(false)
+  })
+
+  it('points to the signature with "Sign below" until it is in view', async () => {
+    await show({ draft: draftAt('ready') })
+    await layOutTheDeal()
+    expect(await screen.findByText('Sign below ↓')).toBeOnTheScreen()
+    await fireEvent.scroll(screen.getByTestId('flow-scroll'), { nativeEvent: { contentOffset: { y: 700 } } })
+    expect(screen.queryByText('Sign below ↓')).toBeNull()
+  })
+
+  it('opens every step at its top, however far the one before was scrolled', async () => {
+    await show({ draft: draftAt('ready') })
+    await layOutTheDeal()
+    await fireEvent.scroll(screen.getByTestId('flow-scroll'), { nativeEvent: { contentOffset: { y: 700 } } })
+    await fireEvent.press(screen.getByLabelText('Back'))
+    await screen.findByText('When do you start?')
+    await pressContinue()
+    await screen.findByText('Deal, Daniel.')
+    // Back at the top of the deal, the signature is below the fold again.
+    await layOutTheDeal()
+    expect(await screen.findByText('Sign below ↓')).toBeOnTheScreen()
+  })
+
+  it('says aloud that the save failed, and that the duck is watching', async () => {
+    const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility')
+    jest.spyOn(profileRepo, 'completeOnboarding').mockRejectedValueOnce(new Error('disk full'))
+    await show({ draft: draftAt('ready') })
+    await signTheDeal()
+    await waitFor(() => expect(announce).toHaveBeenCalledWith("I'm watching, Daniel."))
+    await screen.findByText(SAVE_FAILED_LINE, {}, { timeout: 4000 })
+    expect(announce).toHaveBeenCalledWith(SAVE_FAILED_LINE)
+  })
+
+  it('keeps showing a step when the mode flips mid-flow (attempts came back from a backup)', async () => {
+    const draft = draftAt('ready')
+    const view = await show({ draft })
+    await screen.findByText('Deal, Daniel.')
+    await view.rerender(flow({ mode: 'returning', draft }))
+    expect(await screen.findByText('Welcome back, Daniel.')).toBeOnTheScreen()
+  })
+
   it('can’t be committed before it is signed', async () => {
     await show({ draft: draftAt('ready') })
     expect(await screen.findByRole('button', { name: 'I commit' })).toBeDisabled()
@@ -316,6 +438,18 @@ describe('the gate', () => {
     await fireEvent.changeText(await screen.findByLabelText('What should the duck call you?'), 'Dan')
     await pressContinue()
     expect(await screen.findByText('Why are you doing this?')).toBeOnTheScreen()
+  })
+
+  it('starts from the first screen after everything is erased, not from the answers it once had', async () => {
+    await saveDraft(draftAt('challenge'))
+    await gate()
+    expect(await screen.findByText('Pick your challenge')).toBeOnTheScreen()
+    await profileRepo.completeOnboarding({ name: 'Daniel', why: 'A fresh start' }, { startDate: TODAY, variant: 'hard' })
+    await screen.findByText('the app')
+
+    await eraseEverything(nodeStore(mkdtempSync(join(tmpdir(), 'erase-'))))
+    expect(await screen.findByText('Get started')).toBeOnTheScreen()
+    expect(screen.queryByText('Pick your challenge')).toBeNull()
   })
 
   it('resumes the saved draft', async () => {
