@@ -1,10 +1,8 @@
 import { useState } from 'react'
-import { addDaysISO, isValidISODate } from '../lib/dates'
+import { addDaysISO } from '../lib/dates'
+import { resolveStartChoice, START_MAX_DAYS_AHEAD, type StartChoice } from '../logic/startChoice'
 
-export type StartChoice = 'today' | 'tomorrow' | 'pick'
-
-/** How far ahead a new attempt can be set to start. */
-export const START_MAX_DAYS_AHEAD = 60
+export { START_MAX_DAYS_AHEAD, type StartChoice }
 
 export interface StartDateChoiceState {
   choice: StartChoice
@@ -37,16 +35,7 @@ export function useStartDateChoice(
   const [choice, setChoice] = useState<StartChoice>(initial?.choice ?? defaultChoice)
   const [pickedDate, setPickedDate] = useState(initial?.pickedDate ?? addDaysISO(today, 1))
 
-  const maxDate = addDaysISO(today, START_MAX_DAYS_AHEAD)
-  const startDate = choice === 'today' ? today : choice === 'tomorrow' ? addDaysISO(today, 1) : pickedDate
-  // ISO strings compare chronologically.
-  const dateError = !isValidISODate(startDate)
-    ? 'Pick a start date.'
-    : startDate < today
-      ? "The start can't be in the past."
-      : startDate > maxDate
-        ? `Start within the next ${START_MAX_DAYS_AHEAD} days.`
-        : null
+  const { startDate, maxDate, dateError } = resolveStartChoice({ choice, pickedDate, today })
 
   return { choice, setChoice, pickedDate, setPickedDate, startDate, maxDate, dateError }
 }

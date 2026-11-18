@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from '../../components/icons/Icon'
-import { Mascot, type DuckMood } from '../../components/mascot/Mascot'
+import { Mascot } from '../../components/mascot/Mascot'
 import { SAVE_FAILED_LINE } from '../../content/microcopy'
 import { defaultStartChoice } from '../../content/onboarding'
 import { db } from '../../db/db'
@@ -9,7 +9,15 @@ import { profileRepo } from '../../db/repositories/profileRepo'
 import { useNow } from '../../hooks/useNow'
 import { useStartDateChoice } from '../../hooks/useStartDateChoice'
 import { clearDraft, loadDraft, saveDraft } from '../../lib/onboardingDraft'
-import { onboardingSteps, resumeStep, type OnboardingMode, type OnboardingStep } from '../../logic/onboarding'
+import {
+  LONG_STEPS,
+  onboardingSteps,
+  resumeStep,
+  SIGNED_BEAT_MS,
+  STEP_MOODS,
+  type OnboardingMode,
+  type OnboardingStep,
+} from '../../logic/onboarding'
 import { isValidName, isValidWhy } from '../../logic/profile'
 import type { ChallengeVariant } from '../../logic/rulesets'
 import { BedtimeStep, ChallengeStep, NameStep, ReadyStep, StartStep, WelcomeStep, WhyStep } from './OnboardingSteps'
@@ -19,21 +27,7 @@ interface OnboardingFlowProps {
   today: string
 }
 
-const STEP_MOODS: Record<OnboardingStep, DuckMood> = {
-  welcome: 'content',
-  name: 'watching',
-  challenge: 'tapping',
-  why: 'watching',
-  bedtime: 'watching',
-  start: 'waiting',
-  ready: 'judging',
-}
-
-/** The steps with the most content: a smaller duck keeps their button in reach. */
-const LONG_STEPS: ReadonlySet<OnboardingStep> = new Set(['challenge', 'ready'])
-
-/** How long the duck holds the signed deal before the app takes over. */
-export const SIGNED_BEAT_MS = 1200
+export { SIGNED_BEAT_MS }
 
 /**
  * The welcome flow: one question per screen, shown until the player has a

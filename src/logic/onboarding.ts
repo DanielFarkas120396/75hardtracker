@@ -1,3 +1,5 @@
+import type { DuckMood } from './duckRig'
+
 /** A screen of the welcome flow. */
 export type OnboardingStep = 'welcome' | 'name' | 'challenge' | 'why' | 'bedtime' | 'start' | 'ready'
 
@@ -29,3 +31,25 @@ export function resumeStep(
   const firstUnanswered = steps.findIndex((step, i) => i < savedIndex && ok[step] === false)
   return firstUnanswered === -1 ? savedIndex : firstUnanswered
 }
+
+export const STEP_MOODS: Record<OnboardingStep, DuckMood> = {
+  welcome: 'content',
+  name: 'watching',
+  challenge: 'tapping',
+  why: 'watching',
+  bedtime: 'watching',
+  start: 'waiting',
+  ready: 'judging',
+}
+
+/** The steps with the most content: a smaller duck keeps their button in reach. */
+export const LONG_STEPS: ReadonlySet<OnboardingStep> = new Set(['challenge', 'ready'])
+
+/** How long the duck holds the signed deal before the app takes over. */
+export const SIGNED_BEAT_MS = 1200
+
+/** From this length on, the why field shows how much room is left. */
+export const WHY_COUNTER_FROM = 100
+
+/** Past this length, the reason on the deal is set a size smaller, so it doesn't fill the card. */
+export const LONG_REASON_FROM = 60
