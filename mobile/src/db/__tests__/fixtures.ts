@@ -1,4 +1,4 @@
-import { getDb, setDbForTests } from '../open'
+import { setDbForTests, transaction } from '../open'
 import { challengeToParams, INSERT_CHALLENGE } from '../rows'
 import type { Challenge } from '../types'
 import { freshDb } from './testDb'
@@ -11,6 +11,5 @@ export async function freshDatabase(): Promise<void> {
 }
 
 export async function addChallenge(challenge: Omit<Challenge, 'id'>): Promise<number> {
-  const result = await getDb().runAsync(INSERT_CHALLENGE, challengeToParams(challenge))
-  return result.lastInsertRowId
+  return transaction(async (db) => (await db.runAsync(INSERT_CHALLENGE, challengeToParams(challenge))).lastInsertRowId)
 }
