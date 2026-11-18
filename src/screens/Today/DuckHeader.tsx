@@ -158,11 +158,11 @@ export function useDuck({
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: reduceMotion ? 1 : 0.95 }}
       transition={{ duration: 0.18, ease: 'easeOut' }}
-      style={{ transformOrigin: '2rem 100%' }}
+      style={{ transformOrigin: '3.25rem 100%' }}
       className="relative w-max max-w-full rounded-2xl bg-surface px-2.5 py-1.5 font-rounded text-xs font-bold leading-snug text-ink shadow-md"
     >
-      <span aria-hidden="true" className="absolute -bottom-1.5 left-5 h-3 w-3 rotate-45 bg-surface" />
-      <span className="relative line-clamp-3">{line.text}</span>
+      <span aria-hidden="true" className="absolute -bottom-1.5 left-10 h-3 w-3 rotate-45 bg-surface" />
+      <span className="relative line-clamp-4 text-balance">{line.text}</span>
     </motion.p>
   )
 
@@ -178,10 +178,10 @@ export function useDuck({
         <Mascot mood={LEVEL_MOODS[menace.level]} size={64} reaction={reaction} decorative />
       </button>
     ),
-    // Above the duck, rising from him, and narrow enough to stay in the space beside the ring, never over its count.
+    // Above the duck, rising from him, and no wider than the duck's column plus the margin to its left: never over the ring's bars.
     // The caller places it in the duck's own box. Two stacked slots, so only the lines worth hearing sit in the live region.
     speech: (
-      <div className="pointer-events-none absolute bottom-full left-0 z-20 mb-2 grid w-max max-w-[7rem] grid-cols-[minmax(0,1fr)] items-end">
+      <div className="pointer-events-none absolute bottom-full -left-5 z-20 mb-2 grid w-max max-w-[5.75rem] grid-cols-[minmax(0,1fr)] items-end">
         <div aria-live="polite" className="col-start-1 row-start-1">
           <AnimatePresence>{speech?.announce && bubble(speech)}</AnimatePresence>
         </div>

@@ -132,7 +132,7 @@ function AddBookForm({ onDone }: { onDone: () => void }) {
           autoComplete="off"
           value={totalPages}
           onChange={(e) => setTotalPages(e.target.value)}
-          className="min-h-touch w-24 rounded-xl bg-surface px-3 text-right font-rounded text-ink"
+          className="min-h-touch w-24 rounded-xl bg-surface px-3 text-right font-rounded text-base text-ink"
         />
       </label>
       {errors.totalPages && (

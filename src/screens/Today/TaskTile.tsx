@@ -14,7 +14,8 @@ import { TASK_ICONS, TASK_TONE } from './taskTones'
 export interface QuickAction {
   /** Announced to screen readers ("Add 250 ml"). */
   label: string
-  icon: IconName
+  /** None for a text-only chip, e.g. the reading tile's "+10 pages", which must stay clear of the title on a 375 px phone. */
+  icon?: IconName
   /** Shown next to the icon; none for an icon-only button. */
   text?: string
   onPress: () => void
@@ -131,7 +132,7 @@ export function TaskTile({ task, data, rules, complete, bookTitle, urgency, quic
               className="group flex min-h-touch min-w-touch touch-manipulation items-center justify-center rounded-full font-rounded text-xs font-bold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
               <span data-fill-anchor className="flex h-8 items-center gap-1 rounded-full border border-ink/15 bg-surface px-2.5 motion-safe:transition-transform motion-safe:group-active:scale-90">
-                <Icon name={action.icon} size={14} />
+                {action.icon && <Icon name={action.icon} size={14} />}
                 {action.text}
               </span>
             </motion.button>

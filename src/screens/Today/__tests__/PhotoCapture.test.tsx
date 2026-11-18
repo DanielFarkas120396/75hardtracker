@@ -17,15 +17,16 @@ vi.mock('../../../lib/camera', async (importOriginal) => ({
 
 async function renderCard() {
   const onCameraOpen = vi.fn()
+  const onCameraUnavailable = vi.fn()
   const challengeId = await addChallenge({ startDate: todayISO(), attemptNumber: 1, status: 'active' })
   const entry = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 1, date: todayISO() })
   render(
-    <PhotoCapture entry={entry} onCameraOpen={onCameraOpen}>
+    <PhotoCapture entry={entry} onCameraOpen={onCameraOpen} onCameraUnavailable={onCameraUnavailable}>
       <PhotoTask />
     </PhotoCapture>,
   )
   const fileClick = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {})
-  return { fileClick, onCameraOpen }
+  return { fileClick, onCameraOpen, onCameraUnavailable }
 }
 
 describe('PhotoCapture', () => {
@@ -66,13 +67,15 @@ describe('PhotoCapture', () => {
 
   it("explains and falls back when the camera can't start", async () => {
     camera.startCamera.mockRejectedValue(new DOMException('denied', 'NotAllowedError'))
-    const { fileClick } = await renderCard()
+    const { fileClick, onCameraUnavailable } = await renderCard()
 
     fireEvent.click(screen.getByRole('button', { name: 'Take photo' }))
     await act(async () => {})
 
     expect(screen.queryByTestId('camera-preview')).not.toBeInTheDocument()
-    expect(screen.getByText(/in-app camera isn't available/)).toBeInTheDocument()
+    // The host reopens the photo sheet, so the explanation is seen rather than the tap seeming to do nothing.
+    expect(onCameraUnavailable).toHaveBeenCalledTimes(1)
+    expect(screen.getByText(/in-app camera couldn't start/)).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Take photo' }))
     expect(fileClick).toHaveBeenCalled()

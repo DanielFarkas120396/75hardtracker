@@ -18,6 +18,8 @@ interface PhotoCaptureProps {
   onCameraOpened?: () => void
   /** The camera (or the phone's camera app) is opening: the host can close whatever sits over Today. */
   onCameraOpen?: () => void
+  /** The in-app camera couldn't start: the host shows the photo sheet, which explains the fallback. */
+  onCameraUnavailable?: () => void
   children: ReactNode
 }
 
@@ -33,6 +35,7 @@ export function PhotoCapture({
   openCameraNow = false,
   onCameraOpened,
   onCameraOpen,
+  onCameraUnavailable,
   children,
 }: PhotoCaptureProps) {
   const cameraInputRef = useRef<HTMLInputElement>(null)
@@ -81,9 +84,10 @@ export function PhotoCapture({
     if (openCameraNow) onArrival()
   }, [openCameraNow])
 
-  const onCameraUnavailable = () => {
+  const cameraUnavailable = () => {
     setCameraOpen(false)
     setCameraFailed(true)
+    onCameraUnavailable?.()
   }
 
   const onFileChosen = (input: HTMLInputElement) => {
@@ -115,7 +119,7 @@ export function PhotoCapture({
               ghost={ghost?.blob}
               onCapture={savePhoto}
               onClose={() => setCameraOpen(false)}
-              onUnavailable={onCameraUnavailable}
+              onUnavailable={cameraUnavailable}
             />
           )}
         </AnimatePresence>,

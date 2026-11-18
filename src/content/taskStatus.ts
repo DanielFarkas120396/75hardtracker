@@ -41,6 +41,8 @@ export function taskStatusLine(task: TaskId, data: DayTaskData, rules: Ruleset, 
       // The outdoor rule shows from the start, so it never surprises at 21:00.
       const outdoorsMissing = rules.requireOutdoor && !data.workouts.some((w) => w.isOutdoor && isQualifyingWorkout(w, rules))
       if (done === 0) {
+        // Logged, but every session is under the minimum: say so, or "0 of 1" reads as a save that failed.
+        if (data.workouts.length > 0) return `Too short · ${rules.minWorkoutMin} min needed`
         if (rules.requireOutdoor) return `${rules.requiredWorkouts} × ${rules.minWorkoutMin} min · 1 outdoors`
         return `0 of ${rules.requiredWorkouts} · ${rules.minWorkoutMin} min${rules.requiredWorkouts === 1 ? '' : ' each'}`
       }

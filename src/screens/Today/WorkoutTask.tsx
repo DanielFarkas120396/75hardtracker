@@ -68,7 +68,7 @@ export function WorkoutTask({ dayEntryId, workouts, complete, rules, restDay, we
     <div>
       <div className="flex flex-col gap-3">
         {workouts.map((workout) => (
-          <WorkoutRow key={workout.id} workout={workout} onRemove={() => remove(workout)} />
+          <WorkoutRow key={workout.id} workout={workout} minMinutes={rules.minWorkoutMin} onRemove={() => remove(workout)} />
         ))}
       </div>
 
@@ -126,7 +126,7 @@ export function WorkoutTask({ dayEntryId, workouts, complete, rules, restDay, we
   )
 }
 
-function WorkoutRow({ workout, onRemove }: { workout: Workout; onRemove: () => void }) {
+function WorkoutRow({ workout, minMinutes, onRemove }: { workout: Workout; minMinutes: number; onRemove: () => void }) {
   const setFeel = (feel: Mood) => {
     void workoutRepo.update(workout.id, { feel: workout.feel === feel ? undefined : feel })
   }
@@ -159,6 +159,9 @@ function WorkoutRow({ workout, onRemove }: { workout: Workout; onRemove: () => v
         max={300}
         unit="min"
       />
+      {workout.durationMin < minMinutes && (
+        <p className="font-rounded text-sm font-semibold text-ink-muted">Under {minMinutes} min: saved, but it doesn't count yet.</p>
+      )}
 
       <Toggle
         checked={workout.isOutdoor}

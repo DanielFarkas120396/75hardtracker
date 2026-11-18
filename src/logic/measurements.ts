@@ -135,3 +135,13 @@ export function weightSummary(points: AttemptWeight[]): { latest: AttemptWeight;
   if (points.length === 1) return { latest, start }
   return { latest, start, changeKg: roundToTenth(latest.weight_kg - start.weight_kg) }
 }
+
+/** The kg scale: at most five ticks on a round step (1, 2, 5 or 10 kg), with a kilo or more of room above and below. */
+export function weightTicks(weights: number[]): number[] {
+  const low = Math.min(...weights) - 1
+  const high = Math.max(...weights) + 1
+  const step = [1, 2, 5, 10].find((s) => Math.ceil(high / s) - Math.floor(low / s) <= 4) ?? 20
+  const ticks: number[] = []
+  for (let kg = Math.floor(low / step) * step; kg <= Math.ceil(high / step) * step; kg += step) ticks.push(kg)
+  return ticks
+}

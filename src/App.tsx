@@ -127,8 +127,10 @@ function MainApp({ today, onBadgeFeed }: { today: string; onBadgeFeed: (feed: Ba
   // "Day complete!" waits for the board's last chip to land (5 s at most).
   const shownCelebration = useSettledCelebration(celebration)
   const { toasts, dismiss: dismissToast } = useBadgeUnlocks(gate)
-  // Badges wait for the day-complete celebration to be dismissed: one peak at a time.
-  const badgesPaused = celebration !== null
+  // Badges wait for the day-complete celebration to be dismissed (one peak at a time),
+  // and for the restart, joker and gave-up screens: no "Badge unlocked" over bad news.
+  const blockingScreen = gate?.kind === 'needsRestart' || gate?.kind === 'jokerUsed' || gate?.kind === 'abandoned'
+  const badgesPaused = celebration !== null || blockingScreen
   useEffect(() => onBadgeFeed({ badges: badgesPaused ? [] : toasts, dismiss: dismissToast }), [toasts, badgesPaused, dismissToast, onBadgeFeed])
   useEffect(() => () => onBadgeFeed(NO_BADGES), [onBadgeFeed])
   // The app wears the colours of the Journey world you're in.

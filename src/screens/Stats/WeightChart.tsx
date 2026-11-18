@@ -1,6 +1,6 @@
 import { useId, type PointerEvent } from 'react'
 import { Area, CartesianGrid, ComposedChart, Line, ReferenceDot, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from 'recharts'
-import type { TrendWeight } from '../../logic/measurements'
+import { weightTicks, type TrendWeight } from '../../logic/measurements'
 
 interface WeightChartProps {
   /** The attempt's weigh-ins, from `weightTrend`. */
@@ -46,7 +46,7 @@ export function WeightChart({ points, lastDay, readDay, onRead }: WeightChartPro
   const reading = readDay === null ? undefined : points.find((p) => p.day === readDay)
 
   const weights = points.map((p) => p.weight_kg)
-  const yDomain = [Math.floor(Math.min(...weights) - 1), Math.ceil(Math.max(...weights) + 1)]
+  const yTicks = weightTicks(weights)
 
   const read = (event: PointerEvent<HTMLDivElement>) => {
     // A mouse reads on hover; a finger only while it touches.
@@ -84,8 +84,9 @@ export function WeightChart({ points, lastDay, readDay, onRead }: WeightChartPro
             />
             <YAxis
               orientation="right"
-              domain={yDomain}
-              allowDecimals={false}
+              domain={[yTicks[0], yTicks[yTicks.length - 1]]}
+              ticks={yTicks}
+              interval={0}
               width={SCALE_WIDTH}
               tick={AXIS_TICK}
               axisLine={false}

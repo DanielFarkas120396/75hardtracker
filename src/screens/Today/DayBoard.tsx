@@ -67,8 +67,7 @@ export function DayBoard(props: DayBoardProps) {
     const words = `${pages} ${pages === 1 ? 'page' : 'pages'}`
     return {
       label: `Add ${words}`,
-      icon: 'plus',
-      text: words,
+      text: `+${words}`,
       onPress: () => void addPages(pages).then(() => log(`Logged ${words}`, () => void addPages(-pages))),
     }
   }
