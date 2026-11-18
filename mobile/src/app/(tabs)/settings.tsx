@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text } from 'react-native'
 import { Placeholder, PlaceholderText } from '../../components/Placeholder'
+import { KeychainCheck } from '../../dev/KeychainCheck'
 import { seedDay } from '../../dev/seed'
 import { useTheme } from '../../theme/ThemeProvider'
 
@@ -17,6 +18,7 @@ export default function SettingsScreen() {
           <Text style={[styles.label, { color: colors.onWorld, fontFamily: fonts.rounded.bold }]}>Seed Day 12</Text>
         </Pressable>
       )}
+      {__DEV__ && <KeychainCheck />}
     </Placeholder>
   )
 }
