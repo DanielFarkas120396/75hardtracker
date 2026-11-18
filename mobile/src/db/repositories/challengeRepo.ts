@@ -1,16 +1,25 @@
+import { CHALLENGE_LENGTH } from '@logic/constants'
+import { dayNumberForDate } from '@logic/dates'
 import { parseProfile } from '@logic/profile'
 import { buildNextChallenge } from '@logic/restart'
-import type { ChallengeVariant } from '@logic/rulesets'
+import { challengeWeek, rulesFor, type ChallengeVariant } from '@logic/rulesets'
 import { SETTING_KEYS } from '@logic/settingKeys'
+import { syncDayCompletion } from '../completion'
 import type { Db } from '../driver'
 import { getDb, transaction } from '../open'
 import { challengeFromRow, challengeToParams, INSERT_CHALLENGE, type ChallengeRow } from '../rows'
+import { allRows, getRow, updateRow } from '../table'
 import type { Challenge } from '../types'
+
+export type SocialDayResult =
+  | { ok: true }
+  | { ok: false; reason: 'not-allowed' | 'out-of-range' | 'too-late' }
+  | { ok: false; reason: 'week-taken'; dayNumber: number }
 
 /**
  * The attempts. Same calls and behaviour as the web app's challengeRepo
  * (src/db/repositories/challengeRepo.ts); the methods the first screens don't
- * need yet (restart, give up, start date, variant, social days, jokers)
+ * need yet (restart, give up, start date, variant, jokers)
  * arrive with those screens.
  */
 
@@ -75,5 +84,44 @@ export const challengeRepo = {
   /** Starts a fresh attempt after a completed or given-up one. Reuses the active attempt if one already exists. */
   async startNew(startDate: string, variant: ChallengeVariant): Promise<number> {
     return transaction((db) => activeOrNextAttempt(db, startDate, variant))
+  },
+
+  /**
+   * Declares (or cancels) a social occasion. It must be declared the day
+   * before at the latest, with at most one per challenge week, and only in
+   * challenges that allow them. A past occasion can't be cancelled; cancelling
+   * today's re-judges today.
+   */
+  async setSocialDay(id: number, dayNumber: number, on: boolean, today: string): Promise<SocialDayResult> {
+    return transaction(async (db): Promise<SocialDayResult> => {
+      const challenge = await getRow(db, 'challenges', id)
+      if (!challenge || challenge.status !== 'active' || rulesFor(challenge).socialDaysPerWeek === 0) {
+        return { ok: false, reason: 'not-allowed' }
+      }
+      if (!Number.isInteger(dayNumber) || dayNumber < 1 || dayNumber > CHALLENGE_LENGTH) {
+        return { ok: false, reason: 'out-of-range' }
+      }
+      const todayDayNumber = dayNumberForDate(challenge.startDate, today)
+      const days = challenge.socialDays ?? []
+
+      if (on) {
+        if (!(dayNumber > todayDayNumber)) return { ok: false, reason: 'too-late' }
+        if (days.includes(dayNumber)) return { ok: true }
+        const taken = days.find((day) => challengeWeek(day) === challengeWeek(dayNumber))
+        if (taken !== undefined) return { ok: false, reason: 'week-taken', dayNumber: taken }
+        await updateRow(db, 'challenges', id, { socialDays: [...days, dayNumber].sort((a, b) => a - b) })
+        return { ok: true }
+      }
+
+      if (!days.includes(dayNumber)) return { ok: true }
+      if (dayNumber < todayDayNumber) return { ok: false, reason: 'too-late' }
+      const rest = days.filter((day) => day !== dayNumber)
+      await updateRow(db, 'challenges', id, { socialDays: rest.length > 0 ? rest : undefined })
+      if (dayNumber === todayDayNumber) {
+        const [entry] = await allRows(db, 'dayEntries', 'WHERE challengeId = ? AND dayNumber = ?', [id, dayNumber])
+        if (entry) await syncDayCompletion(db, entry.id)
+      }
+      return { ok: true }
+    })
   },
 }

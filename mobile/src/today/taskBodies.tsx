@@ -20,10 +20,12 @@ interface DietTaskProps {
   rules: Ruleset
   /** Whether today is a declared social occasion: a drink is allowed. */
   socialToday: boolean
+  /** Opens "Plan a social night"; absent when the rules allow none, or no day is left to declare. */
+  onPlanSocial?: () => void
 }
 
-/** The diet sheet's body: the two ticks. Planning a social night comes with part 4b. */
-export function DietTask({ entry, rules, socialToday }: DietTaskProps) {
+/** The diet sheet's body: the two ticks, and the social occasion. */
+export function DietTask({ entry, rules, socialToday, onPlanSocial }: DietTaskProps) {
   const { colors, fonts } = useTheme()
   return (
     <View style={styles.column}>
@@ -45,6 +47,9 @@ export function DietTask({ entry, rules, socialToday }: DietTaskProps) {
           label="No alcohol"
           icon={<Icon name="noDrink" size={20} color={colors.worldInk} />}
         />
+      )}
+      {onPlanSocial && (
+        <Button label="Plan a social night" variant="secondary" onPress={onPlanSocial} icon={<Icon name="drink" size={18} color={colors.worldInk} />} />
       )}
     </View>
   )

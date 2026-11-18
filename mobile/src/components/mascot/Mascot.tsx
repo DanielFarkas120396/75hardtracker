@@ -1,7 +1,9 @@
 import { createRig, poseToTransforms, type DuckMood, type DuckReaction } from '@logic/duckRig'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, type ComponentRef } from 'react'
+import { View } from 'react-native'
 import { useReduceMotion } from '../../hooks/useReduceMotion'
 import { DuckArt } from './DuckArt'
+import { gaze } from './gaze'
 
 export type { DuckMood, DuckReaction } from '@logic/duckRig'
 
@@ -32,8 +34,10 @@ interface MascotProps {
  * the next pose. Under reduced motion he holds his mood's pose.
  *
  * ponytail: each frame goes through React state, which redraws the SVG. If the
- * phone drops frames, write the transforms natively instead. His eyes don't
- * follow touches yet (the web's useTouchGaze); that comes with Today.
+ * phone drops frames, write the transforms natively instead.
+ *
+ * His eyes follow a finger and glance down when the page scrolls, on the
+ * screens that tell `gaze` about their touches.
  */
 export function Mascot({ mood, size = 120, reaction, decorative = false }: MascotProps) {
   const reducedMotion = useReduceMotion()
@@ -60,12 +64,23 @@ export function Mascot({ mood, size = 120, reaction, decorative = false }: Masco
     return () => cancelAnimationFrame(frame)
   }, [rig])
 
+  // A touch arrives as a point of the window; the rig wants it in the art's own units (DUCK_VIEWBOX: -10 20 490 500).
+  const box = useRef<ComponentRef<typeof View>>(null)
+  useEffect(
+    () =>
+      gaze.watch({
+        touch: (pageX, pageY) =>
+          box.current?.measureInWindow((left, top, width, height) => {
+            if (width > 0 && height > 0) rig.touch({ x: -10 + ((pageX - left) / width) * 490, y: 20 + ((pageY - top) / height) * 500 })
+          }),
+        scrolled: () => rig.scrolled(),
+      }),
+    [rig],
+  )
+
   return (
-    <DuckArt
-      size={size}
-      transforms={poseToTransforms(pose)}
-      opacities={pose}
-      label={decorative ? undefined : MOOD_LABELS[mood]}
-    />
+    <View ref={box} collapsable={false}>
+      <DuckArt size={size} transforms={poseToTransforms(pose)} opacities={pose} label={decorative ? undefined : MOOD_LABELS[mood]} />
+    </View>
   )
 }

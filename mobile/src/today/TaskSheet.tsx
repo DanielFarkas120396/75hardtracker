@@ -3,7 +3,7 @@ import type { Ruleset } from '@logic/rulesets'
 import { TASK_TITLES, type BoardTask } from '@logic/taskStatus'
 import type { TaskId } from '@logic/types'
 import { dietRuleLine, formatLiters, readingRuleLine, workoutRuleLine } from '@logic/variantsCopy'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { AccessibilityInfo, StyleSheet, Text, View } from 'react-native'
 import { DoneBadge } from '../components/ui/controls'
 import { Sheet, SheetHeader } from '../components/ui/Sheet'
@@ -32,6 +32,8 @@ export interface TaskSheetContext {
   libraryOnly: boolean
   /** Opens the "Add workout" sheet: the workouts sheet adds through the same form as the tile. */
   onAddWorkout: () => void
+  /** Opens "Plan a social night" from the diet sheet; absent where a night can't be planned (Hard, the last day, yesterday). */
+  onPlanSocial?: () => void
 }
 
 // The web's taskSheets.tsx: each task's rule line, as typed there.
@@ -67,7 +69,7 @@ function body(task: BoardTask, ctx: TaskSheetContext) {
         />
       )
     case 'diet':
-      return <DietTask entry={ctx.entry} rules={ctx.rules} socialToday={ctx.socialToday} />
+      return <DietTask entry={ctx.entry} rules={ctx.rules} socialToday={ctx.socialToday} onPlanSocial={ctx.onPlanSocial} />
     case 'water':
       return <WaterTask entry={ctx.entry} rules={ctx.rules} />
     case 'reading':
@@ -79,13 +81,18 @@ function body(task: BoardTask, ctx: TaskSheetContext) {
   }
 }
 
-/** What the day's sheet holds: one task's controls, or the "Add workout" form. */
-export type OpenSheet = BoardTask | 'add-workout'
+/** What the day's sheet holds: one task's controls, the "Add workout" form, the evening's plan or the social night. */
+export type OpenSheet = BoardTask | 'add-workout' | 'plan' | 'social'
+
+const SHEET_LABELS = { 'add-workout': 'Add workout', plan: 'Tell the duck your plan', social: 'Plan a social night' } as const
 
 interface TaskSheetProps {
   /** What is open, or null when closed. */
   sheet: OpenSheet | null
   context: TaskSheetContext
+  /** The plan's form and the social night's, on the screens that have them. */
+  plan?: ReactNode
+  social?: ReactNode
   onClose: () => void
 }
 
@@ -95,16 +102,21 @@ interface TaskSheetProps {
  * cheer) and, except for workouts (a done workout can still get its feel),
  * the sheet closes on its own after the cheer. The web's TaskSheet.
  *
- * The "Add workout" form opens in this same sheet (the web has a second one):
- * the phone shows one sheet at a time, and a second asked for while the first
- * is still leaving would never appear.
+ * The "Add workout" form, the evening's plan and the social night open in
+ * this same sheet (the web has others for them): the phone shows one sheet at
+ * a time, and a second asked for while the first is still leaving would never
+ * appear.
  */
-export function TaskSheet({ sheet, context, onClose }: TaskSheetProps) {
-  const label = sheet === null ? '' : sheet === 'add-workout' ? 'Add workout' : TASK_TITLES[sheet]
+export function TaskSheet({ sheet, context, plan, social, onClose }: TaskSheetProps) {
+  const label = sheet === null ? '' : sheet === 'add-workout' || sheet === 'plan' || sheet === 'social' ? SHEET_LABELS[sheet] : TASK_TITLES[sheet]
   return (
     <Sheet open={sheet !== null} onClose={onClose} label={label}>
       {sheet === 'add-workout' ? (
         <AddWorkoutForm key={sheet} dayEntryId={context.entry.id} rules={context.rules} onClose={onClose} />
+      ) : sheet === 'plan' ? (
+        plan
+      ) : sheet === 'social' ? (
+        social
       ) : (
         sheet && <SheetContent key={sheet} task={sheet} context={context} onClose={onClose} />
       )}

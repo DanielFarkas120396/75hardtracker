@@ -1,21 +1,10 @@
 import { TASK_IDS } from '@logic/dayCompletion'
-import type { DuckMood, DuckReaction } from '@logic/duckRig'
-import type { MenaceLevel } from '@logic/menace'
-import type { TaskId } from '@logic/types'
-import { useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { FlameStreak, GaugeRing } from '../components/GaugeRing'
 import { Icon } from '../components/icons/Icon'
-import { Mascot } from '../components/mascot/Mascot'
 import { DuckGlow } from '../onboarding/parts'
 import { useTheme } from '../theme/ThemeProvider'
-
-const LEVEL_MOODS: Record<MenaceLevel, DuckMood> = {
-  content: 'content',
-  watching: 'watching',
-  tapping: 'tapping',
-  hunting: 'hunting',
-}
 
 interface TodayHeroProps {
   /** "75 Hard #1". */
@@ -25,9 +14,10 @@ interface TodayHeroProps {
   streak: number
   /** Jokers left, or undefined when the ruleset has none. */
   jokersLeft: number | undefined
-  /** The duck's mood follows the menace. */
-  level: MenaceLevel
-  completion: Record<TaskId, boolean>
+  /** The duck, at the bottom left beside the gauge. */
+  duck: ReactNode
+  /** The duck's speech bubble: it pops up above him now and then. */
+  speech: ReactNode
   /** The player's reason, quoted at the bottom. */
   why?: string
   /** Under the gauge: "Day N won" and the closing ritual, the time left late in the evening, the next plan, or the duck's line. */
@@ -38,28 +28,10 @@ interface TodayHeroProps {
  * The top of Today, on the world's sunrise glow, built around the gauge of
  * tasks done: the day and the attempt on one line above it; the duck on its
  * left; the streak and the jokers on its right; what matters next under it;
- * and the player's reason at the bottom. The web's TodayHero. The duck nods
- * at a task ticked and glares at one unticked; his bubble, his chatter and
- * his answer to a poke come with part 4b.
+ * and the player's reason at the bottom. The web's TodayHero.
  */
-export function TodayHero({ attemptLine, dayNumber, completedCount, streak, jokersLeft, level, completion, why, below }: TodayHeroProps) {
+export function TodayHero({ attemptLine, dayNumber, completedCount, streak, jokersLeft, duck, speech, why, below }: TodayHeroProps) {
   const { colors, fonts } = useTheme()
-
-  // Which tasks are done, compared with the render before: a tick gets a nod, an untick a glare.
-  const done = TASK_IDS.filter((task) => completion[task]).join()
-  const [seen, setSeen] = useState(done)
-  const [reaction, setReaction] = useState<{ kind: DuckReaction; id: number }>()
-  if (seen !== done) {
-    setSeen(done)
-    const before = seen.split(',')
-    const now = done.split(',')
-    const kind: DuckReaction | undefined = before.some((task) => task !== '' && !now.includes(task))
-      ? 'glare'
-      : now.some((task) => task !== '' && !before.includes(task))
-        ? 'approve'
-        : undefined
-    if (kind) setReaction((previous) => ({ kind, id: (previous?.id ?? 0) + 1 }))
-  }
 
   return (
     <View style={styles.hero}>
@@ -74,7 +46,10 @@ export function TodayHero({ attemptLine, dayNumber, completedCount, streak, joke
       {/* Three columns, so the gauge sits in the true centre: the duck, the gauge, the streak and jokers. */}
       <View style={styles.columns}>
         <View style={styles.side}>
-          <Mascot mood={LEVEL_MOODS[level]} size={64} reaction={reaction} />
+          <View>
+            {speech}
+            {duck}
+          </View>
         </View>
         <View style={styles.centre}>
           <GaugeRing value={completedCount} max={TASK_IDS.length} />
@@ -104,7 +79,8 @@ export function TodayHero({ attemptLine, dayNumber, completedCount, streak, joke
 }
 
 const styles = StyleSheet.create({
-  hero: { marginHorizontal: 16, marginVertical: 12, padding: 12 },
+  // Above the cards that follow: the duck's bubble may rise over the heading, never under a card.
+  hero: { zIndex: 1, marginHorizontal: 16, marginVertical: 12, padding: 12 },
   heading: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center', gap: 8 },
   day: { fontSize: 36, lineHeight: 38, letterSpacing: 0.9 },
   attempt: { fontSize: 12 },

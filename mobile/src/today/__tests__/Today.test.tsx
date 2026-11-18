@@ -1,6 +1,6 @@
 // The Today screen, from the web's TodayScreen, TaskBoard, DayBoard and task tests, where they don't
 // concern what comes with later parts (the fills, the morph, the evening plan, the celebration).
-import { addDaysISO } from '@logic/dates'
+import { addDaysISO, dateForDayNumber, formatShortDay, formatWeekday } from '@logic/dates'
 import { SETTING_KEYS } from '@logic/settingKeys'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import { useCameraPermissions } from 'expo-camera'
@@ -13,6 +13,7 @@ import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { AccessibilityInfo } from 'react-native'
 import { addChallenge, addPerfectDays, freshDatabase } from '../../db/__tests__/fixtures'
+import { challengeRepo } from '../../db/repositories/challengeRepo'
 import { bookRepo } from '../../db/repositories/bookRepo'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import { measurementRepo } from '../../db/repositories/measurementRepo'
@@ -30,6 +31,25 @@ import { entryOf, Providers, startAttempt, TODAY } from './support'
 jest.mock('expo-font', () => ({ ...jest.requireActual('expo-font'), useFonts: jest.fn() }))
 jest.mock('expo-haptics', () => ({ impactAsync: jest.fn(async () => {}), ImpactFeedbackStyle: { Light: 'light' } }))
 jest.mock('expo-image-picker', () => ({ launchImageLibraryAsync: jest.fn() }))
+jest.mock('expo-audio', () => ({
+  useAudioPlayer: () => ({ play: jest.fn(), seekTo: jest.fn(async () => {}) }),
+  setAudioModeAsync: jest.fn(async () => {}),
+}))
+// The phone's own pickers are native views: a plain view stands in, and tests send it the picked value.
+jest.mock('@react-native-community/datetimepicker', () => ({
+  __esModule: true,
+  default: (props: Record<string, unknown>) => {
+    const { View } = jest.requireActual<typeof import('react-native')>('react-native')
+    return <View {...props} />
+  },
+}))
+// The mood lighting is drawn (it has no words): here a line of text says what it was asked for.
+jest.mock('../MenaceAtmosphere', () => ({
+  MenaceAtmosphere: ({ level, flashes }: { level: string; flashes: number }) => {
+    const { Text: Line } = jest.requireActual<typeof import('react-native')>('react-native')
+    return <Line>{`atmosphere: ${level}, ${flashes}`}</Line>
+  },
+}))
 jest.mock('../../hooks/useClock', () => ({ useClock: jest.fn() }))
 jest.mock('../../hooks/useNowMinutes', () => ({ useNowMinutes: jest.fn() }))
 jest.mock('../../hooks/useToday', () => ({ useToday: jest.fn() }))
@@ -91,6 +111,8 @@ const allowCamera = (granted: boolean) =>
 
 beforeEach(async () => {
   jest.mocked(Font.useFonts).mockReturnValue([true, null])
+  // React Native's test setup already ships this as a mock: restoring spies doesn't empty it.
+  jest.mocked(AccessibilityInfo.announceForAccessibility).mockClear()
   setClock(TODAY, MORNING)
   jest.mocked(prepareShot).mockImplementation(async () => newShot())
   jest.mocked(Haptics.impactAsync).mockClear()
@@ -622,5 +644,333 @@ describe('the photo', () => {
     expect(await screen.findByText("Couldn't save that photo. Try again, or free up some space.")).toBeOnTheScreen()
     await waitFor(() => expect(announce).toHaveBeenCalledWith("Couldn't save that photo. Try again, or free up some space."))
     expect(await today(challengeId)).not.toHaveProperty('photoId')
+  })
+})
+
+/** A time picked in the phone's time picker (the `index`th on screen). */
+async function pickTime(hours: number, minutes: number, index = 0) {
+  const at = new Date(2000, 0, 1, hours, minutes)
+  await fireEvent(screen.getAllByTestId('time-field')[index], 'valueChange', {}, at)
+}
+/** What the duck says in his bubble: for the eyes only (VoiceOver hears it instead), so the query must look past that. */
+const says = (text: string) => screen.findByText(text, { includeHiddenElements: true })
+
+describe('the evening plan', () => {
+  it('saves a time for a task, with what it is estimated to take, and the duck answers', async () => {
+    const challengeId = await startAttempt()
+    await show()
+    await press('Plan my evening')
+    expect(await screen.findByText("He leaves a task alone until its time comes. Break the plan and he'll know.")).toBeOnTheScreen()
+    // A row per missing task, none with a time yet.
+    for (const task of ['Workouts', 'Diet', 'Water', 'Reading', 'Photo']) expect(button(`Set a time for ${task}`)).toBeOnTheScreen()
+    await press('Set a time for Reading')
+    await pickTime(21, 0)
+    await press('Save plan')
+
+    await waitFor(async () => expect((await today(challengeId))!.plans).toEqual({ reading: '21:00' }))
+    expect((await today(challengeId))!.planEstimates).toEqual({ reading: 20 })
+    expect(await says('21:00. Not a minute later.')).toBeOnTheScreen()
+    expect(screen.getByText('duck: watching, relax')).toBeOnTheScreen()
+    // Under the gauge, the next plan; and the button now edits it.
+    expect(await screen.findByText('Reading at 21:00')).toBeOnTheScreen()
+    expect(await screen.findByRole('button', { name: 'Edit my plan' })).toBeOnTheScreen()
+    await waitFor(() => expect(screen.queryByText("He leaves a task alone until its time comes. Break the plan and he'll know.")).toBeNull())
+  })
+
+  it('refuses a time already past, or one that leaves no room before midnight, only on the rows just changed', async () => {
+    const challengeId = await startAttempt()
+    const entry = await entryOf(challengeId)
+    // Planned this morning for 09:00, with its estimate frozen then; it is 10:00 now.
+    await dayEntryRepo.setPlans(entry.id, { reading: '09:00' }, { reading: 5 })
+    await show()
+    await press('Edit my plan')
+    await screen.findByText('Tell the duck your plan')
+    expect(screen.queryByText('Pick a time later than now.')).toBeNull()
+
+    await press('Set a time for Photo')
+    await pickTime(9, 30, 1)
+    expect(await screen.findByText('Pick a time later than now.')).toBeOnTheScreen()
+    expect(button('Save plan')).toBeDisabled()
+    await press('Clear Photo')
+    expect(screen.queryByText('Pick a time later than now.')).toBeNull()
+
+    await press('Set a time for Workouts')
+    await pickTime(23, 30, 0)
+    expect(await screen.findByText("That won't fit before midnight.")).toBeOnTheScreen()
+    await pickTime(18, 0, 0)
+    expect(screen.queryByText("That won't fit before midnight.")).toBeNull()
+    await press('Save plan')
+
+    // The earlier plan stays as it was, estimate and all; the new one is estimated now.
+    await waitFor(async () => expect((await today(challengeId))!.plans).toEqual({ workouts: '18:00', reading: '09:00' }))
+    expect((await today(challengeId))!.planEstimates).toEqual({ workouts: 90, reading: 5 })
+    expect(await says('18:00. Not a minute later.')).toBeOnTheScreen()
+  })
+
+  it("estimates a freshly planned task against the day's own rules, not Hard's", async () => {
+    const challengeId = await startAttempt(1, 'medium')
+    await show()
+    await press('Plan my evening')
+    await press('Set a time for Workouts')
+    await pickTime(18, 0)
+    await press('Save plan')
+    await waitFor(async () => expect((await today(challengeId))!.planEstimates).toEqual({ workouts: 45 }))
+  })
+
+  it('says nothing when every saved time has already passed, and clears a plan', async () => {
+    const challengeId = await startAttempt()
+    const entry = await entryOf(challengeId)
+    await dayEntryRepo.setPlans(entry.id, { reading: '09:00', photo: '09:30' }, { reading: 20, photo: 2 })
+    await show()
+    await press('Edit my plan')
+    await press('Clear Photo')
+    await press('Save plan')
+    await waitFor(async () => expect((await today(challengeId))!.plans).toEqual({ reading: '09:00' }))
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    expect(screen.queryByText(/Not a minute later\./, { includeHiddenElements: true })).toBeNull()
+  })
+
+  it('says the plan could not be saved, and keeps the sheet', async () => {
+    await startAttempt()
+    await show()
+    await press('Plan my evening')
+    await press('Set a time for Diet')
+    jest.spyOn(dayEntryRepo, 'setPlans').mockRejectedValueOnce(new Error('disk full'))
+    await press('Save plan')
+    expect(await screen.findByText("Couldn't save your plan — try again.")).toBeOnTheScreen()
+    expect(button('Save plan')).toBeEnabled()
+  })
+
+  it('holds him to a broken plan: "You said HH:mm.", and the plan can still be edited', async () => {
+    const challengeId = await startAttempt()
+    const entry = await entryOf(challengeId)
+    await dayEntryRepo.setPlans(entry.id, { photo: '09:00' }, { photo: 2 })
+    await show()
+    // 09:00 plus 2 minutes plus the 15 of grace are long past at 10:00.
+    // In his bubble: under the gauge, the evening's clock has taken his line's place.
+    expect(await says('You said 09:00.')).toBeOnTheScreen()
+    expect(screen.getByText('13h to bedtime')).toBeOnTheScreen()
+    expect(screen.getByText('duck: tapping')).toBeOnTheScreen()
+    expect(screen.getByText('atmosphere: tapping, 0')).toBeOnTheScreen()
+    expect(button('Edit my plan')).toBeEnabled()
+  })
+
+  it('is too late to plan once he hunts: the button stays, greyed out', async () => {
+    setClock(TODAY, 22 * 60 + 30)
+    await startAttempt()
+    await show()
+    const plan = await screen.findByRole('button', { name: 'Too late to plan' })
+    expect(plan).toBeDisabled()
+    await fireEvent.press(plan)
+    expect(screen.queryByText('Tell the duck your plan')).toBeNull()
+    expect(screen.getByText('atmosphere: hunting, 0')).toBeOnTheScreen()
+  })
+
+  it('flashes the screen once when three quick pokes make him lunge', async () => {
+    await startAttempt()
+    await show()
+    const duck = await screen.findByRole('button', { name: 'Poke the duck' })
+    await fireEvent.press(duck)
+    await fireEvent.press(duck)
+    expect(screen.getByText('atmosphere: watching, 0')).toBeOnTheScreen()
+    await fireEvent.press(duck)
+    expect(await screen.findByText('atmosphere: watching, 1')).toBeOnTheScreen()
+    expect(await says("That's it.")).toBeOnTheScreen()
+  })
+
+  it('goes with the day at midnight', async () => {
+    await startAttempt()
+    const view = await show()
+    await press('Plan my evening')
+    await screen.findByText('Tell the duck your plan')
+    setClock(addDaysISO(TODAY, 1), 0)
+    await view.rerender(<Today />)
+    expect(await screen.findByLabelText('Day 2, 75 Hard #1')).toBeOnTheScreen()
+    expect(screen.queryByText('Tell the duck your plan')).toBeNull()
+  })
+})
+
+describe('social nights', () => {
+  const stored = async (challengeId: number) => (await challengeRepo.getById(challengeId))!
+  /** A day picked in the phone's date picker. */
+  async function pickDay(iso: string) {
+    const [year, month, day] = iso.split('-').map(Number)
+    await fireEvent(screen.getByTestId('date-field'), 'valueChange', {}, new Date(year, month - 1, day, 12))
+  }
+
+  it('declares a night from the row under the board, and the duck counts', async () => {
+    const challengeId = await startAttempt(3, 'strong')
+    await addPerfectDays(challengeId, addDaysISO(TODAY, -2), 1, 2)
+    await show()
+    await press('Plan a social night')
+    expect(await screen.findByText('Tomorrow at the earliest, one per week. On that day a drink is allowed — the diet still counts.')).toBeOnTheScreen()
+    // No day is picked at first.
+    expect(button('Declare')).toBeDisabled()
+    await press('Pick a day')
+    await pickDay(addDaysISO(TODAY, 2))
+    await press('Declare')
+
+    await waitFor(async () => expect((await stored(challengeId)).socialDays).toEqual([5]))
+    expect(await says(`${formatWeekday(addDaysISO(TODAY, 2))}. One drink. I'm counting.`)).toBeOnTheScreen()
+
+    // It is listed when the sheet opens again, and cancels at once.
+    await waitFor(() => expect(screen.queryByText('Declared')).toBeNull())
+    await press('Plan a social night')
+    expect(await screen.findByText(`${formatShortDay(addDaysISO(TODAY, 2))} · Day 5`)).toBeOnTheScreen()
+    await press('Cancel Day 5')
+    await waitFor(async () => expect(await stored(challengeId)).not.toHaveProperty('socialDays'))
+  })
+
+  it('says why a night is refused', async () => {
+    const challengeId = await startAttempt(3, 'strong')
+    await addPerfectDays(challengeId, addDaysISO(TODAY, -2), 1, 2)
+    await challengeRepo.setSocialDay(challengeId, 4, true, TODAY)
+    await show()
+    await press('Plan a social night')
+    await press('Pick a day')
+    await pickDay(addDaysISO(TODAY, 3))
+    await press('Declare')
+    expect(await screen.findByText('Week 1 already has one: Day 4.')).toBeOnTheScreen()
+    expect((await stored(challengeId)).socialDays).toEqual([4])
+    // Picking another day drops the refusal.
+    await pickDay(dateForDayNumber(addDaysISO(TODAY, -2), 9))
+    expect(screen.queryByText('Week 1 already has one: Day 4.')).toBeNull()
+    await press('Declare')
+    await waitFor(async () => expect((await stored(challengeId)).socialDays).toEqual([4, 9]))
+  })
+
+  it("shows today's night on the diet tile, and asks before cancelling it", async () => {
+    const challengeId = await addChallenge({ startDate: addDaysISO(TODAY, -2), attemptNumber: 1, status: 'active', variant: 'strong', socialDays: [3] })
+    await profileRepo.completeOnboarding({ name: 'Daniel', why: 'A fresh start' })
+    await addPerfectDays(challengeId, addDaysISO(TODAY, -2), 1, 2)
+    await show()
+    expect(await screen.findByLabelText('Social night today — a drink is allowed')).toBeOnTheScreen()
+    expect(screen.queryByRole('switch', { name: 'No alcohol' })).toBeNull()
+
+    // From the diet sheet, which gives way to the social night's.
+    await openSheet(/^Diet, /, /^No cheat meals\./)
+    expect(screen.getByText('Social night today — a drink is allowed.')).toBeOnTheScreen()
+    await pressLast('Plan a social night')
+    expect(await screen.findByText('Today · Day 3')).toBeOnTheScreen()
+    expect(screen.queryByText(/^No cheat meals\./)).toBeNull()
+
+    await press('Cancel Day 3')
+    expect(await screen.findByText("Cancel today's occasion? You can't declare today again, and a drink today would break your diet.")).toBeOnTheScreen()
+    expect((await stored(challengeId)).socialDays).toEqual([3])
+    await press('Keep it')
+    await press('Cancel Day 3')
+    await press('Cancel it')
+    await waitFor(async () => expect(await stored(challengeId)).not.toHaveProperty('socialDays'))
+    expect(await screen.findByRole('switch', { name: 'No alcohol' })).toBeOnTheScreen()
+  })
+
+  it('is not offered on Hard, nor on the last day', async () => {
+    await startAttempt()
+    const view = await show()
+    await screen.findByLabelText('Day 1, 75 Hard #1')
+    expect(screen.queryByRole('button', { name: 'Plan a social night' })).toBeNull()
+    await view.unmount()
+
+    await freshDatabase()
+    const challengeId = await startAttempt(75, 'strong')
+    await addPerfectDays(challengeId, addDaysISO(TODAY, -74), 1, 74)
+    await show()
+    await screen.findByLabelText('Day 75, 75 Strong #1')
+    expect(screen.queryByRole('button', { name: 'Plan a social night' })).toBeNull()
+  })
+
+  it('can be planned before Day 1', async () => {
+    const challengeId = await startAttempt(0, 'soft')
+    await show()
+    await press('Plan a social night')
+    await press('Pick a day')
+    // The first day offered is Day 1 itself: tomorrow.
+    await press('Declare')
+    await waitFor(async () => expect((await stored(challengeId)).socialDays).toEqual([1]))
+  })
+})
+
+describe('yesterday, until noon', () => {
+  /** Day 2 today, with Day 1 left as it was: nothing logged. */
+  const dayTwo = () => startAttempt(2)
+
+  it('offers to finish it, and logs onto yesterday: the photo from the library only', async () => {
+    const challengeId = await dayTwo()
+    await show()
+    expect(await screen.findByText("Day 1 isn't finished")).toBeOnTheScreen()
+    expect(screen.getByText('Forgot to log it? You have until 12:00.')).toBeOnTheScreen()
+    expect(screen.getByText("Yesterday's still open. Noon.")).toBeOnTheScreen()
+
+    await press('Finish it')
+    expect(await screen.findByText('Finish Day 1')).toBeOnTheScreen()
+    expect(screen.getByText('Yesterday')).toBeOnTheScreen()
+    expect(screen.getByText('Log what you did yesterday. You have until 12:00; after that, the day counts as missed.')).toBeOnTheScreen()
+    // No duck, no plan, no weigh-in there.
+    expect(screen.queryByText(/^duck: /)).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Plan my evening' })).toBeNull()
+    expect(screen.queryByText('Weigh in')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Take photo' })).toBeNull()
+
+    await press('Add 250 ml')
+    await waitFor(async () => expect((await today(challengeId, 1))?.water_ml).toBe(250))
+    expect((await today(challengeId, 1))!.date).toBe(addDaysISO(TODAY, -1))
+
+    jest.mocked(ImagePicker.launchImageLibraryAsync).mockResolvedValue({ canceled: false, assets: [{ uri: 'file:///library/y.jpg', width: 3024, height: 4032 }] } as never)
+    await press('Choose from library')
+    expect(await screen.findByRole('button', { name: 'Photo, Taken, done' })).toBeOnTheScreen()
+    await press('Photo, Taken, done')
+    expect(await screen.findByText("Yesterday's photo, from your library.")).toBeOnTheScreen()
+    expect(screen.queryByRole('button', { name: /Retake photo|Take photo/ })).toBeNull()
+    await press('Close')
+
+    await press('Today')
+    expect(await screen.findByLabelText('Day 2, 75 Hard #1')).toBeOnTheScreen()
+  })
+
+  it('comes back to today by itself once yesterday is finished, and the card is gone', async () => {
+    const challengeId = await dayTwo()
+    const entry = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 1, date: addDaysISO(TODAY, -1) })
+    await dayEntryRepo.update(entry.id, { dietFollowed: true, noAlcohol: true })
+    await dayEntryRepo.adjustWater(entry.id, 3800)
+    await dayEntryRepo.adjustPages(entry.id, 10)
+    await workoutRepo.add({ dayEntryId: entry.id, type: 'Running', durationMin: 45, isOutdoor: true })
+    await workoutRepo.add({ dayEntryId: entry.id, type: 'Weights', durationMin: 45, isOutdoor: false })
+    await show()
+    await press('Finish it')
+    await screen.findByText('Finish Day 1')
+    jest.mocked(ImagePicker.launchImageLibraryAsync).mockResolvedValue({ canceled: false, assets: [{ uri: 'file:///library/y.jpg', width: 3024, height: 4032 }] } as never)
+    await press('Choose from library')
+
+    expect(await screen.findByLabelText('Day 2, 75 Hard #1')).toBeOnTheScreen()
+    expect(screen.queryByText("Day 1 isn't finished")).toBeNull()
+    expect(screen.getByLabelText('Streak: 1 day')).toBeOnTheScreen()
+    expect((await today(challengeId, 1))!.completed).toBe(true)
+  })
+
+  it('has no card once yesterday is done, nor past noon', async () => {
+    const challengeId = await dayTwo()
+    await dayEntryRepo.getAllForChallenge(challengeId)
+    setClock(TODAY, 13 * 60)
+    const view = await show()
+    expect(await screen.findByText('Day 1 was missed')).toBeOnTheScreen()
+    await view.unmount()
+
+    await freshDatabase()
+    const done = await startAttempt(2)
+    await addPerfectDays(done, addDaysISO(TODAY, -1), 1, 1)
+    setClock(TODAY, MORNING)
+    await show()
+    await screen.findByLabelText('Day 2, 75 Hard #1')
+    expect(screen.queryByText("Day 1 isn't finished")).toBeNull()
+    expect(screen.queryByText("Yesterday's still open. Noon.")).toBeNull()
+  })
+
+  it('shows only the last day to finish the morning after Day 75, with no way back to a today', async () => {
+    const challengeId = await startAttempt(76)
+    await addPerfectDays(challengeId, addDaysISO(TODAY, -75), 1, 74)
+    await show()
+    expect(await screen.findByText('Finish Day 75')).toBeOnTheScreen()
+    expect(screen.queryByRole('button', { name: 'Today' })).toBeNull()
+    expect(screen.queryByText(/Day 1 starts/)).toBeNull()
   })
 })

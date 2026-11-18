@@ -18,6 +18,8 @@ afterEach(() => {
 
 beforeEach(async () => {
   jest.mocked(Font.useFonts).mockReturnValue([true, null])
+  // React Native's test setup already ships this as a mock: restoring spies doesn't empty it.
+  jest.mocked(AccessibilityInfo.announceForAccessibility).mockClear()
   await freshDatabase()
 })
 
