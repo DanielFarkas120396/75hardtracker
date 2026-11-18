@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import * as Font from 'expo-font'
-import type { ReactNode } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import { StyleSheet, Text } from 'react-native'
 import { freshDatabase } from '../../../db/__tests__/fixtures'
 import { ThemeProvider } from '../../../theme/ThemeProvider'
@@ -11,7 +11,7 @@ import { Field } from '../Field'
 jest.mock('expo-font', () => ({ ...jest.requireActual('expo-font'), useFonts: jest.fn() }))
 
 const Providers = ({ children }: { children: ReactNode }) => <ThemeProvider>{children}</ThemeProvider>
-const show = (ui: ReactNode) => render(ui, { wrapper: Providers })
+const show = (ui: ReactElement) => render(ui, { wrapper: Providers })
 
 beforeEach(async () => {
   jest.mocked(Font.useFonts).mockReturnValue([true, null])
