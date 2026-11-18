@@ -73,7 +73,7 @@ Each step ends in something that runs on the phone. The plan details them.
 3. Onboarding and the deal, up to Day 1 (moved ahead of Today on 2026-11-18, at the owner's request: "I want the app to work from day 1 with the onboarding"). **Coded and reviewed** (2026-11-18); the owner's walk-through on the phone is pending.
 4. Today, in three parts:
    - 4a. A whole day can be logged: the hero, the five tiles with their sheets, the camera sheet, the weigh-in, the countdown before Day 1. **Coded** (2026-11-18), with the web's thin bar on the tiles in place of the fills.
-   - 4b. The evening and yesterday: "Plan my evening", the menace's atmosphere, the duck's bubble and pokes, social nights, the late-day card, sounds.
+   - 4b. The evening and yesterday: "Plan my evening", the menace's atmosphere, the duck's bubble and pokes, social nights, the late-day card, sounds. **Coded** (2026-11-18); the knife's sound is a rendered file nobody has heard yet.
    - 4c. The show: the five fills, the tile shrinking into its chip, the gauge's wave, the day-complete peak.
    - 4d. Failure and restart, the joker screen, give up, Victory.
 5. Journey.
