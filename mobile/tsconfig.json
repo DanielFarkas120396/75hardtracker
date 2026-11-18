@@ -10,7 +10,7 @@
         "../src/logic/*"
       ],
       "@schema": [
-        "../src/db/types.ts"
+        "../src/logic/records.ts"
       ],
       "date-fns": [
         "./node_modules/date-fns"

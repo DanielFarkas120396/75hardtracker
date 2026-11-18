@@ -4,7 +4,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import * as Font from 'expo-font'
 import * as SplashScreen from 'expo-splash-screen'
 import type { ReactNode } from 'react'
-import { Text } from 'react-native'
+import { Alert, Text } from 'react-native'
 import TodayScreen from '../app/(tabs)/index'
 import SettingsScreen from '../app/(tabs)/settings'
 import { AppGate } from '../components/AppGate'
@@ -62,9 +62,19 @@ describe('seedDay', () => {
 })
 
 describe('Settings', () => {
-  it('has a developer button that seeds Day 12', async () => {
+  it('has a developer button that seeds Day 12, after asking', async () => {
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {})
     await render(<SettingsScreen />, { wrapper: Providers })
     await fireEvent.press(await screen.findByText('Seed Day 12'))
+    expect(alert).toHaveBeenCalledWith(
+      'Erase everything?',
+      'This replaces all data on this phone with a test attempt.',
+      expect.any(Array),
+    )
+    expect(await challengeRepo.getCurrent()).toBeUndefined()
+    const buttons = alert.mock.calls[0][2]!
+    expect(buttons.map((button) => button.text)).toEqual(['Cancel', 'Erase'])
+    buttons[1].onPress!()
     await waitFor(async () => {
       const current = await challengeRepo.getCurrent()
       expect(current && dayNumberForDate(current.startDate, todayISO())).toBe(12)

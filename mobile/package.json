@@ -48,7 +48,7 @@
     "preset": "jest-expo",
     "moduleNameMapper": {
       "^@logic/(.*)$": "<rootDir>/../src/logic/$1",
-      "^@schema$": "<rootDir>/../src/db/types.ts",
+      "^@schema$": "<rootDir>/../src/logic/records.ts",
       "^@/(.*)$": "<rootDir>/src/$1"
     },
     "modulePaths": [

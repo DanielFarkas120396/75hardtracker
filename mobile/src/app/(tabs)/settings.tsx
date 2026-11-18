@@ -1,8 +1,15 @@
-import { Pressable, StyleSheet, Text } from 'react-native'
+import { Alert, Pressable, StyleSheet, Text } from 'react-native'
 import { Placeholder, PlaceholderText } from '../../components/Placeholder'
 import { KeychainCheck } from '../../dev/KeychainCheck'
 import { seedDay } from '../../dev/seed'
 import { useTheme } from '../../theme/ThemeProvider'
+
+function confirmSeed() {
+  Alert.alert('Erase everything?', 'This replaces all data on this phone with a test attempt.', [
+    { text: 'Cancel', style: 'cancel' },
+    { text: 'Erase', style: 'destructive', onPress: () => void seedDay(12) },
+  ])
+}
 
 export default function SettingsScreen() {
   const { colors, fonts } = useTheme()
@@ -12,7 +19,7 @@ export default function SettingsScreen() {
       {__DEV__ && (
         <Pressable
           accessibilityRole="button"
-          onPress={() => void seedDay(12)}
+          onPress={confirmSeed}
           style={[styles.button, { backgroundColor: colors.world }]}
         >
           <Text style={[styles.label, { color: colors.onWorld, fontFamily: fonts.rounded.bold }]}>Seed Day 12</Text>

@@ -46,17 +46,59 @@ describe('transaction', () => {
     expect(await transaction(async () => 42)).toBe(42)
   })
 
-  it('tells the listeners after a write, and not after a failed one', async () => {
+  it('tells the listeners after a write, and after a failed one too', async () => {
     const listener = jest.fn()
     const stop = subscribeToChanges(listener)
     await transaction(insert('a'))
     expect(listener).toHaveBeenCalledTimes(1)
+    // A screen may have read while the failed write was in flight: it must reread.
     await transaction(async () => {
       throw new Error('stop')
     }).catch(() => undefined)
-    expect(listener).toHaveBeenCalledTimes(1)
+    expect(listener).toHaveBeenCalledTimes(2)
     stop()
     await transaction(insert('b'))
-    expect(listener).toHaveBeenCalledTimes(1)
+    expect(listener).toHaveBeenCalledTimes(2)
+  })
+
+  it('a listener that throws neither fails the write nor silences the next listener', async () => {
+    const logged = jest.spyOn(console, 'error').mockImplementation(() => {})
+    const second = jest.fn()
+    const stopFirst = subscribeToChanges(() => {
+      throw new Error('broken screen')
+    })
+    const stopSecond = subscribeToChanges(second)
+    await expect(transaction(insert('a'))).resolves.toBeUndefined()
+    expect(second).toHaveBeenCalledTimes(1)
+    expect(logged).toHaveBeenCalled()
+    stopFirst()
+    stopSecond()
+    logged.mockRestore()
+  })
+
+  describe('a write that waits on another write', () => {
+    const WARNING = 'A write has waited 5 s for another write. A transaction task must not call transaction() or a repository write.'
+
+    beforeEach(() => jest.useFakeTimers())
+    afterEach(() => jest.useRealTimers())
+
+    it('is reported after 5 s when a task writes inside itself', async () => {
+      const logged = jest.spyOn(console, 'error').mockImplementation(() => {})
+      // Never finishes: the inner write waits for the outer one, which waits for it.
+      void transaction(async () => {
+        await transaction(insert('a'))
+      })
+      await jest.advanceTimersByTimeAsync(5000)
+      expect(logged).toHaveBeenCalledWith(WARNING)
+      logged.mockRestore()
+    })
+
+    it('is not reported for writes that simply follow each other', async () => {
+      const logged = jest.spyOn(console, 'error').mockImplementation(() => {})
+      await Promise.all([transaction(insert('a')), transaction(insert('b'))])
+      await jest.advanceTimersByTimeAsync(6000)
+      expect(logged).not.toHaveBeenCalled()
+      logged.mockRestore()
+    })
   })
 })

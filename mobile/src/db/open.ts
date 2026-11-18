@@ -28,28 +28,48 @@ export function getDb(): Db {
   return current
 }
 
-/** Tests swap in an in-memory database (see __tests__/fixtures.ts). */
+/** Tests swap in an in-memory database (see __tests__/fixtures.ts), with an empty write queue. */
 export function setDbForTests(db: Db): void {
   current = db
+  queue = Promise.resolve()
 }
+
+const STUCK_WRITE =
+  'A write has waited 5 s for another write. A transaction task must not call transaction() or a repository write.'
 
 /**
  * Every write goes through here. The task runs in a transaction (undone if it
  * throws), and transactions run one after the other, so two taps at once can't
- * both "check, then insert". Screens reading through useLiveQuery reread after it.
+ * both "check, then insert". Screens reading through useLiveQuery reread after it,
+ * even when it failed (they may have read while it was in flight).
+ *
+ * A task must never call `transaction` or a repository write itself: that write
+ * would wait for the task, which waits for it, and every later write with them.
  *
  * ponytail: one queue on the JS side, on one connection. A read outside a
  * transaction can see one in flight; use expo-sqlite's exclusive transactions
  * if that ever matters.
  */
 export function transaction<T>(task: (db: Db) => Promise<T>): Promise<T> {
+  const stuck = __DEV__ ? setTimeout(() => console.error(STUCK_WRITE), 5000) : undefined
   const run = queue.then(async () => {
+    clearTimeout(stuck)
     const db = getDb()
     let result!: T
-    await db.withTransactionAsync(async () => {
-      result = await task(db)
-    })
-    for (const listener of [...listeners]) listener()
+    try {
+      await db.withTransactionAsync(async () => {
+        result = await task(db)
+      })
+    } finally {
+      for (const listener of [...listeners]) {
+        try {
+          listener()
+        } catch (error) {
+          // A broken screen must not make a saved write look failed.
+          console.error(error)
+        }
+      }
+    }
     return result
   })
   queue = run.catch(() => undefined)
