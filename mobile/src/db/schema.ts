@@ -86,6 +86,37 @@ export const MIGRATIONS: readonly string[] = [
   CREATE INDEX photos_date ON photos (date);
   CREATE INDEX measurements_date ON measurements (date);
   `,
+  // 2: a day entry may have no day number. An old web backup can hold a day whose date falls
+  // outside its attempt's 75 days; the web app keeps it, unnumbered, and so must an import here.
+  // (Entries without a number never clash: SQLite treats NULLs as distinct in a UNIQUE.)
+  `
+  CREATE TABLE dayEntries_v2 (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    challengeId INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    dayNumber INTEGER,
+    water_ml INTEGER NOT NULL,
+    pages_read INTEGER NOT NULL,
+    dietFollowed INTEGER NOT NULL,
+    noAlcohol INTEGER NOT NULL,
+    photoId INTEGER,
+    notes TEXT,
+    mood,
+    plans TEXT,
+    planEstimates TEXT,
+    restDay INTEGER,
+    bookId INTEGER,
+    completed INTEGER NOT NULL,
+    UNIQUE (challengeId, dayNumber)
+  );
+  INSERT INTO dayEntries_v2
+    SELECT id, challengeId, date, dayNumber, water_ml, pages_read, dietFollowed, noAlcohol, photoId, notes, mood,
+      plans, planEstimates, restDay, bookId, completed
+    FROM dayEntries;
+  DROP TABLE dayEntries;
+  ALTER TABLE dayEntries_v2 RENAME TO dayEntries;
+  CREATE INDEX dayEntries_date ON dayEntries (date);
+  `,
 ]
 
 /** Every table, for the operations that empty the database (an import, the developer seed). */

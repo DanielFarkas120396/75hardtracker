@@ -155,3 +155,19 @@ it('says so when the import fails, and keeps what was there', async () => {
   expect(await screen.findByText('Restoring failed. Your existing data was not changed.')).toBeOnTheScreen()
   expect(await attempts()).toEqual([7])
 })
+
+it('says the photos aren’t in place yet when only the picture swap failed', async () => {
+  await addChallenge({ startDate: '2025-12-01', attemptNumber: 7, status: 'failed' })
+  const broken: FileStore = {
+    ...store,
+    renameFolder: () => {
+      throw new Error('rename failed')
+    },
+  }
+  await open(async () => JSON.stringify(finishedBackup()), broken)
+  await fireEvent.press(await screen.findByText('Replace data'))
+  expect(
+    await screen.findByText('Your data was imported, but its photos aren’t in place yet. Close the app and open it again.'),
+  ).toBeOnTheScreen()
+  expect(await attempts()).toEqual([1, 2])
+})

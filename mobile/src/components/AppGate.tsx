@@ -1,6 +1,8 @@
 import * as SplashScreen from 'expo-splash-screen'
 import { useEffect, useState, type ReactNode } from 'react'
+import { recoverPictures } from '../backup/importBackup'
 import { openAppDatabase } from '../db/open'
+import { expoStore, type FileStore } from '../files/store'
 import { ThemeProvider, useTheme } from '../theme/ThemeProvider'
 import { DatabaseError } from './DatabaseError'
 
@@ -11,12 +13,16 @@ type Opening = { status: 'opening' } | { status: 'open' } | { status: 'failed'; 
  * theme and fonts. The splash screen stays up meanwhile. If the database can't
  * be opened, an error screen says so instead of a blank app.
  */
-export function AppGate({ children }: { children: ReactNode }) {
+export function AppGate({ children, store = expoStore }: { children: ReactNode; store?: FileStore }) {
   const [opening, setOpening] = useState<Opening>({ status: 'opening' })
 
   useEffect(() => {
     let gone = false
-    openAppDatabase().then(
+    openAppDatabase()
+      // An import the app was closed on may have left its pictures half in place. Not worth
+      // refusing to start over: the data is intact either way, and the next launch tries again.
+      .then(() => recoverPictures(store).catch((error: unknown) => console.error(error)))
+      .then(
       () => {
         if (!gone) setOpening({ status: 'open' })
       },
@@ -27,7 +33,7 @@ export function AppGate({ children }: { children: ReactNode }) {
     return () => {
       gone = true
     }
-  }, [])
+  }, [store])
 
   if (opening.status === 'opening') return null
   if (opening.status === 'failed') {

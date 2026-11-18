@@ -53,6 +53,26 @@ it('commit with nothing staged leaves empty folders, not stale pictures', async 
   expect(readdirSync(join(root, 'pictures/photos'))).toEqual([])
 })
 
+it('commit changes nothing when nothing is staged', async () => {
+  const { root, store } = fresh()
+  await stagePictures(store, [photo(1, 'current')])
+  commitStaged(store)
+  commitStaged(store)
+  expect(readdirSync(join(root, 'pictures/photos'))).toEqual(['1.jpg'])
+})
+
+it('commit finishes a swap that stopped between its two renames', async () => {
+  const { root, store } = fresh()
+  await stagePictures(store, [photo(1, 'old')])
+  commitStaged(store)
+  await stagePictures(store, [photo(2, 'new')])
+  // The app died here: the old set was moved aside, the new one not yet put in place.
+  store.renameFolder('pictures', 'pictures-outgoing')
+  commitStaged(store)
+  expect(readdirSync(join(root, 'pictures/photos'))).toEqual(['2.jpg'])
+  expect(readdirSync(root)).toEqual(['pictures'])
+})
+
 it('discard drops the staged pictures and leaves the current ones untouched', async () => {
   const { root, store } = fresh()
   await stagePictures(store, [photo(1, 'current')])

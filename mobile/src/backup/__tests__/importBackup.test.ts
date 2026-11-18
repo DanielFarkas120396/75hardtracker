@@ -11,7 +11,7 @@ import { ROWS, type Row } from '../../db/rows'
 import { nodeStore } from '../../files/__tests__/nodeStore'
 import { commitStaged, stagePictures } from '../../files/pictures'
 import type { FileStore } from '../../files/store'
-import { importBackup } from '../importBackup'
+import { importBackup, PictureSwapError, recoverPictures } from '../importBackup'
 import { base64, sampleBackup, SAMPLE_TODAY } from './sampleBackup'
 
 let root: string
@@ -137,4 +137,64 @@ it('changes nothing when a row can’t be saved', async () => {
   backup.photos.push({ ...backup.photos[0], blobBase64: base64('same id twice') })
   await expect(importBackup(backup, store, SAMPLE_TODAY)).rejects.toThrow(/UNIQUE/)
   await expectUntouched()
+})
+
+it('takes in a day an old backup can’t place in the 75 days', async () => {
+  const backup = sampleBackup()
+  backup.dayEntries.push({ ...backup.dayEntries[0], id: 40, date: '2024-06-01', dayNumber: null as unknown as number })
+  await importBackup(backup, store, SAMPLE_TODAY)
+  const stray = (await all<Record<string, unknown>>('dayEntries')).find((entry) => entry.id === 40)
+  expect(stray).toMatchObject({ id: 40, date: '2024-06-01' })
+  expect(stray && 'dayNumber' in stray).toBe(false)
+})
+
+describe('when putting the pictures in place fails after the rows are in', () => {
+  /** Fails the first rename of the swap, as a full disk or a crash would. */
+  function failingOnce(): FileStore {
+    let failed = false
+    return {
+      ...store,
+      renameFolder: (from, to) => {
+        if (!failed) {
+          failed = true
+          throw new Error('rename failed')
+        }
+        store.renameFolder(from, to)
+      },
+    }
+  }
+
+  it('says exactly that, and the next launch finishes the job', async () => {
+    await somethingAlreadyThere()
+    await expect(importBackup(sampleBackup(), failingOnce(), SAMPLE_TODAY)).rejects.toBeInstanceOf(PictureSwapError)
+    // The rows are the backup's: the message must not claim nothing changed.
+    expect((await challengeRepo.getAll()).map((challenge) => challenge.attemptNumber)).toEqual([1, 2])
+
+    await recoverPictures(store)
+    expect(readdirSync(join(root, 'pictures/photos')).sort()).toEqual(['10.jpg', '11.jpg', '12.webp'])
+    expect(readdirSync(root)).toEqual(['pictures'])
+
+    // Nothing is pending any more: a later launch leaves the pictures alone.
+    await recoverPictures(store)
+    expect(readdirSync(join(root, 'pictures/photos')).sort()).toEqual(['10.jpg', '11.jpg', '12.webp'])
+  })
+})
+
+it('at launch, clears pictures left by an import that never reached the database', async () => {
+  await somethingAlreadyThere()
+  await stagePictures(store, [{ folder: 'photos', id: 5, base64: base64('never imported'), mimeType: 'image/jpeg' }])
+  await recoverPictures(store)
+  await expectUntouched()
+})
+
+it('reports the import’s own error even when clearing up fails too', async () => {
+  const broken: FileStore = {
+    ...store,
+    writeBase64: async () => Promise.reject(new Error('disk full')),
+    deleteFolder: (path) => {
+      if (path === 'pictures-incoming' && store.exists(path)) throw new Error('cannot delete')
+      store.deleteFolder(path)
+    },
+  }
+  await expect(importBackup(sampleBackup(), broken, SAMPLE_TODAY)).rejects.toThrow('disk full')
 })

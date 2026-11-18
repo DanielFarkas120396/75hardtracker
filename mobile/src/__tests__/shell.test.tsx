@@ -3,11 +3,16 @@ import { dayNumberForDate, todayISO } from '@logic/dates'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import * as Font from 'expo-font'
 import * as SplashScreen from 'expo-splash-screen'
+import { mkdtempSync, readdirSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import type { ReactNode } from 'react'
 import { Alert, Text } from 'react-native'
 import TodayScreen from '../app/(tabs)/index'
 import SettingsScreen from '../app/(tabs)/settings'
 import { AppGate } from '../components/AppGate'
+import { nodeStore } from '../files/__tests__/nodeStore'
+import { stagePictures } from '../files/pictures'
 import { addChallenge, freshDatabase } from '../db/__tests__/fixtures'
 import * as open from '../db/open'
 import { challengeRepo } from '../db/repositories/challengeRepo'
@@ -83,10 +88,27 @@ describe('Settings', () => {
 })
 
 describe('opening the app', () => {
+  const files = () => nodeStore(mkdtempSync(join(tmpdir(), 'gate-')))
+
+  it('finishes putting imported pictures in place when the last import was cut short', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'gate-'))
+    const store = nodeStore(root)
+    await stagePictures(store, [{ folder: 'photos', id: 3, base64: 'aGk=', mimeType: 'image/jpeg' }])
+    await settingsRepo.set('picturesPending', true)
+    openAppDatabase.mockResolvedValue(open.getDb())
+    await render(
+      <AppGate store={store}>
+        <Text>inside</Text>
+      </AppGate>,
+    )
+    expect(await screen.findByText('inside')).toBeOnTheScreen()
+    expect(readdirSync(join(root, 'pictures/photos'))).toEqual(['3.jpg'])
+  })
+
   it('shows the app once the database is open', async () => {
     openAppDatabase.mockResolvedValue(open.getDb())
     await render(
-      <AppGate>
+      <AppGate store={files()}>
         <Text>inside</Text>
       </AppGate>,
     )
@@ -98,7 +120,7 @@ describe('opening the app', () => {
     jest.mocked(Font.useFonts).mockReturnValue([false, null])
     openAppDatabase.mockResolvedValue(open.getDb())
     await render(
-      <AppGate>
+      <AppGate store={files()}>
         <Text>inside</Text>
       </AppGate>,
     )
@@ -111,7 +133,7 @@ describe('opening the app', () => {
     jest.mocked(Font.useFonts).mockReturnValue([false, new Error('no fonts')])
     openAppDatabase.mockResolvedValue(open.getDb())
     await render(
-      <AppGate>
+      <AppGate store={files()}>
         <Text>inside</Text>
       </AppGate>,
     )
@@ -122,7 +144,7 @@ describe('opening the app', () => {
   it('shows an error screen when the database can’t open', async () => {
     openAppDatabase.mockRejectedValue(new Error('disk full'))
     await render(
-      <AppGate>
+      <AppGate store={files()}>
         <Text>inside</Text>
       </AppGate>,
     )

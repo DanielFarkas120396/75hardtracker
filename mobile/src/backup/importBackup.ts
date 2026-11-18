@@ -2,12 +2,44 @@ import type { ExportPayload } from '@logic/backupFormat'
 import { normalizeRecords } from '@logic/normalize'
 import { DEVICE_SETTING_KEYS, SETTING_KEYS } from '@logic/settingKeys'
 import type { SqlValue } from '../db/driver'
-import { transaction } from '../db/open'
+import { getDb, transaction } from '../db/open'
 import { ROWS } from '../db/rows'
 import { TABLE_NAMES } from '../db/schema'
 import type { Book, Photo } from '../db/types'
 import { commitStaged, discardStaged, stagePictures, type StagedPicture } from '../files/pictures'
 import type { FileStore } from '../files/store'
+
+/**
+ * Set (in the settings table) from the moment the imported rows are saved until their
+ * pictures are in place. It belongs to this phone: never put it in a backup.
+ */
+const PICTURES_PENDING = 'picturesPending'
+
+/** The backup's rows are saved, but its pictures could not be put in place yet. The next launch finishes it. */
+export class PictureSwapError extends Error {
+  constructor(cause: unknown) {
+    super('The imported pictures could not be put in place.', { cause })
+    this.name = 'PictureSwapError'
+  }
+}
+
+async function finishSwap(store: FileStore): Promise<void> {
+  commitStaged(store)
+  await transaction(async (db) => {
+    await db.runAsync('DELETE FROM settings WHERE key = ?', [PICTURES_PENDING])
+  })
+}
+
+/**
+ * At launch: finishes a picture swap that an import left half done (the app
+ * was closed, or the disk refused), and clears pictures staged by an import
+ * that never reached the database.
+ */
+export async function recoverPictures(store: FileStore): Promise<void> {
+  const pending = await getDb().getFirstAsync('SELECT 1 FROM settings WHERE key = ?', [PICTURES_PENDING])
+  if (pending) await finishSwap(store)
+  else discardStaged(store)
+}
 
 /**
  * Replaces everything on the phone with a backup exported by the web app (a
@@ -16,9 +48,11 @@ import type { FileStore } from '../files/store'
  * counts as backed up when the file was made, and this phone's own settings
  * (its lock) stay as they are.
  *
- * Nothing changes unless all of it works: the pictures are written beside the
- * current ones first, the rows are replaced in one transaction, and only then
- * are the pictures swapped. Destructive: callers confirm with the user first.
+ * Nothing changes unless the rows can be saved: the pictures are written beside
+ * the current ones first, the rows are replaced in one transaction, and only
+ * then are the pictures swapped. If that last step fails, PictureSwapError says
+ * so and `recoverPictures` finishes it at the next launch. Destructive: callers
+ * confirm with the user first.
  */
 export async function importBackup(payload: ExportPayload, store: FileStore, today: string): Promise<void> {
   const pictures: StagedPicture[] = [
@@ -87,13 +121,20 @@ export async function importBackup(payload: ExportPayload, store: FileStore, tod
       for (const row of settings) await db.runAsync(insertSetting, [row.key, JSON.stringify(row.value ?? null)])
       await db.runAsync(insertSetting, [SETTING_KEYS.lastExportAt, JSON.stringify(payload.exportedAt)])
       for (const row of ownSettings) await db.runAsync(insertSetting, [row.key, row.value])
+      await db.runAsync(insertSetting, [PICTURES_PENDING, 'true'])
     })
   } catch (error) {
-    discardStaged(store)
+    try {
+      discardStaged(store)
+    } catch {
+      // The import's own failure is the one to report; stale staged pictures are cleared at launch.
+    }
     throw error
   }
 
-  // ponytail: the rows are in and the swap is two renames. If a rename failed here the rows
-  // would point at pictures still in pictures-incoming; a repair step at launch if that is ever seen.
-  commitStaged(store)
+  try {
+    await finishSwap(store)
+  } catch (error) {
+    throw new PictureSwapError(error)
+  }
 }

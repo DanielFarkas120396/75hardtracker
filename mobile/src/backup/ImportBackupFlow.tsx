@@ -9,7 +9,7 @@ import { expoStore, type FileStore } from '../files/store'
 import { useToday } from '../hooks/useToday'
 import { useTheme } from '../theme/ThemeProvider'
 import { decryptOnPhone } from './decrypt'
-import { importBackup } from './importBackup'
+import { importBackup, PictureSwapError } from './importBackup'
 import { pickBackupFile } from './pickBackupFile'
 
 interface ImportBackupProps {
@@ -37,13 +37,23 @@ export function ImportBackup({ pick = pickBackupFile, store = expoStore }: Impor
   const [pending, setPending] = useState<ExportPayload | null>(null)
   const [gapped, setGapped] = useState<{ payload: ExportPayload; gap: BackupGap } | null>(null)
 
+  const closeLocked = () => {
+    setLocked(null)
+    setPassword('')
+    setPasswordError(null)
+  }
+
   const restore = async (payload: ExportPayload) => {
     setBusy(true)
     try {
       await importBackup(payload, store, today)
       setDone(true)
-    } catch {
-      setError('Restoring failed. Your existing data was not changed.')
+    } catch (failure) {
+      setError(
+        failure instanceof PictureSwapError
+          ? 'Your data was imported, but its photos aren’t in place yet. Close the app and open it again.'
+          : 'Restoring failed. Your existing data was not changed.',
+      )
     }
     setBusy(false)
     setPending(null)
@@ -59,7 +69,10 @@ export function ImportBackup({ pick = pickBackupFile, store = expoStore }: Impor
 
   const accept = async (payload: ExportPayload) => {
     // A phone with nothing on it has nothing to lose: no need to ask.
-    if ((await challengeRepo.getAll()).length > 0) setPending(payload)
+    const hasData = (await challengeRepo.getAll()).length > 0
+    // The password step closes and the next one opens in the same update, so the sheet stays up.
+    closeLocked()
+    if (hasData) setPending(payload)
     else restoreOrAsk(payload)
   }
 
@@ -79,20 +92,19 @@ export function ImportBackup({ pick = pickBackupFile, store = expoStore }: Impor
     else await accept(contents.payload)
   }
 
-  const closeLocked = () => {
-    setLocked(null)
-    setPassword('')
-    setPasswordError(null)
-  }
-
   const unlock = async () => {
     if (!locked) return
     setBusy(true)
     const result = await openProtectedBackup(locked, password, decryptOnPhone)
     setBusy(false)
     if (!result.ok) return setPasswordError(result.error)
-    closeLocked()
     await accept(result.payload)
+  }
+
+  const closeAll = () => {
+    closeLocked()
+    setPending(null)
+    setGapped(null)
   }
 
   const heading = { color: colors.ink, fontFamily: fonts.rounded.bold }
@@ -108,48 +120,52 @@ export function ImportBackup({ pick = pickBackupFile, store = expoStore }: Impor
       )}
       {done && <Text style={[styles.note, { color: colors.greenInk, fontFamily: fonts.rounded.semibold }]}>Backup imported.</Text>}
 
-      <Sheet open={locked !== null} onClose={closeLocked}>
-        <Text style={[styles.heading, heading]}>This backup is protected</Text>
-        <TextInput
-          accessibilityLabel="Its password"
-          placeholder="Its password"
-          placeholderTextColor={colors.inkMuted}
-          secureTextEntry
-          autoCapitalize="none"
-          autoCorrect={false}
-          value={password}
-          onChangeText={(text) => {
-            setPassword(text)
-            setPasswordError(null)
-          }}
-          style={[styles.input, { color: colors.ink, borderColor: colors.inkMuted, fontFamily: fonts.rounded.regular }]}
-        />
-        {passwordError !== null && (
-          <Text accessibilityRole="alert" style={[styles.note, { color: colors.dangerInk, fontFamily: fonts.rounded.semibold }]}>
-            {passwordError}
-          </Text>
-        )}
-        <Button label={busy ? 'Opening…' : 'Open'} onPress={() => void unlock()} disabled={busy || password === ''} />
-        <Button label="Cancel" onPress={closeLocked} disabled={busy} kind="secondary" />
-      </Sheet>
-
-      <Sheet open={pending !== null} onClose={() => setPending(null)}>
-        <Text style={[styles.heading, heading]}>Replace all data?</Text>
-        <Text style={[styles.text, body]}>
-          Restoring this file will replace everything currently on this device — all attempts, photos, and badges — with
-          the contents of the file. This can&apos;t be undone.
-        </Text>
-        <Button
-          label={busy ? 'Restoring…' : 'Replace data'}
-          onPress={() => pending && restoreOrAsk(pending)}
-          disabled={busy}
-          kind="danger"
-        />
-        <Button label="Cancel" onPress={() => setPending(null)} disabled={busy} kind="secondary" />
-      </Sheet>
-
-      <Sheet open={gapped !== null} onClose={() => setGapped(null)}>
-        {gapped && (
+      {/* One sheet whose content changes: on iOS a second pop-up opened while the first is closing may never appear. */}
+      <Sheet open={locked !== null || pending !== null || gapped !== null} onClose={closeAll}>
+        {locked !== null ? (
+          <>
+            <Text style={[styles.heading, heading]}>This backup is protected</Text>
+            <TextInput
+              accessibilityLabel="Its password"
+              placeholder="Its password"
+              placeholderTextColor={colors.inkMuted}
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text)
+                setPasswordError(null)
+              }}
+              style={[styles.input, { color: colors.ink, borderColor: colors.inkMuted, fontFamily: fonts.rounded.regular }]}
+            />
+            {passwordError !== null && (
+              <Text
+                accessibilityRole="alert"
+                style={[styles.note, { color: colors.dangerInk, fontFamily: fonts.rounded.semibold }]}
+              >
+                {passwordError}
+              </Text>
+            )}
+            <Button label={busy ? 'Opening…' : 'Open'} onPress={() => void unlock()} disabled={busy || password === ''} />
+            <Button label="Cancel" onPress={closeLocked} disabled={busy} kind="secondary" />
+          </>
+        ) : pending !== null ? (
+          <>
+            <Text style={[styles.heading, heading]}>Replace all data?</Text>
+            <Text style={[styles.text, body]}>
+              Restoring this file will replace everything currently on this device — all attempts, photos, and badges —
+              with the contents of the file. This can&apos;t be undone.
+            </Text>
+            <Button
+              label={busy ? 'Restoring…' : 'Replace data'}
+              onPress={() => restoreOrAsk(pending)}
+              disabled={busy}
+              kind="danger"
+            />
+            <Button label="Cancel" onPress={() => setPending(null)} disabled={busy} kind="secondary" />
+          </>
+        ) : gapped !== null ? (
           <GapQuestion
             gap={gapped.gap}
             busy={busy}
@@ -157,7 +173,7 @@ export function ImportBackup({ pick = pickBackupFile, store = expoStore }: Impor
             onMissedThem={() => void restore(gapped.payload)}
             onClose={() => setGapped(null)}
           />
-        )}
+        ) : null}
       </Sheet>
     </View>
   )

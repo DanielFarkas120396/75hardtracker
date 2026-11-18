@@ -52,9 +52,14 @@ export async function stagePictures(store: FileStore, pictures: StagedPicture[])
   return names
 }
 
-/** Makes the staged pictures the current ones, and removes the old set. */
+/**
+ * Makes the staged pictures the current ones, and removes the old set. Safe to
+ * call again after it was interrupted: with nothing staged it only clears what
+ * a finished swap left behind.
+ */
 export function commitStaged(store: FileStore): void {
   store.deleteFolder(OUTGOING)
+  if (!store.exists(INCOMING)) return
   if (store.exists(CURRENT)) store.renameFolder(CURRENT, OUTGOING)
   store.renameFolder(INCOMING, CURRENT)
   store.deleteFolder(OUTGOING)
