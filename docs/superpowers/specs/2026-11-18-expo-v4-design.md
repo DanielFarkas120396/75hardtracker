@@ -74,8 +74,8 @@ Each step ends in something that runs on the phone. The plan details them.
 4. Today, in three parts:
    - 4a. A whole day can be logged: the hero, the five tiles with their sheets, the camera sheet, the weigh-in, the countdown before Day 1. **Coded** (2026-11-18), with the web's thin bar on the tiles in place of the fills.
    - 4b. The evening and yesterday: "Plan my evening", the menace's atmosphere, the duck's bubble and pokes, social nights, the late-day card, sounds. **Coded** (2026-11-18); the knife's sound is a rendered file nobody has heard yet.
-   - 4c. The show: the five fills, the tile shrinking into its chip, the gauge's wave, the day-complete peak.
-   - 4d. Failure and restart, the joker screen, give up, Victory.
+   - 4c. The show: the five fills, the tile shrinking into its chip, the gauge's wave, the day-complete peak. **Coded** (2026-11-18), in three plans (4c-1 the fills, 4c-2 the board and the gauge, 4c-3 the peak); its independent review was cut short and is still to run. The book and the iris are drawn by a shader each: pictures beside the web's in `2026-11-18-v4-fills-preview/`.
+   - 4d. Failure and restart, the joker screen, give up, Victory. **Started** (2026-11-18): the repository and the screens are written; not wired into Today or Settings, no screen tests yet.
 5. Journey.
 6. Gallery and Compare.
 7. Stats.
