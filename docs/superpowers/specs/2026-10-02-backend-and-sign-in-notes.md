@@ -1,7 +1,6 @@
 # Backend, sign-in and cloud backup — notes (for later)
 
-Status: **decided for now** (2026-10-02). The app stays **local-only**. No backend and no sign-in.
-Revisit when one of the triggers below happens.
+Status: **revisited on 2026-11-18** for the native app (v4): optional Sign in with Apple and an encrypted cloud backup on Supabase, see `2026-11-18-expo-v4-design.md`. The web app stays **local-only**, as decided on 2026-10-02 below.
 
 ## Decision
 
