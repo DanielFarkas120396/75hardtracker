@@ -5,10 +5,20 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@logic/*": [
+        "../src/logic/*"
+      ],
+      "@schema": [
+        "../src/db/types.ts"
+      ],
+      "date-fns": [
+        "./node_modules/date-fns"
       ]
     },
     "types": [
-      "jest"
+      "jest",
+      "node"
     ]
   },
   "include": [

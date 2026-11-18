@@ -5,4 +5,5 @@ import Index from '../app/index'
 it('opens', async () => {
   await render(<Index />)
   expect(screen.getByText('Companion')).toBeOnTheScreen()
+  expect(screen.getByText('75 days')).toBeOnTheScreen()
 })
