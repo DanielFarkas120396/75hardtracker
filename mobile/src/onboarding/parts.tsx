@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ComponentRef, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react'
 import { AccessibilityInfo, Animated, Pressable, StyleSheet, Text, View, type TextStyle } from 'react-native'
 import Svg, { Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg'
 import { useReduceMotion } from '../hooks/useReduceMotion'
@@ -81,7 +81,7 @@ export function TopBar({ index, total, onBack, hideBack }: TopBarProps) {
   const { colors } = useTheme()
   const reduceMotion = useReduceMotion()
   const target = total > 1 ? index / (total - 1) : 1
-  const progress = useRef(new Animated.Value(target)).current
+  const progress = useState(() => new Animated.Value(target))[0]
   useEffect(() => {
     if (reduceMotion) progress.setValue(target)
     else Animated.timing(progress, { toValue: target, duration: 300, useNativeDriver: false }).start()

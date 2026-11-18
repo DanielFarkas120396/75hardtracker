@@ -7,7 +7,7 @@ import { cleanText, isValidName, isValidWhy, NAME_MAX_LENGTH, WHY_MAX_LENGTH } f
 import { RULESETS, type ChallengeVariant } from '@logic/rulesets'
 import { SETTING_KEYS } from '@logic/settingKeys'
 import { dailyRuleLines, NO_REMINDERS_LINE, stakesLine, VARIANT_NAMES } from '@logic/variantsCopy'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Animated, Pressable, StyleSheet, Text, TextInput, View, type LayoutChangeEvent, type ViewStyle } from 'react-native'
 import Svg, { Path } from 'react-native-svg'
 import { ImportBackup } from '../backup/ImportBackupFlow'
@@ -306,8 +306,10 @@ export function ReadyStep(props: ReadyStepProps) {
   const rules = RULESETS[variant]
   const startsIn = dateError ? null : startsInLine(startDate, today)
   const muted = { color: colors.inkMuted, fontFamily: fonts.rounded.bold }
-  let line = 0
-  const next = () => line++
+  // Each line of the deal arrives after the one above it.
+  const ruleLines = dailyRuleLines(rules)
+  const afterDates = dateError ? 1 : 2
+  const afterRules = afterDates + 1 + ruleLines.length
 
   return (
     <>
@@ -316,39 +318,39 @@ export function ReadyStep(props: ReadyStepProps) {
         accessibilityLabel="The deal"
         style={[styles.deal, { borderColor: withAlpha(colors.worldEdge, 0.4), backgroundColor: colors.worldSoft }]}
       >
-        <DealLine index={next()}>
+        <DealLine index={0}>
           <Text style={[styles.dealName, { color: colors.worldInk, fontFamily: fonts.display.semibold }]}>
             {VARIANT_NAMES[variant]}
           </Text>
         </DealLine>
         {!dateError && (
-          <DealLine index={next()}>
+          <DealLine index={1}>
             <Text style={[styles.dealDates, { color: colors.ink, fontFamily: fonts.rounded.bold }]}>
               {formatShortDay(startDate)} → {formatShortDay(dateForDayNumber(startDate, CHALLENGE_LENGTH))}
             </Text>
             {startsIn && <Text style={[styles.small, { color: colors.inkMuted, fontFamily: fonts.rounded.semibold }]}>{startsIn}</Text>}
           </DealLine>
         )}
-        <DealLine index={next()}>
+        <DealLine index={afterDates}>
           <Text style={[styles.small, styles.gap, muted]}>Every day, for {CHALLENGE_LENGTH} days</Text>
         </DealLine>
-        {dailyRuleLines(rules).map((rule) => (
-          <DealLine key={rule} index={next()}>
+        {ruleLines.map((rule, i) => (
+          <DealLine key={rule} index={afterDates + 1 + i}>
             <View style={styles.rule}>
               <Text style={[styles.ruleText, { color: colors.worldInk, fontFamily: fonts.rounded.bold }]}>•</Text>
               <Text style={[styles.ruleText, styles.ruleBody, { color: colors.ink, fontFamily: fonts.rounded.regular }]}>{rule}</Text>
             </View>
           </DealLine>
         ))}
-        <DealLine index={next()}>
+        <DealLine index={afterRules}>
           <Text style={[styles.stakes, { color: colors.worldInk, fontFamily: fonts.rounded.bold }]}>{stakesLine(rules)}</Text>
         </DealLine>
-        <DealLine index={next()}>
+        <DealLine index={afterRules + 1}>
           <Text style={[styles.small, styles.gapSmall, { color: colors.inkMuted, fontFamily: fonts.rounded.semibold }]}>
             {NO_REMINDERS_LINE}
           </Text>
         </DealLine>
-        <DealLine index={next()}>
+        <DealLine index={afterRules + 2}>
           <Reason why={why} style={[styles.reasonInDeal, { borderTopColor: withAlpha(colors.worldEdge, 0.3) }]} />
         </DealLine>
       </View>
@@ -391,7 +393,7 @@ export function ReadyStep(props: ReadyStepProps) {
 /** The deal appears line by line: each part fades up after the one before. Reduce motion keeps only the fade. */
 function DealLine({ index, children }: { index: number; children: ReactNode }) {
   const reduceMotion = useReduceMotion()
-  const shown = useRef(new Animated.Value(0)).current
+  const shown = useState(() => new Animated.Value(0))[0]
   useEffect(() => {
     Animated.timing(shown, { toValue: 1, duration: 250, delay: 150 + index * 80, useNativeDriver: true }).start()
   }, [shown, index])

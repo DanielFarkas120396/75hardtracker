@@ -11,6 +11,7 @@ import { ROWS, type Row } from '../../db/rows'
 import { nodeStore } from '../../files/__tests__/nodeStore'
 import { commitStaged, stagePictures } from '../../files/pictures'
 import type { FileStore } from '../../files/store'
+import { eraseEverything } from '../../db/erase'
 import { importBackup, PictureSwapError, recoverPictures } from '../importBackup'
 import { base64, sampleBackup, SAMPLE_TODAY } from './sampleBackup'
 
@@ -197,4 +198,13 @@ it('reports the import’s own error even when clearing up fails too', async () 
     },
   }
   await expect(importBackup(sampleBackup(), broken, SAMPLE_TODAY)).rejects.toThrow('disk full')
+})
+
+it('"Erase everything" leaves no row and no picture', async () => {
+  await importBackup(sampleBackup(), store, SAMPLE_TODAY)
+  await eraseEverything(store)
+  for (const table of ['challenges', 'dayEntries', 'workouts', 'books', 'measurements', 'photos', 'badges', 'settings']) {
+    expect(await getDb().getAllAsync(`SELECT * FROM ${table}`)).toEqual([])
+  }
+  expect(store.exists('pictures')).toBe(false)
 })

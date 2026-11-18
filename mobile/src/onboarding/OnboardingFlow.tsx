@@ -115,11 +115,12 @@ export function OnboardingFlow({ mode, today, draft, nowMin: nowMinProp }: Onboa
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null)
   const [view, setView] = useState({ offset: 0, height: 0 })
   const [signing, setSigning] = useState<{ y: number; height: number } | null>(null)
+  const [stepTop, setStepTop] = useState(0)
   const signingVisible =
     signing === null ||
     view.height === 0 ||
-    Math.min(view.offset + view.height, signing.y + signing.height) - Math.max(view.offset, signing.y) >= signing.height * 0.3
-  const stepTop = useRef(0)
+    Math.min(view.offset + view.height, stepTop + signing.y + signing.height) - Math.max(view.offset, stepTop + signing.y) >=
+      signing.height * 0.3
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.canvas }]}>
@@ -145,7 +146,7 @@ export function OnboardingFlow({ mode, today, draft, nowMin: nowMinProp }: Onboa
             <View
               style={styles.step}
               onLayout={(event) => {
-                stepTop.current = event.nativeEvent.layout.y
+                setStepTop(event.nativeEvent.layout.y)
               }}
             >
               <View style={styles.duck}>
@@ -177,7 +178,7 @@ export function OnboardingFlow({ mode, today, draft, nowMin: nowMinProp }: Onboa
                   onFinish={() => void finish()}
                   onSigningLayout={(event) => {
                     const { y, height } = event.nativeEvent.layout
-                    setSigning({ y: stepTop.current + y, height })
+                    setSigning({ y, height })
                   }}
                 />
               )}
@@ -192,7 +193,7 @@ export function OnboardingFlow({ mode, today, draft, nowMin: nowMinProp }: Onboa
         {step === 'ready' && mode === 'new' && !signed && !signingVisible && signing !== null && (
           <Pressable
             accessibilityRole="button"
-            onPress={() => scroll.current?.scrollTo({ y: Math.max(signing.y - 80, 0), animated: true })}
+            onPress={() => scroll.current?.scrollTo({ y: Math.max(stepTop + signing.y - 80, 0), animated: true })}
             style={[styles.pill, { backgroundColor: colors.ink }]}
           >
             <Text style={[styles.pillLabel, { color: colors.surface, fontFamily: fonts.rounded.bold }]}>Sign below ↓</Text>
@@ -206,7 +207,7 @@ export function OnboardingFlow({ mode, today, draft, nowMin: nowMinProp }: Onboa
 /** A step arrives with a short fade and slide. Under reduce motion it is simply there. */
 function StepTransition({ children }: { children: ReactNode }) {
   const reduceMotion = useReduceMotion()
-  const shown = useRef(new Animated.Value(0)).current
+  const shown = useState(() => new Animated.Value(0))[0]
   useEffect(() => {
     Animated.timing(shown, { toValue: 1, duration: 200, useNativeDriver: true }).start()
   }, [shown])
