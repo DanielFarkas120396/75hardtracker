@@ -64,7 +64,13 @@ export function VictoryScreen({ challenge, today, revealed, streak, missedDays }
 
       <p className="max-w-xs font-rounded text-ink-muted">{victoryLine(rules)}</p>
 
-      <div className="grid w-full max-w-sm grid-cols-2 gap-3">
+      {/* The next step first, where the first screen shows it, clear of the nav; the numbers below. */}
+      <Button variant="primary" className="w-full max-w-sm" onClick={() => setSheetOpen(true)}>
+        Start a new challenge
+      </Button>
+      <p className="max-w-xs font-rounded text-xs text-ink-muted">Pick your next challenge and when it starts.</p>
+
+      <div className="mt-2 grid w-full max-w-sm grid-cols-2 gap-3">
         <VictoryStat label="Perfect days" value={`${stats.perfectDays}`} />
         <VictoryStat label="Water" value={`${(stats.water_ml / 1000).toFixed(1)} L`} />
         <VictoryStat label="Pages read" value={`${stats.pages}`} />
@@ -72,11 +78,6 @@ export function VictoryScreen({ challenge, today, revealed, streak, missedDays }
         <VictoryStat label="Streak" value={`🔥 ${streak}`} />
         {rules.jokers > 0 && <VictoryStat label="Jokers used" value={`${missedDays.length}/${rules.jokers}`} />}
       </div>
-
-      <Button variant="primary" className="mt-2 w-full max-w-sm" onClick={() => setSheetOpen(true)}>
-        Start a new challenge
-      </Button>
-      <p className="max-w-xs font-rounded text-xs text-ink-muted">Pick your next challenge and when it starts.</p>
 
       <NewChallengeSheet
         open={sheetOpen}
@@ -90,7 +91,7 @@ export function VictoryScreen({ challenge, today, revealed, streak, missedDays }
 
 function VictoryStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-card bg-surface p-3">
+    <div className="rounded-card bg-surface p-3 last:odd:col-span-2">
       <p className="font-rounded text-xs font-bold text-ink-muted">{label}</p>
       <p className="mt-1 font-rounded text-xl font-bold text-ink">{value}</p>
     </div>

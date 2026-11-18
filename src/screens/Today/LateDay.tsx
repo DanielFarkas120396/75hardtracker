@@ -17,7 +17,7 @@ import { describeTask } from './taskSheets'
 /** On Today, under the hero: yesterday isn't finished, and there's until noon to log it. */
 export function LateDayCard({ dayNumber, onOpen }: { dayNumber: number; onOpen: () => void }) {
   return (
-    <section className="mx-4 mb-4 flex items-center gap-3 rounded-card border-2 border-world bg-surface p-4">
+    <section className="mx-4 mb-4 flex items-center gap-3 rounded-card border-2 border-danger-ink bg-surface p-4">
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-world-soft text-world-ink">
         <Icon name="history" />
       </span>

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { BlobImage } from '../../components/BlobImage'
+import { FlameStreak } from '../../components/FlameStreak'
 import { Icon } from '../../components/icons/Icon'
 import { Mascot } from '../../components/mascot/Mascot'
 import { Button } from '../../components/ui/Button'
@@ -11,12 +12,15 @@ import { PhotoThumbnail } from './PhotoThumbnail'
 interface GalleryScreenProps {
   /** The current attempt: the Gallery shows its photos only. */
   challengeId: number
+  /** Shown in the header, like Journey and Stats. */
+  attemptNumber: number
+  streak: number
   /** Goes to Today with its camera open (from the empty state). */
   onTakePhoto: () => void
 }
 
 /** This attempt's progress photos in one grid, newest first, with Compare on top. */
-export function GalleryScreen({ challengeId, onTakePhoto }: GalleryScreenProps) {
+export function GalleryScreen({ challengeId, attemptNumber, streak, onTakePhoto }: GalleryScreenProps) {
   const entries = useGalleryPhotos(challengeId)
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   const [comparing, setComparing] = useState(false)
@@ -27,12 +31,15 @@ export function GalleryScreen({ challengeId, onTakePhoto }: GalleryScreenProps) 
 
   return (
     <div className="min-h-dvh bg-canvas pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
-      <header className="px-4 pt-6 pb-4">
-        <h1 className="flex items-center gap-2 font-display text-2xl tracking-wide text-ink">
-          <Icon name="gallery" className="text-world-ink" />
-          Gallery
-        </h1>
-        <p className="font-rounded text-sm text-ink-muted">This attempt's progress photos.</p>
+      <header className="flex items-center justify-between px-4 pt-6 pb-4">
+        <div>
+          <p className="font-rounded text-sm font-semibold text-ink-muted">Attempt #{attemptNumber}</p>
+          <h1 className="flex items-center gap-2 font-display text-2xl font-semibold tracking-wide text-ink">
+            <Icon name="gallery" className="text-world-ink" />
+            Gallery
+          </h1>
+        </div>
+        <FlameStreak streak={streak} />
       </header>
 
       <main className="flex flex-col gap-5 px-4">

@@ -77,7 +77,7 @@ function WeighInForm({ today, dayNumber, lastWeight }: WeighInCardProps & { last
 
   return (
     <section
-      className={`mx-4 mb-4 rounded-card border-2 border-world bg-surface p-4 motion-safe:transition-shadow motion-safe:duration-300 ${
+      className={`mx-4 mb-4 rounded-card bg-surface p-4 ring-1 ring-ink/10 dark:ring-0 motion-safe:transition-shadow motion-safe:duration-300 ${
         saved !== undefined ? 'shadow-[inset_0_0_28px_-6px_var(--color-world)]' : ''
       }`}
     >

@@ -34,7 +34,8 @@ const numberText = (value: number | undefined) => (value === undefined ? '' : St
 /** Add or edit a weigh-in: date, weight in kg, and optional body measurements in cm. */
 export function MeasurementModal({ measurement, open, today, onClose, onDelete }: MeasurementModalProps) {
   return (
-    <Modal open={open} onClose={onClose}>
+    // A bottom sheet, like every other form in the app.
+    <Modal open={open} onClose={onClose} placement="sheet">
       {/* Keyed so each open starts from the entry being edited (or a blank form). */}
       <MeasurementForm key={measurement?.id ?? 'new'} measurement={measurement} today={today} onDone={onClose} onDelete={onDelete} />
     </Modal>
