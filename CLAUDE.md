@@ -63,6 +63,15 @@ Vitest fails a run on any unhandled error, even when every test passes.
 - jsdom has no `matchMedia`: stub it.
 - Vitest empties CSS, even through `?raw`: tests that read `index.css` or `index.html` use `fs`, with `/// <reference types="node" />`.
 
+## v4: the native app (`mobile/`)
+
+- The native iPhone app (Expo) is built on the long-lived `v4` branch, in its own worktree (`../75hard-v4`). Design: `docs/superpowers/specs/2026-11-18-expo-v4-design.md`. Plans: `docs/superpowers/plans/2026-11-18-v4-part-*.md`.
+- `mobile/` imports web code only through `@logic/*` (`src/logic/`) and `@schema` (`src/db/types.ts`). A change to `src/logic/` must keep `src/logic/__tests__/boundary.test.ts` green.
+- Before every commit in `mobile/`: `npm run check` there (types, lint, tests, iOS bundle). The four web checks still apply when files outside `mobile/` change.
+- Install Expo packages with `npx expo install <name>`. Expo changes with every SDK: read `mobile/AGENTS.md` and the versioned docs before using an Expo API.
+- Tests live outside `mobile/src/app/`: every file in there is a route.
+- Trying it: `npx expo start` in `mobile/`, then scan the QR code with Expo Go on the iPhone. Native code of our own (the keychain module) needs an EAS development build instead.
+
 ## pstack
 
 The pstack plugin (`poteto-mode` and its skills) is installed. Where it differs, these rules win:

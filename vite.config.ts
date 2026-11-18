@@ -54,6 +54,6 @@ export default defineConfig(({ mode }) => ({
     // The IndexedDB tests do real (in-memory) IO; leave headroom for a busy machine.
     testTimeout: 15_000,
     // The desktop app keeps other sessions' worktrees under .claude/; their tests aren't ours.
-    exclude: ['**/node_modules/**', '**/dist/**', '.claude/**'],
+    exclude: ['**/node_modules/**', '**/dist/**', '.claude/**', 'mobile/**'],
   },
 }))

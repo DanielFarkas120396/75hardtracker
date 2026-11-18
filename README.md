@@ -120,6 +120,10 @@ Everything stays on the device, in this browser. The app sends nothing anywhere,
 - `src/dev/` holds the dev-only seeded scenarios (the app never imports them) and time travel (shown only in the dev server).
 - `src/assets/animations/` holds the Lottie animations, which `lottie-web` (light SVG build) loads on demand.
 
+## Native app (in progress)
+
+A native iPhone app is being built with Expo in `mobile/`, on the `v4` branch. It shares the challenge rules in `src/logic/` with this web app. Design: `docs/superpowers/specs/2026-11-18-expo-v4-design.md`.
+
 ## Credits
 
 - The streak flame is the animated 🔥 from Google's [Noto Emoji](https://github.com/googlefonts/noto-emoji) animations, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
