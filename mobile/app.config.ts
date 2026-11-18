@@ -19,6 +19,8 @@ const config: ExpoConfig = {
     'expo-router',
     'expo-sqlite',
     '@react-native-community/datetimepicker',
+    ['expo-camera', { cameraPermission: 'Allow $(PRODUCT_NAME) to use the camera for your daily progress photo.' }],
+    ['expo-image-picker', { photosPermission: 'Allow $(PRODUCT_NAME) to pick your progress photo from your library.' }],
     [
       'expo-splash-screen',
       // Dark Hell's canvas (WORLD_COLORS.hell.dark.canvas), the app's first colour.

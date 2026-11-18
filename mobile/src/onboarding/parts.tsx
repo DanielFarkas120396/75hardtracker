@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react'
-import { AccessibilityInfo, Animated, Pressable, StyleSheet, Text, View, type TextStyle } from 'react-native'
+import { AccessibilityInfo, Animated, Pressable, StyleSheet, Text, View, type TextStyle, type ViewStyle } from 'react-native'
 import Svg, { Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg'
 import { useReduceMotion } from '../hooks/useReduceMotion'
 import { useTheme } from '../theme/ThemeProvider'
@@ -120,11 +120,11 @@ export function TopBar({ index, total, onBack, hideBack }: TopBarProps) {
   )
 }
 
-/** The world's glow behind the duck (the web's .world-glow radial gradient). */
-export function DuckGlow() {
+/** The world's glow behind the duck (the web's .world-glow radial gradient). `reach` says how far it spreads past its parent, when not the welcome flow's. */
+export function DuckGlow({ reach }: { reach?: Pick<ViewStyle, 'left' | 'right' | 'top' | 'bottom'> }) {
   const { colors } = useTheme()
   return (
-    <View pointerEvents="none" style={styles.glow}>
+    <View pointerEvents="none" style={[styles.glow, reach]}>
       <Svg width="100%" height="100%">
         <Defs>
           <RadialGradient id="world-glow" cx="50%" cy="30%" rx="60%" ry="55%">

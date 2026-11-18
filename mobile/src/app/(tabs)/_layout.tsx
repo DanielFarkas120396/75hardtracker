@@ -1,4 +1,5 @@
 import { NativeTabs } from 'expo-router/native-tabs'
+import { useTabBarHidden } from '../../hooks/useTabBar'
 import { useTheme } from '../../theme/ThemeProvider'
 
 // The web app's five tabs, in its order (src/components/ui/BottomNav.tsx). The icons are
@@ -13,8 +14,10 @@ const TABS = [
 
 export default function TabsLayout() {
   const { colors } = useTheme()
+  // The camera sheet covers the tab bar on the web; here the bar steps aside while it is open.
+  const hidden = useTabBarHidden()
   return (
-    <NativeTabs backgroundColor={colors.surface} tintColor={colors.worldInk} iconColor={colors.inkMuted}>
+    <NativeTabs hidden={hidden} backgroundColor={colors.surface} tintColor={colors.worldInk} iconColor={colors.inkMuted}>
       {TABS.map((tab) => (
         <NativeTabs.Trigger key={tab.name} name={tab.name}>
           <NativeTabs.Trigger.Label>{tab.label}</NativeTabs.Trigger.Label>

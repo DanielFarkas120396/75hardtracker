@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Pressable, StyleSheet, Text, type StyleProp, type ViewStyle } from 'react-native'
 import { useTheme } from '../../theme/ThemeProvider'
 import { withAlpha } from '../../theme/tokens'
@@ -9,11 +10,15 @@ interface ButtonProps {
   onPress: () => void
   variant?: ButtonVariant
   disabled?: boolean
+  /** A decoration before the label. */
+  icon?: ReactNode
+  /** What VoiceOver says, when the label alone isn't enough ("Add" → "Add 330 ml"). */
+  accessibilityLabel?: string
   style?: StyleProp<ViewStyle>
 }
 
 /** A flat pill that sinks slightly on tap. The web app's Button (src/components/ui/Button.tsx), with its five looks. */
-export function Button({ label, onPress, variant = 'primary', disabled = false, style }: ButtonProps) {
+export function Button({ label, onPress, variant = 'primary', disabled = false, icon, accessibilityLabel, style }: ButtonProps) {
   const { colors, fonts } = useTheme()
   const looks: Record<ButtonVariant, { fill: string; ink: string }> = {
     primary: { fill: colors.world, ink: colors.onWorld },
@@ -28,12 +33,13 @@ export function Button({ label, onPress, variant = 'primary', disabled = false, 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [styles.pill, { backgroundColor: look.fill }, pressed && styles.pressed, style]}
     >
+      {icon}
       <Text style={[styles.label, { color: look.ink, fontFamily: fonts.rounded.semibold }]}>{label}</Text>
     </Pressable>
   )
@@ -43,6 +49,8 @@ const styles = StyleSheet.create({
   pill: {
     minHeight: 48,
     minWidth: 48,
+    flexDirection: 'row',
+    gap: 8,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 999,

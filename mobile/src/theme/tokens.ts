@@ -105,3 +105,11 @@ export function withAlpha(hex: string, alpha: number): string {
   const value = Number.parseInt(hex.slice(1), 16)
   return `rgba(${value >> 16}, ${(value >> 8) & 255}, ${value & 255}, ${alpha})`
 }
+
+/** Two hex colours mixed: `amount` of `b` (0 to 1) into `a`. The web's color-mix(in srgb, a, b amount%). */
+export function mixHex(a: string, b: string, amount: number): string {
+  const from = Number.parseInt(a.slice(1), 16)
+  const to = Number.parseInt(b.slice(1), 16)
+  const channel = (shift: number) => Math.round(((from >> shift) & 255) * (1 - amount) + ((to >> shift) & 255) * amount)
+  return `#${[16, 8, 0].map((shift) => channel(shift).toString(16).padStart(2, '0')).join('')}`
+}

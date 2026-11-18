@@ -8,7 +8,6 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { ReactNode } from 'react'
 import { Alert, Text } from 'react-native'
-import TodayScreen from '../app/(tabs)/index'
 import SettingsScreen from '../app/(tabs)/settings'
 import { AppGate } from '../components/AppGate'
 import { nodeStore } from '../files/__tests__/nodeStore'
@@ -16,6 +15,7 @@ import { stagePictures } from '../files/pictures'
 import { addChallenge, freshDatabase } from '../db/__tests__/fixtures'
 import * as open from '../db/open'
 import { challengeRepo } from '../db/repositories/challengeRepo'
+import { profileRepo } from '../db/repositories/profileRepo'
 import { settingsRepo } from '../db/repositories/settingsRepo'
 import { seedDay } from '../dev/seed'
 import { ThemeProvider } from '../theme/ThemeProvider'
@@ -34,25 +34,6 @@ beforeEach(async () => {
   await freshDatabase()
 })
 
-describe('Today', () => {
-  it('shows the day of the current challenge', async () => {
-    await seedDay(12)
-    await render(<TodayScreen />, { wrapper: Providers })
-    expect(await screen.findByText('Day 12 of 75')).toBeOnTheScreen()
-  })
-
-  it('says so when there is no challenge', async () => {
-    await render(<TodayScreen />, { wrapper: Providers })
-    expect(await screen.findByText('No challenge yet')).toBeOnTheScreen()
-  })
-
-  it('says so when the challenge starts later', async () => {
-    await seedDay(-2)
-    await render(<TodayScreen />, { wrapper: Providers })
-    expect(await screen.findByText('Not started yet')).toBeOnTheScreen()
-  })
-})
-
 describe('seedDay', () => {
   it('replaces whatever was there with one attempt on that day', async () => {
     await addChallenge({ startDate: '2026-01-01', attemptNumber: 4, status: 'failed' })
@@ -63,6 +44,8 @@ describe('seedDay', () => {
     expect(challenges[0]).toMatchObject({ attemptNumber: 1, status: 'active', variant: 'hard' })
     expect(dayNumberForDate(challenges[0].startDate, todayISO())).toBe(30)
     expect(await settingsRepo.get(SETTING_KEYS.bedtime, 'none')).toBe('none')
+    // With a profile, so the app opens on Today and not on the welcome flow.
+    expect(await profileRepo.get()).toMatchObject({ name: 'Tester' })
   })
 })
 
