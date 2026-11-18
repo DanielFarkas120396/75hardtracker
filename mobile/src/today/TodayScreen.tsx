@@ -6,7 +6,7 @@ import { daysUntilStart, isChallengeDay } from '@logic/days'
 import { bedtimeMinutes, eveningDeadline, menace as resolveMenace, minutesToFinish, plansToMinutes } from '@logic/menace'
 import { duckLine, LATE_GRACE_LINE, planReminderLine, tasksLeftLine, timeLeftLine } from '@logic/microcopy'
 import { challengeWeek, rulesFor } from '@logic/rulesets'
-import { notesStatusLine, type BoardTask } from '@logic/taskStatus'
+import { notesStatusLine } from '@logic/taskStatus'
 import { preStartPlanLine, VARIANT_NAMES } from '@logic/variantsCopy'
 import { useState, type ReactNode } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
@@ -26,10 +26,9 @@ import { dayCompletion, useBedtime, useCurrentBook, useDayEntry, useProfile, use
 import { PhotoCapture } from './PhotoCapture'
 import { usePhotoCapture } from './photoCaptureContext'
 import { BookPicker } from './ReadingTask'
-import { TaskSheet } from './TaskSheet'
+import { TaskSheet, type OpenSheet } from './TaskSheet'
 import { TodayHero } from './TodayHero'
 import { WeighInCard } from './WeighInCard'
-import { AddWorkoutSheet } from './WorkoutTask'
 
 /**
  * The Today tab: what the attempt's gate says to show. The web decides this in
@@ -67,8 +66,7 @@ function TodayTasks({ gate }: { gate: ChallengeGate }) {
   const bedtime = useBedtime()
   const profile = useProfile()
   const { currentBook } = useCurrentBook()
-  const [openTask, setOpenTask] = useState<BoardTask | null>(null)
-  const [addWorkoutOpen, setAddWorkoutOpen] = useState(false)
+  const [sheet, setSheet] = useState<OpenSheet | null>(null)
   const { logged, log, clear } = useLogged()
 
   if (!entry || !workouts || bedtime === undefined) return <Centred>Loading…</Centred>
@@ -87,10 +85,7 @@ function TodayTasks({ gate }: { gate: ChallengeGate }) {
   const weekRestDay = dayEntries.find(
     (e) => e.restDay && e.dayNumber !== todayDayNumber && challengeWeek(e.dayNumber) === challengeWeek(todayDayNumber),
   )?.dayNumber
-  const onAddWorkout = () => {
-    setOpenTask(null)
-    setAddWorkoutOpen(true)
-  }
+  const onAddWorkout = () => setSheet('add-workout')
   // Late in the evening with tasks left: the duck is tapping or hunting.
   const urgent = day.missing.length > 0 && (menace.level === 'tapping' || menace.level === 'hunting')
   const won = day.missing.length === 0
@@ -98,7 +93,7 @@ function TodayTasks({ gate }: { gate: ChallengeGate }) {
   const line = duckLine({ menace, missing: day.missing, dayNumber: todayDayNumber, name: profile?.name, started: hasAnyProgress(day.data) })
 
   return (
-    <PhotoCapture entry={entry} onCameraOpen={() => setOpenTask(null)} onCameraUnavailable={() => setOpenTask('photo')}>
+    <PhotoCapture entry={entry} onCameraOpen={() => setSheet(null)} onCameraUnavailable={() => setSheet('photo')}>
       <Page>
         <TodayHero
           attemptLine={`${VARIANT_NAMES[rules.variant]} #${challenge.attemptNumber}`}
@@ -111,7 +106,7 @@ function TodayTasks({ gate }: { gate: ChallengeGate }) {
           why={profile?.why}
           below={
             won ? (
-              <Won dayNumber={todayDayNumber} entry={entry} onNotes={() => setOpenTask('notes')} />
+              <Won dayNumber={todayDayNumber} entry={entry} onNotes={() => setSheet('notes')} />
             ) : urgent ? (
               <TimeLeft
                 first={timeLeftLine(deadline, todayDayNumber)}
@@ -142,20 +137,19 @@ function TodayTasks({ gate }: { gate: ChallengeGate }) {
             minutesLeft={urgent ? deadline.minutesLeft : undefined}
             onLogged={log}
             onAddWorkout={onAddWorkout}
-            onOpen={setOpenTask}
+            onOpen={setSheet}
           />
           {/* Once the day is won, the hero's "How did it go?" opens the notes instead. "Plan my evening" and "Social night" join this row in part 4b. */}
-          {!won && <ActionButton icon="notes" label="Notes" onPress={() => setOpenTask('notes')} />}
+          {!won && <ActionButton icon="notes" label="Notes" onPress={() => setSheet('notes')} />}
         </View>
       </Page>
 
       <LoggedToast logged={logged} onDone={clear} />
       <TaskSheet
-        task={openTask}
+        sheet={sheet}
         context={{ entry, workouts, completion: day.completion, rules, dayNumber: todayDayNumber, socialToday, weekRestDay, libraryOnly: false, onAddWorkout }}
-        onClose={() => setOpenTask(null)}
+        onClose={() => setSheet(null)}
       />
-      <AddWorkoutSheet open={addWorkoutOpen} dayEntryId={entry.id} rules={rules} onClose={() => setAddWorkoutOpen(false)} />
     </PhotoCapture>
   )
 }

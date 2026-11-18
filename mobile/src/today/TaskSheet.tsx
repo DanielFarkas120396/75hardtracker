@@ -12,7 +12,7 @@ import { useTheme } from '../theme/ThemeProvider'
 import { DayNotesTask, DietTask, PhotoTask, WaterTask } from './taskBodies'
 import { ReadingTask } from './ReadingTask'
 import { TASK_ICONS } from './TaskTile'
-import { WorkoutTask } from './WorkoutTask'
+import { AddWorkoutForm, WorkoutTask } from './WorkoutTask'
 
 /** How long the cheer stays up before the sheet closes itself. */
 export const CHEER_VISIBLE_MS = 1500
@@ -79,9 +79,12 @@ function body(task: BoardTask, ctx: TaskSheetContext) {
   }
 }
 
+/** What the day's sheet holds: one task's controls, or the "Add workout" form. */
+export type OpenSheet = BoardTask | 'add-workout'
+
 interface TaskSheetProps {
-  /** The open task, or null when closed. */
-  task: BoardTask | null
+  /** What is open, or null when closed. */
+  sheet: OpenSheet | null
   context: TaskSheetContext
   onClose: () => void
 }
@@ -91,11 +94,20 @@ interface TaskSheetProps {
  * tint. When the task completes here, the header flips to done (tick and
  * cheer) and, except for workouts (a done workout can still get its feel),
  * the sheet closes on its own after the cheer. The web's TaskSheet.
+ *
+ * The "Add workout" form opens in this same sheet (the web has a second one):
+ * the phone shows one sheet at a time, and a second asked for while the first
+ * is still leaving would never appear.
  */
-export function TaskSheet({ task, context, onClose }: TaskSheetProps) {
+export function TaskSheet({ sheet, context, onClose }: TaskSheetProps) {
+  const label = sheet === null ? '' : sheet === 'add-workout' ? 'Add workout' : TASK_TITLES[sheet]
   return (
-    <Sheet open={task !== null} onClose={onClose} label={task ? TASK_TITLES[task] : ''}>
-      {task && <SheetContent key={task} task={task} context={context} onClose={onClose} />}
+    <Sheet open={sheet !== null} onClose={onClose} label={label}>
+      {sheet === 'add-workout' ? (
+        <AddWorkoutForm key={sheet} dayEntryId={context.entry.id} rules={context.rules} onClose={onClose} />
+      ) : (
+        sheet && <SheetContent key={sheet} task={sheet} context={context} onClose={onClose} />
+      )}
     </Sheet>
   )
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { Fragment, useEffect, useState, type ReactNode } from 'react'
 import { Animated, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useReduceMotion } from '../../hooks/useReduceMotion'
@@ -33,6 +33,13 @@ export function Sheet({ open, onClose, label, children }: SheetProps) {
   const [kept, setKept] = useState(children)
   if (open && !mounted) setMounted(true)
   if (open && kept !== children) setKept(children)
+  // Each opening starts afresh, even one that comes while the last is still sliding away.
+  const [wasOpen, setWasOpen] = useState(open)
+  const [opening, setOpening] = useState(0)
+  if (wasOpen !== open) {
+    setWasOpen(open)
+    if (open) setOpening(opening + 1)
+  }
 
   useEffect(() => {
     if (open) {
@@ -61,6 +68,8 @@ export function Sheet({ open, onClose, label, children }: SheetProps) {
         <Animated.View
           accessibilityViewIsModal
           accessibilityLabel={label}
+          // On its way out it takes no touch: a late tap must not act twice.
+          pointerEvents={open ? 'auto' : 'none'}
           style={[
             styles.panel,
             { maxHeight: height * 0.85, backgroundColor: colors.surface, opacity: reduceMotion ? shown : 1, transform: [{ translateY: slide }] },
@@ -70,7 +79,7 @@ export function Sheet({ open, onClose, label, children }: SheetProps) {
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={[styles.content, { paddingBottom: Math.max(20, insets.bottom) }]}
           >
-            {open ? children : kept}
+            <Fragment key={opening}>{open ? children : kept}</Fragment>
           </ScrollView>
         </Animated.View>
       </KeyboardAvoidingView>

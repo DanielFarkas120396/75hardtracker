@@ -9,6 +9,7 @@ import { bookRepo } from '../db/repositories/bookRepo'
 import { dayEntryRepo } from '../db/repositories/dayEntryRepo'
 import { settingsRepo } from '../db/repositories/settingsRepo'
 import type { DayEntry } from '../db/types'
+import { useAnnounceChanges } from '../hooks/useAnnounce'
 import { useTheme } from '../theme/ThemeProvider'
 import { withAlpha } from '../theme/tokens'
 import { useCurrentBook } from './hooks'
@@ -100,6 +101,7 @@ function AddBookForm({ onDone }: { onDone: () => void }) {
   // Kept as typed, so the field can be cleared and retyped; validated on save.
   const [totalPages, setTotalPages] = useState('200')
   const [errors, setErrors] = useState<BookErrors>({})
+  useAnnounceChanges([errors.title, errors.totalPages].filter((line) => line !== undefined).join(' '))
 
   const submit = async () => {
     const result = validateBook({ title, totalPages, currentPage: '' })

@@ -117,7 +117,8 @@ export function DoneBadge({ pop }: { pop: boolean }) {
   const springs = pop && !reduceMotion
   const scale = useState(() => new Animated.Value(springs ? 0 : 1))[0]
   useEffect(() => {
-    if (!springs) return
+    // Reduce motion may only be known after the first frame: the tick is then simply there.
+    if (!springs) return scale.setValue(1)
     const spring = Animated.spring(scale, { toValue: 1, stiffness: 500, damping: 14, mass: 1, useNativeDriver: true })
     spring.start()
     return () => spring.stop()

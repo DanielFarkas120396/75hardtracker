@@ -8,13 +8,12 @@ const changed = (by: number) => {
   for (const listener of [...listeners]) listener()
 }
 
-/** Hides the tab bar for as long as `hidden` is true and this component is on screen. */
-export function useHideTabBar(hidden: boolean): void {
+/** Hides the tab bar for as long as the component calling it is on screen. */
+export function useHideTabBar(): void {
   useEffect(() => {
-    if (!hidden) return
     changed(1)
     return () => changed(-1)
-  }, [hidden])
+  }, [])
 }
 
 /** Whether the tab bar should be hidden right now. Read by the tabs' layout. */

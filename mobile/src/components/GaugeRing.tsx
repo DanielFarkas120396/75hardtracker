@@ -108,17 +108,16 @@ interface FlameStreakProps {
 }
 
 /**
- * The streak: a flame and the count of days. The emoji is the web's own look
- * until its animated flame has loaded (src/components/FlameStreak.tsx); the
- * animated one comes with part 4c.
+ * A running streak: a flame and the count of days. The emoji is the web's own
+ * look until its animated flame has loaded (src/components/FlameStreak.tsx);
+ * the animated one, and the flame gone out at 0, come with part 4c.
  */
 export function FlameStreak({ streak }: FlameStreakProps) {
   const { colors, fonts } = useTheme()
-  const lit = streak > 0
   return (
     <View accessible accessibilityRole="image" accessibilityLabel={`Streak: ${streak} ${streak === 1 ? 'day' : 'days'}`} style={styles.streak}>
-      <Text style={[styles.flame, !lit && styles.out]}>🔥</Text>
-      <Text style={[styles.count, { color: lit ? colors.orangeInk : colors.inkMuted, fontFamily: fonts.rounded.bold }]}>{streak}</Text>
+      <Text style={styles.flame}>🔥</Text>
+      <Text style={[styles.count, { color: colors.orangeInk, fontFamily: fonts.rounded.bold }]}>{streak}</Text>
     </View>
   )
 }
@@ -127,6 +126,5 @@ const styles = StyleSheet.create({
   box: { width: '100%', maxWidth: 184, aspectRatio: 184 / 152 },
   streak: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   flame: { fontSize: 22 },
-  out: { opacity: 0.5 },
   count: { fontSize: 18 },
 })

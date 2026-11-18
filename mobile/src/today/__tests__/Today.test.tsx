@@ -20,6 +20,7 @@ import { photoRepo } from '../../db/repositories/photoRepo'
 import { profileRepo } from '../../db/repositories/profileRepo'
 import { settingsRepo } from '../../db/repositories/settingsRepo'
 import { workoutRepo } from '../../db/repositories/workoutRepo'
+import { useClock } from '../../hooks/useClock'
 import { useNowMinutes } from '../../hooks/useNowMinutes'
 import { useToday } from '../../hooks/useToday'
 import { prepareShot } from '../photo'
@@ -29,6 +30,7 @@ import { entryOf, Providers, startAttempt, TODAY } from './support'
 jest.mock('expo-font', () => ({ ...jest.requireActual('expo-font'), useFonts: jest.fn() }))
 jest.mock('expo-haptics', () => ({ impactAsync: jest.fn(async () => {}), ImpactFeedbackStyle: { Light: 'light' } }))
 jest.mock('expo-image-picker', () => ({ launchImageLibraryAsync: jest.fn() }))
+jest.mock('../../hooks/useClock', () => ({ useClock: jest.fn() }))
 jest.mock('../../hooks/useNowMinutes', () => ({ useNowMinutes: jest.fn() }))
 jest.mock('../../hooks/useToday', () => ({ useToday: jest.fn() }))
 // The picture's preparation is the phone's (its own tests cover the sizes): here it hands back a file to save.
@@ -63,6 +65,7 @@ jest.mock('expo-camera', () => {
 })
 
 const MORNING = 10 * 60
+const HARD_RULE = '2 sessions of at least 45 minutes, one of them outdoors.'
 const shots = mkdtempSync(join(tmpdir(), 'shots-'))
 let shotCount = 0
 /** A picture file, as the camera or the library hands one over. */
@@ -70,6 +73,13 @@ function newShot(): string {
   const path = join(shots, `shot-${++shotCount}.jpg`)
   writeFileSync(path, `picture ${shotCount}`)
   return pathToFileURL(path).href
+}
+
+/** Sets the date and the time of day everywhere the app reads them. */
+function setClock(today: string, nowMin: number) {
+  jest.mocked(useClock).mockReturnValue({ today, nowMin })
+  jest.mocked(useToday).mockReturnValue(today)
+  jest.mocked(useNowMinutes).mockReturnValue(nowMin)
 }
 
 const allowCamera = (granted: boolean) =>
@@ -81,8 +91,7 @@ const allowCamera = (granted: boolean) =>
 
 beforeEach(async () => {
   jest.mocked(Font.useFonts).mockReturnValue([true, null])
-  jest.mocked(useNowMinutes).mockReturnValue(MORNING)
-  jest.mocked(useToday).mockReturnValue(TODAY)
+  setClock(TODAY, MORNING)
   jest.mocked(prepareShot).mockImplementation(async () => newShot())
   jest.mocked(Haptics.impactAsync).mockClear()
   mockTakePicture.mockReset().mockResolvedValue({ uri: 'file:///camera/raw.jpg', width: 3000, height: 4000 })
@@ -204,12 +213,14 @@ describe('Today', () => {
   })
 
   it('counts every quick tap, and Undo takes back exactly one pour', async () => {
+    const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility')
     const challengeId = await startAttempt()
     await show()
     const glass = await screen.findByRole('button', { name: 'Add 250 ml' })
     for (let tap = 0; tap < 4; tap++) await fireEvent.press(glass)
     await waitFor(async () => expect((await today(challengeId))!.water_ml).toBe(1000))
     expect(await screen.findByText('Logged 250 ml')).toBeOnTheScreen()
+    await waitFor(() => expect(announce).toHaveBeenCalledWith('Logged 250 ml'))
     await press('Undo')
     await waitFor(async () => expect((await today(challengeId))!.water_ml).toBe(750))
     expect(screen.queryByText('Logged 250 ml')).toBeNull()
@@ -229,7 +240,7 @@ describe('Today', () => {
   })
 
   it('late in the evening, puts the time left and the tasks left under the gauge', async () => {
-    jest.mocked(useNowMinutes).mockReturnValue(22 * 60 + 30)
+    setClock(TODAY, 22 * 60 + 30)
     await startAttempt()
     await show()
     expect(await screen.findByText('30 min to bedtime')).toBeOnTheScreen()
@@ -243,7 +254,7 @@ describe('Today', () => {
     const view = await show()
     await openSheet(/^Water, /, 'Goal: 3.8 L a day.')
 
-    jest.mocked(useToday).mockReturnValue(addDaysISO(TODAY, 1))
+    setClock(addDaysISO(TODAY, 1), 0)
     await view.rerender(<Today />)
     expect(await screen.findByLabelText('Day 2, 75 Hard #1')).toBeOnTheScreen()
     expect(screen.queryByText('Goal: 3.8 L a day.')).toBeNull()
@@ -255,7 +266,7 @@ describe('Today', () => {
 describe('an attempt that is not running', () => {
   it('says a day was missed, instead of a blank Today', async () => {
     await startAttempt(3)
-    jest.mocked(useNowMinutes).mockReturnValue(13 * 60)
+    setClock(TODAY, 13 * 60)
     await show()
     expect(await screen.findByText('Day 1 was missed')).toBeOnTheScreen()
     expect(screen.getByText("This attempt is over. Starting again isn't built in this version yet.")).toBeOnTheScreen()
@@ -330,7 +341,7 @@ describe('the weigh-in card', () => {
     expect(await screen.findByText('Before breakfast is best.')).toBeOnTheScreen()
     expect(screen.getByLabelText('Weight in kg').props.placeholder).toBe('83.0')
     await view.unmount()
-    jest.mocked(useNowMinutes).mockReturnValue(15 * 60)
+    setClock(TODAY, 15 * 60)
     await show()
     expect(await screen.findByText('Any time today works.')).toBeOnTheScreen()
   })
@@ -368,18 +379,109 @@ describe('the workouts sheet', () => {
     expect(screen.queryByText(/must be outdoors/)).toBeNull()
   })
 
+  it('adds a workout from the workouts sheet, which gives way to the form: one sheet at a time', async () => {
+    const challengeId = await startAttempt()
+    await show()
+    await openSheet(/^Workouts, /, HARD_RULE)
+    await press('+ Add workout')
+    // At once, not after a slide: the phone can't show two sheets at the same time.
+    expect(screen.queryByText(HARD_RULE)).toBeNull()
+    expect(await screen.findByText("One of today's workouts must be outdoors.")).toBeOnTheScreen()
+    await pressLast('Save')
+    const entry = (await today(challengeId))!
+    await waitFor(async () => expect(await workoutRepo.getForDayEntry(entry.id)).toHaveLength(1))
+    await waitFor(() => expect(screen.queryByText("One of today's workouts must be outdoors.")).toBeNull())
+  })
+
+  it('stores one session on a double tap on Save, and none from a tap on the sheet as it leaves', async () => {
+    const challengeId = await startAttempt()
+    await show()
+    await press('Add workout')
+    const save = (await screen.findAllByRole('button', { name: 'Save' })).at(-1)!
+    await fireEvent.press(save)
+    await fireEvent.press(save)
+    const entry = (await today(challengeId))!
+    await waitFor(async () => expect(await workoutRepo.getForDayEntry(entry.id)).toHaveLength(1))
+    // Saved, and sliding away: a late tap lands on nothing.
+    const late = screen.queryAllByRole('button', { name: 'Save' }).at(-1)
+    if (late) await fireEvent.press(late)
+    await new Promise((resolve) => setTimeout(resolve, 400))
+    expect(await workoutRepo.getForDayEntry(entry.id)).toHaveLength(1)
+  })
+
+  it('keeps Outdoor as set by hand, and says when the last session must be outdoors', async () => {
+    const challengeId = await startAttempt()
+    const entry = await entryOf(challengeId)
+    await workoutRepo.add({ dayEntryId: entry.id, type: 'Weights', durationMin: 45, isOutdoor: false })
+    await show()
+    await press('Add workout')
+    expect(await screen.findByText('This one must be outdoors.')).toBeOnTheScreen()
+    await fireEvent.press(screen.getByRole('switch', { name: 'Outdoor' }))
+    expect(screen.getByRole('switch', { name: 'Outdoor' })).not.toBeChecked()
+    await press('Walking')
+    expect(screen.getByRole('switch', { name: 'Outdoor' })).not.toBeChecked()
+  })
+
+  it('cheers when the workouts are done in the sheet, stays open for the feel, and drops the cheer when undone', async () => {
+    const challengeId = await startAttempt()
+    const entry = await entryOf(challengeId)
+    await workoutRepo.add({ dayEntryId: entry.id, type: 'Running', durationMin: 45, isOutdoor: true })
+    await workoutRepo.add({ dayEntryId: entry.id, type: 'Yoga', durationMin: 40, isOutdoor: false })
+    await show()
+    await openSheet(/^Workouts, /, HARD_RULE)
+    await fireEvent.press(screen.getAllByRole('button', { name: 'Increase' }).at(-1)!)
+    expect(await screen.findByText('Both workouts done! 💪')).toBeOnTheScreen()
+    await new Promise((resolve) => setTimeout(resolve, 1800))
+    expect(screen.getByText(HARD_RULE)).toBeOnTheScreen()
+
+    await fireEvent.press(screen.getAllByRole('button', { name: 'Decrease' }).at(-1)!)
+    await waitFor(() => expect(screen.queryByText('Both workouts done! 💪')).toBeNull())
+    expect(screen.getByText(HARD_RULE)).toBeOnTheScreen()
+  })
+
+  it('offers no recovery day on Hard, once the workouts are done, or when the week has had its own', async () => {
+    const hard = await startAttempt()
+    const view = await show()
+    await openSheet(/^Workouts, /, HARD_RULE)
+    expect(screen.queryByRole('button', { name: 'Take my recovery day' })).toBeNull()
+    await view.unmount()
+
+    await freshDatabase()
+    const soft = await startAttempt(3, 'soft')
+    await addPerfectDays(soft, addDaysISO(TODAY, -2), 1, 2)
+    const day2 = (await today(soft, 2))!
+    await dayEntryRepo.setRestDay(day2.id, true)
+    const softView = await show()
+    await openSheet(/^Workouts, /, /One recovery day a week\./)
+    expect(screen.getByText("Day 2 was this week's recovery day.")).toBeOnTheScreen()
+    expect(screen.queryByRole('button', { name: 'Take my recovery day' })).toBeNull()
+    await softView.unmount()
+
+    await freshDatabase()
+    const done = await startAttempt(1, 'soft')
+    const entry = await entryOf(done)
+    await workoutRepo.add({ dayEntryId: entry.id, type: 'Running', durationMin: 45, isOutdoor: true })
+    await show()
+    await press(/^Workouts, .* done$/)
+    await screen.findByText(/One recovery day a week\./)
+    expect(screen.queryByRole('button', { name: 'Take my recovery day' })).toBeNull()
+    expect(hard).toEqual(expect.any(Number))
+  })
+
   it('says a short session does not count yet, and brings a removed one back with Undo', async () => {
     const challengeId = await startAttempt()
     const entry = await entryOf(challengeId)
     const id = await workoutRepo.add({ dayEntryId: entry.id, type: 'Yoga', durationMin: 45, isOutdoor: false })
     await show()
-    await openSheet(/^Workouts, /, '2 sessions of at least 45 minutes, one of them outdoors.')
+    await openSheet(/^Workouts, /, HARD_RULE)
     await press('Decrease')
     expect(await screen.findByText("Under 45 min: saved, but it doesn't count yet.")).toBeOnTheScreen()
     expect((await workoutRepo.getForDayEntry(entry.id))[0]).toMatchObject({ id, durationMin: 40 })
 
+    const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility')
     await press('Remove workout')
     expect(await screen.findByText('Workout removed')).toBeOnTheScreen()
+    expect(announce).toHaveBeenCalledWith('Workout removed')
     await waitFor(async () => expect(await workoutRepo.getForDayEntry(entry.id)).toEqual([]))
     await press('Undo')
     await waitFor(async () => expect(await workoutRepo.getForDayEntry(entry.id)).toMatchObject([{ type: 'Yoga', durationMin: 40 }]))
@@ -414,8 +516,10 @@ describe('the other sheets', () => {
     await show()
     await openSheet(/^Reading, /, /^10 pages of /)
     await press('+ Add book')
+    const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility')
     await pressLast('Save')
     expect(await screen.findByText('Enter a title.')).toBeOnTheScreen()
+    expect(announce).toHaveBeenCalledWith('Enter a title.')
     await fireEvent.changeText(screen.getByLabelText('Book title'), 'Deep Work')
     await fireEvent.changeText(screen.getByLabelText('Total pages'), '296')
     await pressLast('Save')
@@ -514,7 +618,9 @@ describe('the photo', () => {
     jest.mocked(ImagePicker.launchImageLibraryAsync).mockResolvedValueOnce({ canceled: false, assets: [{ uri: 'file:///library/b.jpg', width: 100, height: 100 }] } as never)
     jest.mocked(prepareShot).mockRejectedValueOnce(new Error('no room'))
     await press('Choose from library')
+    const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility')
     expect(await screen.findByText("Couldn't save that photo. Try again, or free up some space.")).toBeOnTheScreen()
+    await waitFor(() => expect(announce).toHaveBeenCalledWith("Couldn't save that photo. Try again, or free up some space."))
     expect(await today(challengeId)).not.toHaveProperty('photoId')
   })
 })

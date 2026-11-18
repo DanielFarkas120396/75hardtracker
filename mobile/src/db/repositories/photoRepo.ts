@@ -44,8 +44,15 @@ export const photoRepo = {
       await syncDayCompletion(db, entryId)
       return { photoId, replaced }
     })
-    // Only now: a save that failed must leave the old picture where it was.
-    if (saved.replaced) store.deleteFile(picturePath('photos', saved.replaced.file))
+    // Only now: a save that failed must leave the old picture where it was. And the new photo is
+    // saved whatever happens to the old file: a leftover costs room, not the day's photo.
+    if (saved.replaced) {
+      try {
+        store.deleteFile(picturePath('photos', saved.replaced.file))
+      } catch (error) {
+        console.error(error)
+      }
+    }
     return saved.photoId
   },
 }

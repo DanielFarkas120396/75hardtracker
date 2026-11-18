@@ -16,11 +16,15 @@ jest.mock('../../components/mascot/Mascot', () => ({
   },
 }))
 const mockTakePicture = jest.fn()
+const mockCameras = { mounted: 0 }
 jest.mock('expo-camera', () => {
   const React = jest.requireActual<typeof import('react')>('react')
   const { View } = jest.requireActual<typeof import('react-native')>('react-native')
   class CameraView extends React.Component<Record<string, unknown>> {
     takePictureAsync = (options: unknown) => mockTakePicture(options)
+    componentDidMount() {
+      mockCameras.mounted += 1
+    }
     render() {
       return <View {...this.props} />
     }
@@ -51,6 +55,7 @@ const permission = (granted: boolean, canAskAgain = false) =>
 beforeEach(async () => {
   jest.mocked(Font.useFonts).mockReturnValue([true, null])
   mockSteps.length = 0
+  mockCameras.mounted = 0
   mockTakePicture.mockReset().mockResolvedValue({ uri: 'file:///camera/raw.jpg', width: 3000, height: 4000 })
   request.mockReset()
   permission(true)
@@ -212,6 +217,10 @@ describe('the camera sheet', () => {
     expect(on.onFacingChange).toHaveBeenCalledWith('front')
     expect(screen.getByTestId('camera-preview').props).toMatchObject({ facing: 'front', mirror: true })
     expect(screen.getByText('Starting camera…')).toBeOnTheScreen()
+    // A camera says it is ready once in its life: the other one is a new view, which says so in its turn.
+    expect(mockCameras.mounted).toBe(2)
+    await ready()
+    expect(button('Take photo')).toBeEnabled()
   })
 
   it('closes from its own button, and when the app goes to the background', async () => {
@@ -223,7 +232,13 @@ describe('the camera sheet', () => {
     await waitFor(() => expect(on.onClose).toHaveBeenCalledTimes(1))
 
     // Every listener hears it (the theme listens for the date too); only the camera closes on it.
-    for (const [event, onChange] of listen.mock.calls) if (event === 'change') onChange('background')
+    const tell = (state: 'inactive' | 'background') => {
+      for (const [event, onChange] of listen.mock.calls) if (event === 'change') onChange(state)
+    }
+    // The phone's own "Allow the camera?" alert, or Control Centre, only makes the app inactive: the sheet stays.
+    tell('inactive')
+    expect(on.onClose).toHaveBeenCalledTimes(1)
+    tell('background')
     expect(on.onClose).toHaveBeenCalledTimes(2)
   })
 

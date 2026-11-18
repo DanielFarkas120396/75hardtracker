@@ -237,6 +237,23 @@ describe('photoRepo.replaceForEntry', () => {
     expect(readFileSync(join(root, 'pictures', 'photos', `${firstId}.jpg`), 'utf8')).toBe('picture 1')
   })
 
+  it('keeps the new photo even when the old picture cannot be removed', async () => {
+    const challengeId = await addChallenge({ startDate: today, attemptNumber: 1, status: 'active' })
+    const entry = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: 1, date: today })
+    await photoRepo.replaceForEntry(entry.id, shot(1), store)
+    const stuck: FileStore = {
+      ...store,
+      deleteFile() {
+        throw new Error('file is busy')
+      },
+    }
+    const logged = jest.spyOn(console, 'error').mockImplementation(() => {})
+    const secondId = await photoRepo.replaceForEntry(entry.id, shot(2), stuck)
+    expect((await entryRow(entry.id))!.photoId).toBe(secondId)
+    expect(logged).toHaveBeenCalled()
+    logged.mockRestore()
+  })
+
   it('refuses a day that does not exist', async () => {
     await expect(photoRepo.replaceForEntry(99, shot(), store)).rejects.toThrow('Day entry 99 not found')
     expect(await allRows(getDb(), 'photos')).toEqual([])

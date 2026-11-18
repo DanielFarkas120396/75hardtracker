@@ -7,6 +7,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { bookRepo } from '../db/repositories/bookRepo'
 import { dayEntryRepo } from '../db/repositories/dayEntryRepo'
 import type { Book, DayEntry } from '../db/types'
+import { useAnnounceChanges } from '../hooks/useAnnounce'
 import { useTheme } from '../theme/ThemeProvider'
 import { usePhotoCapture } from './photoCaptureContext'
 import { TaskBoard, type QuickAction } from './TaskBoard'
@@ -118,10 +119,11 @@ export function useLogged(): { logged: Logged | null; log: (text: string, undo: 
 /** "Logged 250 ml · Undo", floating over the page just above the tab bar. */
 export function LoggedToast({ logged, onDone }: { logged: Logged | null; onDone: () => void }) {
   const { colors, fonts } = useTheme()
+  useAnnounceChanges(logged ? logged.text : '')
   if (!logged) return null
   return (
     <View pointerEvents="box-none" style={styles.slot}>
-      <View accessibilityRole="alert" style={[styles.toast, { backgroundColor: colors.ink }]}>
+      <View style={[styles.toast, { backgroundColor: colors.ink }]}>
         <Text style={[styles.text, { color: colors.surface, fontFamily: fonts.rounded.bold }]}>{logged.text}</Text>
         <Pressable
           accessibilityRole="button"

@@ -8,14 +8,15 @@ import { Icon } from '../components/icons/Icon'
 import type { IconName } from '../components/icons/icons'
 import { Button } from '../components/ui/Button'
 import { MoodPicker, Stepper, Toggle } from '../components/ui/controls'
-import { Sheet, SheetHeader } from '../components/ui/Sheet'
+import { SheetHeader } from '../components/ui/Sheet'
 import { dayEntryRepo } from '../db/repositories/dayEntryRepo'
 import { workoutRepo } from '../db/repositories/workoutRepo'
 import type { Workout, WorkoutType } from '../db/types'
+import { useAnnounceChanges } from '../hooks/useAnnounce'
 import { useTheme } from '../theme/ThemeProvider'
 import { useWorkoutsForEntry } from './hooks'
 
-// The workouts sheet and the "Add workout" sheet, as on the web
+// The workouts sheet and the "Add workout" form, as on the web
 // (src/screens/Today/WorkoutTask.tsx, AddWorkoutSheet.tsx, ActivityPicker.tsx).
 
 /** Each activity's logo (the web's ACTIVITY_ICONS, src/content/activities.ts). */
@@ -53,6 +54,7 @@ export function WorkoutTask({ dayEntryId, workouts, complete, rules, restDay, we
   const [restDayError, setRestDayError] = useState<string | null>(null)
   // The last removed session, kept for a moment so Undo can write it back as it was.
   const [removed, setRemoved] = useState<Workout | null>(null)
+  useAnnounceChanges(removed ? 'Workout removed' : (restDayError ?? ''))
 
   useEffect(() => {
     if (!removed) return
@@ -229,24 +231,18 @@ function ActivityPicker({ value, onPick, idleFill }: ActivityPickerProps) {
 /** Activities usually done outside: Outdoor starts on for them while the day still needs its outdoor workout. */
 const OUTSIDE: ReadonlySet<WorkoutType> = new Set(['Running', 'Walking', 'Cycling'])
 
-interface AddWorkoutSheetProps {
-  open: boolean
+interface AddWorkoutFormProps {
   dayEntryId: number
   rules: Ruleset
   onClose: () => void
 }
 
-/** The Workouts tile's shortcut: a small sheet asking the activity, the length and how it felt, then saving the session. */
-export function AddWorkoutSheet({ open, dayEntryId, rules, onClose }: AddWorkoutSheetProps) {
-  return (
-    <Sheet open={open} onClose={onClose} label="Add workout">
-      {/* Mounted each time the sheet opens, so it starts from the defaults again. */}
-      {open && <AddWorkoutForm dayEntryId={dayEntryId} rules={rules} onClose={onClose} />}
-    </Sheet>
-  )
-}
-
-function AddWorkoutForm({ dayEntryId, rules, onClose }: Omit<AddWorkoutSheetProps, 'open'>) {
+/**
+ * The Workouts tile's shortcut: a small form asking the activity, the length
+ * and how it felt, then saving the session. It is mounted each time it opens,
+ * so it starts from the defaults again.
+ */
+export function AddWorkoutForm({ dayEntryId, rules, onClose }: AddWorkoutFormProps) {
   const { colors, fonts } = useTheme()
   const [type, setType] = useState<WorkoutType>('Running')
   const [durationMin, setDurationMin] = useState(rules.minWorkoutMin)
@@ -261,13 +257,15 @@ function AddWorkoutForm({ dayEntryId, rules, onClose }: Omit<AddWorkoutSheetProp
 
   const save = async () => {
     // A double tap reaches here twice before the sheet closes, and two sessions would pass Hard's 2 × 45.
+    // Once saved, the form is on its way out: it takes no second save.
     if (saving.current) return
     saving.current = true
     try {
       await workoutRepo.add({ dayEntryId, type, durationMin, isOutdoor, ...(feel ? { feel } : {}) })
       onClose()
-    } finally {
+    } catch (error) {
       saving.current = false
+      throw error
     }
   }
 

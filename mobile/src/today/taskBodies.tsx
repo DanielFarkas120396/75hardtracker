@@ -181,6 +181,7 @@ function NotesField({ entry }: { entry: DayEntry }) {
 export function PhotoTask() {
   const { colors, fonts } = useTheme()
   const { photoUri, busy, error, cameraRefused, libraryOnly, takePhoto, chooseFromLibrary } = usePhotoCapture()
+  useAnnounceChanges(error ?? '')
   const iconColor = busy ? colors.inkMuted : colors.worldInk
 
   return (

@@ -85,7 +85,7 @@ export function CameraSheet({ ghostUri, initialFacing, onFacingChange, onCapture
   const [aspect, setAspect] = useState<number>()
   const shown = useState(() => new Animated.Value(0))[0]
 
-  useHideTabBar(true)
+  useHideTabBar()
   const react = (kind: DuckReaction) => setReaction((previous) => ({ kind, id: (previous?.id ?? 0) + 1 }))
 
   useEffect(() => {
@@ -122,8 +122,10 @@ export function CameraSheet({ ghostUri, initialFacing, onFacingChange, onCapture
   }, [granted, canAsk])
 
   useEffect(() => {
+    // Only once the app is really behind: the phone's "Allow the camera?" alert and Control Centre
+    // make it "inactive" for a moment, and the sheet must still be there after them.
     const subscription = AppState.addEventListener('change', (state) => {
-      if (state !== 'active') onClose()
+      if (state === 'background') onClose()
     })
     return () => subscription.remove()
     // oxlint-disable-next-line react-hooks/exhaustive-deps
@@ -232,6 +234,8 @@ export function CameraSheet({ ghostUri, initialFacing, onFacingChange, onCapture
         >
           {granted && (
             <CameraView
+              // A camera says "ready" once in its life: the other camera is a new view, which says so in its turn.
+              key={facing}
               ref={camera}
               testID="camera-preview"
               style={StyleSheet.absoluteFill}
