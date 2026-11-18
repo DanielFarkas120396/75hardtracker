@@ -1,24 +1,10 @@
 import { Vector2, Vector3, type WebGLRenderer } from 'three'
-import { outQuart } from './motion'
+import { createInkModel, INK, INK_MARGIN } from '../../../logic/fillInk'
 import { mix, type FillPalette } from './palette'
 import type { Painter } from './painter'
 import { shaderQuad } from './quad'
 
-/** The chosen settings (docs/prototypes/README.md, Diet). */
-const P = { spread: 1.1, swirl: 0.81, grain: 150, soft: 20, drift: 0.36 }
-const MARGIN = P.swirl * 40 + P.soft + 6
-
-/** The radius from `origin` (px from the tile's centre, y up) that covers `level` of the tile: read off the sorted distances to a grid of points, plus `margin` for the swirl and the soft edge. */
-export function inkRadius(level: number, width: number, height: number, origin: readonly [number, number], margin: number): number {
-  const distances: number[] = []
-  for (let y = 0; y < 30; y++) {
-    for (let x = 0; x < 60; x++) distances.push(Math.hypot(-width / 2 + ((x + 0.5) * width) / 60 - origin[0], -height / 2 + ((y + 0.5) * height) / 30 - origin[1]))
-  }
-  distances.sort((a, b) => a - b)
-  if (level <= 0) return -margin
-  if (level >= 1) return distances[distances.length - 1] + margin
-  return distances[Math.floor(level * distances.length)]
-}
+export { inkRadius } from '../../../logic/fillInk'
 
 // The pale parts are the palette's top tone; the veins sit halfway between its deep and mid tones (deep alone read too dark on the dark tile).
 // `k * k`, not pow(k, 2.0): GLSL ES leaves pow undefined for a negative base, and `e` is negative across the soft outer fringe.
@@ -51,53 +37,31 @@ const FRAG = /* glsl */ `
 /** Diet: green ink blooming through water from the switches, half the tile per switch; it keeps drifting slowly. */
 export function createInk(palette: FillPalette): Painter {
   const u = {
-    uTime: { value: Math.random() * 50 },
-    uR: { value: -MARGIN },
-    uSwirl: { value: P.swirl },
-    uSoft: { value: P.soft },
-    uScale: { value: P.grain },
+    uTime: { value: 0 },
+    uR: { value: -INK_MARGIN },
+    uSwirl: { value: INK.swirl },
+    uSoft: { value: INK.soft },
+    uScale: { value: INK.grain },
     uO: { value: new Vector2() },
     uTop: { value: new Vector3() },
     uVein: { value: new Vector3() },
   }
   const quad = shaderQuad(FRAG, u)
-  let from = 0
-  let to = 0
-  let p = 1
-  // A spread eases from the radius last drawn, not from its level's: the radius isn't linear in the level, so a tap mid-spread would snap the edge.
-  let fromR: number | null = null
-  let drawnR: number | null = null
-  let anchorRight = 56
-  let anchorTop = 60
-  const shown = () => from + (to - from) * outQuart(p)
+  const model = createInkModel()
 
   const painter: Painter = {
-    setLevel(level, instant) {
-      from = instant ? level : shown()
-      to = level
-      p = instant ? 1 : 0
-      if (instant) drawnR = null
-      fromR = drawnR
-    },
-    step(dt, drift) {
-      p = Math.min(1, p + dt / P.spread)
-      if (drift) u.uTime.value += dt * P.drift
-      return p < 1
-    },
-    drifts: () => to > 0,
-    shown,
-    settled: () => p >= 0.85,
-    setAnchor(right, top) {
-      anchorRight = right
-      anchorTop = top
-    },
+    setLevel: model.setLevel,
+    step: model.step,
+    drifts: model.drifts,
+    shown: model.shown,
+    settled: model.settled,
+    setAnchor: model.setAnchor,
     render(renderer: WebGLRenderer, width, height) {
       quad.fit(width, height)
-      const origin: [number, number] = [width / 2 - anchorRight, height / 2 - anchorTop]
-      u.uO.value.set(origin[0], origin[1])
-      const b = inkRadius(to, width, height, origin, MARGIN)
-      fromR ??= inkRadius(from, width, height, origin, MARGIN)
-      u.uR.value = drawnR = fromR + (b - fromR) * outQuart(p)
+      const f = model.frame(width, height)
+      u.uTime.value = f.time
+      u.uO.value.set(f.origin[0], f.origin[1])
+      u.uR.value = f.radius
       renderer.render(quad.scene, quad.camera)
     },
     setPalette(p2) {
