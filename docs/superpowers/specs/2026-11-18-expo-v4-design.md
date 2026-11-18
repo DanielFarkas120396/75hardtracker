@@ -68,10 +68,11 @@ New in v4:
 
 Each step ends in something that runs on the phone. The plan details them.
 
-1. Foundation: the Expo project, the Swift keychain module proven on two devices, SQLite and the repositories, the shared rules, themes and fonts, EAS builds.
-2. Import a web app backup. From here on the owner can test with their real attempt.
-3. Today and its tiles, the camera, the duck, "Plan my evening", the day-complete peak.
-4. Onboarding, the deal, late logging, failure and restart, give up, Victory.
+1. Foundation: the Expo project, the Swift keychain module proven on two devices, SQLite and the repositories, the shared rules, themes and fonts, EAS builds. **Built** (2026-11-18), except the keychain's build and two-device check.
+2. Import a web app backup. **Coded** (2026-11-18). The owner set its phone test aside: they want to use the app from Day 1 first.
+3. Onboarding and the deal, up to Day 1 (moved ahead of Today on 2026-11-18, at the owner's request: "I want the app to work from day 1 with the onboarding").
+4. Today and its tiles, the camera, the duck, "Plan my evening", the day-complete peak.
+4b. Late logging, failure and restart, give up, Victory.
 5. Journey.
 6. Gallery and Compare.
 7. Stats.
