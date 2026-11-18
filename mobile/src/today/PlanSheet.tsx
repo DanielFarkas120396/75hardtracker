@@ -18,9 +18,9 @@ const ERROR_TEXT: Record<PlanError, string> = {
   'past-midnight': "That won't fit before midnight.",
 }
 
-/** The time a row starts on when "Set a time" is tapped: the next quarter of an hour at least 30 minutes away, by midnight at the latest. */
-export function suggestedTime(nowMin: number): string {
-  return formatHHmm(Math.min(23 * 60 + 45, Math.ceil((nowMin + 30) / 15) * 15))
+/** The time a row starts on when "Set a time" is tapped: the next quarter of an hour at least 30 minutes away, and before midnight whatever the hour. */
+function suggestedTime(nowMin: number): string {
+  return formatHHmm(Math.min(23 * 60 + 59, Math.ceil((nowMin + 30) / 15) * 15))
 }
 
 interface PlanFormProps {
@@ -47,7 +47,6 @@ export function PlanForm({ entry, data, missing, nowMin, rules, onClose, onSaved
   const [draft, setDraft] = useState<Partial<Record<TaskId, string>>>(() => ({ ...saved }))
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
-  useAnnounceChanges(saveError ?? '')
 
   // Only rows changed since the sheet opened are checked, so an earlier plan
   // whose time has passed never blocks saving the others.
@@ -56,7 +55,13 @@ export function PlanForm({ entry, data, missing, nowMin, rules, onClose, onSaved
     if (!value || value === saved[task]) return null
     return planError(task, value, data, nowMin, rules)
   }
-  const hasErrors = missing.some((task) => errorFor(task) !== null)
+  const rowErrors = missing.flatMap((task) => {
+    const error = errorFor(task)
+    return error ? [`${TASK_NAMES[task]}: ${ERROR_TEXT[error]}`] : []
+  })
+  const hasErrors = rowErrors.length > 0
+  // A refused time greys Save out: said aloud, or it would happen in silence.
+  useAnnounceChanges(saveError ?? rowErrors.join(' '))
 
   const save = async () => {
     if (hasErrors) return

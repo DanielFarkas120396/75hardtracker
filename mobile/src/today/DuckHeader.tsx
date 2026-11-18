@@ -17,8 +17,11 @@ const REACTION_MS = 2500
 /** He waits a beat after Today opens before he speaks. */
 export const FIRST_LINE_DELAY_MS = 600
 /** Between those moments he speaks up on his own, every so often: somewhere in this range. */
-export const CHATTER_MIN_MS = 40_000
+const CHATTER_MIN_MS = 40_000
 export const CHATTER_MAX_MS = 75_000
+
+/** How wide his bubble may get. */
+export const BUBBLE_WIDTH = 92
 
 const LEVEL_MOODS: Record<MenaceLevel, DuckMood> = {
   content: 'content',
@@ -182,29 +185,26 @@ function Bubble({ text }: { text: string }) {
   const rise = reduceMotion ? 0 : shown.interpolate({ inputRange: [0, 1], outputRange: [6, 0] })
   const grow = reduceMotion ? 1 : shown.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] })
   return (
-    <Animated.View
-      pointerEvents="none"
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-      style={[styles.bubble, { backgroundColor: colors.surface, opacity: shown, transform: [{ translateY: rise }, { scale: grow }] }]}
-    >
-      <View style={[styles.tail, { backgroundColor: colors.surface }]} />
-      <Text numberOfLines={4} style={[styles.words, { color: colors.ink, fontFamily: fonts.rounded.bold }]}>
-        {text}
-      </Text>
-    </Animated.View>
+    // A slot with a width of its own: left to itself, the bubble would be no wider than the duck under it.
+    <View testID="duck-bubble" pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.slot}>
+      <Animated.View style={[styles.bubble, { backgroundColor: colors.surface, opacity: shown, transform: [{ translateY: rise }, { scale: grow }] }]}>
+        <View style={[styles.tail, { backgroundColor: colors.surface }]} />
+        <Text numberOfLines={4} style={[styles.words, { color: colors.ink, fontFamily: fonts.rounded.bold }]}>
+          {text}
+        </Text>
+      </Animated.View>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
   duck: { borderRadius: 16 },
+  // The duck's column plus the margin to its left, as on the web (5.75rem): never over the gauge's bars.
+  slot: { position: 'absolute', bottom: '100%', left: -20, zIndex: 2, width: BUBBLE_WIDTH, marginBottom: 8, alignItems: 'flex-start' },
   bubble: {
-    position: 'absolute',
-    bottom: '100%',
-    left: -20,
-    zIndex: 2,
-    marginBottom: 8,
-    maxWidth: 124,
+    // Wide enough for its tail, which points at the duck.
+    minWidth: 60,
+    maxWidth: '100%',
     borderRadius: 16,
     paddingHorizontal: 10,
     paddingVertical: 6,

@@ -28,6 +28,7 @@ export function Page({ behind, children }: PageProps) {
   const { cameraOpen } = usePhotoCapture()
   return (
     <SafeAreaView
+      testID="today-page"
       edges={['top']}
       style={[styles.screen, { backgroundColor: colors.canvas }]}
       onTouchStart={(event) => gaze.touch(event.nativeEvent.pageX, event.nativeEvent.pageY)}

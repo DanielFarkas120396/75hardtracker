@@ -9,7 +9,7 @@ import * as Font from 'expo-font'
 import { AccessibilityInfo, Text, View } from 'react-native'
 import { freshDatabase } from '../../db/__tests__/fixtures'
 import { settingsRepo } from '../../db/repositories/settingsRepo'
-import { CHATTER_MAX_MS, FIRST_LINE_DELAY_MS, SPEECH_MS, useDuck, type DuckAnnouncement } from '../DuckHeader'
+import { BUBBLE_WIDTH, CHATTER_MAX_MS, FIRST_LINE_DELAY_MS, SPEECH_MS, useDuck, type DuckAnnouncement } from '../DuckHeader'
 import { Providers } from './support'
 
 jest.mock('expo-font', () => ({ ...jest.requireActual('expo-font'), useFonts: jest.fn() }))
@@ -83,6 +83,9 @@ it('says the day’s line a beat after Today opens, aloud too, then falls quiet'
   expect(says("New day, Daniel. I'm watching.")).toBeNull()
   await wait(FIRST_LINE_DELAY_MS)
   expect(says("New day, Daniel. I'm watching.")).not.toBeNull()
+  // The bubble has room of its own: without it, it would be squeezed to the duck's 64 points.
+  expect(screen.getByTestId('duck-bubble', { includeHiddenElements: true })).toHaveStyle({ position: 'absolute', width: BUBBLE_WIDTH })
+  expect(BUBBLE_WIDTH).toBe(92)
   expect(announce).toHaveBeenCalledWith("New day, Daniel. I'm watching.")
   await wait(SPEECH_MS)
   expect(says("New day, Daniel. I'm watching.")).toBeNull()

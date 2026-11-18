@@ -687,9 +687,11 @@ describe('the evening plan', () => {
     await screen.findByText('Tell the duck your plan')
     expect(screen.queryByText('Pick a time later than now.')).toBeNull()
 
+    const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility')
     await press('Set a time for Photo')
     await pickTime(9, 30, 1)
     expect(await screen.findByText('Pick a time later than now.')).toBeOnTheScreen()
+    await waitFor(() => expect(announce).toHaveBeenCalledWith('Photo: Pick a time later than now.'))
     expect(button('Save plan')).toBeDisabled()
     await press('Clear Photo')
     expect(screen.queryByText('Pick a time later than now.')).toBeNull()

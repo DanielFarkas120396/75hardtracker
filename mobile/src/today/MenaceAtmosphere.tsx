@@ -7,6 +7,7 @@ import { useReduceMotion } from '../hooks/useReduceMotion'
 // The web's two gradients (src/screens/Today/MenaceAtmosphere.tsx): clear in the middle, coloured at the edges.
 const DARK_VIGNETTE = { color: 'rgb(40, 14, 10)', opacity: 0.26, clearTo: 0.5 }
 const RED_GLOW = { color: 'rgb(190, 24, 34)', opacity: 0.4, clearTo: 0.45 }
+type Look = typeof DARK_VIGNETTE
 
 interface MenaceAtmosphereProps {
   level: MenaceLevel
@@ -19,63 +20,86 @@ interface MenaceAtmosphereProps {
  * time is tight, a slow red pulse (2.8 s, far below any flashing threshold)
  * when it's out, and one red flash when the duck lunges. Cards sit on top, so
  * no text is ever over it. Reduce motion stops the pulse and the flash.
+ *
+ * A layer is a full-screen drawing: each is only there while it shows.
  */
 export function MenaceAtmosphere({ level, flashes }: MenaceAtmosphereProps) {
   const reduceMotion = useReduceMotion()
-  const dark = useFade(level === 'tapping')
-  const red = useFade(level === 'hunting')
-
-  const pulse = useState(() => new Animated.Value(1))[0]
-  const pulsing = level === 'hunting' && !reduceMotion
-  useEffect(() => {
-    if (!pulsing) return pulse.setValue(1)
-    const beat = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, { toValue: 0.78, duration: 1400, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 1, duration: 1400, useNativeDriver: true }),
-      ]),
-    )
-    beat.start()
-    return () => beat.stop()
-  }, [pulse, pulsing])
-
-  const flash = useState(() => new Animated.Value(0))[0]
-  useEffect(() => {
-    if (flashes === 0 || reduceMotion) return
-    flash.setValue(1)
-    const fading = Animated.timing(flash, { toValue: 0, duration: 600, useNativeDriver: true })
-    fading.start()
-    return () => fading.stop()
-  }, [flash, flashes, reduceMotion])
-
   return (
     <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={StyleSheet.absoluteFill}>
-      <Animated.View testID="atmosphere-dark" style={[StyleSheet.absoluteFill, { opacity: dark }]}>
-        <Edges id="dark" look={DARK_VIGNETTE} />
-      </Animated.View>
-      <Animated.View testID="atmosphere-red" style={[StyleSheet.absoluteFill, { opacity: Animated.multiply(red, pulse) }]}>
-        <Edges id="red" look={RED_GLOW} />
-      </Animated.View>
-      <Animated.View testID="atmosphere-flash" style={[StyleSheet.absoluteFill, { opacity: flash }]}>
-        <Edges id="flash" look={RED_GLOW} />
-      </Animated.View>
+      <Layer name="dark" on={level === 'tapping'} look={DARK_VIGNETTE} />
+      <Layer name="red" on={level === 'hunting'} look={RED_GLOW} pulses={!reduceMotion} />
+      <Flash flashes={flashes} still={reduceMotion} />
     </View>
   )
 }
 
-/** 0 or 1, reached over a second. */
-function useFade(on: boolean): Animated.Value {
-  const value = useState(() => new Animated.Value(on ? 1 : 0))[0]
+/** One gradient that fades in over a second while `on`, and out over a second after. */
+function Layer({ name, on, look, pulses = false }: { name: string; on: boolean; look: Look; pulses?: boolean }) {
+  // Kept until it has faded out.
+  const [mounted, setMounted] = useState(on)
+  if (on && !mounted) setMounted(true)
+  const shown = useState(() => new Animated.Value(on ? 1 : 0))[0]
   useEffect(() => {
-    const fading = Animated.timing(value, { toValue: on ? 1 : 0, duration: 1000, useNativeDriver: true })
-    fading.start()
+    const fading = Animated.timing(shown, { toValue: on ? 1 : 0, duration: 1000, useNativeDriver: true })
+    fading.start(({ finished }) => {
+      if (finished && !on) setMounted(false)
+    })
     return () => fading.stop()
-  }, [value, on])
-  return value
+  }, [shown, on])
+
+  const beat = useState(() => new Animated.Value(1))[0]
+  const pulsing = pulses && on
+  useEffect(() => {
+    if (!pulsing) return beat.setValue(1)
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(beat, { toValue: 0.78, duration: 1400, useNativeDriver: true }),
+        Animated.timing(beat, { toValue: 1, duration: 1400, useNativeDriver: true }),
+      ]),
+    )
+    pulse.start()
+    return () => pulse.stop()
+  }, [beat, pulsing])
+
+  if (!mounted) return null
+  return (
+    <Animated.View testID={`atmosphere-${name}`} style={[StyleSheet.absoluteFill, { opacity: Animated.multiply(shown, beat) }]}>
+      <Edges id={name} look={look} />
+    </Animated.View>
+  )
+}
+
+/** One red flash per lunge, fading over 0.6 s. Under reduce motion (`still`) a lunge flashes nothing. */
+function Flash({ flashes, still }: { flashes: number; still: boolean }) {
+  const [seen, setSeen] = useState(flashes)
+  // The lunge whose flash is on screen; 0 when none is.
+  const [flight, setFlight] = useState(0)
+  if (seen !== flashes) {
+    setSeen(flashes)
+    if (!still && flashes > seen) setFlight(flashes)
+  }
+  const opacity = useState(() => new Animated.Value(1))[0]
+  useEffect(() => {
+    if (flight === 0) return
+    opacity.setValue(1)
+    const fading = Animated.timing(opacity, { toValue: 0, duration: 600, useNativeDriver: true })
+    fading.start(({ finished }) => {
+      if (finished) setFlight(0)
+    })
+    return () => fading.stop()
+  }, [opacity, flight])
+
+  if (flight === 0) return null
+  return (
+    <Animated.View testID="atmosphere-flash" style={[StyleSheet.absoluteFill, { opacity }]}>
+      <Edges id="flash" look={RED_GLOW} />
+    </Animated.View>
+  )
 }
 
 /** One gradient over the whole screen, with the top kept clear: the header's text sits on the canvas there. */
-function Edges({ id, look }: { id: string; look: typeof DARK_VIGNETTE }) {
+function Edges({ id, look }: { id: string; look: Look }) {
   return (
     <Svg width="100%" height="100%">
       <Defs>

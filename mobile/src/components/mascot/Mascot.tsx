@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type ComponentRef } from 'react'
 import { View } from 'react-native'
 import { useReduceMotion } from '../../hooks/useReduceMotion'
 import { DuckArt } from './DuckArt'
-import { gaze } from './gaze'
+import { artPoint, gaze } from './gaze'
 
 export type { DuckMood, DuckReaction } from '@logic/duckRig'
 
@@ -64,14 +64,14 @@ export function Mascot({ mood, size = 120, reaction, decorative = false }: Masco
     return () => cancelAnimationFrame(frame)
   }, [rig])
 
-  // A touch arrives as a point of the window; the rig wants it in the art's own units (DUCK_VIEWBOX: -10 20 490 500).
+  // A touch arrives as a point of the window; the rig wants it in the art's own units.
   const box = useRef<ComponentRef<typeof View>>(null)
   useEffect(
     () =>
       gaze.watch({
         touch: (pageX, pageY) =>
           box.current?.measureInWindow((left, top, width, height) => {
-            if (width > 0 && height > 0) rig.touch({ x: -10 + ((pageX - left) / width) * 490, y: 20 + ((pageY - top) / height) * 500 })
+            if (width > 0 && height > 0) rig.touch(artPoint(pageX, pageY, { left, top, width, height }))
           }),
         scrolled: () => rig.scrolled(),
       }),
@@ -79,7 +79,8 @@ export function Mascot({ mood, size = 120, reaction, decorative = false }: Masco
   )
 
   return (
-    <View ref={box} collapsable={false}>
+    // The drawing's own size, wherever he stands: a box stretched by its parent would move his eyes off the finger.
+    <View ref={box} collapsable={false} style={{ width: size, height: (size * 500) / 490 }}>
       <DuckArt size={size} transforms={poseToTransforms(pose)} opacities={pose} label={decorative ? undefined : MOOD_LABELS[mood]} />
     </View>
   )
