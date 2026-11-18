@@ -99,3 +99,9 @@ export function colorsFor(world: WorldId, mode: ThemeMode) {
 }
 
 export type ThemeColors = ReturnType<typeof colorsFor>
+
+/** A hex colour at an opacity, as rgba: the web's `bg-ink/8`. */
+export function withAlpha(hex: string, alpha: number): string {
+  const value = Number.parseInt(hex.slice(1), 16)
+  return `rgba(${value >> 16}, ${(value >> 8) & 255}, ${value & 255}, ${alpha})`
+}
