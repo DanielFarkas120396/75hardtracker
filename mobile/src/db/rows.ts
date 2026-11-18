@@ -23,6 +23,8 @@ export interface Codec<T extends { id: number }> {
   insertWithId: string
   toParams(record: Omit<T, 'id'>): SqlValue[]
   toParamsWithId(record: T): SqlValue[]
+  /** UPDATE of the given fields only; one given as undefined is emptied. Null when there is nothing to change. */
+  toUpdate(id: number, changes: Partial<Omit<T, 'id'>>): { sql: string; params: SqlValue[] } | null
   fromRow(row: Row): T
 }
 
@@ -50,6 +52,14 @@ function codec<T extends { id: number }>(table: string, fields: Record<Exclude<k
     insertWithId: `INSERT INTO ${table} (id, ${names.join(', ')}) VALUES (${marks(names.length + 1)})`,
     toParams: values,
     toParamsWithId: (record) => [record.id, ...values(record)],
+    toUpdate(id, changes) {
+      const changed = names.filter((name) => name in changes)
+      if (changed.length === 0) return null
+      return {
+        sql: `UPDATE ${table} SET ${changed.map((name) => `${name} = ?`).join(', ')} WHERE id = ?`,
+        params: [...changed.map((name) => toParam(fields[name], (changes as Record<string, unknown>)[name])), id],
+      }
+    },
     fromRow(row) {
       const record: Record<string, unknown> = { id: row.id }
       for (const name of names) {

@@ -70,7 +70,12 @@ export function discardStaged(store: FileStore): void {
   store.deleteFolder(INCOMING)
 }
 
+/** Where a current picture is, in the file store. */
+export function picturePath(folder: PictureFolder, file: string): string {
+  return `${CURRENT}/${folder}/${file}`
+}
+
 /** The address of a current picture, for an <Image>. */
 export function pictureUri(store: FileStore, folder: PictureFolder, file: string): string {
-  return store.uri(`${CURRENT}/${folder}/${file}`)
+  return store.uri(picturePath(folder, file))
 }

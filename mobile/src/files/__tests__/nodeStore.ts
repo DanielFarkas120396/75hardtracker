@@ -1,6 +1,6 @@
-import { existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import { copyFileSync, existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import type { FileStore } from '../store'
 
 /** The FileStore over a real folder on this computer, for tests. */
@@ -9,6 +9,13 @@ export function nodeStore(root: string): FileStore {
     async writeBase64(path, base64) {
       mkdirSync(dirname(join(root, path)), { recursive: true })
       writeFileSync(join(root, path), Buffer.from(base64, 'base64'))
+    },
+    async copyIn(fromUri, path) {
+      mkdirSync(dirname(join(root, path)), { recursive: true })
+      copyFileSync(fileURLToPath(fromUri), join(root, path))
+    },
+    deleteFile(path) {
+      rmSync(join(root, path), { force: true })
     },
     makeFolder(path) {
       mkdirSync(join(root, path), { recursive: true })

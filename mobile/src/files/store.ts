@@ -8,6 +8,10 @@ import { Directory, File, Paths } from 'expo-file-system'
 export interface FileStore {
   /** Writes a file from base64, creating its folders. Replaces a file already there. */
   writeBase64(path: string, base64: string): Promise<void>
+  /** Copies a file from anywhere on the phone (a `file://` address) to `path`, creating its folders. Replaces a file already there. */
+  copyIn(fromUri: string, path: string): Promise<void>
+  /** Deletes one file. Fine if it isn't there. */
+  deleteFile(path: string): void
   /** Creates the folder and those above it. Fine if it exists. */
   makeFolder(path: string): void
   exists(path: string): boolean
@@ -27,6 +31,14 @@ export const expoStore: FileStore = {
     const file = new File(Paths.document, path)
     file.create({ overwrite: true })
     await file.write(base64, { encoding: 'base64' })
+  },
+  async copyIn(fromUri, path) {
+    this.makeFolder(folderOf(path))
+    await new File(fromUri).copy(new File(Paths.document, path), { overwrite: true })
+  },
+  deleteFile(path) {
+    const file = new File(Paths.document, path)
+    if (file.exists) file.delete()
   },
   makeFolder(path) {
     if (path !== '') new Directory(Paths.document, path).create({ intermediates: true, idempotent: true })
