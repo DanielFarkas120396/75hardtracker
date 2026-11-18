@@ -1,6 +1,6 @@
 # Coherence pass
 
-Date: 2026-11-18 · Status: **agreed**, being built in four PRs (A–D). Agreed with the owner on 2026-11-18: every recommended pick, and the bedtime question in onboarding for the first evening.
+Date: 2026-11-18 · Status: **merged** into `main` on 2026-11-18 (PRs #103–#106); phone check pending. Agreed with the owner on 2026-11-18: every recommended pick, and the bedtime question in onboarding for the first evening.
 
 ## Why
 
