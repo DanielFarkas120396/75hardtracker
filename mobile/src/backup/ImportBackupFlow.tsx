@@ -13,6 +13,10 @@ import { importBackup, PictureSwapError } from './importBackup'
 import { pickBackupFile } from './pickBackupFile'
 
 interface ImportBackupProps {
+  /** What the opener says. */
+  label?: string
+  /** A button (Settings) or a quiet link (the welcome screen). */
+  look?: 'button' | 'link'
   /** Where the file's text comes from. The file picker, except in tests. */
   pick?: () => Promise<string | null>
   /** Where pictures go. The phone's documents folder, except in tests. */
@@ -25,7 +29,12 @@ interface ImportBackupProps {
  * password if it is protected, confirms the replacement when the phone already
  * holds an attempt, asks about the days the backup can't know about, then imports.
  */
-export function ImportBackup({ pick = pickBackupFile, store = expoStore }: ImportBackupProps) {
+export function ImportBackup({
+  label = 'Import a web app backup',
+  look = 'button',
+  pick = pickBackupFile,
+  store = expoStore,
+}: ImportBackupProps) {
   const { colors, fonts } = useTheme()
   const today = useToday()
   const [error, setError] = useState<string | null>(null)
@@ -112,7 +121,13 @@ export function ImportBackup({ pick = pickBackupFile, store = expoStore }: Impor
 
   return (
     <View style={styles.block}>
-      <Button label="Import a web app backup" onPress={() => void start()} disabled={busy} kind="secondary" />
+      {look === 'button' ? (
+        <Button label={label} onPress={() => void start()} disabled={busy} kind="secondary" />
+      ) : (
+        <Pressable accessibilityRole="button" disabled={busy} onPress={() => void start()} style={styles.link}>
+          <Text style={[styles.linkLabel, { color: colors.inkMuted, fontFamily: fonts.rounded.semibold }]}>{label}</Text>
+        </Pressable>
+      )}
       {error !== null && (
         <Text accessibilityRole="alert" style={[styles.note, { color: colors.dangerInk, fontFamily: fonts.rounded.semibold }]}>
           {error}
@@ -258,4 +273,6 @@ const styles = StyleSheet.create({
   button: { minHeight: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 14, borderWidth: 1.5, paddingHorizontal: 18 },
   buttonLabel: { fontSize: 17 },
   disabled: { opacity: 0.5 },
+  link: { minHeight: 48, alignItems: 'center', justifyContent: 'center' },
+  linkLabel: { fontSize: 15, textDecorationLine: 'underline' },
 })
