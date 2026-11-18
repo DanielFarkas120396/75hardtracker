@@ -50,10 +50,15 @@ export function WeighInCard({ today, dayNumber }: WeighInCardProps) {
       const timer = setTimeout(gone, LOGGED_MS)
       return () => clearTimeout(timer)
     }
-    // Reduce motion: a fade, then the page moves up in one step.
-    shown.value = withDelay(LOGGED_MS, withTiming(0, { duration: reduceMotion ? 200 : FADE_MS, reduceMotion: ReduceMotion.Never }, (finished) => {
-      if (finished && reduceMotion) runOnJS(gone)()
-    }))
+    // Reduce motion: a fade, then the page moves up in one step. The wait is kept too (Reanimated would skip it):
+    // "kg logged." has to be read first.
+    shown.value = withDelay(
+      LOGGED_MS,
+      withTiming(0, { duration: reduceMotion ? 200 : FADE_MS, reduceMotion: ReduceMotion.Never }, (finished) => {
+        if (finished && reduceMotion) runOnJS(gone)()
+      }),
+      ReduceMotion.Never,
+    )
     if (!reduceMotion) {
       open.value = withDelay(LOGGED_MS, withTiming(0, { duration: FOLD_MS, easing: EASE_FOLD }, (finished) => {
         if (finished) runOnJS(gone)()

@@ -81,9 +81,9 @@ function Busy() {
 }
 
 const onLanded = jest.fn()
-const board = (data: DayTaskData, paused = false) => (
+const board = (data: DayTaskData, paused = false, completed = isDayComplete(data, RULES)) => (
   <>
-    <TaskBoard entry={{ ...ENTRY, completed: isDayComplete(data, RULES) }} data={data} completion={taskCompletionMap(data, RULES)} rules={RULES} paused={paused} onLandedChange={onLanded} onOpen={() => undefined} />
+    <TaskBoard entry={{ ...ENTRY, completed }} data={data} completion={taskCompletionMap(data, RULES)} rules={RULES} paused={paused} onLandedChange={onLanded} onOpen={() => undefined} />
     <Busy />
   </>
 )
@@ -149,12 +149,80 @@ describe('the board’s choreography', () => {
     await act(async () => void jest.advanceTimersByTime(1))
     expect(landed()).toBe(0)
     expect(screen.getByText('busy')).toBeOnTheScreen()
+    // Lifted out of the grid where it stood, it waits for its chip's place; the chip is there to be measured, unseen.
+    expect(screen.queryByTestId('cell-water')).toBeNull()
+    expect(screen.getByTestId('morphing-water', { includeHiddenElements: true })).toBeOnTheScreen()
+    expect(tile('Water, 3.8 L, done')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Water, 3.8 L, done', includeHiddenElements: true })).toHaveStyle({ opacity: 0 })
+
+    // Its chip's place is what starts the trip: no timer is moved on here, so the fallback for a board with no
+    // layout (150 ms) can't be what lands it.
     await fireEvent(screen.getByTestId('board-chips'), 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 358, height: 48 } } })
     await fireEvent(screen.getByTestId('chip-water'), 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 96, height: 48 } } })
-    await act(async () => void jest.runOnlyPendingTimers())
+    await act(async () => {})
+    expect(screen.queryByTestId('morphing-water', { includeHiddenElements: true })).toBeNull()
     expect(tile('Water, 3.8 L, done')).toBeOnTheScreen()
+    expect(tile('Water, 3.8 L, done')).not.toHaveStyle({ opacity: 0 })
     expect(landed()).toBe(1)
     expect(screen.getByText('idle')).toBeOnTheScreen()
+  })
+
+  it('waits for its chip’s place before it lands, and gives up on the trip only after 150 ms', async () => {
+    jest.useFakeTimers()
+    const view = await show(EMPTY)
+    await act(async () => {})
+    await view.rerender(board({ ...EMPTY, water_ml: 3800 }))
+    await settle('wave')
+    await fireEvent(screen.getByTestId('board-grid'), 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 358, height: 384 } } })
+    await fireEvent(screen.getByTestId('cell-water'), 'layout', { nativeEvent: { layout: { x: 0, y: 264, width: 358, height: 120 } } })
+    await act(async () => void jest.advanceTimersByTime(380))
+    expect(screen.getByTestId('morphing-water', { includeHiddenElements: true })).toBeOnTheScreen()
+    await act(async () => void jest.advanceTimersByTime(149))
+    expect(landed()).toBe(0)
+    await act(async () => void jest.advanceTimersByTime(1))
+    expect(landed()).toBe(1)
+    expect(tile('Water, 3.8 L, done')).toBeOnTheScreen()
+  })
+
+  it('keeps the board busy while a task done under a sheet waits for its chip', async () => {
+    jest.useFakeTimers()
+    const view = await show({ ...EMPTY, water_ml: 3550 }, true)
+    await act(async () => {})
+    await view.rerender(board({ ...EMPTY, water_ml: 3800 }, true))
+    expect(screen.getByText('busy')).toBeOnTheScreen()
+    expect(tile('Water, 3.55 of 3.8 L')).toBeOnTheScreen()
+    // The sheet closes: the tile fills, glows and lands.
+    await view.rerender(board({ ...EMPTY, water_ml: 3800 }, false))
+    expect(screen.getByText('busy')).toBeOnTheScreen()
+    await settle('wave')
+    await act(async () => void jest.advanceTimersByTime(1000))
+    expect(tile('Water, 3.8 L, done')).toBeOnTheScreen()
+    expect(screen.getByText('idle')).toBeOnTheScreen()
+  })
+
+  it('stays busy while the day is saved complete but its last workout has not loaded', async () => {
+    flags.__SKIP_ANIMATIONS__ = true
+    const allButOne: DayTaskData = { water_ml: 3800, pages_read: 10, dietFollowed: true, noAlcohol: true, hasPhoto: true, workouts: [{ durationMin: 45, isOutdoor: true }] }
+    const view = await render(board(allButOne, false, true), { wrapper: Providers })
+    await act(async () => {})
+    expect(screen.getByText('busy')).toBeOnTheScreen()
+    await view.rerender(board({ ...allButOne, workouts: [...allButOne.workouts, { durationMin: 45, isOutdoor: false }] }, false, true))
+    expect(screen.getByText('idle')).toBeOnTheScreen()
+  })
+
+  it('writes a status in the ink colour over a fill, the reading’s at 0 pages too, and leaves it muted on a bare tile', async () => {
+    await show({ ...EMPTY, water_ml: 0, pages_read: 0, workouts: [{ durationMin: 45, isOutdoor: true }] })
+    await act(async () => {})
+    const colourOf = (line: string): string | undefined =>
+      [screen.getByText(line).props.style].flat(5).reduce((found: string | undefined, style: { color?: string } | null | false) => (style && style.color) || found, undefined)
+    const ink = colourOf('Water')
+    expect(ink).toBeDefined()
+    // The book draws its open pages at rest: its line is always over a fill.
+    expect(colourOf('0 of 10 pages')).toBe(ink)
+    // An empty wave draws nothing: the muted grey reads there.
+    expect(colourOf('0 / 3.8 L')).not.toBe(ink)
+    // A fill part way: ink.
+    expect(colourOf('1 of 2 · 45 min')).toBe(ink)
   })
 
   it('shows the chip even when the board has no layout to travel by', async () => {
@@ -210,6 +278,8 @@ describe('the board’s choreography', () => {
     expect(screen.getByText('0.75 / 3.8 L')).toBeOnTheScreen()
     await settle('wave')
     expect(screen.getByText('1 / 3.8 L')).toBeOnTheScreen()
+    // The count lands where it was going: no dip, no slide-in.
+    expect(screen.getByText('1 / 3.8 L').parent).toHaveStyle({ opacity: 1, transform: [{ translateY: 0 }] })
   })
 
   it('holds still under a sheet, fills included, and plays what changed once it closes', async () => {

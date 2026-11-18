@@ -18,7 +18,7 @@ import { useReduceMotion } from '../hooks/useReduceMotion'
 import { useTheme } from '../theme/ThemeProvider'
 import { withAlpha } from '../theme/tokens'
 import { FADE_AWAY, FADE_HERE, growIn, MorphingTile, shrinkOut, SLIDE, useLanding, type Box } from './boardMotion'
-import { canAnimate, setBoardBusy, useFrozenWhile } from './boardSettle'
+import { canAnimate, setBoardBusy, setBoardPaused, useFrozenWhile } from './boardSettle'
 import { FillEngineContext, useFillEngine } from './fills/TileFill'
 import { HOLD_MS, TASK_ICONS, TaskTile, type QuickAction } from './TaskTile'
 
@@ -115,6 +115,11 @@ export function TaskBoard(props: TaskBoardProps) {
   const busy = settling(phases, liveCompletion) || (entry.completed && !TASK_IDS.every((task) => liveCompletion[task]))
   useEffect(() => setBoardBusy(busy), [busy])
   useEffect(() => () => setBoardBusy(false), [])
+  // The day-complete peak waits for a sheet to close: it can't show above one.
+  useEffect(() => {
+    setBoardPaused(paused)
+    return () => setBoardPaused(false)
+  }, [paused])
 
   // The day is the truth; the board follows it.
   useLayoutEffect(() => dispatch({ type: 'sync', completion, animate }), [completion, animate])

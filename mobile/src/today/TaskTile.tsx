@@ -212,7 +212,8 @@ function SlideIn({ slide, children }: { slide: boolean; children: ReactNode }) {
   const moves = slide && !reduceMotion && canAnimate()
   const shown = useState(() => new NativeAnimated.Value(moves ? 0 : 1))[0]
   useEffect(() => {
-    if (!moves) return
+    // In place at once, also when motion stops being allowed half way: never left faint.
+    if (!moves) return shown.setValue(1)
     const sliding = NativeAnimated.timing(shown, { toValue: 1, duration: 240, useNativeDriver: true })
     sliding.start()
     return () => sliding.stop()

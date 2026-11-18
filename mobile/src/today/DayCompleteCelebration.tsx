@@ -114,7 +114,8 @@ function Sunrise({ moves }: { moves: boolean }) {
   const { width, height } = useWindowDimensions()
   const up = useState(() => new Animated.Value(moves ? 0 : 1))[0]
   useEffect(() => {
-    if (!moves) return
+    // Up at once, also when motion stops being allowed half way.
+    if (!moves) return up.setValue(1)
     const swell = Animated.timing(up, { toValue: 1, duration: 1400, easing: EASE_OUT, useNativeDriver: true })
     swell.start()
     return () => swell.stop()
@@ -218,12 +219,14 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle)
 /** A short stretch of the climb, with the Journey's own stones: today's lights up as the day is won. */
 function ClimbStretch({ dayNumber, streak, moves }: { dayNumber: number; streak: number; moves: boolean }) {
   const { colors } = useTheme()
-  const [lit, setLit] = useState(!moves)
+  const [timeUp, setTimeUp] = useState(false)
+  // Won at once without motion, also when motion stops being allowed half way.
+  const lit = timeUp || !moves
   const burst = useState(() => new Animated.Value(0))[0]
   const ring = useState(() => new Animated.Value(moves ? 0 : 1))[0]
   useEffect(() => {
-    if (!moves) return
-    const timer = setTimeout(() => setLit(true), STONE_LIGHTS_MS)
+    if (!moves) return ring.setValue(1)
+    const timer = setTimeout(() => setTimeUp(true), STONE_LIGHTS_MS)
     // The burst's radius is drawn, not a transform: it runs on the JS thread, for 1.3 s.
     const out = Animated.timing(burst, { toValue: 1, duration: 1300, delay: STONE_LIGHTS_MS - 200, easing: Easing.out(Easing.quad), useNativeDriver: false })
     const settle = Animated.timing(ring, { toValue: 1, duration: 500, delay: STONE_LIGHTS_MS, easing: EASE_OUT, useNativeDriver: false })

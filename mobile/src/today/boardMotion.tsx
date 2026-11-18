@@ -139,7 +139,7 @@ export function MorphingTile({ task, from, to, photoUri, children, onLanded }: M
 
   return (
     <>
-      <Animated.View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.box, box]}>
+      <Animated.View testID={`morphing-${task}`} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.box, box]}>
         {/* The tile keeps its size as its box shrinks around it: it has faded before the box is much smaller. */}
         <Animated.View style={[{ width: from.width, height: from.height }, content]}>{children}</Animated.View>
       </Animated.View>

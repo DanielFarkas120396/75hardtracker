@@ -112,7 +112,8 @@ export function VictoryScreen({ challenge, today, revealed, streak, missedDays }
     if (revealed) onReveal()
   }, [revealed])
   useEffect(() => {
-    if (!moves) return
+    // Whole at once, also when Reduce Motion is learned after he started to arrive.
+    if (!moves) return arrive.setValue(1)
     const spring = Animated.spring(arrive, { toValue: 1, stiffness: 220, damping: 14, mass: 1, useNativeDriver: true })
     spring.start()
     return () => spring.stop()
@@ -131,7 +132,7 @@ export function VictoryScreen({ challenge, today, revealed, streak, missedDays }
   return (
     <>
       <ScrollView style={{ backgroundColor: colors.canvas }} contentContainerStyle={[styles.victory, { paddingTop: insets.top + 40 }]}>
-        <Animated.View style={{ opacity: arrive, transform: [{ scale: arrive.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) }] }}>
+        <Animated.View testID="victory-duck" style={{ opacity: arrive, transform: [{ scale: arrive.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) }] }}>
           <Mascot mood="triumphant" size={160} />
         </Animated.View>
         <View style={styles.centre}>

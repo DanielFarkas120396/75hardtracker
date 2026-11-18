@@ -6,7 +6,8 @@ import { AccessibilityInfo } from 'react-native'
 import { freshDatabase } from '../../db/__tests__/fixtures'
 import { settingsRepo } from '../../db/repositories/settingsRepo'
 import { useDayCompleteCelebration, type DayCelebration } from '../../hooks/useDayCompleteCelebration'
-import { setBoardBusy, useSettledCelebration } from '../boardSettle'
+import { useReduceMotion } from '../../hooks/useReduceMotion'
+import { setBoardBusy, setBoardPaused, useSettledCelebration } from '../boardSettle'
 import { DayCompleteCelebration } from '../DayCompleteCelebration'
 import { Providers } from './support'
 
@@ -38,6 +39,7 @@ beforeEach(async () => {
   jest.mocked(AccessibilityInfo.announceForAccessibility).mockClear()
   mockPlay.mockClear()
   setBoardBusy(false)
+  setBoardPaused(false)
   await freshDatabase()
 })
 
@@ -115,6 +117,45 @@ describe('when a day is complete', () => {
   })
 })
 
+describe('a day finished inside a sheet that stays open', () => {
+  it('keeps the peak back for as long as the sheet covers the board: it would play unseen under it', async () => {
+    jest.useFakeTimers()
+    const day: DayCelebration = { dayNumber: 4, streak: 1, isFinalDay: false, late: false }
+    // The second workout reaches 45 minutes in the workouts sheet, which stays open for the feel.
+    await act(async () => {
+      setBoardPaused(true)
+      setBoardBusy(true)
+    })
+    const hook = await renderHook(({ value }: { value: DayCelebration | null }) => useSettledCelebration(value), { initialProps: { value: null as DayCelebration | null } })
+    await hook.rerender({ value: day })
+    await act(async () => void jest.advanceTimersByTime(60_000))
+    expect(hook.result.current).toBeNull()
+
+    // The sheet closes: the chip lands, and the peak follows.
+    await act(async () => setBoardPaused(false))
+    expect(hook.result.current).toBeNull()
+    await act(async () => setBoardBusy(false))
+    expect(hook.result.current).toBe(day)
+  })
+
+  it('gives the board its five seconds once the sheet has closed', async () => {
+    jest.useFakeTimers()
+    const day: DayCelebration = { dayNumber: 4, streak: 1, isFinalDay: false, late: false }
+    await act(async () => {
+      setBoardPaused(true)
+      setBoardBusy(true)
+    })
+    const hook = await renderHook(({ value }: { value: DayCelebration | null }) => useSettledCelebration(value), { initialProps: { value: null as DayCelebration | null } })
+    await hook.rerender({ value: day })
+    await act(async () => void jest.advanceTimersByTime(8000))
+    await act(async () => setBoardPaused(false))
+    await act(async () => void jest.advanceTimersByTime(4999))
+    expect(hook.result.current).toBeNull()
+    await act(async () => void jest.advanceTimersByTime(1))
+    expect(hook.result.current).toBe(day)
+  })
+})
+
 describe('the day-complete peak', () => {
   const show = (celebration: DayCelebration, onDismiss = jest.fn()) => render(<DayCompleteCelebration celebration={celebration} onDismiss={onDismiss} />, { wrapper: Providers })
   const stone = (day: number) => screen.queryByTestId(`stone-${day}`, { includeHiddenElements: true })?.props.accessibilityLabel
@@ -157,6 +198,16 @@ describe('the day-complete peak', () => {
     expect(stone(14)).toBe('Day 14, not reached yet')
   })
 
+  it('reads only its words: the stones are for the eyes', async () => {
+    await show({ dayNumber: 12, streak: 12, isFinalDay: false, late: false })
+    await screen.findByLabelText('Day 12 done.')
+    for (const day of [10, 11, 12, 13, 14]) {
+      expect(screen.queryByTestId(`stone-${day}`)).toBeNull()
+      expect(screen.getByTestId(`stone-${day}`, { includeHiddenElements: true })).toBeOnTheScreen()
+    }
+    expect(screen.getByLabelText('12 day streak')).toBeOnTheScreen()
+  })
+
   it('stops at the ends of the climb', async () => {
     const first = await show({ dayNumber: 1, streak: 1, isFinalDay: false, late: false })
     await screen.findByLabelText('Day 1 done.')
@@ -167,6 +218,23 @@ describe('the day-complete peak', () => {
     await screen.findByLabelText('Day 75 done.')
     expect(stone(76)).toBeUndefined()
     expect(stone(73)).toBe('Day 73, completed')
+  })
+
+  it('opens on its end state under reduce motion: the stone won, its ring on, long after the app learned the setting', async () => {
+    // Animations are on, as on a phone: only Reduce Motion holds them back.
+    flags.__SKIP_ANIMATIONS__ = false
+    jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(true)
+    const Host = ({ celebration }: { celebration: DayCelebration | null }) => {
+      // The app's root asks the phone at launch (AppGate).
+      useReduceMotion()
+      return <DayCompleteCelebration celebration={celebration} onDismiss={jest.fn()} />
+    }
+    const view = await render(<Host celebration={null} />, { wrapper: Providers })
+    await act(async () => {})
+    await view.rerender(<Host celebration={{ dayNumber: 12, streak: 2, isFinalDay: false, late: false }} />)
+    await act(async () => {})
+    expect(stone(12)).toBe('Day 12, completed')
+    expect(screen.getByTestId('won-ring', { includeHiddenElements: true })).toBeOnTheScreen()
   })
 
   it('shows the end state at once under reduce motion, and stays quiet when sounds are off', async () => {

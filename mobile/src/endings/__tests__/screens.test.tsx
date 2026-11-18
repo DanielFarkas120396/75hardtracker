@@ -380,6 +380,15 @@ describe('VictoryScreen', () => {
     expect(confetti()).toBeNull()
   })
 
+  it('shows the duck whole when Reduce Motion is learned after it started to arrive (the app opened on Victory)', async () => {
+    flags.__SKIP_ANIMATIONS__ = false
+    jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(true)
+    await setup({ variant: 'hard', streak: 75, missedDays: [] })
+    await screen.findByRole('header', { name: '75 Hard complete! 🏆' })
+
+    await waitFor(() => expect(screen.getByTestId('victory-duck')).toHaveStyle({ opacity: 1, transform: [{ scale: 1 }] }))
+  })
+
   it('starts the next attempt from its sheet, with the challenge just won picked by default', async () => {
     await setup({ variant: 'soft', streak: 75, missedDays: [] })
     await press('Start a new challenge')

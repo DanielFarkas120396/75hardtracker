@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { recoverPictures } from '../backup/importBackup'
 import { openAppDatabase } from '../db/open'
 import { expoStore, type FileStore } from '../files/store'
+import { useReduceMotion } from '../hooks/useReduceMotion'
 import { ThemeProvider, useTheme } from '../theme/ThemeProvider'
 import { DatabaseError } from './DatabaseError'
 
@@ -15,6 +16,8 @@ type Opening = { status: 'opening' } | { status: 'open' } | { status: 'failed'; 
  */
 export function AppGate({ children, store = expoStore }: { children: ReactNode; store?: FileStore }) {
   const [opening, setOpening] = useState<Opening>({ status: 'opening' })
+  // Asked here, at launch, and listened to for the app's whole life: every screen then knows it from its first render.
+  useReduceMotion()
 
   useEffect(() => {
     let gone = false
