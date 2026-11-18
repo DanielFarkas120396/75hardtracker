@@ -220,6 +220,8 @@ function MainApp({ today, onBadgeFeed }: { today: string; onBadgeFeed: (feed: Ba
           {screen === 'gallery' && (
             <GalleryScreen
               challengeId={gate.challenge.id}
+              attemptNumber={gate.challenge.attemptNumber}
+              streak={gate.streak}
               onTakePhoto={() => {
                 setScreen('today')
                 setCameraRequested(true)

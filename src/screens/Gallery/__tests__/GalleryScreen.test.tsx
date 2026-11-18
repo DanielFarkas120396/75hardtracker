@@ -19,7 +19,7 @@ describe('GalleryScreen', () => {
 
   it('with no photos, shows the duck and sends you to take one', async () => {
     const onTakePhoto = vi.fn()
-    render(<GalleryScreen challengeId={1} onTakePhoto={onTakePhoto} />)
+    render(<GalleryScreen challengeId={1} attemptNumber={1} streak={3} onTakePhoto={onTakePhoto} />)
 
     expect(await screen.findByRole('heading', { name: 'No photos yet' }, LOADED)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: "Take today's photo" }))
@@ -32,7 +32,7 @@ describe('GalleryScreen', () => {
     const current = await addChallenge({ startDate: '2026-10-01', attemptNumber: 2, status: 'active' })
     await addPerfectDay(current, '2026-10-01', 1)
     await addPerfectDay(current, '2026-10-01', 40)
-    render(<GalleryScreen challengeId={current} onTakePhoto={() => {}} />)
+    render(<GalleryScreen challengeId={current} attemptNumber={1} streak={3} onTakePhoto={() => {}} />)
 
     expect(await screen.findAllByRole('button', { name: /^Day \d+ progress/ }, LOADED)).toHaveLength(2)
     expect(screen.queryByRole('heading', { level: 2 })).not.toBeInTheDocument()
@@ -43,7 +43,7 @@ describe('GalleryScreen', () => {
       const id = await addChallenge({ startDate: '2026-10-01', attemptNumber: 1, status: 'active' })
       await addPerfectDay(id, '2026-10-01', 1)
       await addPerfectDay(id, '2026-10-01', 32)
-      render(<GalleryScreen challengeId={id} onTakePhoto={() => {}} />)
+      render(<GalleryScreen challengeId={id} attemptNumber={1} streak={3} onTakePhoto={() => {}} />)
 
       fireEvent.click(await screen.findByRole('button', { name: /^Compare ?Day 1 → Day 32$/ }, LOADED))
       expect(screen.getByRole('dialog', { name: 'Compare photos' })).toBeInTheDocument()
@@ -55,7 +55,7 @@ describe('GalleryScreen', () => {
       await addPerfectDay(old, '2026-09-01', 2)
       const current = await addChallenge({ startDate: '2026-10-01', attemptNumber: 2, status: 'active' })
       await addPerfectDay(current, '2026-10-01', 1)
-      render(<GalleryScreen challengeId={current} onTakePhoto={() => {}} />)
+      render(<GalleryScreen challengeId={current} attemptNumber={1} streak={3} onTakePhoto={() => {}} />)
 
       expect(await screen.findAllByRole('button', { name: /^Day \d+ progress/ }, LOADED)).toHaveLength(1)
       expect(screen.queryByRole('button', { name: /^Compare/ })).not.toBeInTheDocument()
