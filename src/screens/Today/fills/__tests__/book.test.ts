@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { contrastRatio, SURFACE, WORLD_COLORS } from '../../../../lib/worldColors'
 import { WORLDS } from '../../../Journey/worlds'
 import { createBook, riffleGap, spineShade } from '../book'
+import { frameDecision } from '../schedule'
 import { FILL_LOOK, fillOpacity, fillPalette, mix, rgb, TILE_INK, toHex } from '../palette'
 
 describe('book fill', () => {
@@ -68,6 +69,28 @@ describe('book fill', () => {
     for (let i = 0; i < 60 * 6; i++) book.step(1 / 60, true)
     expect(book.shown()).toBeCloseTo(0.3)
     expect(book.settled()).toBe(true)
+    book.dispose()
+  })
+
+  it('draws an empty tile after "+1 page" then Undo, not the last frame of the ebb', () => {
+    // The engine's loop: step, then draw only when frameDecision says so; `drawn` is what the tile shows.
+    const book = createBook(fillPalette(WORLD_COLORS.forest.dark, 'dark'))
+    let drawn = book.shown()
+    let wasMoving = false
+    const frames = (n: number) => {
+      for (let i = 0; i < n; i++) {
+        const moving = book.step(1 / 60, true)
+        const { draw } = frameDecision({ moving, settling: wasMoving && !moving, fading: false, dirty: false, drifting: false }, false)
+        wasMoving = moving
+        if (draw) drawn = book.shown()
+      }
+    }
+    book.setLevel(0.1, false)
+    frames(60 * 3)
+    expect(drawn).toBeCloseTo(0.1)
+    book.setLevel(0, false)
+    frames(60)
+    expect(drawn).toBe(0)
     book.dispose()
   })
 })

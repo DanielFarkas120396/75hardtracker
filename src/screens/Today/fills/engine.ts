@@ -16,6 +16,8 @@ interface Entry {
   level: number
   visible: boolean
   dirty: boolean
+  /** The painter moved on the last frame: when it stops, its resting frame still needs drawing. */
+  wasMoving: boolean
   /** The last frame before a crossfade, drawn under the new one as it fades in. */
   prev: HTMLCanvasElement | null
   fade: number
@@ -168,9 +170,11 @@ export function createEngine(): FillEngine {
       // A tile that shrinks into its chip or changes width is drawn at its new size at once, not on the next drift slot.
       const resized = entry.canvas.width !== Math.round(width * dpr) || entry.canvas.height !== Math.round(height * dpr)
       const moving = entry.painter.step(dt, drift)
+      const settling = entry.wasMoving && !moving
+      entry.wasMoving = moving
       if (entry.prev) entry.fade = Math.min(1, entry.fade + dt / FADE_S)
       const decision = frameDecision(
-        { moving, fading: entry.prev !== null, dirty: entry.dirty || resized, drifting: drift && entry.painter.drifts() },
+        { moving, settling, fading: entry.prev !== null, dirty: entry.dirty || resized, drifting: drift && entry.painter.drifts() },
         driftDue,
       )
       if (decision.draw) {
@@ -203,7 +207,7 @@ export function createEngine(): FillEngine {
     add(kind, canvas, onFrame): FillHandle {
       const ctx = canvas.getContext('2d')
       if (!ctx) throw new Error('This browser has no 2D canvas')
-      const entry: Entry = { kind, canvas, ctx, painter: makePainter(kind), level: 0, visible: true, dirty: true, prev: null, fade: 1, onFrame }
+      const entry: Entry = { kind, canvas, ctx, painter: makePainter(kind), level: 0, visible: true, dirty: true, wasMoving: false, prev: null, fade: 1, onFrame }
       canvas.style.opacity = String(fillOpacity(kind, palette))
       entries.set(canvas, entry)
       seen.observe(canvas)
