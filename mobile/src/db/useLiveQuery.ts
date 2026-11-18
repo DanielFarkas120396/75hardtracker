@@ -32,6 +32,7 @@ export function useLiveQuery<T>(query: () => Promise<T>, deps: readonly unknown[
       stop()
     }
     // The caller lists what the query depends on, as with dexie-react-hooks.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 
   if ('error' in state) throw state.error
