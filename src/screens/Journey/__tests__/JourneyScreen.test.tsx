@@ -52,6 +52,16 @@ describe('JourneyScreen', () => {
     expect(screen.getByRole('button', { name: /Day 4 · forgiven with a joker/ })).toBeInTheDocument()
   })
 
+  it("counts today as to go until it's done", () => {
+    renderJourney(1, [entry(1, { completed: false })])
+    expect(screen.getByText('Days 1–10 · 10 to go')).toBeInTheDocument()
+  })
+
+  it('counts nine to go once Day 1 is done', () => {
+    renderJourney(1, [entry(1)])
+    expect(screen.getByText('Days 1–10 · 9 to go')).toBeInTheDocument()
+  })
+
   it('opens the day card from a past day', () => {
     renderJourney(3, [entry(1, { notes: 'First day done.' }), entry(2)])
 

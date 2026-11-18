@@ -53,7 +53,7 @@ function CompareView({ entries, onClose }: Omit<PhotoCompareProps, 'open'>) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 p-4 outline-none"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/95 p-4 outline-none backdrop-blur-md"
       onClick={onClose}
     >
       <div className="flex w-full max-w-[calc(70dvh*2/3)] flex-col items-center gap-3" onClick={(e) => e.stopPropagation()}>

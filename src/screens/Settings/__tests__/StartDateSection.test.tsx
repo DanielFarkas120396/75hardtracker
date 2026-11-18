@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { db } from '../../../db/db'
+import { dayEntryRepo } from '../../../db/repositories/dayEntryRepo'
 import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
 import type { Challenge } from '../../../db/types'
 import { addDaysISO, formatShortDay, todayISO } from '../../../lib/dates'
@@ -9,7 +10,7 @@ import type { ChallengeVariant } from '../../../logic/rulesets'
 import { StartDateSection } from '../StartDateSection'
 
 /** An active challenge whose Day 1 is `todayDayNumber` days before today. */
-async function setup(todayDayNumber: number, variant?: ChallengeVariant) {
+async function setup(todayDayNumber: number, variant?: ChallengeVariant, notes?: string) {
   const today = todayISO()
   const startDate = addDaysISO(today, -(todayDayNumber - 1))
   const challengeId = await addChallenge({
@@ -19,6 +20,10 @@ async function setup(todayDayNumber: number, variant?: ChallengeVariant) {
     ...(variant ? { variant } : {}),
   })
   const challenge = (await db.challenges.get(challengeId)) as Challenge
+  if (notes) {
+    const entry = await dayEntryRepo.getOrCreate({ challengeId, dayNumber: todayDayNumber, date: today })
+    await db.dayEntries.update(entry.id, { notes })
+  }
   render(<StartDateSection challenge={challenge} today={today} todayDayNumber={todayDayNumber} />)
   return { challengeId }
 }
@@ -39,8 +44,22 @@ describe('StartDateSection', () => {
 
     expect(screen.getByRole('heading', { name: 'Challenge' })).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('radio', { name: /^75 Medium/ }))
+    await waitFor(async () => {
+      fireEvent.click(screen.getByRole('radio', { name: /^75 Medium/ }))
+      expect((await db.challenges.get(challengeId))?.variant).toBe('medium')
+    })
+  })
 
+  it('asks before switching once Day 1 has progress, and Cancel keeps the challenge', async () => {
+    const { challengeId } = await setup(1, undefined, 'felt good')
+
+    fireEvent.click(screen.getByRole('radio', { name: /^75 Medium/ }))
+    expect(await screen.findByRole('heading', { name: 'Switch to 75 Medium?' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect((await db.challenges.get(challengeId))?.variant).toBeUndefined()
+
+    fireEvent.click(screen.getByRole('radio', { name: /^75 Medium/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Switch' }))
     await waitFor(async () => expect((await db.challenges.get(challengeId))?.variant).toBe('medium'))
   })
 

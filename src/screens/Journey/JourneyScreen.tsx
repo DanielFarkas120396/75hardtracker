@@ -23,12 +23,13 @@ interface JourneyScreenProps {
 }
 
 /** The cover closing a chapter: its score while you're in it, "Cleared" with the date once it's behind you. */
-function chapterCover(chapter: Chapter, startDate: string) {
+function chapterCover(chapter: Chapter, startDate: string, todayDone: boolean) {
   const { world, done, jokers, cleared } = chapter
   const length = world.lastDay - world.firstDay + 1
   const days = `Days ${world.firstDay}–${world.lastDay}`
   if (!cleared) {
-    const toGo = world.lastDay - chapter.days[0].dayNumber + (chapter.days[0].status === 'today' ? 1 : 0)
+    // Today still counts as to go until it's done.
+    const toGo = world.lastDay - chapter.days[0].dayNumber + (chapter.days[0].status === 'today' && !todayDone ? 1 : 0)
     return { badge: `${done}/${length}`, detail: toGo > 0 ? `${days} · ${toGo} to go` : days }
   }
   const jokerNote = jokers > 0 ? ` · ${jokers} ${jokers === 1 ? 'joker' : 'jokers'}` : ''
@@ -111,7 +112,7 @@ export function JourneyScreen({ challenge, dayEntries, todayDayNumber, streak, c
 
         {log.chapters.map((chapter) => (
           <section key={chapter.world.id} aria-label={chapter.world.name} className="mt-4 flex flex-col gap-2">
-            <WorldCover world={chapter.world} {...chapterCover(chapter, challenge.startDate)} />
+            <WorldCover world={chapter.world} {...chapterCover(chapter, challenge.startDate, Boolean(entryFor(todayDayNumber)?.completed))} />
             {chapter.days.map(({ dayNumber, status }) => (
               <DayRow
                 key={dayNumber}

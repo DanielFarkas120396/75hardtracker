@@ -17,9 +17,9 @@ describe('taskStatusLine', () => {
     const one = { ...empty, workouts: [{ durationMin: 45, isOutdoor: false }] }
     expect(taskStatusLine('workouts', one, hard, false)).toBe('1 of 2 · next outdoors')
     expect(taskStatusLine('workouts', { ...empty, workouts: [{ durationMin: 45, isOutdoor: true }] }, hard, false)).toBe('1 of 2 logged')
-    // A 20-minute session is logged but doesn't count.
+    // A 20-minute session is logged but doesn't count, and the tile says why.
     expect(taskStatusLine('workouts', { ...empty, workouts: [{ durationMin: 20, isOutdoor: false }] }, hard, false)).toBe(
-      '2 × 45 min · 1 outdoors',
+      'Too short · 45 min needed',
     )
     // Hard wants one of the two outdoors: two indoor sessions don't do it.
     const indoors = { ...empty, workouts: [{ durationMin: 45, isOutdoor: false }, { durationMin: 50, isOutdoor: false }] }

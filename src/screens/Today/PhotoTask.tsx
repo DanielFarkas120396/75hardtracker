@@ -18,8 +18,8 @@ export function PhotoTask() {
       )}
 
       {cameraFailed && (
-        <p className="mt-2 text-sm text-ink-muted">
-          The in-app camera isn't available, so Take photo opens your phone's camera instead.
+        <p role="status" className="mt-2 text-sm font-semibold text-ink">
+          The in-app camera couldn't start, so Take photo opens your phone's camera instead.
         </p>
       )}
 

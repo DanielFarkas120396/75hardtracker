@@ -54,19 +54,28 @@ export function StartDateSection({ challenge, today, todayDayNumber }: StartDate
   const [confirmClear, setConfirmClear] = useState(false)
   const [saving, setSaving] = useState(false)
   const [switching, setSwitching] = useState(false)
-  const hasLoggedProgress = useLiveQuery(() => dayEntryRepo.hasLoggedProgress(challenge.id), [challenge.id]) ?? false
+  const [pendingVariant, setPendingVariant] = useState<ChallengeVariant | null>(null)
+  const loggedProgress = useLiveQuery(() => dayEntryRepo.hasLoggedProgress(challenge.id), [challenge.id])
+  const hasLoggedProgress = loggedProgress ?? false
 
   const editable = isStartDateEditable(todayDayNumber)
 
-  const changeVariant = async (variant: ChallengeVariant) => {
-    if (variant === variantOf(challenge)) return
+  const switchVariant = async (variant: ChallengeVariant) => {
     setSwitching(true)
     try {
       const result = await challengeRepo.changeVariant(challenge.id, variant, today)
       setError(result.ok ? null : REJECTION_MESSAGES[result.reason])
     } finally {
       setSwitching(false)
+      setPendingVariant(null)
     }
+  }
+
+  // Logs stay but are re-judged under the new rules, so a done day can reopen: ask first (also while still checking).
+  const changeVariant = (variant: ChallengeVariant) => {
+    if (variant === variantOf(challenge)) return
+    if (loggedProgress !== false) return setPendingVariant(variant)
+    void switchVariant(variant)
   }
 
   const apply = async () => {
@@ -107,7 +116,7 @@ export function StartDateSection({ challenge, today, todayDayNumber }: StartDate
             that, both are locked for this attempt.
           </p>
           <div className="mt-3">
-            <VariantPicker value={variantOf(challenge)} onChange={(v) => void changeVariant(v)} disabled={switching} />
+            <VariantPicker value={variantOf(challenge)} onChange={changeVariant} disabled={switching} />
           </div>
 
           <div className="mt-3 flex gap-2">
@@ -151,6 +160,27 @@ export function StartDateSection({ challenge, today, todayDayNumber }: StartDate
           {error}
         </p>
       )}
+
+      <Modal open={pendingVariant !== null} onClose={() => setPendingVariant(null)}>
+        <h3 className="font-rounded text-lg font-bold text-ink">
+          Switch to {pendingVariant && VARIANT_NAMES[pendingVariant]}?
+        </h3>
+        <p className="mt-2 text-sm text-ink-muted">
+          What you've logged stays, but it's checked against the new rules, so a finished day can open up again.
+        </p>
+        <div className="mt-4 flex gap-2">
+          <Button
+            className="flex-1"
+            onClick={() => pendingVariant && void switchVariant(pendingVariant)}
+            disabled={switching}
+          >
+            {switching ? 'Switching…' : 'Switch'}
+          </Button>
+          <Button variant="secondary" className="flex-1" onClick={() => setPendingVariant(null)} disabled={switching}>
+            Cancel
+          </Button>
+        </div>
+      </Modal>
 
       <Modal open={confirmClear} onClose={() => setConfirmClear(false)}>
         <h3 className="font-rounded text-lg font-bold text-ink">Move the start date?</h3>

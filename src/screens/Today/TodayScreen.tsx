@@ -208,6 +208,7 @@ function TodayTasks({
       openCameraNow={openCamera}
       onCameraOpened={onCameraOpened}
       onCameraOpen={() => setOpenTask(null)}
+      onCameraUnavailable={() => setOpenTask('photo')}
     >
       <div className="min-h-dvh bg-canvas pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
         <MenaceAtmosphere level={menace.level} flashes={lunges} />
