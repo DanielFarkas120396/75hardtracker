@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { journeyLog } from '../chapters'
+import { journeyLog as sharedJourneyLog, type LogInput } from '../journeyLog'
+import { WORLD_SPANS } from '../worlds'
+
+const journeyLog = (input: LogInput) => sharedJourneyLog(WORLD_SPANS, input)
 
 const range = (from: number, to: number) => new Set(Array.from({ length: to - from + 1 }, (_, i) => from + i))
 const none = new Set<number>()
