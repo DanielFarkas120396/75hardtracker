@@ -88,6 +88,18 @@ export const MIGRATIONS: readonly string[] = [
   `,
 ]
 
+/** Every table, for the operations that empty the database (an import, the developer seed). */
+export const TABLE_NAMES = [
+  'challenges',
+  'dayEntries',
+  'workouts',
+  'books',
+  'measurements',
+  'photos',
+  'badges',
+  'settings',
+] as const
+
 /**
  * Brings the database up to the latest version. Safe to run at every launch.
  * A database written by a newer version of the app is left as it is.
