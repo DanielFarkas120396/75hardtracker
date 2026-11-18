@@ -9,20 +9,25 @@ import { challengeWeek, rulesFor } from '@logic/rulesets'
 import { notesStatusLine } from '@logic/taskStatus'
 import type { TaskId } from '@logic/types'
 import { preStartPlanLine, VARIANT_NAMES } from '@logic/variantsCopy'
-import { useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import Animated from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { GaugeRing } from '../components/GaugeRing'
 import { Icon } from '../components/icons/Icon'
 import { Mascot } from '../components/mascot/Mascot'
 import { Button } from '../components/ui/Button'
 import { Sheet } from '../components/ui/Sheet'
-import type { Challenge, DayEntry } from '../db/types'
+import type { Challenge, DayEntry, Workout } from '../db/types'
 import { useAnnounceChanges } from '../hooks/useAnnounce'
 import { useChallengeGate } from '../hooks/useChallengeGate'
+import { useDayCompleteCelebration } from '../hooks/useDayCompleteCelebration'
 import { useNowMinutes } from '../hooks/useNowMinutes'
 import { useTheme } from '../theme/ThemeProvider'
+import { SLIDE } from './boardMotion'
+import { useFrozenWhile, useSettledCelebration } from './boardSettle'
 import { DayBoard, LoggedToast, useLogged } from './DayBoard'
+import { DayCompleteCelebration } from './DayCompleteCelebration'
 import { useDuck, type DuckAnnouncement } from './DuckHeader'
 import { dayCompletion, useBedtime, useCurrentBook, useDayEntry, useProfile, useWorkoutsForEntry } from './hooks'
 import { LateDayCard, LateDayView } from './LateDay'
@@ -45,13 +50,26 @@ import { WeighInCard } from './WeighInCard'
  */
 export function Today() {
   const gate = useChallengeGate()
+  // Held here, above the day's screens: finishing a day may swap what Today shows, and the peak must outlive the swap.
+  const { celebration, dismiss } = useDayCompleteCelebration(gate ?? undefined)
+  // It waits for the board's last chip to land (5 s at most).
+  const shown = useSettledCelebration(celebration)
+  return (
+    <>
+      <Attempt gate={gate} celebrating={celebration !== null} />
+      <DayCompleteCelebration celebration={shown} onDismiss={dismiss} />
+    </>
+  )
+}
+
+function Attempt({ gate, celebrating }: { gate: ChallengeGate | null | undefined; celebrating: boolean }) {
   if (!gate) return <Centred>Loading…</Centred>
   if (gate.kind === 'needsRestart') {
     return <NotRunning title={`Day ${gate.failedDayNumber} was missed`} line="This attempt is over. Starting again isn't built in this version yet." />
   }
   if (gate.kind === 'abandoned') return <NotRunning title="You gave up" line="Starting again isn't built in this version yet." />
   if (gate.kind === 'completed') return <NotRunning title={`${CHALLENGE_LENGTH} days done`} line="The victory screen isn't built in this version yet." />
-  return <TodayScreen gate={gate} />
+  return <TodayScreen gate={gate} celebrating={celebrating} />
 }
 
 /**
@@ -59,7 +77,7 @@ export function Today() {
  * or yesterday's while it can still be finished (until noon) and the player
  * has opened it. The web's TodayScreen.
  */
-export function TodayScreen({ gate }: { gate: ChallengeGate }) {
+export function TodayScreen({ gate, celebrating = false }: { gate: ChallengeGate; celebrating?: boolean }) {
   const [lateOpen, setLateOpen] = useState(false)
   const late = gate.lateDayPending ? gate.lateDayNumber : null
   const hasToday = isChallengeDay(gate.todayDayNumber)
@@ -81,23 +99,32 @@ export function TodayScreen({ gate }: { gate: ChallengeGate }) {
   }
   if (!hasToday) return <PreStartView challenge={gate.challenge} today={gate.today} todayDayNumber={gate.todayDayNumber} />
   // Keyed by day: the lunges, the sheets, the camera and the announcement all belong to one day.
-  return <TodayTasks key={gate.todayDayNumber} gate={gate} pendingLateDay={late} onOpenLateDay={() => setLateOpen(true)} />
+  return <TodayTasks key={gate.todayDayNumber} gate={gate} pendingLateDay={late} celebrating={celebrating} onOpenLateDay={() => setLateOpen(true)} />
 }
 
 interface TodayTasksProps {
   gate: ChallengeGate
   /** Yesterday, while it can still be finished (until noon) and isn't yet. */
   pendingLateDay: number | null
+  /** The day-complete peak is up or on its way: the gauge holds. */
+  celebrating: boolean
   onOpenLateDay: () => void
 }
 
-function TodayTasks({ gate, pendingLateDay, onOpenLateDay }: TodayTasksProps) {
-  const { challenge, dayEntries, today, todayDayNumber } = gate
-  const rules = rulesFor(challenge)
+function TodayTasks(props: TodayTasksProps) {
+  const { challenge, dayEntries, today, todayDayNumber } = props.gate
   const entry = useDayEntry({ challengeId: challenge.id, dayNumber: todayDayNumber, date: today, dayEntries })
   const workouts = useWorkoutsForEntry(entry?.id)
-  const nowMin = useNowMinutes()
   const bedtime = useBedtime()
+  if (!entry || !workouts || bedtime === undefined) return <Centred>Loading…</Centred>
+  return <TodayDay {...props} entry={entry} workouts={workouts} bedtime={bedtime} />
+}
+
+/** The day, once its entry, its workouts and the bedtime have been read. */
+function TodayDay({ gate, pendingLateDay, celebrating, onOpenLateDay, entry, workouts, bedtime }: TodayTasksProps & { entry: DayEntry; workouts: Workout[]; bedtime: string }) {
+  const { challenge, dayEntries, today, todayDayNumber } = gate
+  const rules = useMemo(() => rulesFor(challenge), [challenge])
+  const nowMin = useNowMinutes()
   const profile = useProfile()
   const { currentBook } = useCurrentBook()
   const [sheet, setSheet] = useState<OpenSheet | null>(null)
@@ -105,9 +132,11 @@ function TodayTasks({ gate, pendingLateDay, onOpenLateDay }: TodayTasksProps) {
   const [announcement, setAnnouncement] = useState<DuckAnnouncement>()
   const { logged, log, clear } = useLogged()
 
-  if (!entry || !workouts || bedtime === undefined) return <Centred>Loading…</Centred>
-
-  const day = dayCompletion(entry, workouts, rules, challenge.socialDays)
+  const live = useMemo(() => dayCompletion(entry, workouts, rules, challenge.socialDays), [entry, workouts, rules, challenge.socialDays])
+  // How many chips have landed on the board: the gauge counts these, not the saved completions.
+  const [landed, setLanded] = useState<number | null>(null)
+  // At 5/5 the hero, the duck and the buttons keep the day as it was until the board's last chip lands.
+  const day = useFrozenWhile(live.missing.length === 0 && landed !== null && landed < TASK_IDS.length, live)
   const menace = resolveMenace({
     data: day.data,
     nowMin,
@@ -116,7 +145,7 @@ function TodayTasks({ gate, pendingLateDay, onOpenLateDay }: TodayTasksProps) {
     estimates: entry.planEstimates,
     rules,
   })
-  const completedCount = TASK_IDS.filter((task) => day.completion[task]).length
+  const completedCount = TASK_IDS.filter((task) => live.completion[task]).length
   const socialToday = rules.socialDaysPerWeek > 0 && (challenge.socialDays?.includes(todayDayNumber) ?? false)
   const canPlanSocial = rules.socialDaysPerWeek > 0 && todayDayNumber < CHALLENGE_LENGTH
   const weekRestDay = dayEntries.find(
@@ -155,7 +184,9 @@ function TodayTasks({ gate, pendingLateDay, onOpenLateDay }: TodayTasksProps) {
         <Hero
           attemptLine={`${VARIANT_NAMES[rules.variant]} #${challenge.attemptNumber}`}
           dayNumber={todayDayNumber}
-          completedCount={completedCount}
+          completedCount={landed ?? completedCount}
+          celebrating={celebrating}
+          waitingForChip={live.missing.length === 0 && day.missing.length > 0}
           streak={gate.streak}
           jokersLeft={rules.jokers > 0 ? gate.jokersLeft : undefined}
           why={profile?.why}
@@ -175,10 +206,12 @@ function TodayTasks({ gate, pendingLateDay, onOpenLateDay }: TodayTasksProps) {
         <View style={styles.main}>
           <DayBoard
             entry={entry}
-            data={day.data}
-            completion={day.completion}
+            data={live.data}
+            completion={live.completion}
             rules={rules}
             currentBook={currentBook}
+            covered={sheet !== null}
+            onLandedChange={setLanded}
             socialToday={socialToday}
             urgent={urgent}
             minutesLeft={urgent ? deadline.minutesLeft : undefined}
@@ -186,7 +219,8 @@ function TodayTasks({ gate, pendingLateDay, onOpenLateDay }: TodayTasksProps) {
             onAddWorkout={onAddWorkout}
             onOpen={setSheet}
           />
-          <View style={styles.actions}>
+          {/* The buttons under the board slide with it as it closes up. */}
+          <Animated.View layout={SLIDE} style={styles.actions}>
             {!won && (
               <ActionButton
                 icon="calendar"
@@ -198,7 +232,7 @@ function TodayTasks({ gate, pendingLateDay, onOpenLateDay }: TodayTasksProps) {
             {canPlanSocial && <ActionButton icon="drink" label="Social night" accessibilityLabel="Plan a social night" onPress={() => setSheet('social')} />}
             {/* Once the day is won, the hero's "How did it go?" opens the notes instead. */}
             {!won && <ActionButton icon="notes" label="Notes" onPress={() => setSheet('notes')} />}
-          </View>
+          </Animated.View>
         </View>
       </Page>
 
@@ -208,7 +242,7 @@ function TodayTasks({ gate, pendingLateDay, onOpenLateDay }: TodayTasksProps) {
         context={{
           entry,
           workouts,
-          completion: day.completion,
+          completion: live.completion,
           rules,
           dayNumber: todayDayNumber,
           socialToday,
@@ -220,8 +254,8 @@ function TodayTasks({ gate, pendingLateDay, onOpenLateDay }: TodayTasksProps) {
         plan={
           <PlanForm
             entry={entry}
-            data={day.data}
-            missing={day.missing}
+            data={live.data}
+            missing={live.missing}
             nowMin={nowMin}
             rules={rules}
             onClose={() => setSheet(null)}
@@ -262,6 +296,9 @@ interface HeroProps {
   name?: string
   started: boolean
   yesterdayOpen: boolean
+  celebrating?: boolean
+  /** The day is won but the board's last chip hasn't landed: the frozen line would ask for a task already ticked. */
+  waitingForChip?: boolean
   onLunge: () => void
 }
 
@@ -269,10 +306,10 @@ interface HeroProps {
  * The hero with its duck: rendered once the day has loaded, so the duck's hook always has its inputs. When nothing
  * else is under the gauge, his line stays there (said aloud as it changes) and his bubble keeps to reactions and chatter.
  */
-function Hero({ menace, missing, completion, dayNumber, announcement, name, started, yesterdayOpen, onLunge, below, ...hero }: HeroProps) {
+function Hero({ menace, missing, completion, dayNumber, announcement, name, started, yesterdayOpen, onLunge, below, waitingForChip = false, ...hero }: HeroProps) {
   const lineInHero = below === null
   const { duck, speech, line } = useDuck({ menace, missing, completion, dayNumber, announcement, name, started, yesterdayOpen, onLunge, lineInHero })
-  return <TodayHero {...hero} dayNumber={dayNumber} duck={duck} speech={speech} below={lineInHero ? <Line announced>{line}</Line> : below} />
+  return <TodayHero {...hero} dayNumber={dayNumber} duck={duck} speech={speech} below={lineInHero ? <Line announced hidden={waitingForChip}>{line}</Line> : below} />
 }
 
 /** "Day N won", and the day's closing ritual: how it went. */
@@ -303,10 +340,11 @@ function TimeLeft({ first, second }: { first: string; second: string }) {
 }
 
 /** A line under the gauge: the next plan, or the duck's own line, which is said aloud when it changes. */
-function Line({ children, announced = false }: { children: string; announced?: boolean }) {
+function Line({ children, announced = false, hidden = false }: { children: string; announced?: boolean; hidden?: boolean }) {
   const { colors, fonts } = useTheme()
-  useAnnounceChanges(announced ? children : '')
-  return <Text style={[styles.small, styles.line, { color: colors.inkMuted, fontFamily: fonts.rounded.bold }]}>{children}</Text>
+  useAnnounceChanges(announced && !hidden ? children : '')
+  // Hidden, its room is kept: the won line follows with the gauge.
+  return <Text style={[styles.small, styles.line, { color: colors.inkMuted, fontFamily: fonts.rounded.bold }, hidden && styles.unseen]}>{children}</Text>
 }
 
 /** An attempt that is no longer running, said plainly. Its real screens are part 4d. */
@@ -413,6 +451,7 @@ const styles = StyleSheet.create({
   pill: { minHeight: 48, justifyContent: 'center', borderRadius: 24, paddingHorizontal: 16 },
   timeLeft: { alignItems: 'center' },
   line: { maxWidth: 176, textAlign: 'center' },
+  unseen: { opacity: 0 },
   preStart: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 16, paddingHorizontal: 24, paddingBottom: 120 },
   card: { width: '100%', maxWidth: 320, alignItems: 'center', gap: 12, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 16 },
   duckAndGauge: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },

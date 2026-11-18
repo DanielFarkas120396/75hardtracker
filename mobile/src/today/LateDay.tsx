@@ -98,6 +98,7 @@ export function LateDayView({ challenge, dayEntries, dayNumber, date, onBack }: 
             rules={rules}
             currentBook={currentBook}
             socialToday={socialThatDay}
+            covered={sheet !== null}
             onLogged={log}
             onAddWorkout={onAddWorkout}
             onOpen={setSheet}

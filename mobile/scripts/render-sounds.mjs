@@ -62,6 +62,21 @@ function knifeShing() {
   return samples
 }
 
+/** The day-complete chime: two sine notes (C5, then G5 a tenth of a second later), each struck and left to ring out. */
+function dayComplete() {
+  const samples = new Float64Array(Math.ceil(RATE * 0.45))
+  ;[523.25, 783.99].forEach((frequency, note) => {
+    const start = note * 0.1
+    for (let i = Math.round(start * RATE); i < Math.round((start + 0.35) * RATE); i++) {
+      const t = i / RATE - start
+      // WebAudio's linear ramp to 0.2 in 20 ms, then its exponential ramp down to 0.001.
+      const gain = t < 0.02 ? (0.2 * t) / 0.02 : ramp(t, 0.02, 0.2, 0.35, 0.001)
+      samples[i] += Math.sin(2 * Math.PI * frequency * t) * gain
+    }
+  })
+  return samples
+}
+
 /** 16-bit mono WAV. The loudest sample is brought to `peak`: a phone plays files quieter than a browser plays its own synthesis. */
 function wav(samples, peak = 0.6) {
   const loudest = samples.reduce((max, sample) => Math.max(max, Math.abs(sample)), 0)
@@ -85,5 +100,7 @@ function wav(samples, peak = 0.6) {
 }
 
 mkdirSync(out, { recursive: true })
-writeFileSync(join(out, 'knife-shing.wav'), wav(knifeShing()))
-console.log(`Wrote ${join(out, 'knife-shing.wav')}`)
+for (const [name, samples] of [['knife-shing', knifeShing()], ['day-complete', dayComplete()]]) {
+  writeFileSync(join(out, `${name}.wav`), wav(samples))
+  console.log(`Wrote ${join(out, `${name}.wav`)}`)
+}

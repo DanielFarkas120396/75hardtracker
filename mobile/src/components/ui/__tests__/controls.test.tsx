@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import * as Font from 'expo-font'
 import type { ReactElement } from 'react'
 import { Text } from 'react-native'
@@ -69,6 +69,50 @@ describe('GaugeRing', () => {
     expect(litBars(5, 5)).toBe(41)
     expect(litBars(9, 5)).toBe(41)
     expect(litBars(1, 0)).toBe(0)
+  })
+})
+
+describe('GaugeRing, moving', () => {
+  const flags = globalThis as { __SKIP_ANIMATIONS__?: boolean }
+  /** The number the gauge draws (react-native-svg wraps it in a span). */
+  const count = () => {
+    const drawn = screen.getByTestId('gauge-count', { includeHiddenElements: true }).props.children as number | { props: { children: number } }
+    return Number(typeof drawn === 'object' ? drawn.props.children : drawn)
+  }
+
+  afterEach(() => {
+    flags.__SKIP_ANIMATIONS__ = true
+    jest.useRealTimers()
+    jest.restoreAllMocks()
+  })
+
+  it('while held keeps the last state, and catches up once released', async () => {
+    const view = await show(<GaugeRing value={3} max={5} />)
+    await screen.findByLabelText('3 of 5 tasks done')
+    expect(count()).toBe(3)
+    await view.rerender(<GaugeRing value={5} max={5} held />)
+    expect(count()).toBe(3)
+    await view.rerender(<GaugeRing value={5} max={5} />)
+    expect(count()).toBe(5)
+  })
+
+  it('counts up from 0 when it first shows, one tick per task, then rests on the day as it is', async () => {
+    flags.__SKIP_ANIMATIONS__ = false
+    jest.useFakeTimers()
+    const frames = jest.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((frame) => setTimeout(() => frame(performance.now()), 16) as unknown as number)
+    await show(<GaugeRing value={2} max={5} />)
+    await act(async () => {})
+    expect(count()).toBe(1)
+    await act(async () => void jest.advanceTimersByTime(300))
+    expect(count()).toBe(1)
+    await act(async () => void jest.advanceTimersByTime(500))
+    expect(count()).toBe(2)
+    await act(async () => void jest.advanceTimersByTime(3000))
+    expect(count()).toBe(2)
+    // At rest: no frame is being asked for any more.
+    const asked = frames.mock.calls.length
+    await act(async () => void jest.advanceTimersByTime(1000))
+    expect(frames.mock.calls.length).toBe(asked)
   })
 })
 

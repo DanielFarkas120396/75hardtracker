@@ -1,6 +1,6 @@
 import { MOODS, type Mood } from '@logic/moods'
 import { useEffect, useState, type ReactNode } from 'react'
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useReduceMotion } from '../../hooks/useReduceMotion'
 import { useTheme } from '../../theme/ThemeProvider'
 import { withAlpha } from '../../theme/tokens'
@@ -110,6 +110,46 @@ export function Track({ checked, on, width, height, thumb, thumbOn = '#ffffff' }
   )
 }
 
+const BURST_PARTICLES = 8
+const BURST_DISTANCE = 28
+
+/** Dots that fly out once from behind a done badge (the web's Burst). None under reduce motion. */
+export function Burst() {
+  const { colors } = useTheme()
+  const reduceMotion = useReduceMotion()
+  const out = useState(() => new Animated.Value(0))[0]
+  useEffect(() => {
+    const flight = Animated.timing(out, { toValue: 1, duration: 600, easing: Easing.out(Easing.quad), useNativeDriver: true })
+    flight.start()
+    return () => flight.stop()
+  }, [out])
+  if (reduceMotion) return null
+  const tones = [colors.world, colors.yellow, colors.blue, colors.orange]
+  return (
+    <View testID="burst" pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[StyleSheet.absoluteFill, styles.burst]}>
+      {Array.from({ length: BURST_PARTICLES }, (_, i) => {
+        const angle = (i / BURST_PARTICLES) * 2 * Math.PI
+        return (
+          <Animated.View
+            key={i}
+            style={[
+              styles.burstDot,
+              { backgroundColor: tones[i % tones.length] },
+              {
+                opacity: out.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+                transform: [
+                  { translateX: out.interpolate({ inputRange: [0, 1], outputRange: [0, Math.cos(angle) * BURST_DISTANCE] }) },
+                  { translateY: out.interpolate({ inputRange: [0, 1], outputRange: [0, Math.sin(angle) * BURST_DISTANCE] }) },
+                ],
+              },
+            ]}
+          />
+        )
+      })}
+    </View>
+  )
+}
+
 /** The round tick in the world's colour that marks a done task. With `pop` it springs in from nothing. */
 export function DoneBadge({ pop }: { pop: boolean }) {
   const { colors, fonts } = useTheme()
@@ -207,6 +247,8 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     shadowOffset: { width: 0, height: 1 },
   },
+  burst: { alignItems: 'center', justifyContent: 'center' },
+  burstDot: { position: 'absolute', width: 6, height: 6, borderRadius: 3 },
   badge: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center', borderRadius: 14 },
   badgeTick: { fontSize: 14 },
   moods: { alignSelf: 'stretch', flexDirection: 'row', gap: 4 },

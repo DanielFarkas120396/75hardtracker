@@ -29,7 +29,12 @@ import { Today } from '../TodayScreen'
 import { entryOf, Providers, startAttempt, TODAY } from './support'
 
 jest.mock('expo-font', () => ({ ...jest.requireActual('expo-font'), useFonts: jest.fn() }))
-jest.mock('expo-haptics', () => ({ impactAsync: jest.fn(async () => {}), ImpactFeedbackStyle: { Light: 'light' } }))
+jest.mock('expo-haptics', () => ({
+  impactAsync: jest.fn(async () => {}),
+  notificationAsync: jest.fn(async () => {}),
+  ImpactFeedbackStyle: { Light: 'light' },
+  NotificationFeedbackType: { Success: 'success' },
+}))
 jest.mock('expo-image-picker', () => ({ launchImageLibraryAsync: jest.fn() }))
 jest.mock('expo-audio', () => ({
   useAudioPlayer: () => ({ play: jest.fn(), seekTo: jest.fn(async () => {}) }),
@@ -194,10 +199,11 @@ describe('Today', () => {
     // Water: its sheet, eight half-litres.
     await openSheet(/^Water, /, 'Goal: 3.8 L a day.')
     for (let pour = 0; pour < 8; pour++) await fireEvent.press(button('+ 500 ml'))
-    expect(await screen.findByRole('button', { name: 'Water, 4 L, done' })).toBeOnTheScreen()
-    // Done inside its sheet: the cheer, then the sheet closes by itself.
-    expect(screen.getByText('Fully hydrated! 💧')).toBeOnTheScreen()
+    // Done inside its sheet: the cheer, then the sheet closes by itself. The board held still under it, and catches up.
+    expect(await screen.findByText('Fully hydrated! 💧')).toBeOnTheScreen()
+    expect(screen.queryByRole('button', { name: 'Water, 4 L, done' })).toBeNull()
     await waitFor(() => expect(screen.queryByText('Goal: 3.8 L a day.')).toBeNull(), { timeout: 4000 })
+    expect(await screen.findByRole('button', { name: 'Water, 4 L, done' })).toBeOnTheScreen()
 
     // Workouts: two sessions through the tile's shortcut.
     for (const expected of ['Workouts, 1 of 2 · 45 min', 'Workouts, 2 workouts · 90 min, done']) {
@@ -212,6 +218,12 @@ describe('Today', () => {
     await fireEvent.press(screen.getAllByRole('button', { name: 'Take photo' }).at(-1)!)
     await press('Use photo')
     expect(await screen.findByText('Saved!')).toBeOnTheScreen()
+
+    // The camera sheet leaves, the last chip lands, and the day ends on its peak.
+    expect(await screen.findByText('One more stone. 74 to go.', {}, { timeout: 4000 })).toBeOnTheScreen()
+    expect(screen.getByLabelText('Day 1 done.')).toBeOnTheScreen()
+    await press('Nice!')
+    expect(screen.queryByText('One more stone. 74 to go.')).toBeNull()
 
     expect(await screen.findByText('Day 1 won')).toBeOnTheScreen()
     expect(screen.getByLabelText('5 of 5 tasks done')).toBeOnTheScreen()
@@ -516,7 +528,6 @@ describe('the workouts sheet', () => {
     await press('Take my recovery day')
     expect(await screen.findByText('Recovery day ✓')).toBeOnTheScreen()
     expect((await today(challengeId))!.restDay).toBe(true)
-    expect(button('Workouts, Recovery day, done')).toBeOnTheScreen()
     await press('Undo')
     await waitFor(async () => expect(await today(challengeId)).not.toHaveProperty('restDay'))
   })
@@ -552,7 +563,8 @@ describe('the other sheets', () => {
     const [book] = await bookRepo.getAll()
     expect(book).toMatchObject({ title: 'Deep Work', currentPage: 10 })
     await waitFor(async () => expect((await today(challengeId))!.bookId).toBe(book.id))
-    expect(await screen.findByRole('button', { name: 'Reading, 10 pages, Deep Work, done' })).toBeOnTheScreen()
+    // The sheet closes after its cheer, and the board, which held still under it, shows the chip.
+    expect(await screen.findByRole('button', { name: 'Reading, 10 pages, Deep Work, done' }, { timeout: 4000 })).toBeOnTheScreen()
   })
 
   it('keeps the mood and the notes, saved once typing pauses or the sheet closes', async () => {
@@ -578,11 +590,11 @@ describe('the other sheets', () => {
   })
 
   it('leaves a sheet open when a change completes nothing', async () => {
-    await startAttempt()
+    const challengeId = await startAttempt()
     await show()
     await openSheet(/^Diet, /, 'No cheat meals, no alcohol.')
     await fireEvent.press(screen.getAllByRole('switch', { name: 'No alcohol' }).at(-1)!)
-    expect(await screen.findByRole('button', { name: 'Diet, 1 of 2' })).toBeOnTheScreen()
+    await waitFor(async () => expect((await today(challengeId))!.noAlcohol).toBe(true))
     await new Promise((resolve) => setTimeout(resolve, 1800))
     expect(screen.getByText('No cheat meals, no alcohol.')).toBeOnTheScreen()
   })
@@ -623,7 +635,7 @@ describe('the photo', () => {
 
     jest.mocked(ImagePicker.launchImageLibraryAsync).mockResolvedValue({ canceled: false, assets: [{ uri: 'file:///library/a.heic', width: 3024, height: 4032 }] } as never)
     await press('Choose from library')
-    expect(await screen.findByRole('button', { name: 'Photo, Taken, done' })).toBeOnTheScreen()
+    expect(await screen.findByRole('button', { name: 'Photo, Taken, done' }, { timeout: 4000 })).toBeOnTheScreen()
     expect(prepareShot).toHaveBeenCalledWith(expect.objectContaining({ uri: 'file:///library/a.heic', width: 3024, height: 4032 }))
     expect((await today(challengeId))!.photoId).toEqual(expect.any(Number))
   })
@@ -943,6 +955,9 @@ describe('yesterday, until noon', () => {
     jest.mocked(ImagePicker.launchImageLibraryAsync).mockResolvedValue({ canceled: false, assets: [{ uri: 'file:///library/y.jpg', width: 3024, height: 4032 }] } as never)
     await press('Choose from library')
 
+    // Yesterday's peak, with its own line; then today.
+    expect(await screen.findByText('Logged just in time. The streak lives. Now go get today.')).toBeOnTheScreen()
+    await press('Nice!')
     expect(await screen.findByLabelText('Day 2, 75 Hard #1')).toBeOnTheScreen()
     expect(screen.queryByText("Day 1 isn't finished")).toBeNull()
     expect(screen.getByLabelText('Streak: 1 day')).toBeOnTheScreen()

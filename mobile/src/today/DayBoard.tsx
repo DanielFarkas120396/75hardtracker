@@ -34,6 +34,10 @@ interface DayBoardProps {
   socialToday?: boolean
   urgent?: boolean
   minutesLeft?: number
+  /** A sheet covers the board: it holds still (it does so too while the camera is open). */
+  covered?: boolean
+  /** How many chips have landed on the board: the gauge counts these. */
+  onLandedChange?: (count: number) => void
   /** A shortcut logged something: the screen shows "Logged … · Undo" over the page. */
   onLogged: (text: string, undo: () => void) => void
   /** Opens the "Add workout" sheet (the screen owns it, so the workouts sheet can open it too). */
@@ -48,7 +52,7 @@ interface DayBoardProps {
  * one tap to take back. Lives under PhotoCapture, which owns the camera.
  * The web's DayBoard (src/screens/Today/DayBoard.tsx).
  */
-export function DayBoard({ entry, data, completion, rules, currentBook, socialToday, urgent, minutesLeft, onLogged, onAddWorkout, onOpen }: DayBoardProps) {
+export function DayBoard({ entry, data, completion, rules, currentBook, socialToday, urgent, minutesLeft, covered = false, onLandedChange, onLogged, onAddWorkout, onOpen }: DayBoardProps) {
   const capture = usePhotoCapture()
   const pagesLeft = Math.max(rules.pagesTarget - data.pages_read, 0)
 
@@ -96,6 +100,8 @@ export function DayBoard({ entry, data, completion, rules, currentBook, socialTo
       socialToday={socialToday}
       urgent={urgent}
       minutesLeft={minutesLeft}
+      paused={covered || capture.cameraOpen}
+      onLandedChange={onLandedChange}
       onOpen={onOpen}
     />
   )

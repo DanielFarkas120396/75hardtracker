@@ -22,6 +22,8 @@ interface TodayHeroProps {
   why?: string
   /** Under the gauge: "Day N won" and the closing ritual, the time left late in the evening, the next plan, or the duck's line. */
   below: ReactNode
+  /** The "Day complete!" overlay is up, or waiting for the last chip: the gauge keeps its last state, and plays the change once released. */
+  celebrating?: boolean
 }
 
 /**
@@ -30,7 +32,7 @@ interface TodayHeroProps {
  * left; the streak and the jokers on its right; what matters next under it;
  * and the player's reason at the bottom. The web's TodayHero.
  */
-export function TodayHero({ attemptLine, dayNumber, completedCount, streak, jokersLeft, duck, speech, why, below }: TodayHeroProps) {
+export function TodayHero({ attemptLine, dayNumber, completedCount, streak, jokersLeft, duck, speech, why, below, celebrating = false }: TodayHeroProps) {
   const { colors, fonts } = useTheme()
 
   return (
@@ -52,7 +54,7 @@ export function TodayHero({ attemptLine, dayNumber, completedCount, streak, joke
           </View>
         </View>
         <View style={styles.centre}>
-          <GaugeRing value={completedCount} max={TASK_IDS.length} />
+          <GaugeRing value={completedCount} max={TASK_IDS.length} held={celebrating} />
           {below}
         </View>
         <View style={[styles.side, styles.right]}>

@@ -5,7 +5,7 @@ import type { TaskId } from '@logic/types'
 import { dietRuleLine, formatLiters, readingRuleLine, workoutRuleLine } from '@logic/variantsCopy'
 import { useEffect, useState, type ReactNode } from 'react'
 import { AccessibilityInfo, StyleSheet, Text, View } from 'react-native'
-import { DoneBadge } from '../components/ui/controls'
+import { Burst, DoneBadge } from '../components/ui/controls'
 import { Sheet, SheetHeader } from '../components/ui/Sheet'
 import type { DayEntry, Workout } from '../db/types'
 import { useTheme } from '../theme/ThemeProvider'
@@ -154,7 +154,14 @@ function SheetContent({ task, context, onClose }: { task: BoardTask; context: Ta
         icon={TASK_ICONS[task]}
         title={TASK_TITLES[task]}
         ruleLine={ruleLine(task, context)}
-        badge={complete ? <DoneBadge pop={justDone > 0} /> : undefined}
+        badge={
+          complete ? (
+            <View>
+              {justDone > 0 && <Burst key={justDone} />}
+              <DoneBadge pop={justDone > 0} />
+            </View>
+          ) : undefined
+        }
         onClose={onClose}
       >
         {justDone > 0 && cheer && (
