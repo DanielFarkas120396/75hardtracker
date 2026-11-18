@@ -17,6 +17,7 @@ const config: ExpoConfig = {
   },
   plugins: [
     'expo-router',
+    'expo-sqlite',
     [
       'expo-splash-screen',
       // Dark Hell's canvas (WORLD_COLORS.hell.dark.canvas), the app's first colour.
