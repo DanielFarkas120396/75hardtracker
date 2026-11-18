@@ -43,13 +43,13 @@ export function taskStatusLine(task: TaskId, data: DayTaskData, rules: Ruleset, 
       if (done === 0) {
         // Logged, but every session is under the minimum: say so, or "0 of 1" reads as a save that failed.
         if (data.workouts.length > 0) return `Too short · ${rules.minWorkoutMin} min needed`
-        if (rules.requireOutdoor) return `${rules.requiredWorkouts} × ${rules.minWorkoutMin} min · 1 outdoors`
-        return `0 of ${rules.requiredWorkouts} · ${rules.minWorkoutMin} min${rules.requiredWorkouts === 1 ? '' : ' each'}`
+        return `0 of ${rules.requiredWorkouts} · ${rules.minWorkoutMin} min${rules.requireOutdoor ? ', 1 outdoors' : ''}`
       }
       // Enough sessions, yet not done: none of them was outdoors.
       if (done >= rules.requiredWorkouts) return 'One must be outdoors'
+      // One pattern throughout: how many count, then what the next one needs.
       if (outdoorsMissing && rules.requiredWorkouts - done === 1) return `${done} of ${rules.requiredWorkouts} · next outdoors`
-      return `${done} of ${rules.requiredWorkouts} logged`
+      return `${done} of ${rules.requiredWorkouts} · ${rules.minWorkoutMin} min`
     }
     case 'diet': {
       const social = rules.socialDaysPerWeek > 0 && data.socialDay === true

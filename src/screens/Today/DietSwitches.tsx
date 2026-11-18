@@ -24,7 +24,7 @@ export function DietSwitches({ entry, rules, socialToday }: DietSwitchesProps) {
       {socialToday ? (
         // Centred under the switch's track.
         <span className="box-content flex h-11 w-8 items-center justify-center pr-1 text-ink">
-          <Icon name="drink" size={22} label="Social occasion today — a drink is allowed" />
+          <Icon name="drink" size={22} label="Social night today — a drink is allowed" />
         </span>
       ) : (
         <MiniSwitch

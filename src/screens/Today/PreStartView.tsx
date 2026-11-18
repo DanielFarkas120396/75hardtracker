@@ -70,7 +70,7 @@ export function PreStartView({ challenge, todayDayNumber, today }: PreStartViewP
           {rules.socialDaysPerWeek > 0 && (
             <Button variant="secondary" className="flex items-center justify-center gap-2" onClick={() => setSocialOpen(true)}>
               <Icon name="drink" size={18} className="text-world-ink" />
-              Plan a social occasion
+              Plan a social night
             </Button>
           )}
         </>

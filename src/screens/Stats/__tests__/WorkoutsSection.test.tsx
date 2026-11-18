@@ -57,7 +57,7 @@ describe('WorkoutsSection', () => {
     expect(screen.getByRole('button', { name: 'Weights, 1 session' })).not.toHaveTextContent('Your favorite')
 
     const summary = screen.getByRole('group', { name: 'This attempt' })
-    expect(summary).toHaveTextContent('2h 25m')
+    expect(summary).toHaveTextContent('2h25')
     expect(summary).toHaveTextContent('of sweat')
     expect(summary).toHaveTextContent('3 sessions')
     expect(summary).toHaveTextContent('2 under the sky')

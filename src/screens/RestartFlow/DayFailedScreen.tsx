@@ -41,9 +41,10 @@ export function DayFailedScreen({ challenge, failedDayNumber, today }: DayFailed
       <p className="max-w-xs font-rounded text-ink-muted">
         {missedDayExplanation(rulesFor(challenge), challenge.attemptNumber)}
       </p>
-      <YouSaid className="max-w-xs" />
-
       <MissedTasksList challenge={challenge} dayNumber={failedDayNumber} />
+
+      {/* After the missed list, as on the joker screen. */}
+      <YouSaid className="max-w-xs" />
 
       <p className="mt-2 font-rounded font-bold text-ink">
         {profile ? `Again, ${profile.name}. From Day 1. I'm watching.` : "Again. From Day 1. I'm watching."}

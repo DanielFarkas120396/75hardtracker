@@ -264,7 +264,7 @@ function TodayTasks({
                   <button
                     type="button"
                     onClick={() => setSocialOpen(true)}
-                    aria-label="Plan a social occasion"
+                    aria-label="Plan a social night"
                     className={ACTION_BUTTON}
                   >
                     <Icon name="drink" size={18} className="text-world-ink" />

@@ -176,8 +176,8 @@ describe('TodayScreen', () => {
     fireEvent.click(await screen.findByRole('button', { name: /^Diet,/ }))
     const sheet = await screen.findByRole('dialog', { name: 'Diet' })
     expect(within(sheet).getByRole('switch', { name: 'No alcohol' })).toBeInTheDocument()
-    expect(screen.queryByText('Social occasion today — a drink is allowed.')).not.toBeInTheDocument()
-    expect(screen.queryByRole('img', { name: /Social occasion today/ })).not.toBeInTheDocument()
+    expect(screen.queryByText('Social night today — a drink is allowed.')).not.toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: /Social night today/ })).not.toBeInTheDocument()
   })
 
   it('Hard on Day 3: names the attempt, and offers no joker, recovery or social controls', async () => {
@@ -185,7 +185,7 @@ describe('TodayScreen', () => {
 
     expect(await screen.findByText('75 Hard #1')).toBeInTheDocument()
     expect(screen.queryByText(/joker/i)).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Plan a social occasion' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Plan a social night' })).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /^Workouts,/ }))
     expect(await screen.findByRole('dialog', { name: 'Workouts' })).toBeInTheDocument()
@@ -194,30 +194,30 @@ describe('TodayScreen', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /^Diet,/ }))
     expect(await screen.findByRole('dialog', { name: 'Diet' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Plan a social occasion' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Plan a social night' })).not.toBeInTheDocument()
   })
 
   it('Medium on Day 1: shows the joker chip, and the hero opens the social sheet in one tap', async () => {
     await setup({ variant: 'medium', todayDayNumber: 1, jokersLeft: 1 })
 
     expect(await screen.findByText('1 joker')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Plan a social occasion' }))
-    expect(await screen.findByRole('heading', { name: 'Plan a social occasion' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Plan a social night' }))
+    expect(await screen.findByRole('heading', { name: 'Plan a social night' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Close' }))
 
     fireEvent.click(screen.getByRole('button', { name: /^Diet,/ }))
     const sheet = await screen.findByRole('dialog', { name: 'Diet' })
-    expect(within(sheet).getByRole('button', { name: 'Plan a social occasion' })).toBeInTheDocument()
+    expect(within(sheet).getByRole('button', { name: 'Plan a social night' })).toBeInTheDocument()
   })
 
   it('Strong on Day 3 with a declared occasion: shows the drink-allowed note', async () => {
     await setup({ variant: 'strong', todayDayNumber: 3, socialDays: [3] })
 
     expect(await screen.findByRole('button', { name: 'Diet, 1 to tick' })).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'Social occasion today — a drink is allowed' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Social night today — a drink is allowed' })).toBeInTheDocument()
     expect(screen.queryByRole('switch', { name: 'No alcohol' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Diet, 1 to tick' }))
-    expect(await screen.findByText('Social occasion today — a drink is allowed.')).toBeInTheDocument()
+    expect(await screen.findByText('Social night today — a drink is allowed.')).toBeInTheDocument()
   })
 
   it('ticks the diet and the alcohol straight from the tile', async () => {

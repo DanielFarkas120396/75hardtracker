@@ -146,7 +146,7 @@ describe('nextCatchphrase', () => {
 describe('timeLeftLine', () => {
   it('counts to bedtime, then says the day itself is ending', () => {
     expect(timeLeftLine({ until: 'bedtime', minutesLeft: 90 }, 12)).toBe('1h30 to bedtime')
-    expect(timeLeftLine({ until: 'bedtime', minutesLeft: 180 }, 12)).toBe('3h00 to bedtime')
+    expect(timeLeftLine({ until: 'bedtime', minutesLeft: 180 }, 12)).toBe('3h to bedtime')
     expect(timeLeftLine({ until: 'midnight', minutesLeft: 45 }, 12)).toBe('Day 12 ends in 45 min')
   })
 })

@@ -13,7 +13,7 @@ describe('activities', () => {
   it('reads training time like the Stats tile', () => {
     expect(formatMinutes(0)).toBe('0 min')
     expect(formatMinutes(45)).toBe('45 min')
-    expect(formatMinutes(60)).toBe('1h 0m')
-    expect(formatMinutes(535)).toBe('8h 55m')
+    expect(formatMinutes(60)).toBe('1h')
+    expect(formatMinutes(535)).toBe('8h55')
   })
 })

@@ -147,7 +147,7 @@ export function SettingsScreen({ challenge, today, todayDayNumber, streak, canGi
                   onClick={() => open('challenge')}
                 />
               )}
-              <SettingsRow icon="journey" label="Rules" onClick={() => open('rules')} />
+              <SettingsRow icon="notes" label="Rules" onClick={() => open('rules')} />
               <SettingsRow
                 icon="reading"
                 label="Books"

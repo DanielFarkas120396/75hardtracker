@@ -11,7 +11,7 @@ interface DietTaskProps {
   rules: Ruleset
   /** Whether today is a declared social occasion: a drink is allowed. */
   socialToday: boolean
-  /** Whether the "Plan a social occasion" button should show at all (the rules allow it, and there's still a day left to declare). */
+  /** Whether the "Plan a social night" button should show at all (the rules allow it, and there's still a day left to declare). */
   canPlanSocial: boolean
   onPlanSocial: () => void
 }
@@ -29,7 +29,7 @@ export function DietTask({ entry, rules, socialToday, canPlanSocial, onPlanSocia
       {socialToday ? (
         <p className="flex items-center gap-2 rounded-xl bg-canvas px-3 py-2 font-rounded text-sm font-bold text-ink">
           <Icon name="drink" size={18} className="shrink-0 text-world-ink" />
-          Social occasion today — a drink is allowed.
+          Social night today — a drink is allowed.
         </p>
       ) : (
         <Toggle
@@ -42,7 +42,7 @@ export function DietTask({ entry, rules, socialToday, canPlanSocial, onPlanSocia
       {canPlanSocial && (
         <Button variant="secondary" className="flex w-full items-center justify-center gap-2" onClick={onPlanSocial}>
           <Icon name="drink" size={18} className="text-world-ink" />
-          Plan a social occasion
+          Plan a social night
         </Button>
       )}
     </div>
