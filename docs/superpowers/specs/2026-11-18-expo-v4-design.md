@@ -1,6 +1,6 @@
 # v4: native iPhone app (Expo) with cloud backup
 
-Date: 2026-11-18 · Status: **agreed** with the owner on 2026-11-18. Not built yet.
+Date: 2026-11-18 · Status: **agreed** with the owner on 2026-11-18. **Part 1 (foundation) built** on `v4` (2026-11-18): the shell was seen on the owner's iPhone in Expo Go; the keychain module isn't built or tried on a device yet (needs the Apple Developer account).
 
 ## Why
 

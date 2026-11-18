@@ -2,6 +2,7 @@ import { SETTING_KEYS } from '@logic/settingKeys'
 import { dayNumberForDate, todayISO } from '@logic/dates'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import * as Font from 'expo-font'
+import * as SplashScreen from 'expo-splash-screen'
 import type { ReactNode } from 'react'
 import { Text } from 'react-native'
 import TodayScreen from '../app/(tabs)/index'
@@ -15,6 +16,8 @@ import { seedDay } from '../dev/seed'
 import { ThemeProvider } from '../theme/ThemeProvider'
 
 jest.mock('expo-font', () => ({ ...jest.requireActual('expo-font'), useFonts: jest.fn() }))
+jest.mock('expo-splash-screen', () => ({ hideAsync: jest.fn(async () => {}), preventAutoHideAsync: jest.fn(async () => {}) }))
+const hideSplash = jest.mocked(SplashScreen.hideAsync)
 jest.mock('../db/open', () => ({ ...jest.requireActual('../db/open'), openAppDatabase: jest.fn() }))
 const openAppDatabase = jest.mocked(open.openAppDatabase)
 
@@ -22,6 +25,7 @@ const Providers = ({ children }: { children: ReactNode }) => <ThemeProvider>{chi
 
 beforeEach(async () => {
   jest.mocked(Font.useFonts).mockReturnValue([true, null])
+  hideSplash.mockClear()
   await freshDatabase()
 })
 
@@ -77,6 +81,32 @@ describe('opening the app', () => {
       </AppGate>,
     )
     expect(await screen.findByText('inside')).toBeOnTheScreen()
+    expect(hideSplash).toHaveBeenCalled()
+  })
+
+  it('keeps the splash screen up while the fonts are loading', async () => {
+    jest.mocked(Font.useFonts).mockReturnValue([false, null])
+    openAppDatabase.mockResolvedValue(open.getDb())
+    await render(
+      <AppGate>
+        <Text>inside</Text>
+      </AppGate>,
+    )
+    await waitFor(() => expect(openAppDatabase).toHaveBeenCalled())
+    expect(screen.queryByText('inside')).toBeNull()
+    expect(hideSplash).not.toHaveBeenCalled()
+  })
+
+  it('lifts the splash screen and shows the app when the fonts fail', async () => {
+    jest.mocked(Font.useFonts).mockReturnValue([false, new Error('no fonts')])
+    openAppDatabase.mockResolvedValue(open.getDb())
+    await render(
+      <AppGate>
+        <Text>inside</Text>
+      </AppGate>,
+    )
+    expect(await screen.findByText('inside')).toBeOnTheScreen()
+    expect(hideSplash).toHaveBeenCalled()
   })
 
   it('shows an error screen when the database can’t open', async () => {
@@ -88,6 +118,7 @@ describe('opening the app', () => {
     )
     expect(await screen.findByText("Your data couldn't be opened.")).toBeOnTheScreen()
     expect(screen.getByText('disk full')).toBeOnTheScreen()
+    expect(hideSplash).toHaveBeenCalled()
     expect(screen.queryByText('inside')).toBeNull()
   })
 })

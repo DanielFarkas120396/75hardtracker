@@ -20,12 +20,16 @@ public class SyncedKeychainModule: Module {
     Name("SyncedKeychain")
 
     AsyncFunction("setItem") { (key: String, value: String) in
-      SecItemDelete(self.query(key) as CFDictionary)
-      var item = self.query(key)
-      item[kSecValueData as String] = Data(value.utf8)
-      // Synced items can't be "this device only"; readable once the phone was unlocked after a restart.
-      item[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
-      let status = SecItemAdd(item as CFDictionary, nil)
+      let data = Data(value.utf8)
+      // Update in place: deleting first would lose the old value if the write then failed.
+      var status = SecItemUpdate(self.query(key) as CFDictionary, [kSecValueData as String: data] as CFDictionary)
+      if status == errSecItemNotFound {
+        var item = self.query(key)
+        item[kSecValueData as String] = data
+        // Synced items can't be "this device only"; readable once the phone was unlocked after a restart.
+        item[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
+        status = SecItemAdd(item as CFDictionary, nil)
+      }
       guard status == errSecSuccess else {
         throw Exception(name: "ERR_KEYCHAIN", description: "Keychain write failed (\(status))")
       }
