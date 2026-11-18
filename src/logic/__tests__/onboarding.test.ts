@@ -30,7 +30,7 @@ describe('resumeStep', () => {
 
 describe('onboardingSteps', () => {
   it('walks a new player through the challenge and its start', () => {
-    expect(onboardingSteps('new')).toEqual(['welcome', 'name', 'challenge', 'why', 'start', 'ready'])
+    expect(onboardingSteps('new')).toEqual(['welcome', 'name', 'challenge', 'why', 'bedtime', 'start', 'ready'])
   })
 
   it('skips the challenge and the start for a returning player, whose attempts stay as they are', () => {

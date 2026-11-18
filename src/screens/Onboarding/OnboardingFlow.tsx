@@ -12,7 +12,7 @@ import { clearDraft, loadDraft, saveDraft } from '../../lib/onboardingDraft'
 import { onboardingSteps, resumeStep, type OnboardingMode, type OnboardingStep } from '../../logic/onboarding'
 import { isValidName, isValidWhy } from '../../logic/profile'
 import type { ChallengeVariant } from '../../logic/rulesets'
-import { ChallengeStep, NameStep, ReadyStep, StartStep, WelcomeStep, WhyStep } from './OnboardingSteps'
+import { BedtimeStep, ChallengeStep, NameStep, ReadyStep, StartStep, WelcomeStep, WhyStep } from './OnboardingSteps'
 
 interface OnboardingFlowProps {
   mode: OnboardingMode
@@ -24,6 +24,7 @@ const STEP_MOODS: Record<OnboardingStep, DuckMood> = {
   name: 'watching',
   challenge: 'tapping',
   why: 'watching',
+  bedtime: 'watching',
   start: 'waiting',
   ready: 'judging',
 }
@@ -142,6 +143,7 @@ export function OnboardingFlow({ mode, today }: OnboardingFlowProps) {
               <ChallengeStep variant={variant} onChange={setVariant} onNext={() => next('challenge')} />
             )}
             {step === 'why' && <WhyStep why={why} onChange={setWhy} onNext={() => next('why')} />}
+            {step === 'bedtime' && <BedtimeStep onNext={() => next('bedtime')} />}
             {step === 'start' && variant && (
               <StartStep start={start} today={today} variant={variant} nowMin={nowMin} onNext={() => next('start')} />
             )}
