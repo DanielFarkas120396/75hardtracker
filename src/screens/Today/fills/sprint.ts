@@ -1,17 +1,10 @@
 import { Vector2, Vector3, type WebGLRenderer } from 'three'
-import { clamp01, cubicOut } from './motion'
+import { createSprintModel, SPRINT } from '../../../logic/fillSprint'
 import type { FillPalette } from './palette'
 import type { Painter } from './painter'
 import { shaderQuad } from './quad'
 
-/** The chosen settings (docs/prototypes/README.md, Workouts). */
-const P = { run: 0.7, lanes: 12, streak: 90, ragged: 16, flow: 0.3 }
-
-/** The fill's front, px from the tile's left edge: off the left when empty, off the right (ragged edge and all) when full. */
-export function sprintFront(level: number, width: number): number {
-  const edge = P.ragged + 10
-  return -edge + level * (width + 2 * edge)
-}
+export { sprintFront } from '../../../logic/fillSprint'
 
 const FRAG = /* glsl */ `
   varying vec2 vP;
@@ -39,51 +32,30 @@ export function createSprint(palette: FillPalette): Painter {
     uSize: { value: new Vector2() },
     uFront: { value: 0 },
     uVel: { value: 0 },
-    uRows: { value: P.lanes },
-    uLen: { value: P.streak },
-    uSoft: { value: P.ragged },
+    uRows: { value: SPRINT.lanes },
+    uLen: { value: SPRINT.streak },
+    uSoft: { value: SPRINT.ragged },
     uTime: { value: 0 },
-    uFlow: { value: P.flow },
+    uFlow: { value: SPRINT.flow },
     uMid: { value: new Vector3() },
     uLight: { value: new Vector3() },
   }
   const quad = shaderQuad(FRAG, u)
-  let from = 0
-  let to = 0
-  let t = 1
-  let time = 0
-  let prev = 0
-  let vel = 0
-  // Off at full speed on the tap (ease out): the streaks are longest at once and pull in as it stops.
-  const shown = () => from + (to - from) * cubicOut(t)
+  const model = createSprintModel()
 
   const painter: Painter = {
-    setLevel(level, instant) {
-      from = instant ? level : shown()
-      to = level
-      t = instant ? 1 : 0
-      if (instant) vel = 0
-      prev = shown()
-    },
-    step(dt, drift) {
-      t = Math.min(1, t + dt / P.run)
-      if (drift) time += dt
-      const now = shown()
-      // How fast the front moves, against its top speed, sets how far the streaks reach.
-      const v = dt > 0 ? Math.abs(now - prev) / dt / (Math.abs(to - from) / P.run * 1.5 + 1e-3) : 0
-      prev = now
-      vel += (clamp01(v) - vel) * Math.min(1, dt * 12)
-      return t < 1 || vel > 0.01
-    },
-    drifts: () => to > 0,
-    shown,
-    settled: () => t >= 0.8,
+    setLevel: model.setLevel,
+    step: model.step,
+    drifts: model.drifts,
+    shown: model.shown,
+    settled: model.settled,
     render(renderer: WebGLRenderer, width, height) {
       quad.fit(width, height)
+      const f = model.frame(width, height)
       u.uSize.value.set(width, height)
-      u.uFront.value = sprintFront(shown(), width)
-      u.uVel.value = vel
-      u.uTime.value = time
+      u.uFront.value = f.front
+      u.uVel.value = f.vel
+      u.uTime.value = f.time
       renderer.render(quad.scene, quad.camera)
     },
     setPalette(p) {

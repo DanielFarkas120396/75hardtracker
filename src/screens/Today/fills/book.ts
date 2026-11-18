@@ -11,48 +11,18 @@ import {
   Vector3,
   type WebGLRenderer,
 } from 'three'
-import { clamp01, inOut, smooth } from './motion'
-import { FILL_LOOK, type FillPalette, type Mode } from './palette'
+import { BOOK, createBookModel, pageAngle, pageOpacity, restAngle, spineShade } from '../../../logic/fillBook'
+import { FILL_LOOK, type FillPalette } from './palette'
 import type { Painter } from './painter'
 import { QUAD_VERT } from './quad'
 
-/** Every ruleset reads 10 pages a day (rulesets.ts). */
-const PAGES = 10
-/** The chosen book (docs/prototypes/README.md, Reading), lifting at once: 2.1 s of page motion. */
-const TURN = 2.2
-const FADE = 0.7
-/** A new page fades in over 1.5 s (chosen 2026-11-17): a quick fade made its shape pop up over the book. */
-const FADE_IN = 1.5
-const BETA = 0.6
-const BASE = 0.6
-const BLEND = 0.8
-const REACH = 0.4
-const FEATHER = 18
-const FILL_FROM = 0.12
-const FILL_TO = 0.9
-const START = 0.04
-const GUTTER = 0.32
+export { riffleGap, spineShade } from '../../../logic/fillBook'
+
 const NX = 60
 const NY = 16
 const D = 900
 const LIGHT = new Vector3(-200, 250, 600).normalize()
-/** How fast the fill recedes after an undo, in pages a second: ten pages in 0.4 s. */
-const EBB = 25
 
-/** The gap before the next page: the calm pace for one page; several at once riffle through, all starting within 2.4 s. */
-export function riffleGap(pagesToGo: number): number {
-  return Math.min(TURN * 0.45, 2.4 / Math.max(1, pagesToGo))
-}
-
-/**
- * The spine's shade, from 0 to 1. It comes in with the first page and leaves with it on undo: an unread book's dark
- * crease read as a glitch. In light mode it stays soft, so the tile's ink keeps 4.5:1 across it.
- */
-export function spineShade(pagesTurned: number, mode: Mode): number {
-  return smooth(pagesTurned) * (mode === 'light' ? 0.5 : 1)
-}
-
-const restAngle = (u: number) => BETA * (1 - smooth(clamp01(u / GUTTER)))
 const GUTTER_GLSL = /* glsl */ `
   float gutterShade(float u, float depth) { float g = 1.0 - smoothstep(0.0, 0.34, u); return (g * g * 0.42 + smoothstep(0.03, 0.0, u) * 0.25) * depth; }
   float gutterLight(float u, float depth) { return smoothstep(0.1, 0.22, u) * (1.0 - smoothstep(0.22, 0.42, u)) * 0.07 * depth; }
@@ -70,13 +40,11 @@ const FILL_FRAG = /* glsl */ `
   }
 `
 
-interface Page {
+interface PageMeshes {
   geometry: PlaneGeometry
   material: ShaderMaterial
   depth: Mesh
   color: Mesh
-  start: number
-  t: number
 }
 
 /** Reading: an open book whose pages lift from the right, curl over the spine and fade; the tile fills a tenth per page. */
@@ -87,7 +55,7 @@ export function createBook(palette: FillPalette): Painter {
   let width = 173
   let height = 120
 
-  const fillUniforms = { uSize: { value: new Vector2() }, uFill: { value: 0 }, uFeather: { value: FEATHER }, uAlpha: { value: FILL_LOOK.book.body }, uMid: { value: new Vector3() } }
+  const fillUniforms = { uSize: { value: new Vector2() }, uFill: { value: 0 }, uFeather: { value: BOOK.feather }, uAlpha: { value: FILL_LOOK.book.body }, uMid: { value: new Vector3() } }
   const fill = new Mesh(
     new PlaneGeometry(1, 1),
     new ShaderMaterial({ transparent: true, depthWrite: false, depthTest: false, vertexShader: QUAD_VERT, fragmentShader: FILL_FRAG, uniforms: fillUniforms }),
@@ -148,12 +116,12 @@ export function createBook(palette: FillPalette): Painter {
         cFront: { value: front },
         cBack: { value: back },
         opacity: { value: 0 },
-        base: { value: BASE },
-        reach: { value: REACH },
-        depth: { value: BETA / 0.6 },
+        base: { value: BOOK.base },
+        reach: { value: BOOK.reach },
+        depth: { value: BOOK.beta / 0.6 },
         fillX: { value: 0 },
-        feather: { value: FEATHER },
-        overFill: { value: BLEND },
+        feather: { value: BOOK.feather },
+        overFill: { value: BOOK.blend },
         L: { value: LIGHT },
       },
       vertexShader: 'varying vec3 vN; varying float vU; varying float vX; void main() { vN = normalMatrix * normal; vU = uv.x; vX = (modelMatrix * vec4(position, 1.0)).x; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
@@ -170,40 +138,30 @@ export function createBook(palette: FillPalette): Painter {
     })
 
   let mode = palette.mode
-  const active: Page[] = []
-  let shown = 0
-  let target = 0
-  let time = 0
-  let nextAt = 0
-  let gap = TURN * 0.45
-  let serial = 0
-  /** Pages of fill still receding after an undo: the book never turns pages back. */
-  let ebb = 0
+  const model = createBookModel()
+  /** The meshes of each page the model is turning, by the page's id. */
+  const meshes = new Map<number, PageMeshes>()
 
-  const share = (page: Page) => smooth((page.t - FILL_FROM) / (FILL_TO - FILL_FROM))
-  const turned = () => shown + ebb + active.reduce((sum, page) => sum + share(page), 0)
-
-  function addPage(): Page {
+  function addPage(id: number): PageMeshes {
     const geometry = new PlaneGeometry(1, 1, NX, NY)
     const material = pageMaterial()
-    const k = ++serial
     const depth = new Mesh(geometry, depthOnly)
-    depth.renderOrder = 2 * k
+    depth.renderOrder = 2 * id
     depth.frustumCulled = false
     const color = new Mesh(geometry, material)
-    color.renderOrder = 2 * k + 1
+    color.renderOrder = 2 * id + 1
     color.frustumCulled = false
     scene.add(depth, color)
-    return { geometry, material, depth, color, start: time, t: 0 }
+    return { geometry, material, depth, color }
   }
-  function dropPage(page: Page) {
+  function dropPage(page: PageMeshes) {
     scene.remove(page.depth, page.color)
     page.geometry.dispose()
     page.material.dispose()
   }
 
   // The page turns around the spine; its bottom-right corner leads and the part by the spine lags, so it curls.
-  function bend(page: Page, fillX: number) {
+  function bend(page: PageMeshes, t: number, fillX: number) {
     const pos = page.geometry.attributes.position
     const pw = width / 2
     for (let iy = 0; iy <= NY; iy++) {
@@ -211,12 +169,7 @@ export function createBook(palette: FillPalette): Painter {
       let x = 0
       let z = 0
       for (let ix = 0; ix <= NX; ix++) {
-        const u = ix / NX
-        const lead = 0.3 * u * (1 - v) + 0.12 * u
-        const lag = 0.16 * (1 - smooth(clamp01(u / 0.3)))
-        const e = inOut((page.t - START - lag + lead) / (1 - START - lag))
-        const r = restAngle(u)
-        const a = r + (Math.PI - 2 * r) * e
+        const a = pageAngle(ix / NX, v, t)
         pos.setXYZ(iy * (NX + 1) + ix, x, v * height - height / 2, z + 0.5)
         x += (pw / NX) * Math.cos(a)
         z += (pw / NX) * Math.sin(a)
@@ -225,52 +178,16 @@ export function createBook(palette: FillPalette): Painter {
     pos.needsUpdate = true
     page.geometry.computeVertexNormals()
     const u = page.material.uniforms
-    u.opacity.value = 0.55 * Math.min(smooth((page.t * TURN) / FADE_IN), 1 - smooth((page.t - FADE) / (1 - FADE)))
+    u.opacity.value = pageOpacity(t)
     u.fillX.value = fillX
   }
 
   const painter: Painter = {
-    setLevel(level, instant) {
-      const pages = Math.round(level * PAGES)
-      target = pages
-      if (instant) {
-        active.forEach(dropPage)
-        active.length = 0
-        shown = pages
-        ebb = 0
-        return
-      }
-      if (pages < shown + active.length) {
-        // Keep the pages already turning that still fit; the fill recedes over the rest, never jumping up.
-        const from = turned()
-        while (active.length > 0 && shown + active.length > pages) dropPage(active.pop()!)
-        shown = Math.min(shown, pages)
-        ebb = 0
-        ebb = Math.max(0, from - turned())
-      }
-      gap = riffleGap(pages - shown - active.length)
-    },
-    step(dt) {
-      time += dt
-      ebb = Math.max(0, ebb - dt * EBB)
-      if (shown + active.length < target && time >= nextAt) {
-        active.push(addPage())
-        nextAt = time + gap
-      }
-      for (let k = active.length - 1; k >= 0; k--) {
-        const page = active[k]
-        page.t = clamp01((time - page.start) / TURN)
-        if (page.t >= 1) {
-          shown = Math.min(PAGES, shown + 1)
-          dropPage(page)
-          active.splice(k, 1)
-        }
-      }
-      return active.length > 0 || shown < target || ebb > 0
-    },
-    drifts: () => false,
-    shown: () => turned() / PAGES,
-    settled: () => ebb === 0 && turned() >= target - 0.02,
+    setLevel: model.setLevel,
+    step: model.step,
+    drifts: model.drifts,
+    shown: model.shown,
+    settled: model.settled,
     render(renderer: WebGLRenderer, w, h) {
       width = w
       height = h
@@ -278,13 +195,23 @@ export function createBook(palette: FillPalette): Painter {
       camera.aspect = w / h
       camera.updateProjectionMatrix()
       shapeHalves()
-      for (const half of halves) half.material.uniforms.depth.value = spineShade(turned(), mode)
+      const f = model.frame(w, h)
+      for (const half of halves) half.material.uniforms.depth.value = spineShade(f.turned, mode)
       fill.scale.set(w, h, 1)
       fill.position.z = -1
-      const fillPx = (Math.min(PAGES, turned()) / PAGES) * w
       fillUniforms.uSize.value.set(w, h)
-      fillUniforms.uFill.value = fillPx >= w ? w + FEATHER : fillPx
-      for (const page of active) bend(page, fillPx - w / 2)
+      fillUniforms.uFill.value = f.fillPx >= w ? w + BOOK.feather : f.fillPx
+      // The model's pages come and go; their meshes follow.
+      for (const [id, page] of meshes) {
+        if (f.pages.some((turning) => turning.id === id)) continue
+        dropPage(page)
+        meshes.delete(id)
+      }
+      for (const { id, t } of f.pages) {
+        let page = meshes.get(id)
+        if (!page) meshes.set(id, (page = addPage(id)))
+        bend(page, t, f.fillPx - w / 2)
+      }
       renderer.render(scene, camera)
     },
     setPalette(p) {
@@ -294,7 +221,7 @@ export function createBook(palette: FillPalette): Painter {
       back.set(...p.edge)
     },
     dispose() {
-      active.forEach(dropPage)
+      meshes.forEach(dropPage)
       fill.geometry.dispose()
       ;(fill.material as ShaderMaterial).dispose()
       halves.forEach((half) => {
