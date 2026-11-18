@@ -1,8 +1,9 @@
 import { CHALLENGE_LENGTH } from '@logic/constants'
 import { dayNumberForDate } from '@logic/dates'
+import { isChallengeDay } from '@logic/days'
 import { parseProfile } from '@logic/profile'
 import { buildNextChallenge } from '@logic/restart'
-import { challengeWeek, rulesFor, type ChallengeVariant } from '@logic/rulesets'
+import { challengeWeek, rulesFor, variantOf, type ChallengeVariant } from '@logic/rulesets'
 import { SETTING_KEYS } from '@logic/settingKeys'
 import { syncDayCompletion } from '../completion'
 import type { Db } from '../driver'
@@ -15,12 +16,12 @@ export type SocialDayResult =
   | { ok: true }
   | { ok: false; reason: 'not-allowed' | 'out-of-range' | 'too-late' }
   | { ok: false; reason: 'week-taken'; dayNumber: number }
+export type GiveUpResult = { ok: true } | { ok: false; reason: 'locked' }
 
 /**
  * The attempts. Same calls and behaviour as the web app's challengeRepo
  * (src/db/repositories/challengeRepo.ts); the methods the first screens don't
- * need yet (restart, give up, start date, variant, jokers)
- * arrive with those screens.
+ * need yet (start date, variant) arrive with those screens.
  */
 
 async function first(db: Db, where: string): Promise<Challenge | undefined> {
@@ -81,9 +82,57 @@ export const challengeRepo = {
     })
   },
 
+  /**
+   * Archives an attempt as `failed` and starts the next one (attempt number
+   * = highest + 1) in a single transaction, keeping the failed attempt's
+   * variant (75 Hard if it had none). If an active attempt already exists —
+   * e.g. the restart button was tapped twice — it's reused, so there's never
+   * more than one active challenge. Only the old row's `status` is touched.
+   */
+  async restart(failedChallengeId: number, startDate: string): Promise<number> {
+    return transaction(async (db) => {
+      const failed = await getRow(db, 'challenges', failedChallengeId)
+      if (failed?.status === 'active') await updateRow(db, 'challenges', failedChallengeId, { status: 'failed' })
+      return activeOrNextAttempt(db, startDate, variantOf(failed ?? {}))
+    })
+  },
+
   /** Starts a fresh attempt after a completed or given-up one. Reuses the active attempt if one already exists. */
   async startNew(startDate: string, variant: ChallengeVariant): Promise<number> {
     return transaction((db) => activeOrNextAttempt(db, startDate, variant))
+  },
+
+  /** Marks an active attempt as completed. A no-op for attempts that aren't active. */
+  async markCompleted(id: number): Promise<void> {
+    await transaction(async (db) => {
+      const challenge = await getRow(db, 'challenges', id)
+      if (challenge?.status === 'active') await updateRow(db, 'challenges', id, { status: 'completed' })
+    })
+  },
+
+  /**
+   * Gives up the active attempt for good (Settings, after four confirmations).
+   * Only from Day 1 to Day 75: before Day 1 its challenge and start date can
+   * still be changed instead. Only `status` and `abandonedOn` change, so the
+   * attempt keeps its days, photos and badges. The app then shows the "You
+   * gave up" screen, which starts the next attempt with startNew.
+   */
+  async giveUp(id: number, today: string): Promise<GiveUpResult> {
+    return transaction(async (db): Promise<GiveUpResult> => {
+      const challenge = await getRow(db, 'challenges', id)
+      if (!challenge || challenge.status !== 'active') return { ok: false, reason: 'locked' }
+      if (!isChallengeDay(dayNumberForDate(challenge.startDate, today))) return { ok: false, reason: 'locked' }
+      await updateRow(db, 'challenges', id, { status: 'abandoned', abandonedOn: today })
+      return { ok: true }
+    })
+  },
+
+  /** Records that the player has seen `count` used jokers announced. Never lowers the count. */
+  async acknowledgeJokers(id: number, count: number): Promise<void> {
+    await transaction(async (db) => {
+      const challenge = await getRow(db, 'challenges', id)
+      if (challenge && count > (challenge.jokersAcknowledged ?? 0)) await updateRow(db, 'challenges', id, { jokersAcknowledged: count })
+    })
   },
 
   /**
