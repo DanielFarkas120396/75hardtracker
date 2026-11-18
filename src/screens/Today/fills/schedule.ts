@@ -3,6 +3,8 @@ export const DRIFT_MS = 1000 / 30
 
 export interface FrameNeeds {
   moving: boolean
+  /** It was moving last frame and stopped this one: the step that came to rest changed the picture, so draw it once more. */
+  settling: boolean
   fading: boolean
   dirty: boolean
   drifting: boolean
@@ -11,7 +13,7 @@ export interface FrameNeeds {
 /** Whether a tile's fill is drawn this frame, and whether the loop must go on for it. */
 export function frameDecision(needs: FrameNeeds, driftDue: boolean): { draw: boolean; again: boolean } {
   return {
-    draw: needs.moving || needs.fading || needs.dirty || (needs.drifting && driftDue),
+    draw: needs.moving || needs.settling || needs.fading || needs.dirty || (needs.drifting && driftDue),
     again: needs.moving || needs.fading || needs.drifting,
   }
 }

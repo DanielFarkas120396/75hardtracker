@@ -37,13 +37,19 @@ describe('spring', () => {
 })
 
 describe('frameDecision', () => {
-  const still = { moving: false, fading: false, dirty: false, drifting: false }
+  const still = { moving: false, settling: false, fading: false, dirty: false, drifting: false }
   it('draws what moves every frame, and drifting fills only when the 30 fps slot is due', () => {
     expect(frameDecision({ ...still, moving: true }, false)).toEqual({ draw: true, again: true })
     expect(frameDecision({ ...still, drifting: true }, false)).toEqual({ draw: false, again: true })
     expect(frameDecision({ ...still, drifting: true }, true)).toEqual({ draw: true, again: true })
     expect(frameDecision({ ...still, dirty: true }, false)).toEqual({ draw: true, again: false })
     expect(frameDecision(still, true)).toEqual({ draw: false, again: false })
+  })
+
+  it('draws the frame a fill comes to rest on, once', () => {
+    // An undo drains the reading fill in a few frames; the last step lands on empty and reports it stopped.
+    // Skipping that frame left the tile showing the one before, still slightly filled.
+    expect(frameDecision({ ...still, settling: true }, false)).toEqual({ draw: true, again: false })
   })
 })
 
