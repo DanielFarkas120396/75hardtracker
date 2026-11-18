@@ -5,27 +5,7 @@ import { pbkdf2Sync } from 'node:crypto'
 import { decryptOnPhone, deriveKey } from '../decrypt'
 import { sampleBackup } from './sampleBackup'
 
-// expo-crypto's AES is native code: here Node's AES-256-GCM stands in for it, with the same
-// inputs (a raw key, a base64 IV, base64 ciphertext with the 16-byte tag at its end).
-jest.mock('expo-crypto', () => {
-  const { createDecipheriv } = jest.requireActual<typeof import('node:crypto')>('node:crypto')
-  return {
-    AESEncryptionKey: { import: async (bytes: Uint8Array) => ({ bytes }) },
-    AESSealedData: {
-      fromParts: (iv: string, data: string, tagLength: number) => ({
-        iv: Buffer.from(iv, 'base64'),
-        data: Buffer.from(data, 'base64'),
-        tagLength,
-      }),
-    },
-    aesDecryptAsync: async (sealed: { iv: Buffer; data: Buffer; tagLength: number }, key: { bytes: Uint8Array }) => {
-      const decipher = createDecipheriv('aes-256-gcm', key.bytes, sealed.iv)
-      decipher.setAuthTag(sealed.data.subarray(-sealed.tagLength))
-      const body = sealed.data.subarray(0, -sealed.tagLength)
-      return new Uint8Array(Buffer.concat([decipher.update(body), decipher.final()]))
-    },
-  }
-})
+jest.mock('expo-crypto', () => jest.requireActual('./nodeAes'))
 
 // The web app's own encryption, with few rounds so the tests stay fast.
 const ROUNDS = 1000

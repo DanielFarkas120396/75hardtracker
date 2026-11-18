@@ -1,4 +1,5 @@
 import { Alert, Pressable, StyleSheet, Text } from 'react-native'
+import { ImportBackup } from '../../backup/ImportBackupFlow'
 import { Placeholder, PlaceholderText } from '../../components/Placeholder'
 import { KeychainCheck } from '../../dev/KeychainCheck'
 import { seedDay } from '../../dev/seed'
@@ -16,6 +17,7 @@ export default function SettingsScreen() {
   return (
     <Placeholder title="Settings">
       <PlaceholderText>Coming soon</PlaceholderText>
+      <ImportBackup />
       {__DEV__ && (
         <Pressable
           accessibilityRole="button"
