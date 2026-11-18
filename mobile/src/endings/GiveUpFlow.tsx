@@ -1,13 +1,16 @@
+import { canGiveUp } from '@logic/challengeGate'
 import { CHALLENGE_LENGTH } from '@logic/constants'
 import { variantOf } from '@logic/rulesets'
 import { VARIANT_NAMES } from '@logic/variantsCopy'
 import { useEffect, useState, type ReactNode } from 'react'
-import { AccessibilityInfo, StyleSheet, Text, TextInput, View } from 'react-native'
+import { AccessibilityInfo, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import { Icon } from '../components/icons/Icon'
 import { Mascot } from '../components/mascot/Mascot'
 import { Button } from '../components/ui/Button'
 import { Sheet } from '../components/ui/Sheet'
 import { challengeRepo } from '../db/repositories/challengeRepo'
 import type { Challenge } from '../db/types'
+import { useChallengeGate } from '../hooks/useChallengeGate'
 import { Alert, useFieldStyle } from '../onboarding/parts'
 import { useTheme } from '../theme/ThemeProvider'
 import { YouSaid } from './screens'
@@ -20,8 +23,6 @@ interface GiveUpFlowProps {
   today: string
   todayDayNumber: number
   streak: number
-  /** The attempt has ended: the app now shows "You gave up". */
-  onGivenUp?: () => void
 }
 
 /** How long step 3's "Give up" stays locked. */
@@ -55,8 +56,37 @@ export function GiveUpFlow({ open, onClose, ...rest }: GiveUpFlowProps) {
   )
 }
 
+/**
+ * Settings' way in: "Give up this challenge", there only while an attempt is running on one of its 75 days (the web's
+ * Danger zone row). Once given up the flow closes by itself, and the "You gave up" screen brings Today to the front.
+ */
+export function GiveUpSetting() {
+  const { colors, fonts } = useTheme()
+  const gate = useChallengeGate()
+  const [open, setOpen] = useState(false)
+  const allowed = gate ? canGiveUp(gate) : false
+  // Given up, failed at midnight or finished meanwhile: the next attempt must not open on this flow.
+  if (open && !allowed) setOpen(false)
+  if (!gate) return null
+  return (
+    <>
+      {allowed && (
+        <View style={styles.setting}>
+          <Pressable accessibilityRole="button" onPress={() => setOpen(true)} style={[styles.row, { backgroundColor: colors.surface }]}>
+            <Icon name="close" size={20} color={colors.dangerInk} />
+            <Text style={[styles.body, { color: colors.dangerInk, fontFamily: fonts.rounded.bold }]}>Give up this challenge</Text>
+          </Pressable>
+          <Text style={[styles.footer, { color: colors.inkMuted, fontFamily: fonts.rounded.regular }]}>Giving up stops this attempt for good; it stays in your history.</Text>
+        </View>
+      )}
+      {/* It stays here once the row has gone, so the sheet slides away over "You gave up". */}
+      <GiveUpFlow open={open && allowed} onClose={() => setOpen(false)} challenge={gate.challenge} today={gate.today} todayDayNumber={gate.todayDayNumber} streak={gate.streak} />
+    </>
+  )
+}
+
 /** Mounted each time the flow opens, so it always starts at step 1. */
-function GiveUpSteps({ onClose, challenge, today, todayDayNumber, streak, onGivenUp }: Omit<GiveUpFlowProps, 'open'>) {
+function GiveUpSteps({ onClose, challenge, today, todayDayNumber, streak }: Omit<GiveUpFlowProps, 'open'>) {
   const { colors, fonts } = useTheme()
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
   // Loaded as the flow opens, so step 2 has its numbers by the time it shows.
@@ -88,7 +118,7 @@ function GiveUpSteps({ onClose, challenge, today, todayDayNumber, streak, onGive
           🔥 {streak}-day streak · {perfectDays} perfect {perfectDays === 1 ? 'day' : 'days'}
         </Text>
         <View style={styles.said}>
-          <YouSaid />
+          <YouSaid centred={false} />
         </View>
         <Text style={[styles.body, styles.line, { color: colors.ink, fontFamily: fonts.rounded.bold }]}>{perfectDaysLine(perfectDays)}</Text>
         <StepButtons stay="I'll stay" onStay={onClose}>
@@ -99,7 +129,7 @@ function GiveUpSteps({ onClose, challenge, today, todayDayNumber, streak, onGive
   }
 
   if (step === 3) return <LastWarning todayDayNumber={todayDayNumber} onStay={onClose} onGoOn={() => setStep(4)} />
-  return <TypeToConfirm challenge={challenge} today={today} onCancel={onClose} onGivenUp={onGivenUp} />
+  return <TypeToConfirm challenge={challenge} today={today} onCancel={onClose} />
 }
 
 /** A step's heading, said as its step appears (step 1's is the sheet's own opening). */
@@ -163,7 +193,7 @@ function LastWarning({ todayDayNumber, onStay, onGoOn }: { todayDayNumber: numbe
 }
 
 /** Step 4: typing GIVE UP unlocks the button that ends the attempt. */
-function TypeToConfirm({ challenge, today, onCancel, onGivenUp }: { challenge: Challenge; today: string; onCancel: () => void; onGivenUp?: () => void }) {
+function TypeToConfirm({ challenge, today, onCancel }: { challenge: Challenge; today: string; onCancel: () => void }) {
   const { colors, fonts } = useTheme()
   const field = useFieldStyle()
   const [typed, setTyped] = useState('')
@@ -175,8 +205,8 @@ function TypeToConfirm({ challenge, today, onCancel, onGivenUp }: { challenge: C
     setError(null)
     try {
       const result = await challengeRepo.giveUp(challenge.id, today)
-      // On success the gate turns 'abandoned' and Today becomes the "You gave up" screen.
-      if (result.ok) return onGivenUp?.()
+      // On success the gate turns 'abandoned': the flow closes and Today becomes the "You gave up" screen.
+      if (result.ok) return
       setError("This attempt can't be given up anymore.")
       setBusy(false)
     } catch {
@@ -217,8 +247,11 @@ const styles = StyleSheet.create({
   line: { marginTop: 12 },
   duck: { alignItems: 'center' },
   built: { marginTop: 12, overflow: 'hidden', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
-  said: { marginTop: 12, alignItems: 'flex-start' },
+  said: { marginTop: 12 },
   field: { marginTop: 12 },
   buttons: { marginTop: 16, flexDirection: 'row', gap: 8 },
   half: { flex: 1 },
+  setting: { alignSelf: 'stretch', gap: 8 },
+  row: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 16, paddingHorizontal: 16 },
+  footer: { paddingHorizontal: 16, fontSize: 12, lineHeight: 17 },
 })

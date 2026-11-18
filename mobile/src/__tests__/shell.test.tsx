@@ -1,3 +1,7 @@
+import { resolveGate } from '@logic/challengeGate'
+import { missingTasks } from '@logic/dayCompletion'
+import { toDayTaskData } from '@logic/mappers'
+import { rulesFor } from '@logic/rulesets'
 import { SETTING_KEYS } from '@logic/settingKeys'
 import { dayNumberForDate, todayISO } from '@logic/dates'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
@@ -15,12 +19,16 @@ import { stagePictures } from '../files/pictures'
 import { addChallenge, freshDatabase } from '../db/__tests__/fixtures'
 import * as open from '../db/open'
 import { challengeRepo } from '../db/repositories/challengeRepo'
+import { dayEntryRepo } from '../db/repositories/dayEntryRepo'
+import { workoutRepo } from '../db/repositories/workoutRepo'
 import { profileRepo } from '../db/repositories/profileRepo'
 import { settingsRepo } from '../db/repositories/settingsRepo'
-import { seedDay } from '../dev/seed'
+import { SEEDS, seedDay } from '../dev/seed'
 import { ThemeProvider } from '../theme/ThemeProvider'
 
 jest.mock('expo-font', () => ({ ...jest.requireActual('expo-font'), useFonts: jest.fn() }))
+// Settings holds the way to give up, whose screens ring the chime.
+jest.mock('expo-audio', () => ({ useAudioPlayer: () => ({ play: jest.fn(), seekTo: jest.fn(async () => {}) }), setAudioModeAsync: jest.fn(async () => {}) }))
 jest.mock('expo-splash-screen', () => ({ hideAsync: jest.fn(async () => {}), preventAutoHideAsync: jest.fn(async () => {}) }))
 const hideSplash = jest.mocked(SplashScreen.hideAsync)
 jest.mock('../db/open', () => ({ ...jest.requireActual('../db/open'), openAppDatabase: jest.fn() }))
@@ -46,6 +54,24 @@ describe('seedDay', () => {
     expect(await settingsRepo.get(SETTING_KEYS.bedtime, 'none')).toBe('none')
     // With a profile, so the app opens on Today and not on the welcome flow.
     expect(await profileRepo.get()).toMatchObject({ name: 'Tester' })
+  })
+
+  it('offers each ending one tap away, at any time of day', async () => {
+    /** What the app shows after a seed, early in the morning and in the evening. */
+    const gates = async (label: string) => {
+      await SEEDS.find((seed) => seed.label === label)!.run()
+      const challenge = (await challengeRepo.getCurrent())!
+      const days = await dayEntryRepo.getAllForChallenge(challenge.id)
+      return [8 * 60, 20 * 60].map((nowMin) => resolveGate(challenge, days, todayISO(), nowMin))
+    }
+    for (const gate of await gates('Seed Day 12')) expect(gate).toMatchObject({ kind: 'active', todayDayNumber: 12, streak: 11 })
+    for (const gate of await gates('Seed a missed day')) expect(gate).toMatchObject({ kind: 'needsRestart', failedDayNumber: 10 })
+    for (const gate of await gates('Seed a joker')) expect(gate).toMatchObject({ kind: 'jokerUsed', newlyMissed: [10], jokersLeft: 0 })
+    // Day 75 lacks only its photo: one picture, and the attempt is won.
+    for (const gate of await gates('Seed Day 75')) expect(gate).toMatchObject({ kind: 'active', todayDayNumber: 75, streak: 74 })
+    const challenge = (await challengeRepo.getCurrent())!
+    const last = (await dayEntryRepo.getByChallengeAndDayNumber(challenge.id, 75))!
+    expect(missingTasks(toDayTaskData(last, await workoutRepo.getForDayEntry(last.id), undefined), rulesFor(challenge))).toEqual(['photo'])
   })
 })
 

@@ -108,6 +108,7 @@ export function VictoryScreen({ challenge, today, revealed, streak, missedDays }
     playChime()
   })
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- the burst starts when the peak leaves, which only a prop tells
     if (revealed) onReveal()
   }, [revealed])
   useEffect(() => {
@@ -182,9 +183,9 @@ interface Piece {
 
 function makePieces(): Piece[] {
   return Array.from({ length: PIECES }, (_, i) => {
-    // Straight up, give or take half the spread; faster or slower by up to half.
+    // Straight up, give or take half the spread; from half the start speed to one and a half times it.
     const angle = -Math.PI / 2 + ((Math.random() - 0.5) * 90 * Math.PI) / 180
-    const velocity = 45 * (0.5 + Math.random() * 0.5)
+    const velocity = 45 * (0.5 + Math.random())
     const at = (tick: number) => (velocity * (1 - DECAY ** tick)) / (1 - DECAY)
     const ticks = Array.from({ length: SAMPLES + 1 }, (_, k) => (k / SAMPLES) * TICKS)
     return {

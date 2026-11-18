@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { ScrollView, StyleSheet, Text } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useTheme } from '../theme/ThemeProvider'
 
@@ -11,7 +11,8 @@ export function Placeholder({ title, children }: { title: string; children?: Rea
       <Text accessibilityRole="header" style={[styles.title, { color: colors.ink, fontFamily: fonts.display.bold }]}>
         {title}
       </Text>
-      <View style={styles.body}>{children}</View>
+      {/* It scrolls: Settings holds more developer buttons than a small phone shows. */}
+      <ScrollView contentContainerStyle={styles.body}>{children}</ScrollView>
     </SafeAreaView>
   )
 }
@@ -25,6 +26,6 @@ export function PlaceholderText({ children }: { children: ReactNode }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, paddingHorizontal: 20 },
   title: { fontSize: 34, marginTop: 12 },
-  body: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
+  body: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 16, paddingTop: 16, paddingBottom: 120 },
   text: { fontSize: 17 },
 })

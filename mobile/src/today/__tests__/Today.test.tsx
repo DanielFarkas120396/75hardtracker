@@ -298,26 +298,27 @@ describe('Today', () => {
 })
 
 describe('an attempt that is not running', () => {
-  it('says a day was missed, instead of a blank Today', async () => {
+  // Each ending has its own screen (src/endings/, with its tests): here, only that Today is never blank.
+  it('shows the missed day, instead of a blank Today', async () => {
     await startAttempt(3)
     setClock(TODAY, 13 * 60)
     await show()
-    expect(await screen.findByText('Day 1 was missed')).toBeOnTheScreen()
-    expect(screen.getByText("This attempt is over. Starting again isn't built in this version yet.")).toBeOnTheScreen()
+    expect(await screen.findByRole('header', { name: "Day 1 wasn't completed" })).toBeOnTheScreen()
+    expect(button('Restart from Day 1')).toBeOnTheScreen()
   })
 
   it('says so for a given-up and for a finished attempt', async () => {
     await profileRepo.completeOnboarding({ name: 'Daniel', why: 'A fresh start' })
     await addChallenge({ startDate: addDaysISO(TODAY, -5), attemptNumber: 1, status: 'abandoned', abandonedOn: TODAY })
     const view = await show()
-    expect(await screen.findByText('You gave up')).toBeOnTheScreen()
+    expect(await screen.findByRole('header', { name: 'You gave up on Day 6' })).toBeOnTheScreen()
     await view.unmount()
 
     await freshDatabase()
     await profileRepo.completeOnboarding({ name: 'Daniel', why: 'A fresh start' })
     await addChallenge({ startDate: addDaysISO(TODAY, -80), attemptNumber: 1, status: 'completed' })
     await show()
-    expect(await screen.findByText('75 days done')).toBeOnTheScreen()
+    expect(await screen.findByRole('header', { name: '75 Hard complete! 🏆' })).toBeOnTheScreen()
   })
 })
 
@@ -969,7 +970,7 @@ describe('yesterday, until noon', () => {
     await dayEntryRepo.getAllForChallenge(challengeId)
     setClock(TODAY, 13 * 60)
     const view = await show()
-    expect(await screen.findByText('Day 1 was missed')).toBeOnTheScreen()
+    expect(await screen.findByRole('header', { name: "Day 1 wasn't completed" })).toBeOnTheScreen()
     await view.unmount()
 
     await freshDatabase()

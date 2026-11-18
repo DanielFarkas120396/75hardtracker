@@ -24,6 +24,8 @@ import { useChallengeGate } from '../hooks/useChallengeGate'
 import { useDayCompleteCelebration } from '../hooks/useDayCompleteCelebration'
 import { useNowMinutes } from '../hooks/useNowMinutes'
 import { useTheme } from '../theme/ThemeProvider'
+import { VictoryScreen } from '../endings/NewChallenge'
+import { DayFailedScreen, GaveUpScreen, JokerUsedScreen } from '../endings/screens'
 import { SLIDE } from './boardMotion'
 import { useFrozenWhile, useSettledCelebration } from './boardSettle'
 import { DayBoard, LoggedToast, useLogged } from './DayBoard'
@@ -42,11 +44,9 @@ import { TodayHero } from './TodayHero'
 import { WeighInCard } from './WeighInCard'
 
 /**
- * The Today tab: what the attempt's gate says to show. The web decides this in
- * App.tsx; the screens for an attempt that is no longer running (a missed day
- * beyond the jokers, a given-up or finished attempt) are part 4d, so a plain
- * screen says which it is, and Today is never blank. A joker used but not yet
- * announced doesn't hold Today back here: its announcement is part 4d too.
+ * The Today tab: what the attempt's gate says to show. The web decides this in App.tsx: a missed day beyond the
+ * jokers, a joker just spent and an attempt given up each take the whole screen (the tab bar steps aside), a finished
+ * attempt shows its Victory, and anything else is the day.
  */
 export function Today() {
   const gate = useChallengeGate()
@@ -54,21 +54,27 @@ export function Today() {
   const { celebration, dismiss } = useDayCompleteCelebration(gate ?? undefined)
   // It waits for the board's last chip to land (5 s at most).
   const shown = useSettledCelebration(celebration)
+  // No peak over bad news: it waits behind a screen that blocks the app, as on the web.
+  const blocked = gate?.kind === 'needsRestart' || gate?.kind === 'jokerUsed' || gate?.kind === 'abandoned'
   return (
     <>
       <Attempt gate={gate} celebrating={celebration !== null} />
-      <DayCompleteCelebration celebration={shown} onDismiss={dismiss} />
+      <DayCompleteCelebration celebration={blocked ? null : shown} onDismiss={dismiss} />
     </>
   )
 }
 
 function Attempt({ gate, celebrating }: { gate: ChallengeGate | null | undefined; celebrating: boolean }) {
   if (!gate) return <Centred>Loading…</Centred>
-  if (gate.kind === 'needsRestart') {
-    return <NotRunning title={`Day ${gate.failedDayNumber} was missed`} line="This attempt is over. Starting again isn't built in this version yet." />
+  if (gate.kind === 'needsRestart') return <DayFailedScreen challenge={gate.challenge} failedDayNumber={gate.failedDayNumber} today={gate.today} />
+  if (gate.kind === 'jokerUsed') {
+    return <JokerUsedScreen challenge={gate.challenge} newlyMissed={gate.newlyMissed} missedCount={gate.missedDays.length} jokersLeft={gate.jokersLeft} />
   }
-  if (gate.kind === 'abandoned') return <NotRunning title="You gave up" line="Starting again isn't built in this version yet." />
-  if (gate.kind === 'completed') return <NotRunning title={`${CHALLENGE_LENGTH} days done`} line="The victory screen isn't built in this version yet." />
+  if (gate.kind === 'abandoned') return <GaveUpScreen challenge={gate.challenge} today={gate.today} />
+  if (gate.kind === 'completed') {
+    // The confetti waits until the Day 75 peak has been dismissed.
+    return <VictoryScreen challenge={gate.challenge} today={gate.today} revealed={!celebrating} streak={gate.streak} missedDays={gate.missedDays} />
+  }
   return <TodayScreen gate={gate} celebrating={celebrating} />
 }
 
@@ -347,20 +353,6 @@ function Line({ children, announced = false, hidden = false }: { children: strin
   return <Text style={[styles.small, styles.line, { color: colors.inkMuted, fontFamily: fonts.rounded.bold }, hidden && styles.unseen]}>{children}</Text>
 }
 
-/** An attempt that is no longer running, said plainly. Its real screens are part 4d. */
-function NotRunning({ title, line }: { title: string; line: string }) {
-  const { colors, fonts } = useTheme()
-  return (
-    <View style={[styles.screen, styles.centred, { backgroundColor: colors.canvas }]}>
-      <Mascot mood="judging" size={96} />
-      <Text accessibilityRole="header" style={[styles.heading, { color: colors.ink, fontFamily: fonts.display.semibold }]}>
-        {title}
-      </Text>
-      <Text style={[styles.body, styles.narrow, { color: colors.inkMuted, fontFamily: fonts.rounded.regular }]}>{line}</Text>
-    </View>
-  )
-}
-
 /**
  * What Today shows before Day 1: a countdown instead of task tiles (no day can
  * be logged yet), in the Today hero's look (the gauge at 0), so Day 1 isn't a
@@ -439,8 +431,6 @@ export function PreStartView({ challenge, today, todayDayNumber }: { challenge: 
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  centred: { alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 },
   main: { paddingHorizontal: 16 },
   actions: { marginTop: 16, flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   won: { fontSize: 14 },

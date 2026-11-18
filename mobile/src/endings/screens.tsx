@@ -59,22 +59,22 @@ export function GateHeading({ children, size = 'md' }: { children: string; size?
 }
 
 /** "You said: “…”": the reason, quoted back at a hard moment. Nothing without a profile. */
-export function YouSaid() {
+export function YouSaid({ centred = true }: { centred?: boolean }) {
   const { colors, fonts } = useTheme()
   const profile = useProfile()
   if (!profile) return null
-  return <Text style={[styles.small, styles.narrow, { color: colors.inkMuted, fontFamily: fonts.quote }]}>You said: “{profile.why}”</Text>
+  return <Text style={[styles.small, centred && styles.narrow, { color: colors.inkMuted, fontFamily: fonts.quote }]}>You said: “{profile.why}”</Text>
 }
 
-function Muted({ children }: { children: ReactNode }) {
+function Muted({ children, spaced = false }: { children: ReactNode; spaced?: boolean }) {
   const { colors, fonts } = useTheme()
-  return <Text style={[styles.body, styles.narrow, { color: colors.inkMuted, fontFamily: fonts.rounded.regular }]}>{children}</Text>
+  return <Text style={[styles.body, styles.narrow, spaced && styles.spaced, { color: colors.inkMuted, fontFamily: fonts.rounded.regular }]}>{children}</Text>
 }
 
 /** The duck's last word on the screen. */
 function DuckLine({ children }: { children: ReactNode }) {
   const { colors, fonts } = useTheme()
-  return <Text style={[styles.body, styles.narrow, styles.duckLine, { color: colors.ink, fontFamily: fonts.rounded.bold }]}>{children}</Text>
+  return <Text style={[styles.body, styles.narrow, styles.spaced, { color: colors.ink, fontFamily: fonts.rounded.bold }]}>{children}</Text>
 }
 
 /** What a given day was missing, as a list of rule lines. */
@@ -182,11 +182,11 @@ export function JokerUsedScreen({ challenge, newlyMissed, missedCount, jokersLef
       <GateHeading>{heading}</GateHeading>
       {newlyMissed.map((dayNumber) => (
         <View key={dayNumber} style={styles.day}>
-          {newlyMissed.length > 1 && <Text style={[styles.dayLabel, { color: colors.inkMuted, fontFamily: fonts.rounded.bold }]}>DAY {dayNumber}</Text>}
+          {newlyMissed.length > 1 && <Text style={[styles.dayLabel, { color: colors.inkMuted, fontFamily: fonts.rounded.bold }]}>Day {dayNumber}</Text>}
           <MissedTasksList challenge={challenge} dayNumber={dayNumber} />
         </View>
       ))}
-      <Muted>{jokerLine}</Muted>
+      <Muted spaced>{jokerLine}</Muted>
       <Muted>Your streak starts over. Your challenge doesn&apos;t.</Muted>
       <YouSaid />
       <DuckLine>{duckLine}</DuckLine>
@@ -231,10 +231,10 @@ const styles = StyleSheet.create({
   small: { fontSize: 14, lineHeight: 20 },
   hint: { fontSize: 12 },
   narrow: { maxWidth: 320, textAlign: 'center' },
-  duckLine: { marginTop: 8 },
+  spaced: { marginTop: 8 },
   button: { marginTop: 8 },
   missed: { marginTop: 8, width: '100%', maxWidth: 320, gap: 8 },
   missedLine: { overflow: 'hidden', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 8, fontSize: 14, lineHeight: 20 },
   day: { width: '100%', maxWidth: 320 },
-  dayLabel: { fontSize: 12, letterSpacing: 0.6, textAlign: 'center' },
+  dayLabel: { fontSize: 12, letterSpacing: 0.3, textAlign: 'center', textTransform: 'uppercase' },
 })

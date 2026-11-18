@@ -1,4 +1,6 @@
+import { router } from 'expo-router'
 import { NativeTabs } from 'expo-router/native-tabs'
+import { useEffect } from 'react'
 import { useTabBarHidden } from '../../hooks/useTabBar'
 import { useTheme } from '../../theme/ThemeProvider'
 
@@ -16,6 +18,11 @@ export default function TabsLayout() {
   const { colors } = useTheme()
   // The camera sheet covers the tab bar on the web; here the bar steps aside while it is open.
   const hidden = useTabBarHidden()
+  // Whatever hides the bar lives on Today and covers the whole app on the web (a missed day, a joker, "You gave up",
+  // the day-complete peak): Today comes to the front for it, or another tab would be left without a way out.
+  useEffect(() => {
+    if (hidden) router.navigate('/')
+  }, [hidden])
   return (
     <NativeTabs hidden={hidden} backgroundColor={colors.surface} tintColor={colors.worldInk} iconColor={colors.inkMuted}>
       {TABS.map((tab) => (
