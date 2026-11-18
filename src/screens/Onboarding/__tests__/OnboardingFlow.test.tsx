@@ -1,9 +1,10 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MotionGlobalConfig } from 'framer-motion'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../../db/db'
 import { addChallenge, freshDatabase } from '../../../db/__tests__/fixtures'
 import { profileRepo } from '../../../db/repositories/profileRepo'
+import { settingsRepo, SETTING_KEYS } from '../../../db/repositories/settingsRepo'
 import { addDaysISO, dateForDayNumber, formatShortDay, todayISO } from '../../../lib/dates'
 import { draftKey } from '../../../lib/onboardingDraft'
 import { OnboardingFlow, SIGNED_BEAT_MS } from '../OnboardingFlow'
@@ -85,6 +86,12 @@ describe('OnboardingFlow', () => {
     expect(whyField()).toHaveValue('A fresh start')
     click('Continue')
 
+    await heading('When do you go to bed?')
+    // The bedtime the duck counts down to: 23:00 until changed, saved as it changes.
+    await waitFor(() => expect(screen.getByLabelText('Bedtime')).toHaveValue('23:00'))
+    fireEvent.change(screen.getByLabelText('Bedtime'), { target: { value: '22:15' } })
+    await waitFor(async () => expect(await settingsRepo.get(SETTING_KEYS.bedtime, '')).toBe('22:15'))
+    click('Continue')
     await heading('When do you start?')
     fireEvent.click(screen.getByRole('radio', { name: 'Tomorrow' }))
     click('Continue')
@@ -216,6 +223,8 @@ describe('OnboardingFlow', () => {
     await heading('Why are you doing this?')
     click('A fresh start')
     click('Continue')
+    await heading('When do you go to bed?')
+    click('Continue')
     await heading('When do you start?')
 
     fireEvent.click(screen.getByRole('radio', { name: 'Pick a date' }))
@@ -233,6 +242,8 @@ describe('OnboardingFlow', () => {
     await pickChallenge()
     await heading('Why are you doing this?')
     click('A fresh start')
+    click('Continue')
+    await heading('When do you go to bed?')
     click('Continue')
     await heading('When do you start?')
 
@@ -284,6 +295,48 @@ describe('OnboardingFlow', () => {
     )
   })
 
+  it('points to the signature with "Sign below" until it is in view, and scrolls there on a tap', async () => {
+    // A stand-in for the browser's IntersectionObserver: `inView` decides what the deal screen sees.
+    let inView = false
+    const observed: { cb: IntersectionObserverCallback; els: Element[] }[] = []
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        cb: IntersectionObserverCallback
+        constructor(cb: IntersectionObserverCallback) {
+          this.cb = cb
+          observed.push({ cb, els: [] })
+        }
+        observe(el: Element) {
+          observed.find((o) => o.cb === this.cb)!.els.push(el)
+        }
+        unobserve() {}
+        disconnect() {}
+      },
+    )
+    const report = () =>
+      act(() =>
+        observed.forEach(({ cb, els }) =>
+          cb(els.map((target) => ({ target, isIntersecting: inView, intersectionRatio: inView ? 1 : 0 }) as IntersectionObserverEntry), {} as IntersectionObserver),
+        ),
+      )
+    const scrollIntoView = vi.fn()
+    Element.prototype.scrollIntoView = scrollIntoView
+
+    seedDraft({})
+    render(<OnboardingFlow mode="new" today={today} />)
+    await heading('Deal, Daniel.')
+    report()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sign below ↓' }))
+    expect(scrollIntoView).toHaveBeenCalled()
+
+    inView = true
+    report()
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Sign below ↓' })).not.toBeInTheDocument())
+    vi.unstubAllGlobals()
+  })
+
   it('reopens a restored draft on the first step whose answer no longer holds', async () => {
     seedDraft({ step: 'ready', why: '   ' })
     const first = render(<OnboardingFlow mode="new" today={today} />)
@@ -319,12 +372,12 @@ describe('OnboardingFlow', () => {
     render(<OnboardingFlow mode="new" today={today} />)
     const progress = () => screen.getByRole('progressbar', { name: 'Setup progress' })
 
-    expect(progress()).toHaveAttribute('aria-valuetext', 'Step 1 of 6')
+    expect(progress()).toHaveAttribute('aria-valuetext', 'Step 1 of 7')
     expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument()
 
     click('Get started')
     await heading('What should the duck call you?')
-    expect(progress()).toHaveAttribute('aria-valuetext', 'Step 2 of 6')
+    expect(progress()).toHaveAttribute('aria-valuetext', 'Step 2 of 7')
     expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument()
   })
 
@@ -334,6 +387,8 @@ describe('OnboardingFlow', () => {
     await pickChallenge()
     await heading('Why are you doing this?')
     click('A fresh start')
+    click('Continue')
+    await heading('When do you go to bed?')
     click('Continue')
     await heading('When do you start?')
     click('Continue')
@@ -392,6 +447,8 @@ describe('OnboardingFlow', () => {
     await heading('Why are you doing this?')
     click('A fresh start')
     click('Continue')
+    await heading('When do you go to bed?')
+    click('Continue')
     await heading('When do you start?')
 
     expect(screen.getByRole('radio', { name: 'Today' })).toHaveAttribute('aria-checked', 'true')
@@ -408,6 +465,8 @@ describe('OnboardingFlow', () => {
     await pickChallenge()
     await heading('Why are you doing this?')
     click('A fresh start')
+    click('Continue')
+    await heading('When do you go to bed?')
     click('Continue')
     await heading('When do you start?')
 
@@ -426,6 +485,8 @@ describe('OnboardingFlow', () => {
     await pickChallenge()
     await heading('Why are you doing this?')
     click('A fresh start')
+    click('Continue')
+    await heading('When do you go to bed?')
     click('Continue')
     await heading('When do you start?')
 

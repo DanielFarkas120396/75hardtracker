@@ -1,5 +1,5 @@
-import { motion, type Variants } from 'framer-motion'
-import { useId, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { AnimatePresence, motion, useReducedMotion, type Variants } from 'framer-motion'
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { BackupRestore } from '../../components/BackupRestore'
 import { Icon } from '../../components/icons/Icon'
 import { StartDateChoice } from '../../components/StartDateChoice'
@@ -8,9 +8,11 @@ import { DrawCheckPad } from '../../components/ui/DrawCheckPad'
 import { VariantPicker } from '../../components/VariantPicker'
 import { finishLine, lateStartHint, startsInLine, WHY_IDEAS } from '../../content/onboarding'
 import { dailyRuleLines, NO_REMINDERS_LINE, stakesLine, VARIANT_NAMES } from '../../content/variants'
+import { useSettings } from '../../hooks/useSettings'
 import type { StartDateChoiceState } from '../../hooks/useStartDateChoice'
 import { dateForDayNumber, formatShortDay } from '../../lib/dates'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
+import { EARLIEST_BEDTIME, isValidBedtime, LATEST_BEDTIME } from '../../logic/menace'
 import type { OnboardingMode } from '../../logic/onboarding'
 import { cleanText, isValidName, isValidWhy, NAME_MAX_LENGTH, WHY_MAX_LENGTH } from '../../logic/profile'
 import { RULESETS, type ChallengeVariant } from '../../logic/rulesets'
@@ -294,6 +296,18 @@ export function ReadyStep(props: ReadyStepProps) {
   const valid = isValidName(name) && isValidWhy(why)
   const [checked, setChecked] = useState(false)
   const padLabelId = useId()
+  // The deal card fills the phone: until the signature is in view, a pill at the bottom says there's more below.
+  const signing = useRef<HTMLDivElement>(null)
+  const [signingInView, setSigningInView] = useState(true)
+  useEffect(() => {
+    const el = signing.current
+    // No IntersectionObserver (an old browser): no pill rather than one that never leaves.
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const observer = new IntersectionObserver(([entry]) => setSigningInView(entry.isIntersecting), { threshold: 0.3 })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+  const reduceMotion = useReducedMotion()
 
   if (mode === 'returning') {
     return (
@@ -365,6 +379,7 @@ export function ReadyStep(props: ReadyStepProps) {
 
       {/* After the whole card, not pinned over it: the player reads every rule before they reach the signature. */}
       <motion.div
+        ref={signing}
         className="mt-6 w-full"
         initial={{ opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -407,6 +422,22 @@ export function ReadyStep(props: ReadyStepProps) {
           </>
         )}
       </motion.div>
+
+      <AnimatePresence>
+        {!signed && !signingInView && (
+          <motion.button
+            key="sign-below"
+            type="button"
+            onClick={() => signing.current?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' })}
+            initial={{ opacity: 0, y: reduceMotion ? 0 : 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-1/2 z-20 min-h-touch -translate-x-1/2 rounded-full bg-ink px-5 font-rounded text-sm font-bold text-surface shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+          >
+            Sign below ↓
+          </motion.button>
+        )}
+      </AnimatePresence>
     </>
   )
 }
@@ -428,5 +459,47 @@ function Alert({ children }: { children: ReactNode }) {
     <p role="alert" className="mt-3 text-sm font-semibold text-danger-ink">
       {children}
     </p>
+  )
+}
+
+/**
+ * The bedtime the duck counts down to, asked once so the first evening runs on
+ * the player's own clock (Settings → Companion changes it later). Saved as it
+ * changes, like in Settings.
+ */
+export function BedtimeStep({ onNext }: { onNext: () => void }) {
+  const { bedtime, bedtimeLoaded, setBedtime } = useSettings()
+  const [draft, setDraft] = useState<string | null>(null)
+  const value = draft ?? bedtime
+  const valid = isValidBedtime(value)
+  return (
+    <>
+      <StepTitle>When do you go to bed?</StepTitle>
+      <p className="mt-2 text-ink-muted">I only come for you when what's left won't fit before then.</p>
+      <input
+        type="time"
+        aria-label="Bedtime"
+        aria-describedby={valid ? undefined : 'bedtime-hint'}
+        min={EARLIEST_BEDTIME}
+        max={LATEST_BEDTIME}
+        value={value}
+        disabled={!bedtimeLoaded}
+        onChange={(e) => {
+          setDraft(e.target.value)
+          if (isValidBedtime(e.target.value)) void setBedtime(e.target.value)
+        }}
+        onKeyDown={enterMovesOn(valid, onNext)}
+        className={`mt-4 min-h-touch px-4 text-center ${FIELD}`}
+      />
+      <Button className="mt-6 w-full" onClick={onNext} disabled={!valid} aria-describedby={valid ? undefined : 'bedtime-hint'}>
+        Continue
+      </Button>
+      {!valid && (
+        <MissingHint id="bedtime-hint">
+          Pick a time between {EARLIEST_BEDTIME} and {LATEST_BEDTIME}.
+        </MissingHint>
+      )}
+      <p className="mt-3 text-sm text-ink-muted">You can change it later in Settings.</p>
+    </>
   )
 }

@@ -18,7 +18,7 @@ export interface OnboardingDraft {
   pickedDate: string
 }
 
-const STEPS: readonly OnboardingStep[] = ['welcome', 'name', 'challenge', 'why', 'start', 'ready']
+const STEPS: readonly OnboardingStep[] = ['welcome', 'name', 'challenge', 'why', 'bedtime', 'start', 'ready']
 const START_CHOICES: readonly StartChoice[] = ['today', 'tomorrow', 'pick']
 
 /** One draft per database, so a `?db=` scratch database keeps its own. */

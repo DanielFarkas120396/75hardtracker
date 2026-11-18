@@ -116,6 +116,8 @@ describe('OnboardingGate', () => {
     await screen.findByRole('heading', { name: 'Why are you doing this?' })
     fireEvent.click(screen.getByRole('button', { name: 'A fresh start' }))
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+    await screen.findByRole('heading', { name: 'When do you go to bed?' })
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
     await screen.findByRole('heading', { name: 'When do you start?' })
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
     await screen.findByRole('heading', { name: 'Deal, Daniel.' })
