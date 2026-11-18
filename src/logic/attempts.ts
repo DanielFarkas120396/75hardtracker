@@ -1,4 +1,4 @@
-import { dateForDayNumber, dayNumberForDate } from '../lib/dates'
+import { dateForDayNumber, dayNumberForDate } from './dates'
 import { CHALLENGE_LENGTH } from './constants'
 import { isDayComplete, missingTasks, TASK_IDS } from './dayCompletion'
 import { isChallengeDay } from './days'

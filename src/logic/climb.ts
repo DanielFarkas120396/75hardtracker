@@ -1,5 +1,5 @@
-import { WORLDS, type WorldId } from '../screens/Journey/worlds'
 import { CHALLENGE_LENGTH } from './constants'
+import { WORLD_SPANS, type WorldId } from './worlds'
 
 export interface ClimbSegment {
   id: WorldId
@@ -15,7 +15,7 @@ export interface ClimbSegment {
  */
 export function climbSegments(dayReached: number): ClimbSegment[] {
   const day = Number.isFinite(dayReached) ? Math.min(CHALLENGE_LENGTH, Math.max(0, dayReached)) : 0
-  return WORLDS.map((world) => {
+  return WORLD_SPANS.map((world) => {
     const length = world.lastDay - world.firstDay + 1
     return {
       id: world.id,

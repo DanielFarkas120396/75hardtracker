@@ -1,4 +1,4 @@
-import { dayNumberForDate } from '../lib/dates'
+import { dayNumberForDate } from './dates'
 import { CHALLENGE_LENGTH } from './constants'
 import type { DayCompletionSummary } from './types'
 

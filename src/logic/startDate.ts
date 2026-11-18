@@ -1,4 +1,4 @@
-import { isValidISODate } from '../lib/dates'
+import { isValidISODate } from './dates'
 import { LAST_START_DATE_EDITABLE_DAY } from './constants'
 
 export type StartDateChangeResult =
