@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react'
+import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import type { Challenge, DayEntry } from '../../db/types'
 import type { ChallengeGate } from '../useChallengeGate'
@@ -40,6 +40,15 @@ describe('useDayCompleteCelebration', () => {
     const { result, rerender } = renderHook(({ g }) => useDayCompleteCelebration(g), { initialProps: { g: gate(false, false, true) } })
     rerender({ g: gate(true, false, true) })
     expect(result.current.celebration).toMatchObject({ dayNumber: 5, streak: 5, isFinalDay: false, late: true })
+  })
+
+  it('celebrates a day once: unticking and re-ticking it after the celebration stays quiet', () => {
+    const { result, rerender } = renderHook(({ g }) => useDayCompleteCelebration(g), { initialProps: { g: gate(true, false, false) } })
+    rerender({ g: gate(true, true, false) })
+    act(() => result.current.dismiss())
+    rerender({ g: gate(true, false, false) })
+    rerender({ g: gate(true, true, false) })
+    expect(result.current.celebration).toBeNull()
   })
 
   it('drops a celebration still waiting for the last chip when the day is undone', () => {

@@ -119,8 +119,9 @@ describe('TodayScreen', () => {
     expect(screen.getByRole('button', { name: /^Water,/ }).parentElement!).toHaveClass('ring-danger-ink')
     expect(screen.getByRole('button', { name: /^Workouts,/ }).parentElement!).toHaveClass('ring-danger-ink')
     expect(screen.getByRole('button', { name: /^Reading,/ }).parentElement!).toHaveClass('ring-ink/30')
-    // He's hunting: nothing left to plan, only to do.
+    // He's hunting: nothing left to plan, only to do. The button keeps its place, greyed out, and says why.
     expect(screen.queryByRole('button', { name: 'Plan my evening' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Too late to plan' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Notes' })).toBeInTheDocument()
   })
 
