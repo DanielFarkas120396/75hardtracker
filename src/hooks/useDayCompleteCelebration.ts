@@ -27,6 +27,9 @@ export function useDayCompleteCelebration(gate: ChallengeGate | undefined) {
 
   const [seen, setSeen] = useState({ dayKey, doneDays })
   const [celebration, setCelebration] = useState<DayCelebration | null>(null)
+  // Days whose celebration was seen: unticking and re-ticking one doesn't bring the full screen back.
+  const [shown, setShown] = useState<ReadonlySet<string>>(() => new Set())
+  const challengeId = gate?.challenge.id
 
   // Compare with the previous render during render (React's "adjust state
   // when a prop changes" pattern) — only a change on the same days counts,
@@ -36,7 +39,7 @@ export function useDayCompleteCelebration(gate: ChallengeGate | undefined) {
     const before = seen.doneDays.split(',')
     const done = doneDays.split(',')
     const justDone = done.find((day) => day !== '' && !before.includes(day))
-    if (gate && seen.dayKey === dayKey && justDone !== undefined) {
+    if (gate && seen.dayKey === dayKey && justDone !== undefined && !shown.has(`${gate.challenge.id}:${justDone}`)) {
       const dayNumber = Number(justDone)
       const streak = streakEndingAt(gate.daySummaries, dayNumber)
       setCelebration({
@@ -51,6 +54,9 @@ export function useDayCompleteCelebration(gate: ChallengeGate | undefined) {
     }
   }
 
-  const dismiss = useCallback(() => setCelebration(null), [])
+  const dismiss = useCallback(() => {
+    if (celebration) setShown((days) => new Set(days).add(`${challengeId}:${celebration.dayNumber}`))
+    setCelebration(null)
+  }, [celebration, challengeId])
   return { celebration, dismiss }
 }

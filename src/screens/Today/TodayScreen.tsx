@@ -173,7 +173,9 @@ function TodayTasks({
   const won = shown.missing.length === 0
   const deadline = eveningDeadline(nowMin, bedtimeMinutes(bedtime))
   // Nothing left to plan once he's hunting: only to do.
-  const canPlan = shown.missing.length > 0 && menace.level !== 'hunting'
+  // The button keeps its place all evening: while the duck hunts, the tasks no longer fit, so it's greyed out and says why.
+  const showPlan = shown.missing.length > 0
+  const tooLateToPlan = menace.level === 'hunting'
   const notesTold = entry.mood !== undefined || (entry.notes ?? '').trim() !== ''
 
   // Under the ring, what matters next: the day won and its closing ritual, the time left, or the next plan.
@@ -229,6 +231,7 @@ function TodayTasks({
             started={hasStarted(shown.data)}
             yesterdayOpen={pendingLateDay != null}
             onLunge={() => setLunges((count) => count + 1)}
+            waitingForChip={completion.missing.length === 0 && shown.missing.length > 0}
           />
           {pendingLateDay != null && <LateDayCard dayNumber={pendingLateDay} onOpen={onOpenLateDay} />}
           <WeighInCard today={today} dayNumber={todayDayNumber} />
@@ -254,10 +257,15 @@ function TodayTasks({
                 onOpen={setOpenTask}
               />
               <motion.div layout={reduceMotion ? false : 'position'} className="mt-4 flex flex-wrap gap-2">
-                {canPlan && (
-                  <button type="button" onClick={() => setPlanOpen(true)} className={ACTION_BUTTON}>
-                    <Icon name="calendar" size={18} className="text-world-ink" />
-                    {hasPlan ? 'Edit my plan' : 'Plan my evening'}
+                {showPlan && (
+                  <button
+                    type="button"
+                    onClick={() => setPlanOpen(true)}
+                    disabled={tooLateToPlan}
+                    className={`${ACTION_BUTTON} disabled:text-ink-muted`}
+                  >
+                    <Icon name="calendar" size={18} className="text-world-ink in-disabled:text-ink-muted" />
+                    {tooLateToPlan ? 'Too late to plan' : hasPlan ? 'Edit my plan' : 'Plan my evening'}
                   </button>
                 )}
                 {sheetContext.canPlanSocial && (
@@ -322,13 +330,16 @@ function TodayTasks({
 }
 
 type HeroProps = Omit<Parameters<typeof TodayHero>[0], 'duck' | 'speech' | 'taskCount'> &
-  Parameters<typeof useDuck>[0]
+  Parameters<typeof useDuck>[0] & {
+    /** The day is won but the board's last chip hasn't landed: the frozen line would ask for a task already ticked. */
+    waitingForChip?: boolean
+  }
 
 /**
  * The hero with its duck: rendered once the day has loaded, so the duck's hook always has its inputs. When nothing
  * else is under the ring, his line stays there (read out as it changes) and his bubble keeps to reactions.
  */
-function Hero({ menace, missing, completion, dayNumber, announcement, name, started, yesterdayOpen, onLunge, below, ...hero }: HeroProps) {
+function Hero({ menace, missing, completion, dayNumber, announcement, name, started, yesterdayOpen, onLunge, below, waitingForChip = false, ...hero }: HeroProps) {
   const lineInHero = below === null
   const { duck, speech, line } = useDuck({ menace, missing, completion, dayNumber, announcement, name, started, yesterdayOpen, onLunge, lineInHero })
   return (
@@ -340,7 +351,11 @@ function Hero({ menace, missing, completion, dayNumber, announcement, name, star
       speech={speech}
       below={
         lineInHero ? (
-          <p aria-live="polite" className="max-w-[11rem] text-center font-rounded text-xs font-bold text-ink-muted">
+          // Held back (its room kept) while the last chip lands; the won line follows with the gauge.
+          <p
+            aria-live="polite"
+            className={`max-w-[11rem] text-center font-rounded text-xs font-bold text-ink-muted ${waitingForChip ? 'invisible' : ''}`}
+          >
             {line}
           </p>
         ) : (
