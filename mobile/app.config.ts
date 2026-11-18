@@ -18,6 +18,7 @@ const config: ExpoConfig = {
   plugins: [
     'expo-router',
     'expo-sqlite',
+    '@react-native-community/datetimepicker',
     [
       'expo-splash-screen',
       // Dark Hell's canvas (WORLD_COLORS.hell.dark.canvas), the app's first colour.
