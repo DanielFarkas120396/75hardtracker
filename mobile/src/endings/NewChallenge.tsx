@@ -104,7 +104,8 @@ export function VictoryScreen({ challenge, today, revealed, streak, missedDays }
   const onReveal = useEffectEvent(() => {
     if (celebratedThisSession.has(challenge.id)) return
     celebratedThisSession.add(challenge.id)
-    setConfetti(true)
+    // Not kept for later under Reduce Motion: a burst out of nowhere when the setting changes.
+    if (moves) setConfetti(true)
     playChime()
   })
   useEffect(() => {

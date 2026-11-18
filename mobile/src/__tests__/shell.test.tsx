@@ -12,6 +12,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { ReactNode } from 'react'
 import { Alert, Text } from 'react-native'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 import SettingsScreen from '../app/(tabs)/settings'
 import { AppGate } from '../components/AppGate'
 import { nodeStore } from '../files/__tests__/nodeStore'
@@ -34,7 +35,12 @@ const hideSplash = jest.mocked(SplashScreen.hideAsync)
 jest.mock('../db/open', () => ({ ...jest.requireActual('../db/open'), openAppDatabase: jest.fn() }))
 const openAppDatabase = jest.mocked(open.openAppDatabase)
 
-const Providers = ({ children }: { children: ReactNode }) => <ThemeProvider>{children}</ThemeProvider>
+const PHONE = { frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 47, left: 0, right: 0, bottom: 34 } }
+const Providers = ({ children }: { children: ReactNode }) => (
+  <SafeAreaProvider initialMetrics={PHONE}>
+    <ThemeProvider>{children}</ThemeProvider>
+  </SafeAreaProvider>
+)
 
 beforeEach(async () => {
   jest.mocked(Font.useFonts).mockReturnValue([true, null])
@@ -76,6 +82,13 @@ describe('seedDay', () => {
 })
 
 describe('Settings', () => {
+  it('has the way to give up while an attempt is running', async () => {
+    await seedDay(3)
+    await render(<SettingsScreen />, { wrapper: Providers })
+    expect(await screen.findByRole('button', { name: 'Give up this challenge' })).toBeOnTheScreen()
+    expect(screen.getByText('Giving up stops this attempt for good; it stays in your history.')).toBeOnTheScreen()
+  })
+
   it('has a developer button that seeds Day 12, after asking', async () => {
     const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {})
     await render(<SettingsScreen />, { wrapper: Providers })

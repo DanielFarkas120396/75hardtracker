@@ -2,12 +2,14 @@
 // VictoryScreen and GiveUpFlow tests (src/screens/RestartFlow, Victory, Settings), with their names.
 import { addDaysISO, todayISO } from '@logic/dates'
 import type { ChallengeVariant } from '@logic/rulesets'
+import { SETTING_KEYS } from '@logic/settingKeys'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import * as Font from 'expo-font'
 import { AccessibilityInfo } from 'react-native'
 import { addChallenge, addPerfectDays, freshDatabase } from '../../db/__tests__/fixtures'
 import { challengeRepo, type GiveUpResult } from '../../db/repositories/challengeRepo'
 import { profileRepo } from '../../db/repositories/profileRepo'
+import { settingsRepo } from '../../db/repositories/settingsRepo'
 import type { Challenge } from '../../db/types'
 import { useNowMinutes } from '../../hooks/useNowMinutes'
 import { Providers } from '../../today/__tests__/support'
@@ -96,11 +98,10 @@ describe('DayFailedScreen', () => {
     const challengeId = await addChallenge({ startDate: addDaysISO(today, -3), attemptNumber: 1, status: 'active', variant: 'strong' })
     await show(<DayFailedScreen challenge={await stored(challengeId)} failedDayNumber={1} today={today} />)
     await screen.findByText('✕ Progress photo')
-    // A double tap makes one attempt.
-    await act(async () => {
-      fireEvent.press(button('Restart from Day 1'))
-      fireEvent.press(button(/Restart/))
-    })
+    // A double tap makes one attempt: the button is locked while it saves (two calls at once are the repository's test).
+    await press('Restart from Day 1')
+    const again = screen.queryByRole('button', { name: /^Restart/ })
+    if (again) await fireEvent.press(again)
 
     await waitFor(async () => expect(await active()).toMatchObject([{ attemptNumber: 2, variant: 'strong', startDate: today }]))
     expect((await stored(challengeId)).status).toBe('failed')
@@ -310,7 +311,9 @@ describe('NewChallengeForm', () => {
 
 describe('VictoryScreen', () => {
   /** A completed attempt of the given variant, with the gate's streak and missedDays. */
-  async function setup(props: { variant: ChallengeVariant; streak: number; missedDays: number[]; revealed?: boolean; perfectDays?: number }) {
+  async function setup(props: { variant: ChallengeVariant; streak: number; missedDays: number[]; revealed?: boolean; perfectDays?: number; earlier?: number }) {
+    // Earlier attempts give this one an id of its own: a victory is celebrated once per session and attempt.
+    for (let n = 0; n < (props.earlier ?? 0); n++) await addChallenge({ startDate: addDaysISO(today, -400), attemptNumber: 0, status: 'failed' })
     const startDate = addDaysISO(today, -75)
     const challengeId = await addChallenge({ startDate, attemptNumber: 1, status: 'completed', variant: props.variant })
     if (props.perfectDays) await addPerfectDays(challengeId, startDate, 1, props.perfectDays)
@@ -387,6 +390,23 @@ describe('VictoryScreen', () => {
     await screen.findByRole('header', { name: '75 Hard complete! 🏆' })
 
     await waitFor(() => expect(screen.getByTestId('victory-duck')).toHaveStyle({ opacity: 1, transform: [{ scale: 1 }] }))
+  })
+
+  it('rings its chime when the app opens on Victory, once the sound setting is known', async () => {
+    await setup({ variant: 'hard', streak: 75, missedDays: [], revealed: true, earlier: 2 })
+    await screen.findByRole('header', { name: '75 Hard complete! 🏆' })
+
+    await waitFor(() => expect(mockPlay).toHaveBeenCalledTimes(1))
+  })
+
+  it('stays silent when the app opens on Victory with sounds off', async () => {
+    await settingsRepo.set(SETTING_KEYS.soundEnabled, false)
+    await setup({ variant: 'hard', streak: 75, missedDays: [], revealed: true, earlier: 3 })
+    await screen.findByRole('header', { name: '75 Hard complete! 🏆' })
+    await screen.findByLabelText('Streak: 🔥 75')
+    await act(async () => {})
+
+    expect(mockPlay).not.toHaveBeenCalled()
   })
 
   it('starts the next attempt from its sheet, with the challenge just won picked by default', async () => {
@@ -481,6 +501,7 @@ describe('GiveUpFlow', () => {
     await press("I'm sure")
 
     expect(screen.getByRole('header', { name: 'Last warning.' })).toBeOnTheScreen()
+    expect(announce).toHaveBeenCalledWith('Last warning.')
     expect(screen.getByText("Tomorrow is Day 13. Quitters don't get a Day 13.")).toBeOnTheScreen()
     expect(screen.getByText('duck: hunting')).toBeOnTheScreen()
     expect(screen.getByText('Give up (5)')).toBeOnTheScreen()
@@ -510,6 +531,7 @@ describe('GiveUpFlow', () => {
     await reachStepFour()
 
     expect(screen.getByRole('header', { name: 'Type GIVE UP to confirm.' })).toBeOnTheScreen()
+    expect(announce).toHaveBeenCalledWith('Type GIVE UP to confirm.')
     expect(screen.getByText("This can't be undone.")).toBeOnTheScreen()
     expect(button('Give up for good')).toBeDisabled()
 

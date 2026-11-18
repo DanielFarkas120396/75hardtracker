@@ -40,6 +40,10 @@ export function useDayCompleteCelebration(gate: ChallengeGate | undefined) {
     } else if (seen.dayKey === dayKey && celebration && !done.includes(String(celebration.dayNumber))) {
       // Undone while it still waited for the last chip (an Undo on the toast): a day back at 4/5 has nothing to celebrate.
       setCelebration(null)
+    } else if (celebration && seen.dayKey !== null && dayKey !== null && seen.dayKey.split(':')[0] !== dayKey.split(':')[0]) {
+      // Another attempt (a restart while the peak was held back by the missed day's screen): the old attempt's peak
+      // would cover the new Day 1. The web keeps it; noted there as a follow-up.
+      setCelebration(null)
     }
   }
 

@@ -4,7 +4,7 @@ import { addDaysISO } from '@logic/dates'
 import type { ChallengeVariant } from '@logic/rulesets'
 import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react-native'
 import * as Font from 'expo-font'
-import { AccessibilityInfo } from 'react-native'
+import { AccessibilityInfo, Text } from 'react-native'
 import { addChallenge, addPerfectDays, freshDatabase } from '../../db/__tests__/fixtures'
 import { challengeRepo } from '../../db/repositories/challengeRepo'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
@@ -12,8 +12,10 @@ import { profileRepo } from '../../db/repositories/profileRepo'
 import { useChallengeGate } from '../../hooks/useChallengeGate'
 import { useClock } from '../../hooks/useClock'
 import { useNowMinutes } from '../../hooks/useNowMinutes'
+import { useTabBarHidden } from '../../hooks/useTabBar'
 import { useToday } from '../../hooks/useToday'
 import { Providers, TODAY } from '../../today/__tests__/support'
+import { ScreenFocusContext } from '../../today/TaskBoard'
 import { Today } from '../../today/TodayScreen'
 import { GiveUpSetting } from '../GiveUpFlow'
 
@@ -87,7 +89,18 @@ afterEach(() => {
   jest.restoreAllMocks()
 })
 
-const show = () => render(<Today />, { wrapper: Providers })
+/** What the tabs' layout reads: whether something on screen wants the tab bar out of the way (it then brings Today forward). */
+function TabBar() {
+  return <Text>{useTabBarHidden() ? 'tab bar: hidden' : 'tab bar: shown'}</Text>
+}
+const app = () => (
+  <>
+    <Today />
+    <TabBar />
+  </>
+)
+const show = () => render(app(), { wrapper: Providers })
+const tabBar = () => screen.getByText(/^tab bar: /).props.children
 const button = (name: string | RegExp) => screen.getByRole('button', { name })
 const press = async (name: string | RegExp) => fireEvent.press(await screen.findByRole('button', { name }))
 const attempts = () => challengeRepo.getAll()
@@ -117,9 +130,12 @@ describe('a missed day with no joker left', () => {
     // Today never showed behind it: it would have opened today's entry.
     expect(screen.queryByLabelText(/^Day 3, /)).toBeNull()
     expect(createsToday).not.toHaveBeenCalled()
+    // It takes the whole app: the tab bar steps aside (and the layout brings Today forward).
+    expect(tabBar()).toBe('tab bar: hidden')
 
     await press('Restart from Day 1')
     expect(await screen.findByLabelText('Day 1, 75 Strong #2')).toBeOnTheScreen()
+    expect(tabBar()).toBe('tab bar: shown')
     expect(await attempts()).toMatchObject([
       { id: challengeId, status: 'failed', variant: 'strong' },
       { attemptNumber: 2, status: 'active', variant: 'strong', startDate: TODAY },
@@ -135,7 +151,7 @@ describe('a missed day with no joker left', () => {
     expect(await screen.findByText("Day 1 isn't finished")).toBeOnTheScreen()
 
     setClock(TODAY, AFTERNOON)
-    await view.rerender(<Today />)
+    await view.rerender(app())
     expect(await screen.findByRole('header', { name: "Day 1 wasn't completed" })).toBeOnTheScreen()
     expect(screen.queryByText("Day 1 isn't finished")).toBeNull()
   })
@@ -155,13 +171,14 @@ describe('a missed day with a joker', () => {
     expect(screen.getByText("That was your last joker. Next time, it's Day 1.")).toBeOnTheScreen()
     expect(screen.queryByLabelText(/^Day 3, /)).toBeNull()
     expect(createsToday).not.toHaveBeenCalled()
+    expect(tabBar()).toBe('tab bar: hidden')
 
-    // A second tap changes nothing.
-    await act(async () => {
-      fireEvent.press(button('Keep going'))
-      fireEvent.press(button(/Keep/))
-    })
+    // A second tap changes nothing: the button is locked while it saves (two calls at once are the repository's test).
+    await press('Keep going')
+    const again = screen.queryByRole('button', { name: /^Keep/ })
+    if (again) await fireEvent.press(again)
     expect(await screen.findByLabelText('Day 3, 75 Medium #1')).toBeOnTheScreen()
+    expect(tabBar()).toBe('tab bar: shown')
     expect(await stored(challengeId)).toMatchObject({ status: 'active', jokersAcknowledged: 1 })
     expect(await attempts()).toHaveLength(1)
 
@@ -197,7 +214,7 @@ describe('a missed day with a joker', () => {
 
     // Noon passes with the peak still up: Day 1 is missed, a joker pays for it.
     setClock(TODAY, AFTERNOON)
-    await view.rerender(<Today />)
+    await view.rerender(app())
     expect(await screen.findByRole('header', { name: "Day 1 wasn't completed" })).toBeOnTheScreen()
     expect(screen.queryByLabelText('Day 2 done.')).toBeNull()
 
@@ -212,6 +229,7 @@ describe('giving up', () => {
       <>
         <Today />
         <GiveUpSetting />
+        <TabBar />
       </>,
       { wrapper: Providers },
     )
@@ -244,6 +262,8 @@ describe('giving up', () => {
 
     expect(await screen.findByRole('header', { name: 'You gave up on Day 12' })).toBeOnTheScreen()
     expect(announce).toHaveBeenCalledWith('You gave up on Day 12')
+    // Given up from the Settings tab: this is what brings Today, and this screen, to the front.
+    expect(tabBar()).toBe('tab bar: hidden')
     expect(screen.getByText('75 Hard, attempt #1. It stays in your history.')).toBeOnTheScreen()
     expect(await stored(challengeId)).toMatchObject({ status: 'abandoned', abandonedOn: TODAY })
     // The flow has closed by itself, and there is nothing left to give up.
@@ -255,6 +275,7 @@ describe('giving up', () => {
     await fireEvent.press(screen.getByRole('radio', { name: 'Today' }))
     await press('Start')
     expect(await screen.findByLabelText('Day 1, 75 Hard #2')).toBeOnTheScreen()
+    expect(tabBar()).toBe('tab bar: shown')
     // The new attempt can be given up in turn, and the flow doesn't open by itself.
     await waitFor(() => expect(row()).not.toBeNull())
     expect(screen.queryByText(/^Give up 75 Hard\?$/)).toBeNull()
@@ -318,6 +339,8 @@ describe('all 75 days done', () => {
 
     expect(await screen.findByRole('header', { name: '75 Medium complete! 🏆' })).toBeOnTheScreen()
     expect(screen.getByLabelText('Jokers used: 0/1')).toBeOnTheScreen()
+    // Victory stays inside the Today tab: the other tabs are still there.
+    expect(tabBar()).toBe('tab bar: shown')
     expect(createsToday).not.toHaveBeenCalled()
 
     await press('Start a new challenge')
@@ -325,6 +348,27 @@ describe('all 75 days done', () => {
     await press('Start')
     expect(await screen.findByLabelText('Day 1, 75 Medium #2')).toBeOnTheScreen()
     expect((await stored(challengeId)).status).toBe('completed')
+  })
+})
+
+describe('an attempt found finished while another tab is in front', () => {
+  it('keeps Victory’s chime for when Today is seen (a backup restored from Settings, say)', async () => {
+    // An older attempt first: this file's other victories have had their celebration this session (same ids).
+    await addChallenge({ startDate: addDaysISO(TODAY, -300), attemptNumber: 0, status: 'failed' })
+    const challengeId = await attempt(76, 'hard', 75)
+    await challengeRepo.markCompleted(challengeId)
+    const tab = (focused: boolean) => (
+      <ScreenFocusContext.Provider value={focused}>
+        <Today />
+      </ScreenFocusContext.Provider>
+    )
+    const view = await render(tab(false), { wrapper: Providers })
+    await screen.findByRole('header', { name: '75 Hard complete! 🏆' })
+    await act(async () => {})
+    expect(mockPlay).not.toHaveBeenCalled()
+
+    await view.rerender(tab(true))
+    await waitFor(() => expect(mockPlay).toHaveBeenCalledTimes(1))
   })
 })
 
@@ -337,6 +381,7 @@ describe('an attempt given up earlier', () => {
 
     expect(await screen.findByRole('header', { name: 'You gave up on Day 4' })).toBeOnTheScreen()
     expect(screen.getByText("Fine, Daniel. Pick something. I'm still watching.")).toBeOnTheScreen()
+    expect(tabBar()).toBe('tab bar: hidden')
     expect(createsToday).not.toHaveBeenCalled()
   })
 })

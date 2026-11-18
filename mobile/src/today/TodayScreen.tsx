@@ -9,7 +9,7 @@ import { challengeWeek, rulesFor } from '@logic/rulesets'
 import { notesStatusLine } from '@logic/taskStatus'
 import type { TaskId } from '@logic/types'
 import { preStartPlanLine, VARIANT_NAMES } from '@logic/variantsCopy'
-import { useMemo, useState, type ReactNode } from 'react'
+import { useContext, useMemo, useState, type ReactNode } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import Animated from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -39,6 +39,7 @@ import { PhotoCapture } from './PhotoCapture'
 import { PlanForm } from './PlanSheet'
 import { BookPicker } from './ReadingTask'
 import { SocialForm } from './SocialOccasionSheet'
+import { ScreenFocusContext } from './TaskBoard'
 import { TaskSheet, type OpenSheet } from './TaskSheet'
 import { TodayHero } from './TodayHero'
 import { WeighInCard } from './WeighInCard'
@@ -65,6 +66,7 @@ export function Today() {
 }
 
 function Attempt({ gate, celebrating }: { gate: ChallengeGate | null | undefined; celebrating: boolean }) {
+  const focused = useContext(ScreenFocusContext)
   if (!gate) return <Centred>Loading…</Centred>
   if (gate.kind === 'needsRestart') return <DayFailedScreen challenge={gate.challenge} failedDayNumber={gate.failedDayNumber} today={gate.today} />
   if (gate.kind === 'jokerUsed') {
@@ -72,8 +74,9 @@ function Attempt({ gate, celebrating }: { gate: ChallengeGate | null | undefined
   }
   if (gate.kind === 'abandoned') return <GaveUpScreen challenge={gate.challenge} today={gate.today} />
   if (gate.kind === 'completed') {
-    // The confetti waits until the Day 75 peak has been dismissed.
-    return <VictoryScreen challenge={gate.challenge} today={gate.today} revealed={!celebrating} streak={gate.streak} missedDays={gate.missedDays} />
+    // The confetti waits until the Day 75 peak has been dismissed, and until Today is the tab in front (the web
+    // only draws Victory there): a backup restored from Settings must not spend it unseen.
+    return <VictoryScreen challenge={gate.challenge} today={gate.today} revealed={!celebrating && focused} streak={gate.streak} missedDays={gate.missedDays} />
   }
   return <TodayScreen gate={gate} celebrating={celebrating} />
 }

@@ -1,6 +1,6 @@
 import { SETTING_KEYS } from '@logic/settingKeys'
 import { setAudioModeAsync, useAudioPlayer } from 'expo-audio'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { settingsRepo } from '../db/repositories/settingsRepo'
 import { useLiveQuery } from '../db/useLiveQuery'
 
@@ -15,17 +15,30 @@ const DAY_COMPLETE: number = require('../../assets/sounds/day-complete.wav')
  * when the phone is on silent, and plays over the player's own music instead of stopping it.
  */
 function useSoundFile(file: number): () => void {
-  const soundEnabled = useLiveQuery(() => settingsRepo.get<boolean>(SETTING_KEYS.soundEnabled, true), []) ?? true
+  // Undefined until the setting has been read.
+  const soundEnabled = useLiveQuery(() => settingsRepo.get<boolean>(SETTING_KEYS.soundEnabled, true), [])
   const player = useAudioPlayer(file)
+  // Asked for before the setting was known (the app opening on Victory): it rings once it is, if sounds are on.
+  const waiting = useRef(false)
   useEffect(() => {
     void setAudioModeAsync({ playsInSilentMode: false }).catch(() => undefined)
   }, [])
 
-  return () => {
-    if (!soundEnabled) return
+  const ring = () => {
     // From the start each time: a second one cuts the first one's ring short.
     void player.seekTo(0).catch(() => undefined)
     player.play()
+  }
+  useEffect(() => {
+    if (soundEnabled === undefined || !waiting.current) return
+    waiting.current = false
+    if (soundEnabled) ring()
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- rings when the setting arrives, not when the player's identity changes
+  }, [soundEnabled])
+
+  return () => {
+    if (soundEnabled === undefined) waiting.current = true
+    else if (soundEnabled) ring()
   }
 }
 

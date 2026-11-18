@@ -84,6 +84,15 @@ describe('when a day is complete', () => {
     expect(hook.result.current.celebration?.dayNumber).toBe(4)
   })
 
+  it('drops a peak left up when the attempt ends and the next one starts: it would cover the new Day 1', async () => {
+    const hook = await renderHook(({ g }: { g: ChallengeGate }) => useDayCompleteCelebration(g), { initialProps: { g: gate(2, []) } })
+    await hook.rerender({ g: gate(2, [2]) })
+    expect(hook.result.current.celebration?.dayNumber).toBe(2)
+    // Noon passes with the peak up, Day 1 was missed, "Restart from Day 1": attempt #2.
+    await hook.rerender({ g: gate(1, [], null, 2) })
+    expect(hook.result.current.celebration).toBeNull()
+  })
+
   it('says a day finished the morning after is late, and knows the last day', async () => {
     const late = await renderHook(({ g }: { g: ChallengeGate }) => useDayCompleteCelebration(g), { initialProps: { g: gate(5, [3], 4) } })
     await late.rerender({ g: gate(5, [3, 4], 4) })
