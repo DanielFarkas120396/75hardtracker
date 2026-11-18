@@ -3,7 +3,11 @@ import { AnimatePresence, motion, useReducedMotion, type TargetAndTransition } f
 import { useId, useRef, useState } from 'react'
 import { Icon } from '../../components/icons/Icon'
 import { measurementRepo } from '../../db/repositories/measurementRepo'
+import { useNow } from '../../hooks/useNow'
 import { validateMeasurement } from '../../logic/measurements'
+
+/** From noon, "before breakfast" is no longer advice anyone can follow. */
+const NOON = 12 * 60
 
 interface WeighInCardProps {
   today: string
@@ -52,6 +56,7 @@ function WeighInForm({ today, dayNumber, lastWeight }: WeighInCardProps & { last
   const [weight, setWeight] = useState('')
   const [error, setError] = useState<string>()
   const [saving, setSaving] = useState(false)
+  const nowMin = useNow()
   const [saved, setSaved] = useState<number>()
   const inputRef = useRef<HTMLInputElement>(null)
   const reduceMotion = useReducedMotion()
@@ -100,7 +105,7 @@ function WeighInForm({ today, dayNumber, lastWeight }: WeighInCardProps & { last
         <div className="min-w-0 flex-1">
           <h2 className="font-rounded font-bold text-ink">Weigh in</h2>
           <p className="font-rounded text-sm text-ink-muted">
-            {saved !== undefined ? `${saved.toFixed(1)} kg logged.` : dayNumber === 1 ? 'Your starting weight.' : 'Before breakfast is best.'}
+            {saved !== undefined ? `${saved.toFixed(1)} kg logged.` : dayNumber === 1 ? 'Your starting weight.' : nowMin < NOON ? 'Before breakfast is best.' : 'Any time today works.'}
           </p>
         </div>
       </div>

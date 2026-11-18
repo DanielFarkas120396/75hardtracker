@@ -19,7 +19,7 @@ interface SocialOccasionSheetProps {
   onDeclared: (dayNumber: number) => void
 }
 
-/** "Plan a social occasion": a sheet to declare, or cancel, a day when a drink is allowed. */
+/** "Plan a social night": a sheet to declare, or cancel, a day when a drink is allowed. */
 export function SocialOccasionSheet(props: SocialOccasionSheetProps) {
   return (
     <Modal open={props.open} onClose={props.onClose}>
@@ -75,7 +75,7 @@ function SocialForm({ challenge, today, todayDayNumber, onClose, onDeclared }: S
 
   return (
     <>
-      <h3 className="font-rounded text-lg font-bold text-ink">Plan a social occasion</h3>
+      <h3 className="font-rounded text-lg font-bold text-ink">Plan a social night</h3>
       <p className="mt-1 text-sm text-ink-muted">
         Tomorrow at the earliest, one per week. On that day a drink is allowed — the diet still counts.
       </p>

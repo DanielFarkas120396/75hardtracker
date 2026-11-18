@@ -3,7 +3,16 @@ import { isTooSimplePin } from '../lib/pin'
 import { PinPad } from './PinPad'
 
 /** Choosing a PIN: type it, then type it again. Refuses PINs that are too easy to guess (111111, 123456). */
-export function NewPinFlow({ onDone, title = 'Choose a 6-digit PIN' }: { onDone: (pin: string) => void; title?: string }) {
+export function NewPinFlow({
+  onDone,
+  title = 'Choose a 6-digit PIN',
+  faceId = false,
+}: {
+  onDone: (pin: string) => void
+  title?: string
+  /** Face ID is on: the PIN is its fallback. Without it, the PIN is how the app opens. */
+  faceId?: boolean
+}) {
   const [first, setFirst] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -13,7 +22,7 @@ export function NewPinFlow({ onDone, title = 'Choose a 6-digit PIN' }: { onDone:
         key="first"
         title={title}
         error={error}
-        hint="You'll use it when Face ID can't."
+        hint={faceId ? "You'll use it when Face ID can't." : "You'll type it to open the app."}
         onComplete={(pin) => {
           if (isTooSimplePin(pin)) {
             setError('Too easy to guess. Try another one.')

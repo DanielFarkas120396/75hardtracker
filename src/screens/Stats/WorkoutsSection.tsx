@@ -88,7 +88,7 @@ function Summary({ history }: { history: WorkoutHistory }) {
             <>
               {hours}
               <span className="text-4xl">h</span>
-              {String(minutes).padStart(2, '0')}
+              {minutes > 0 && String(minutes).padStart(2, '0')}
             </>
           ) : (
             <>

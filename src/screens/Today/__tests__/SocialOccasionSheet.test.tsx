@@ -50,7 +50,7 @@ describe('SocialOccasionSheet', () => {
   it('shows the title, the help line and a date range from tomorrow to Day 75', async () => {
     const { start } = await setup()
 
-    expect(screen.getByRole('heading', { name: 'Plan a social occasion' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Plan a social night' })).toBeInTheDocument()
     expect(
       screen.getByText('Tomorrow at the earliest, one per week. On that day a drink is allowed — the diet still counts.'),
     ).toBeInTheDocument()

@@ -65,7 +65,7 @@ export function LockScreen({ faceIdEnabled, failures, onFaceId, onPin, onConfirm
       <h1 className="font-display text-2xl tracking-wide text-ink">75 Hard is locked</h1>
 
       {mode === 'newPin' ? (
-        <NewPinFlow title="Choose a new PIN" onDone={(pin) => void onResetPin(pin)} />
+        <NewPinFlow title="Choose a new PIN" faceId={faceIdEnabled} onDone={(pin) => void onResetPin(pin)} />
       ) : (
         <PinPad
           title="Enter your PIN"

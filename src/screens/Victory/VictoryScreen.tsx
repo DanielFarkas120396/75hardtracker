@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { useEffect, useEffectEvent, useState } from 'react'
 import { Button } from '../../components/ui/Button'
+import { formatMinutes } from '../../content/activities'
 import { Mascot } from '../../components/mascot/Mascot'
 import { victoryLine, victoryTitle } from '../../content/variants'
 import type { Challenge } from '../../db/types'
@@ -68,7 +69,7 @@ export function VictoryScreen({ challenge, today, revealed, streak, missedDays }
         <VictoryStat label="Perfect days" value={`${stats.perfectDays}`} />
         <VictoryStat label="Water" value={`${(stats.water_ml / 1000).toFixed(1)} L`} />
         <VictoryStat label="Pages read" value={`${stats.pages}`} />
-        <VictoryStat label="Workout time" value={`${Math.round(stats.workoutMinutes / 60)} h`} />
+        <VictoryStat label="Workout time" value={formatMinutes(stats.workoutMinutes)} />
         <VictoryStat label="Streak" value={`🔥 ${streak}`} />
         {rules.jokers > 0 && <VictoryStat label="Jokers used" value={`${missedDays.length}/${rules.jokers}`} />}
       </div>

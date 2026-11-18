@@ -108,9 +108,9 @@ export function AppLockSection() {
       <Modal open={dialog !== null} onClose={close}>
         <div className="py-2">
           {dialog === 'setup' && <NewPinFlow key={padKey} onDone={(pin) => void savePin(pin, true)} />}
-          {dialog === 'choosePin' && <NewPinFlow key={padKey} onDone={(pin) => void savePin(pin, false)} />}
+          {dialog === 'choosePin' && <NewPinFlow key={padKey} faceId={Boolean(config?.credentialId)} onDone={(pin) => void savePin(pin, false)} />}
           {dialog === 'changeCheck' && <CheckPinPad title="Enter your current PIN" onVerified={() => setDialog('changeNew')} />}
-          {dialog === 'changeNew' && <NewPinFlow key={padKey} title="Choose a new PIN" onDone={(pin) => void savePin(pin, false)} />}
+          {dialog === 'changeNew' && <NewPinFlow key={padKey} title="Choose a new PIN" faceId={Boolean(config?.credentialId)} onDone={(pin) => void savePin(pin, false)} />}
           {dialog === 'offCheck' && (
             <CheckPinPad
               title="Enter your PIN to turn the lock off"

@@ -138,7 +138,7 @@ export function BookShelfArt({ pages }: { pages: number }) {
       })}
 
       {shown === 0 && (
-        <text x="60" y={SHELF - 14} textAnchor="middle" fontFamily="var(--font-quote)" fontStyle="italic" fontSize="9" fill="var(--color-ink-muted)">
+        <text x="60" y={SHELF - 14} textAnchor="middle" fontFamily="var(--font-quote)" fontStyle="italic" fontSize="12" fill="var(--color-ink-muted)">
           first book at 100
         </text>
       )}
