@@ -67,6 +67,8 @@ export function BodySection({ today, startDate, lastDay }: BodySectionProps) {
   const summary = weightSummary(weighIns)
   const trend = weightTrend(weighIns)
   const reading = readingDay === null ? undefined : trend.find((p) => p.day === readingDay)
+  // The weigh-in read is gone (deleted, or the chart with it): the header goes back to the latest.
+  if (readingDay !== null && measurements !== undefined && (!reading || weighIns.length < 2)) setReadingDay(null)
   const newestFirst = [...weighIns].reverse()
   const rows = showAll ? newestFirst : newestFirst.slice(0, COLLAPSED_ROWS)
   const show = (content: SheetContent) => {

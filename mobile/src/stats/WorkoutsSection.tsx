@@ -233,7 +233,7 @@ function Embers({ glow }: { glow: string }) {
     <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={StyleSheet.absoluteFill}>
       <Svg style={StyleSheet.absoluteFill} preserveAspectRatio="none">
         <Defs>
-          <RadialGradient id="ember-glow" cx="50%" cy="120%" rx="65%" ry="90%">
+          <RadialGradient id="ember-glow" cx="50%" cy="120%" rx="130%" ry="90%">
             <Stop offset="0" stopColor={glow} stopOpacity={1} />
             <Stop offset="0.7" stopColor={glow} stopOpacity={0} />
           </RadialGradient>

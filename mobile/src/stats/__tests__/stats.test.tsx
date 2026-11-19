@@ -15,6 +15,8 @@ import { insertRow } from '../../db/table'
 import { useHideTabBar } from '../../hooks/useTabBar'
 import { Providers } from '../../today/__tests__/support'
 
+// The tab is in front (the drawings' loops run only then).
+jest.mock('expo-router', () => ({ useIsFocused: () => true }))
 jest.mock('expo-font', () => ({ ...jest.requireActual('expo-font'), useFonts: jest.fn() }))
 // The phone's own picker is a native view: a plain view stands in.
 jest.mock('@react-native-community/datetimepicker', () => ({
@@ -85,6 +87,31 @@ describe('weight', () => {
     expect(within(row).getByText(/^Day 3 · /)).toBeOnTheScreen()
     expect(within(row).getByText('87.4')).toBeOnTheScreen()
     expect(within(row).getByText('▼ 0.6')).toBeOnTheScreen()
+  })
+
+  it('shows eight weigh-ins, then all of them, with a ruler on one that has measurements', async () => {
+    const { start } = await attempt(30, { weighIns: Array.from({ length: 9 }, (_, i): [number, number] => [i * 3 + 1, 88 - i * 0.2]) })
+    await measurementRepo.save({ date: addDaysISO(start, 24), weight_kg: 86.4, bodyMeasurements_cm: { waist: 84 } })
+    await show()
+    await fireEvent.press(await screen.findByRole('button', { name: 'Weigh-ins' }))
+    expect(screen.getAllByRole('button', { name: /^Edit weigh-in of / })).toHaveLength(8)
+    expect(screen.getByRole('button', editRow(start, 25)).props.accessibilityHint).toBe('waist 84 cm')
+    await fireEvent.press(screen.getByRole('button', { name: 'Show all 9' }))
+    expect(screen.getAllByRole('button', { name: /^Edit weigh-in of / })).toHaveLength(9)
+    await fireEvent.press(screen.getByRole('button', { name: 'Show fewer' }))
+    expect(screen.getAllByRole('button', { name: /^Edit weigh-in of / })).toHaveLength(8)
+  })
+
+  it('drops a reading whose weigh-in is gone', async () => {
+    const { start } = await attempt(3, { weighIns: [[1, 88], [3, 87.4]] })
+    await show()
+    const chart = await screen.findByLabelText('Weight by challenge day chart')
+    await fireEvent(chart, 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 360, height: 160 } } })
+    await fireEvent(chart, 'responderGrant', { nativeEvent: { locationX: 16, touches: [], changedTouches: [] }, touchHistory: { touchBank: [] } })
+    expect(await screen.findByText(/ · trend /)).toBeOnTheScreen()
+    const first = (await measurementRepo.getAll()).find((m) => m.date === start)!
+    await act(async () => measurementRepo.remove(first.id))
+    await waitFor(() => expect(screen.queryByText(/ · trend /)).toBeNull())
   })
 
   it('asks before deleting a weigh-in, in the same sheet, then deletes it', async () => {

@@ -1,12 +1,13 @@
-import type { ReactNode } from 'react'
+import type { ComponentType, ReactNode } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import Animated, { useAnimatedProps, type SharedValue } from 'react-native-reanimated'
-import Svg, { Circle, ClipPath, Defs, G, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg'
+import Svg, { Circle, ClipPath, Defs, G, LinearGradient, Path, Rect, Stop, Text as SvgText, type GProps } from 'react-native-svg'
 import { useTheme } from '../theme/ThemeProvider'
 import { mixHex, withAlpha } from '../theme/tokens'
-import { fadeInOut, phase, useLoopClock } from './loop'
+import { fadeInOut, phase, rotateAbout, translateX, useLoopClock } from './loop'
 
-const AnimatedG = Animated.createAnimatedComponent(G)
+// `matrix` is the transform the native group takes (react-native-svg turns translateX and friends into it in JS only).
+const AnimatedG = Animated.createAnimatedComponent(G as unknown as ComponentType<GProps & { matrix?: number[] }>)
 const AnimatedCircle = Animated.createAnimatedComponent(Circle)
 
 /** A stats tile: a small drawing, the number, and what it counts. The web's StatTile. */
@@ -36,8 +37,8 @@ export function BottleArt({ fill }: { fill: number }) {
   const y = BOTTLE_BOTTOM - (BOTTLE_BOTTOM - BOTTLE_TOP) * level
   const tone = colors.blueInk
   // The web's `wave` (3 s) and `wave-back` (4.5 s, reversed): each slides one 32-wide hump to the left.
-  const front = useAnimatedProps(() => ({ translateX: -32 * phase(clock.value, 3) }))
-  const back = useAnimatedProps(() => ({ translateX: -32 * (1 - phase(clock.value, 4.5)) }))
+  const front = useAnimatedProps(() => ({ matrix: translateX(-32 * phase(clock.value, 3)) }))
+  const back = useAnimatedProps(() => ({ matrix: translateX(-32 * (1 - phase(clock.value, 4.5))) }))
   return (
     <Svg width={32} height={64} viewBox="0 0 32 64" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       <Defs>
@@ -113,8 +114,8 @@ export function BookShelfArt({ pages }: { pages: number }) {
   const shown = Math.min(books.length, finished)
   // Each book starts where the ones before it end, 0.6 apart.
   const xAt = (i: number) => 6 + BOOK_WIDTHS.slice(0, i).reduce((sum, w) => sum + w + 0.6, 0)
-  // The web's `beam-sway`: -5° to 5° and back in 9 s, easing, around the beam's top (85, 0).
-  const beam = useAnimatedProps(() => ({ rotation: -5 * Math.cos((2 * Math.PI * clock.value) / 9) }))
+  // The web's `beam-sway`: -5° to 5° and back in 9 s, easing, around the beam's top (85, 0). Still: upright, as the web's.
+  const beam = useAnimatedProps(() => ({ matrix: rotateAbout(clock.value === 0 ? 0 : -5 * Math.cos((2 * Math.PI * clock.value) / 9), 85, 0) }))
 
   return (
     <Svg width="100%" height={64} viewBox="0 0 120 64" preserveAspectRatio="xMinYMax meet" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
@@ -124,7 +125,7 @@ export function BookShelfArt({ pages }: { pages: number }) {
           <Stop offset="1" stopColor={colors.dust} stopOpacity={0} />
         </LinearGradient>
       </Defs>
-      <AnimatedG originX={85} originY={0} animatedProps={beam}>
+      <AnimatedG animatedProps={beam}>
         <Path d={`M72 0H98L64 ${SHELF}H26Z`} fill="url(#shelf-beam)" />
       </AnimatedG>
 
