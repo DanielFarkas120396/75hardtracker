@@ -1,6 +1,7 @@
 import { comparePair, frameMs, frameMsToSpeed, speedToFrameMs } from '@logic/photoCompare'
 import { useEffect, useMemo, useRef, useState, type ComponentRef } from 'react'
 import { Image, PanResponder, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View, type GestureResponderEvent } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { RangeSlider } from '../components/ui/RangeSlider'
 import { useReduceMotion } from '../hooks/useReduceMotion'
 import { useTheme } from '../theme/ThemeProvider'
@@ -25,8 +26,11 @@ export const PRELOAD_WAIT_MS = 3000
 export function PhotoCompare({ entries, onClose }: PhotoCompareProps) {
   const [mode, setMode] = useState<'slider' | 'timelapse'>('slider')
   const { width, height } = useWindowDimensions()
-  // Close to the camera's frame (2:3), no taller than 70% of the screen.
-  const frameWidth = Math.min(width - 32, height * 0.7 * (2 / 3))
+  const insets = useSafeAreaInsets()
+  // Close to the camera's frame (2:3): no taller than 70% of the screen, and clear of Close above it (with room for the
+  // strip and the pills below).
+  const room = Math.min(height * 0.7, height - 2 * (Math.max(16, insets.top) + 56) - 120)
+  const frameWidth = Math.min(width - 32, room * (2 / 3))
   return (
     <View accessibilityLabel="Compare photos" style={styles.view}>
       <Pressable testID="compare-backdrop" accessible={false} onPress={onClose} style={StyleSheet.absoluteFill} />
@@ -53,12 +57,13 @@ function Slider({ entries, frameWidth }: { entries: readonly GalleryEntry[]; fra
   const shown: Record<Side, GalleryEntry> = { earlier, later }
   const days = later.dayNumber - earlier.dayNumber
 
-  // The line follows the finger anywhere on the frame; a tap on a side's label stays a tap (the label takes it first).
+  // The line follows a finger put down anywhere on the photos (whose box is the frame's, so locationX is the frame's).
+  // A touch that starts on a side's label stays the label's: the frame never takes it over mid-way.
   const drag = useMemo(() => {
     const follow = (event: GestureResponderEvent) => setSplit(Math.round(Math.min(100, Math.max(0, (event.nativeEvent.locationX / frameWidth) * 100))))
     return PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => false,
       onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: follow,
       onPanResponderMove: follow,
@@ -106,7 +111,7 @@ function Slider({ entries, frameWidth }: { entries: readonly GalleryEntry[]; fra
       </View>
 
       {picking ? (
-        <DayStrip entries={entries} current={shown[picking]} other={shown[picking === 'earlier' ? 'later' : 'earlier']} onPick={(id) => pick(picking, id)} />
+        <DayStrip width={frameWidth} entries={entries} current={shown[picking]} other={shown[picking === 'earlier' ? 'later' : 'earlier']} onPick={(id) => pick(picking, id)} />
       ) : (
         <Text style={[styles.summary, { fontFamily: fonts.rounded.bold }]}>
           Day {earlier.dayNumber} → Day {later.dayNumber} · {days} {days === 1 ? 'day' : 'days'}
@@ -117,6 +122,8 @@ function Slider({ entries, frameWidth }: { entries: readonly GalleryEntry[]; fra
 }
 
 interface DayStripProps {
+  /** The strip's width: the frame's, known before anything is laid out. */
+  width: number
   entries: readonly GalleryEntry[]
   /** The side's day, marked. */
   current: GalleryEntry
@@ -125,12 +132,11 @@ interface DayStripProps {
   onPick: (photoId: number) => void
 }
 
-function DayStrip({ entries, current, other, onPick }: DayStripProps) {
+function DayStrip({ width, entries, current, other, onPick }: DayStripProps) {
   const { colors, fonts } = useTheme()
   const strip = useRef<ComponentRef<typeof ScrollView>>(null)
-  const [stripWidth, setStripWidth] = useState(0)
   return (
-    <ScrollView ref={strip} horizontal showsHorizontalScrollIndicator={false} onLayout={(e) => setStripWidth(e.nativeEvent.layout.width)} contentContainerStyle={styles.strip}>
+    <ScrollView ref={strip} horizontal showsHorizontalScrollIndicator={false} style={{ width }} contentContainerStyle={styles.strip}>
       {entries.map((entry) => {
         const marked = entry === current
         return (
@@ -142,7 +148,7 @@ function DayStrip({ entries, current, other, onPick }: DayStripProps) {
             disabled={entry === other}
             onPress={() => onPick(entry.photo.id)}
             // Opens with the side's day in the middle, not at the start of a long attempt.
-            onLayout={marked ? (e) => strip.current?.scrollTo({ x: Math.max(0, e.nativeEvent.layout.x - (stripWidth - e.nativeEvent.layout.width) / 2), animated: false }) : undefined}
+            onLayout={marked ? (e) => strip.current?.scrollTo({ x: Math.max(0, e.nativeEvent.layout.x - (width - e.nativeEvent.layout.width) / 2), animated: false }) : undefined}
             style={[styles.stripDay, { borderColor: marked ? colors.world : 'transparent', opacity: entry === other ? 0.3 : 1 }]}
           >
             <Image source={{ uri: entry.photo.uri }} style={StyleSheet.absoluteFill} />
@@ -176,7 +182,7 @@ function TimeLapse({ entries, frameWidth }: { entries: readonly GalleryEntry[]; 
     <>
       <View style={[styles.frame, { width: frameWidth, height: frameWidth * 1.5 }]}>
         {ready ? (
-          <Image source={{ uri: entry.photo.uri }} accessibilityLabel={`Day ${entry.dayNumber} progress`} style={StyleSheet.absoluteFill} />
+          <Image source={{ uri: entry.photo.uri }} accessible accessibilityLabel={`Day ${entry.dayNumber} progress`} style={StyleSheet.absoluteFill} />
         ) : (
           <Text style={[styles.loading, { fontFamily: fonts.rounded.regular }]}>Loading…</Text>
         )}
@@ -229,19 +235,21 @@ function TimeLapse({ entries, frameWidth }: { entries: readonly GalleryEntry[]; 
 
 /** Whether every picture is loaded, so the time-lapse doesn't stutter on its first run; true after PRELOAD_WAIT_MS anyway. */
 function usePreloaded(entries: readonly GalleryEntry[]): boolean {
-  const [loaded, setLoaded] = useState<readonly GalleryEntry[] | null>(null)
+  // Keyed by the pictures, not the array: the live read hands a new array after every write.
+  const key = entries.map((e) => e.photo.uri).join('|')
+  const [loaded, setLoaded] = useState<string | null>(null)
   useEffect(() => {
     let live = true
     const wait = new Promise<void>((resolve) => setTimeout(resolve, PRELOAD_WAIT_MS))
-    const all = Promise.all(entries.map((e) => Promise.resolve(Image.prefetch(e.photo.uri)).catch(() => false)))
+    const all = Promise.all(key.split('|').map((uri) => Promise.resolve(Image.prefetch(uri)).catch(() => false)))
     void Promise.race([all, wait]).then(() => {
-      if (live) setLoaded(entries)
+      if (live) setLoaded(key)
     })
     return () => {
       live = false
     }
-  }, [entries])
-  return loaded === entries
+  }, [key])
+  return loaded === key
 }
 
 const styles = StyleSheet.create({

@@ -55,7 +55,8 @@ export function PhotoCapture({ entry, libraryOnly = false, store = expoStore, on
   // The Gallery's "Take today's photo" brings Today forward and opens the camera once.
   const cameraRequest = useCameraRequest()
   useEffect(() => {
-    if (cameraRequest !== null && takeCameraRequest(entry.date) && !libraryOnly) takePhoto()
+    // Yesterday's library-only capture leaves a request for today alone.
+    if (cameraRequest === entry.date && !libraryOnly && takeCameraRequest(entry.date)) takePhoto()
     // Only a new request opens it.
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [cameraRequest])

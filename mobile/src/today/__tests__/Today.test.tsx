@@ -922,6 +922,17 @@ describe('yesterday, until noon', () => {
   /** Day 2 today, with Day 1 left as it was: nothing logged. */
   const dayTwo = () => startAttempt(2)
 
+  it("leaves yesterday for today's camera when the Gallery asks for today's photo", async () => {
+    await dayTwo()
+    await show()
+    await press('Finish it')
+    expect(await screen.findByText('Finish Day 1')).toBeOnTheScreen()
+
+    await act(async () => requestCamera(TODAY))
+    expect(await screen.findByTestId('camera-preview')).toBeOnTheScreen()
+    expect(screen.queryByText('Finish Day 1')).toBeNull()
+  })
+
   it('offers to finish it, and logs onto yesterday: the photo from the library only', async () => {
     const challengeId = await dayTwo()
     await show()

@@ -19,6 +19,7 @@ import { Mascot } from '../components/mascot/Mascot'
 import { Button } from '../components/ui/Button'
 import { Sheet } from '../components/ui/Sheet'
 import type { Challenge, DayEntry, Workout } from '../db/types'
+import { useCameraRequest } from '../gallery/cameraRequest'
 import { useAnnounceChanges } from '../hooks/useAnnounce'
 import { useGate } from '../hooks/useChallengeGate'
 import { useDayCompleteCelebration } from '../hooks/useDayCompleteCelebration'
@@ -92,6 +93,9 @@ export function TodayScreen({ gate, celebrating = false }: { gate: ChallengeGate
   const hasToday = isChallengeDay(gate.todayDayNumber)
   // Finished, or past noon: the next unfinished yesterday starts closed again.
   if (late === null && lateOpen) setLateOpen(false)
+  // The Gallery asked for today's photo: today comes back for its camera.
+  const cameraRequest = useCameraRequest()
+  if (cameraRequest === gate.today && lateOpen) setLateOpen(false)
 
   // The morning after Day 75 there's no today to show: only the last day to finish.
   if (late !== null && (lateOpen || !hasToday)) {

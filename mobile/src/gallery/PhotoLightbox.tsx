@@ -26,6 +26,7 @@ export function PhotoLightbox({ entries, index, onClose, onNavigate }: PhotoLigh
       <View pointerEvents="box-none" style={styles.content}>
         <Image
           source={{ uri: entry.photo.uri }}
+          accessible
           accessibilityLabel={`Day ${entry.dayNumber} progress`}
           resizeMode="contain"
           style={[styles.photo, { height: height * 0.7 }]}

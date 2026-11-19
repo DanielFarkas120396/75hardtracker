@@ -36,6 +36,9 @@ export function GalleryScreen({ gate }: { gate: ChallengeGate }) {
   // A screen that covers the app brings Today forward: the overlay closes first, so its Modal never stays up over Today.
   const covered = useTabBarHidden()
   if (covered && shown !== null) setShown(null)
+  // A photo gone from under the lightbox, or Compare left with one photo: nothing to show, so it closes.
+  const nothingToShow = shown !== null && (shown.kind === 'photo' ? !(entries ?? [])[shown.index] : oldestFirst.length < 2)
+  if (nothingToShow) setShown(null)
 
   const takePhoto = () => {
     requestCamera(today)

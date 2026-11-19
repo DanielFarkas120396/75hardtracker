@@ -4,7 +4,7 @@
 import { addDaysISO, dateForDayNumber, formatDisplayDate, todayISO } from '@logic/dates'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native'
 import * as Font from 'expo-font'
-import { AccessibilityInfo, Image, StyleSheet } from 'react-native'
+import { AccessibilityInfo, Image, ScrollView, StyleSheet } from 'react-native'
 import GalleryRoute from '../../app/(tabs)/gallery'
 import { addChallenge, freshDatabase } from '../../db/__tests__/fixtures'
 import { transaction } from '../../db/open'
@@ -178,6 +178,22 @@ describe('Compare, the slider', () => {
 
     await fireEvent(screen.getByTestId('compare-frame'), 'responderGrant', { nativeEvent: { locationX: width * 0.8, touches: [], changedTouches: [] }, touchHistory: { touchBank: [] } })
     expect(left()).toBeCloseTo(width * 0.8)
+  })
+
+  it('never takes a drag away from a side label: the label keeps its tap', async () => {
+    await compare()
+    const frame = screen.getByTestId('compare-frame')
+    expect(frame.props.onMoveShouldSetResponder({ nativeEvent: { touches: [{}] }, touchHistory: { touchBank: [], numberActiveTouches: 1, indexOfSingleActiveTouch: 0, mostRecentTimeStamp: 0 } })).toBe(false)
+  })
+
+  it('opens the strip with the side’s day in the middle', async () => {
+    const scrollTo = jest.spyOn(ScrollView.prototype as unknown as { scrollTo: (o: object) => void }, 'scrollTo').mockImplementation(() => {})
+    await compare()
+    const width = StyleSheet.flatten(screen.getByTestId('compare-frame').props.style).width as number
+    await fireEvent.press(screen.getByRole('button', { name: 'Change the later day, Day 7' }))
+    // The strip's own layout comes after its days': the centring must not wait on it.
+    await fireEvent(screen.getByRole('button', { name: 'Day 7' }), 'layout', { nativeEvent: { layout: { x: 400, y: 0, width: 44, height: 64 } } })
+    expect(scrollTo).toHaveBeenLastCalledWith({ x: 400 - (width - 44) / 2, animated: false })
   })
 
   it('picks another day for one side, never the other side’s', async () => {

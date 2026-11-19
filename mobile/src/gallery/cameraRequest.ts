@@ -22,6 +22,11 @@ export function takeCameraRequest(date: string): boolean {
   return asked
 }
 
+/** Drops any request: Today went out of view without taking it (the web clears it on every screen change). */
+export function dropCameraRequest(): void {
+  if (requested !== null) set(null)
+}
+
 /** The pending request's date, or null. */
 export function useCameraRequest(): string | null {
   return useSyncExternalStore(

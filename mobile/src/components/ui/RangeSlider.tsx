@@ -31,7 +31,7 @@ export function RangeSlider({ value, min, max, onChange, label, valueText, step 
 
   const handle = useMemo(() => {
     const follow = (event: GestureResponderEvent) => {
-      if (width > 0) onChange(clamp(min + (event.nativeEvent.locationX / width) * (max - min)))
+      if (width > THUMB) onChange(clamp(min + ((event.nativeEvent.locationX - THUMB / 2) / (width - THUMB)) * (max - min)))
     }
     return PanResponder.create({
       onStartShouldSetPanResponder: () => true,
