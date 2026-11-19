@@ -18,6 +18,7 @@ import { AppGate } from '../components/AppGate'
 import { nodeStore } from '../files/__tests__/nodeStore'
 import { picturePath, stagePictures } from '../files/pictures'
 import { expoStore } from '../files/store'
+import { measurementRepo } from '../db/repositories/measurementRepo'
 import { photoRepo } from '../db/repositories/photoRepo'
 import { addChallenge, freshDatabase } from '../db/__tests__/fixtures'
 import * as open from '../db/open'
@@ -92,6 +93,9 @@ describe('seedDay', () => {
     expect(days.filter((d) => d.notes).length).toBe(6)
     const workouts = await workoutRepo.getForDayEntries(days.map((d) => d.id))
     expect(new Set(workouts.map((w) => w.type)).size).toBeGreaterThan(3)
+    expect(workouts.every((w) => w.feel !== undefined)).toBe(true)
+    // Weigh-ins on the evening before Day 1 and every third day: 0, 3, 6, 9.
+    expect(await measurementRepo.getAll()).toHaveLength(4)
   })
 
   it('offers each ending one tap away, at any time of day', async () => {

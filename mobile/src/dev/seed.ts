@@ -1,4 +1,5 @@
 import { addDaysISO, todayISO } from '@logic/dates'
+import type { Mood } from '@logic/moods'
 import { Asset } from 'expo-asset'
 import { RULESETS, type ChallengeVariant } from '@logic/rulesets'
 import { SETTING_KEYS } from '@logic/settingKeys'
@@ -69,8 +70,9 @@ async function insertDay(db: Db, challengeId: number, date: string, dayNumber: n
   })
   const outdoor: WorkoutType = (['Running', 'Walking', 'Cycling'] as const)[dayNumber % 3]
   const indoor: WorkoutType = (['Weights', 'Yoga', 'Weights', 'Swimming'] as const)[dayNumber % 4]
-  await insertRow(db, 'workouts', { dayEntryId, type: outdoor, durationMin: rules.minWorkoutMin + (dayNumber % 3) * 5, isOutdoor: true })
-  if (rules.requiredWorkouts > 1) await insertRow(db, 'workouts', { dayEntryId, type: indoor, durationMin: 60, isOutdoor: false })
+  const feel = (offset: number) => (((dayNumber + offset) % 5) + 1) as Mood
+  await insertRow(db, 'workouts', { dayEntryId, type: outdoor, durationMin: rules.minWorkoutMin + (dayNumber % 3) * 5, isOutdoor: true, feel: feel(0) })
+  if (rules.requiredWorkouts > 1) await insertRow(db, 'workouts', { dayEntryId, type: indoor, durationMin: 60, isOutdoor: false, feel: feel(2) })
   return photoId
 }
 
@@ -96,6 +98,11 @@ export async function seedDay(day: number, { variant = 'hard', missed = [], toda
       if (photoId !== undefined) photoIds.push(photoId)
     }
     if (todayButPhoto && day >= 1) await insertDay(db, challengeId, todayISO(), day, variant, false)
+    // A weigh-in the evening before Day 1 and every third day since, slowly going down: the Stats chart has a trend.
+    for (let dayNumber = 0; dayNumber < day; dayNumber += 3) {
+      const wobble = ((dayNumber * 7) % 5) / 10 - 0.2
+      await insertRow(db, 'measurements', { date: addDaysISO(startDate, dayNumber - 1), weight_kg: Math.round((88 - dayNumber * 0.08 + wobble) * 10) / 10 })
+    }
     await db.runAsync('INSERT INTO settings (key, value) VALUES (?, ?)', [
       SETTING_KEYS.profile,
       JSON.stringify({ name: 'Tester', why: 'A seeded attempt', onboardedAt: new Date().toISOString() }),
