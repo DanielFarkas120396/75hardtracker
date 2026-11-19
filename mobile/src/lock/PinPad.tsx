@@ -11,7 +11,8 @@ import { withAlpha } from '../theme/tokens'
 
 /** Whole seconds left until `until` (epoch ms), ticking every second; 0 once it has passed or when there is none. */
 export function useCountdown(until: number | null): number {
-  const [seconds, setSeconds] = useState(() => secondsUntil(until))
+  // The effect reads the clock at once: never while rendering.
+  const [seconds, setSeconds] = useState(0)
   useEffect(() => {
     const tick = () => setSeconds(secondsUntil(until))
     tick()

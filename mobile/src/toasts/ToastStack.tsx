@@ -3,7 +3,7 @@ import { AccessibilityInfo, Pressable, StyleSheet, Text, View } from 'react-nati
 import Animated, { FadeOutUp, SlideInUp, useAnimatedStyle, withSpring } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Icon } from '../components/icons/Icon'
-import { useLockStatus } from '../lock/store'
+import { useCoverShown, useLockStatus } from '../lock/store'
 import { useTheme } from '../theme/ThemeProvider'
 import { withAlpha } from '../theme/tokens'
 import { dismissBadge, dismissSaveFailure, useToastState } from './store'
@@ -35,11 +35,12 @@ const BADGE_PREFIX = 'badge:'
 export function useToasts(): Toast[] {
   const { badges, saveFailures, badgesPaused } = useToastState()
   const lock = useLockStatus()
+  const covered = useCoverShown()
   return [
     ...(saveFailures > 0
       ? [{ id: SAVE_ERROR_ID, title: "Couldn't save that", detail: 'Try again. If it keeps happening, your phone may be full.', error: true, durationMs: 6000, stamp: saveFailures }]
       : []),
-    ...(lock !== 'open' || badgesPaused
+    ...(lock !== 'open' || covered || badgesPaused
       ? []
       : badges.map((badge) => ({ id: BADGE_PREFIX + badge.id, title: `Badge unlocked: ${badge.name}`, detail: badge.description, durationMs: 4500 }))),
   ]
@@ -143,8 +144,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     transformOrigin: 'top',
   },
-  // Behind the front card: in the same place and as tall as it, since they hold the same layout, hidden.
-  behind: { position: 'absolute', top: 0, left: 0, right: 0 },
+  // Behind the front card: in the same place and stretched to its height, so every edge peeks out the same.
+  behind: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 },
   press: { minHeight: 48, paddingHorizontal: 16, paddingVertical: 12 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   hidden: { opacity: 0 },

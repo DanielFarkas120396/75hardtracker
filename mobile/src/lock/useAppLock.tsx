@@ -1,6 +1,6 @@
 import { shouldRelock } from '@logic/appLock'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { AppState, StyleSheet, View } from 'react-native'
+import { AppState, Keyboard, StyleSheet, View } from 'react-native'
 import { Mascot } from '../components/mascot/Mascot'
 import { appLockRepo, type PinResult } from '../db/repositories/appLockRepo'
 import { useLiveQuery } from '../db/useLiveQuery'
@@ -8,7 +8,7 @@ import { useTheme } from '../theme/ThemeProvider'
 import { askFaceId, isAuthenticating } from './faceId'
 import { LockScreen } from './LockScreen'
 import { hashPin } from './pin'
-import { setLockStatus, type LockStatus } from './store'
+import { setCoverShown, setLockStatus, type LockStatus } from './store'
 
 const NO_FAILURES = { count: 0, lockedUntil: null }
 
@@ -54,9 +54,21 @@ export function AppLock({ children }: { children: ReactNode }) {
   }, [enabled])
 
   const status: LockStatus = config === undefined ? 'loading' : enabled && !unlocked ? 'locked' : 'open'
-  useEffect(() => setLockStatus(status), [status])
+  useEffect(() => {
+    setLockStatus(status)
+    // A keyboard left up on a page (Settings → Profile) would come back over the pad and type into the hidden field.
+    if (status === 'locked') Keyboard.dismiss()
+  }, [status])
+  const coverShown = covered && enabled && status === 'open'
+  useEffect(() => setCoverShown(coverShown), [coverShown])
   // Gone (erased, in tests): nothing stays curtained.
-  useEffect(() => () => setLockStatus('open'), [])
+  useEffect(
+    () => () => {
+      setLockStatus('open')
+      setCoverShown(false)
+    },
+    [],
+  )
 
   const faceIdEnabled = config?.credentialId !== undefined
 
@@ -102,7 +114,7 @@ export function AppLock({ children }: { children: ReactNode }) {
           onBypass={bypass}
         />
       )}
-      {covered && enabled && !locked && (
+      {coverShown && (
         <View testID="privacy-cover" style={[StyleSheet.absoluteFill, styles.cover, { backgroundColor: colors.canvas }]}>
           <Mascot mood="watching" size={96} decorative />
         </View>

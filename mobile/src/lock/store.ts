@@ -14,6 +14,27 @@ export function setLockStatus(next: LockStatus): void {
   for (const listener of [...listeners]) listener()
 }
 
+let coverShown = false
+
+/** The app-switcher cover is up: badges wait under it too. */
+export function setCoverShown(next: boolean): void {
+  if (next === coverShown) return
+  coverShown = next
+  for (const listener of [...listeners]) listener()
+}
+
+export function useCoverShown(): boolean {
+  return useSyncExternalStore(
+    (listener) => {
+      listeners.add(listener)
+      return () => {
+        listeners.delete(listener)
+      }
+    },
+    () => coverShown,
+  )
+}
+
 export function useLockStatus(): LockStatus {
   return useSyncExternalStore(
     (listener) => {
@@ -26,8 +47,9 @@ export function useLockStatus(): LockStatus {
   )
 }
 
-/** A Modal's `visible`: hidden while the lock is closed (it comes back once unlocked), as nothing native may cover the lock. */
+/** A Modal's `visible`: hidden unless the lock is open (it comes back once unlocked), as nothing native may cover the lock. */
 export function useCurtained(visible: boolean): boolean {
-  const locked = useLockStatus() === 'locked'
-  return visible && !locked
+  // Loading counts as closed: a Modal mounted open at a locked launch never flashes over the lock.
+  const open = useLockStatus() === 'open'
+  return visible && open
 }

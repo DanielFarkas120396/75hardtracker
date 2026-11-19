@@ -10,9 +10,7 @@ import * as SplashScreen from 'expo-splash-screen'
 import { mkdtempSync, readdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import type { ReactNode } from 'react'
 import { Text } from 'react-native'
-import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { AppGate } from '../components/AppGate'
 import { nodeStore } from '../files/__tests__/nodeStore'
 import { picturePath, stagePictures } from '../files/pictures'
@@ -27,7 +25,6 @@ import { workoutRepo } from '../db/repositories/workoutRepo'
 import { profileRepo } from '../db/repositories/profileRepo'
 import { settingsRepo } from '../db/repositories/settingsRepo'
 import { SEEDS, seedDay } from '../dev/seed'
-import { GateProvider } from '../hooks/useChallengeGate'
 import { ThemeProvider } from '../theme/ThemeProvider'
 
 jest.mock('expo-font', () => ({ ...jest.requireActual('expo-font'), useFonts: jest.fn() }))
@@ -51,15 +48,6 @@ jest.mock('expo-splash-screen', () => ({ hideAsync: jest.fn(async () => {}), pre
 const hideSplash = jest.mocked(SplashScreen.hideAsync)
 jest.mock('../db/open', () => ({ ...jest.requireActual('../db/open'), openAppDatabase: jest.fn() }))
 const openAppDatabase = jest.mocked(open.openAppDatabase)
-
-const PHONE = { frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 47, left: 0, right: 0, bottom: 34 } }
-const Providers = ({ children }: { children: ReactNode }) => (
-  <SafeAreaProvider initialMetrics={PHONE}>
-    <ThemeProvider>
-      <GateProvider>{children}</GateProvider>
-    </ThemeProvider>
-  </SafeAreaProvider>
-)
 
 beforeEach(async () => {
   jest.mocked(Font.useFonts).mockReturnValue([true, null])

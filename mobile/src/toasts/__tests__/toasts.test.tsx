@@ -12,7 +12,7 @@ import { setSaveFailureListener, transaction } from '../../db/open'
 import { badgeRepo } from '../../db/repositories/badgeRepo'
 import { useGate } from '../../hooks/useChallengeGate'
 import { useHideTabBar, useTabBarHidden } from '../../hooks/useTabBar'
-import { setLockStatus } from '../../lock/store'
+import { setCoverShown, setLockStatus } from '../../lock/store'
 import { BadgesPage } from '../../settings/BadgesPage'
 import { Providers, startAttempt, TODAY } from '../../today/__tests__/support'
 import { noteSaveFailure, queueBadges, resetToastsForTests } from '../store'
@@ -25,6 +25,7 @@ beforeEach(async () => {
   jest.mocked(AccessibilityInfo.announceForAccessibility).mockClear()
   resetToastsForTests()
   setLockStatus('open')
+  setCoverShown(false)
   await freshDatabase()
 })
 afterEach(() => {
@@ -85,6 +86,11 @@ describe('badges', () => {
     await act(async () => setLockStatus('locked'))
     expect(front()).toBeNull()
     await act(async () => setLockStatus('open'))
+    expect(front()).not.toBeNull()
+    // Nor over the app-switcher cover.
+    await act(async () => setCoverShown(true))
+    expect(front()).toBeNull()
+    await act(async () => setCoverShown(false))
     expect(front()).not.toBeNull()
   })
 

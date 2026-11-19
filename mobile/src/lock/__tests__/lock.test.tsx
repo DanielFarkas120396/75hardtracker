@@ -4,7 +4,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-
 import * as Font from 'expo-font'
 import * as LocalAuthentication from 'expo-local-authentication'
 import { useState } from 'react'
-import { AccessibilityInfo, AppState, type AppStateStatus, Pressable, Text } from 'react-native'
+import { AccessibilityInfo, AppState, type AppStateStatus, Keyboard, Pressable, Text } from 'react-native'
 import { Sheet } from '../../components/ui/Sheet'
 import { freshDatabase } from '../../db/__tests__/fixtures'
 import { appLockRepo } from '../../db/repositories/appLockRepo'
@@ -135,10 +135,13 @@ describe('the lock', () => {
     expect(lockTitle()).toBeNull()
     expect(screen.queryByTestId('privacy-cover')).toBeNull()
 
+    // A keyboard left up on the page (Settings → Profile) would come back over the pad and type into the hidden field.
+    const dismiss = jest.spyOn(Keyboard, 'dismiss')
     await goTo('background')
     clock.mockReturnValue(100_000)
     await goTo('active')
     expect(await screen.findByRole('header', { name: / is locked$/ })).toBeOnTheScreen()
+    expect(dismiss).toHaveBeenCalled()
   })
 
   it('hides an open sheet while locked, and brings it back once unlocked', async () => {
