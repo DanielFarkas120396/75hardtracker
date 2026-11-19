@@ -1,21 +1,9 @@
 import { verifyPin, waitAfterFailures, type StoredPin } from '../../lib/pin'
+import type { AppLockConfig, PinFailures } from '../../logic/appLock'
 import { db } from '../db'
 import { SETTING_KEYS, settingsRepo } from './settingsRepo'
 
-export interface AppLockConfig {
-  /** The PIN's fingerprint (see src/lib/pin.ts). The lock's base: Face ID is the shortcut. */
-  pin?: StoredPin
-  /** The Face ID passkey's credential id (base64url), when "Also unlock with Face ID" is on. */
-  credentialId?: string
-  enabledAt: string
-}
-
-export interface PinFailures {
-  /** Wrong PINs in a row. */
-  count: number
-  /** Epoch ms until which no PIN is accepted, or null. */
-  lockedUntil: number | null
-}
+export type { AppLockConfig, PinFailures }
 
 export type PinResult = { ok: true } | { ok: false; failures: PinFailures }
 

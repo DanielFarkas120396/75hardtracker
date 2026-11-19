@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { PinPad } from '../../components/PinPad'
 import { appLockRepo } from '../../db/repositories/appLockRepo'
 import { formatCountdown, useCountdown } from '../../hooks/useCountdown'
-import { FREE_ATTEMPTS } from '../../lib/pin'
+import { wrongPinLine } from '../../logic/appLock'
 
 /** Asks for the current PIN (to change it or turn the lock off). Wrong PINs count and wait, as on the lock screen. */
 export function CheckPinPad({ title, onVerified }: { title: string; onVerified: () => void }) {
@@ -14,8 +14,7 @@ export function CheckPinPad({ title, onVerified }: { title: string; onVerified: 
   const submit = async (pin: string) => {
     const result = await appLockRepo.checkPin(pin)
     if (result.ok) return onVerified()
-    const left = FREE_ATTEMPTS - result.failures.count
-    setError(left > 0 ? `Wrong PIN. ${left} ${left === 1 ? 'try' : 'tries'} left before a wait.` : null)
+    setError(wrongPinLine(result.failures.count))
   }
 
   return (
