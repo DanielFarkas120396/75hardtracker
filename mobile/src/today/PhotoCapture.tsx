@@ -1,5 +1,5 @@
 import * as ImagePicker from 'expo-image-picker'
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { photoRepo } from '../db/repositories/photoRepo'
 import { settingsRepo } from '../db/repositories/settingsRepo'
@@ -7,6 +7,7 @@ import type { DayEntry } from '../db/types'
 import { useLiveQuery } from '../db/useLiveQuery'
 import { pictureUri } from '../files/pictures'
 import { expoStore, type FileStore } from '../files/store'
+import { takeCameraRequest, useCameraRequest } from '../gallery/cameraRequest'
 import { CameraSheet, type CameraFacing } from './CameraSheet'
 import { useEntryPhoto } from './hooks'
 import { prepareShot } from './photo'
@@ -50,6 +51,14 @@ export function PhotoCapture({ entry, libraryOnly = false, store = expoStore, on
     onCameraOpen?.()
     setCameraOpen(true)
   }
+
+  // The Gallery's "Take today's photo" brings Today forward and opens the camera once.
+  const cameraRequest = useCameraRequest()
+  useEffect(() => {
+    if (cameraRequest !== null && takeCameraRequest(entry.date) && !libraryOnly) takePhoto()
+    // Only a new request opens it.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, [cameraRequest])
 
   const chooseFromLibrary = async () => {
     setError(null)

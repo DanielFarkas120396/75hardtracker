@@ -2,7 +2,7 @@
 // concern what comes with later parts (the fills, the morph, the evening plan, the celebration).
 import { addDaysISO, dateForDayNumber, formatShortDay, formatWeekday } from '@logic/dates'
 import { SETTING_KEYS } from '@logic/settingKeys'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import { useCameraPermissions } from 'expo-camera'
 import * as Font from 'expo-font'
 import * as Haptics from 'expo-haptics'
@@ -27,6 +27,7 @@ import { useToday } from '../../hooks/useToday'
 import { prepareShot } from '../photo'
 import { Today } from '../TodayScreen'
 import { entryOf, Providers, startAttempt, TODAY } from './support'
+import { requestCamera, takeCameraRequest } from '../../gallery/cameraRequest'
 
 jest.mock('expo-font', () => ({ ...jest.requireActual('expo-font'), useFonts: jest.fn() }))
 jest.mock('expo-haptics', () => ({
@@ -602,6 +603,18 @@ describe('the other sheets', () => {
 })
 
 describe('the photo', () => {
+  it("opens the camera once when the Gallery asks for today's photo, never for another day", async () => {
+    await startAttempt()
+    requestCamera('2020-01-01')
+    await show()
+    await screen.findByRole('button', { name: 'Take photo' })
+    expect(screen.queryByTestId('camera-preview')).toBeNull()
+
+    await act(async () => requestCamera(TODAY))
+    expect(await screen.findByTestId('camera-preview')).toBeOnTheScreen()
+    expect(takeCameraRequest(TODAY)).toBe(false)
+  })
+
   it('keeps the review open when the photo cannot be saved, and the day keeps the photo it had', async () => {
     const challengeId = await startAttempt()
     const entry = await entryOf(challengeId)
