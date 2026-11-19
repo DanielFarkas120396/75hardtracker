@@ -25,7 +25,6 @@ import { workoutRepo } from '../db/repositories/workoutRepo'
 import { profileRepo } from '../db/repositories/profileRepo'
 import { settingsRepo } from '../db/repositories/settingsRepo'
 import { SEEDS, seedDay } from '../dev/seed'
-import { ThemeProvider } from '../theme/ThemeProvider'
 
 jest.mock('expo-font', () => ({ ...jest.requireActual('expo-font'), useFonts: jest.fn() }))
 // The seeds' bundled pictures are the files in assets/images/seed; the app's pictures go to a folder on this computer.
