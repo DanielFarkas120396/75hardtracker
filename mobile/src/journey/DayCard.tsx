@@ -32,6 +32,11 @@ interface DayCardProps {
 const DRAG_CLOSE = 80
 const FLING_CLOSE = 500
 
+/** Whether a drag on the handle, let go `dy` points down at `vy` points a millisecond, closes the card. */
+export function dragCloses(dy: number, vy: number): boolean {
+  return dy > DRAG_CLOSE || vy * 1000 > FLING_CLOSE
+}
+
 /**
  * A past day on the Journey: its photo, its notes and its workouts, in a centred card that grows from the row tapped
  * and closes from Close, a tap beside it or a drag down on its top. Reduce motion: a fade. The web's DayCard and the
@@ -73,7 +78,7 @@ export function DayCard({ day, open, onClose }: DayCardProps) {
         onMoveShouldSetPanResponder: (_, gesture) => gesture.dy > 4 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
         onPanResponderMove: (_, gesture) => drag.setValue(Math.max(0, gesture.dy) * 0.8),
         onPanResponderRelease: (_, gesture) => {
-          if (gesture.dy > DRAG_CLOSE || gesture.vy * 1000 > FLING_CLOSE) onClose()
+          if (dragCloses(gesture.dy, gesture.vy)) onClose()
           else Animated.spring(drag, { toValue: 0, stiffness: 300, damping: 28, useNativeDriver: true }).start()
         },
         onPanResponderTerminate: () => Animated.spring(drag, { toValue: 0, stiffness: 300, damping: 28, useNativeDriver: true }).start(),
@@ -98,6 +103,7 @@ export function DayCard({ day, open, onClose }: DayCardProps) {
       <View pointerEvents="box-none" style={styles.centre}>
         <Animated.View
           accessibilityViewIsModal
+          onAccessibilityEscape={onClose}
           // On its way out it takes no touch: a late tap must not act twice.
           pointerEvents={visible ? 'auto' : 'none'}
           style={[

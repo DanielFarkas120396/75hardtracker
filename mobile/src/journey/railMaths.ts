@@ -32,3 +32,12 @@ export function sectionFill(day: number, firstDay: number, lastDay: number): num
   'worklet'
   return Math.min(1, Math.max(0, (day - firstDay + 1) / (lastDay - firstDay + 1)))
 }
+
+/**
+ * The day the rail shows with the page scrolled to `scrollY`: never past the day reached. The read line is 45% down a
+ * window `windowHeight` tall, in the page's points (the page starts under the status bar, `insetTop` down).
+ */
+export function railDay(rows: readonly RowPlace[], scrollY: number, windowHeight: number, insetTop: number, dayReached: number): number {
+  'worklet'
+  return Math.min(dayReached, dayInView(rows, scrollY + windowHeight * READ_LINE - insetTop, dayReached))
+}

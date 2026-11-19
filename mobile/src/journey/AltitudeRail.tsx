@@ -43,6 +43,8 @@ function Section({ world, below, day, onPress }: { world: World; below: World; d
       accessibilityLabel={`Go to ${world.name}`}
       onPress={onPress}
       testID={`rail-${world.id}`}
+      // 28 points wide: the touch reaches a little into the page, towards 48.
+      hitSlop={{ left: 4, right: 12 }}
       style={[styles.section, { flexGrow: lastDay - firstDay + 1 }]}
     >
       <View style={[styles.track, { backgroundColor: withAlpha(colors.ink, 0.15) }]}>

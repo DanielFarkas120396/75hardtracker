@@ -22,7 +22,7 @@ import { useTheme, WorldScope } from '../theme/ThemeProvider'
 import { AltitudeRail } from './AltitudeRail'
 import { DayCard, type OpenDay } from './DayCard'
 import { DayRow } from './DayRow'
-import { dayInView, READ_LINE, type RowPlace } from './railMaths'
+import { railDay, type RowPlace } from './railMaths'
 import { WorldCover } from './WorldCover'
 import { WORLDS, type World } from './worlds'
 
@@ -102,7 +102,7 @@ export function JourneyScreen({ gate }: { gate: ChallengeGate }) {
   }
   // The live entry, so the card follows what's logged while it's open.
   const live = openDay && dayData(openDay.dayNumber)
-  const shownDay = openDay && live && { ...openDay, ...(live.entry ? live : {}) }
+  const cardDay = openDay && live && { ...openDay, ...(live.entry ? live : {}) }
 
   // Where each row and each cover sits in the page: the rail reads the rows on the UI thread, a jump reads the covers.
   const rowPlaces = useRef(new Map<number, RowPlace>())
@@ -117,13 +117,12 @@ export function JourneyScreen({ gate }: { gate: ChallengeGate }) {
     coverPlaces.current.set(world, event.nativeEvent.layout.y)
   }
 
-  // The read line, in the page's points: 45% down the screen, which starts under the status bar.
   const scrollY = useSharedValue(0)
-  const lineOffset = height * READ_LINE - insets.top
+  const insetTop = insets.top
   const onScroll = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y
   })
-  const railDay = useDerivedValue(() => Math.min(dayReached, dayInView(rows.value, scrollY.value + lineOffset, dayReached)))
+  const shownDay = useDerivedValue(() => railDay(rows.value, scrollY.value, height, insetTop, dayReached))
 
   // A world reached jumps to its cover; one ahead, to the top, where the next world waits.
   const scroll = useAnimatedRef<Animated.ScrollView>()
@@ -183,8 +182,8 @@ export function JourneyScreen({ gate }: { gate: ChallengeGate }) {
         ))}
       </Animated.ScrollView>
 
-      <AltitudeRail day={railDay} onJump={onJump} />
-      <DayCard day={shownDay} open={cardOpen} onClose={() => setCardOpen(false)} />
+      <AltitudeRail day={shownDay} onJump={onJump} />
+      <DayCard day={cardDay} open={cardOpen} onClose={() => setCardOpen(false)} />
     </SafeAreaView>
   )
 }

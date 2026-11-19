@@ -1,4 +1,4 @@
-import { dayInView, sectionFill, type RowPlace } from '../railMaths'
+import { dayInView, railDay, sectionFill, type RowPlace } from '../railMaths'
 
 // Day 12 (today) at the top, then 11, then a cover (a gap), then 10: newest first, as the logbook lays them out.
 const rows: RowPlace[] = [
@@ -35,5 +35,19 @@ describe('sectionFill', () => {
     expect(sectionFill(10, 11, 22)).toBe(0)
     expect(sectionFill(30, 11, 22)).toBe(1)
     expect(sectionFill(10.5, 1, 10)).toBe(1)
+  })
+})
+
+describe('railDay', () => {
+  // A 844-point window under a 47-point status bar: the line is 332.8 points down the page at the top.
+  it('reads the line 45% down the screen, under the status bar, as the page scrolls', () => {
+    expect(railDay(rows, -100, 844, 47, 12)).toBe(12)
+    expect(railDay(rows, 0, 844, 47, 12)).toBeCloseTo(11.672)
+    expect(railDay(rows, 125.2, 844, 47, 12)).toBeCloseTo(10.5)
+    expect(railDay(rows, 2000, 844, 47, 12)).toBe(0)
+  })
+
+  it('never shows past the day reached', () => {
+    expect(railDay([{ day: 76, top: 300, height: 100 }], 17.2, 844, 47, 75)).toBe(75)
   })
 })

@@ -4,7 +4,7 @@ import { addDaysISO, dateForDayNumber, formatShortDay, todayISO } from '@logic/d
 import type { ChallengeVariant } from '@logic/rulesets'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native'
 import * as Font from 'expo-font'
-import { ScrollView, StyleSheet } from 'react-native'
+import { AccessibilityInfo, ScrollView, StyleSheet } from 'react-native'
 import JourneyRoute from '../../app/(tabs)/journey'
 import { addChallenge, freshDatabase } from '../../db/__tests__/fixtures'
 import { transaction } from '../../db/open'
@@ -15,6 +15,7 @@ import type { WorkoutType } from '../../db/types'
 import { useClock } from '../../hooks/useClock'
 import { useHideTabBar } from '../../hooks/useTabBar'
 import { Providers } from '../../today/__tests__/support'
+import { dragCloses } from '../DayCard'
 
 jest.mock('expo-font', () => ({ ...jest.requireActual('expo-font'), useFonts: jest.fn() }))
 jest.mock('../../files/store', () => {
@@ -85,11 +86,13 @@ const show = async () => {
   await render(<JourneyRoute />, { wrapper: Providers })
   await screen.findByText('Journey')
 }
+/** Each cover as VoiceOver names it: the world and its badge (the detail line follows). */
 const covers = () =>
   screen
     .getAllByRole('header')
     .map((h) => h.props.accessibilityLabel as string | undefined)
     .filter((label) => label !== undefined && label !== 'Journey' && label.includes(', '))
+    .map((label) => label!.split(', ').slice(0, 2).join(', '))
 
 describe('the log', () => {
   it('lists the days newest first, in chapters by world, with the next world locked on top', async () => {
@@ -106,6 +109,23 @@ describe('the log', () => {
     expect(screen.getByText(`Days 1–10 · 9/10 · 1 joker · done ${formatShortDay(dateForDayNumber(start, 10))}`)).toBeOnTheScreen()
     expect(screen.getByRole('button', { name: /Day 4 · forgiven with a joker/ })).toBeOnTheScreen()
     expect(screen.getByText('Days 11–22 · 11 to go')).toBeOnTheScreen()
+    // VoiceOver reads the detail line with the cover's name and badge.
+    expect(screen.getByLabelText('The Wasteland, 1/12, Days 11–22 · 11 to go')).toBeOnTheScreen()
+  })
+
+  it('greys the world ahead with a picture measured around its canvas (Skia takes no onLayout)', async () => {
+    await attempt(12, done(1, 11))
+    await show()
+    const picture = await screen.findByTestId('locked-picture')
+    expect(picture.props.onLayout).toEqual(expect.any(Function))
+    expect(picture.children.every((child) => typeof child === 'string' || child.props.onLayout === undefined)).toBe(true)
+  })
+
+  it('still shows the logbook of an attempt given up (Today comes forward over it)', async () => {
+    const { id } = await attempt(5, done(1, 4))
+    await transaction((db) => db.runAsync("UPDATE challenges SET status = 'abandoned' WHERE id = ?", [id]))
+    await show()
+    await waitFor(() => expect(covers()).toEqual(['The Wasteland, In 6 days', 'Hell, 4/10']))
   })
 
   it("counts today as to go until it's done, then nine to go", async () => {
@@ -189,7 +209,7 @@ describe('the day card', () => {
     const { start } = await attempt(3, { 1: { notes: 'First day done.', workouts: [['Weights', 50]] }, 2: {} })
     await show()
 
-    fireEvent.press(await screen.findByRole('button', { name: /^Day 1/ }), { nativeEvent: { pageX: 60, pageY: 500 } })
+    await fireEvent.press(await screen.findByRole('button', { name: /^Day 1/ }), { nativeEvent: { pageX: 60, pageY: 500 } })
 
     expect(await screen.findByRole('header', { name: `Day 1 · ${formatShortDay(dateForDayNumber(start, 1))}` })).toBeOnTheScreen()
     expect(screen.getAllByText('First day done.').length).toBe(2)
@@ -197,21 +217,21 @@ describe('the day card', () => {
     expect(screen.getAllByLabelText('Weights').length).toBe(2)
     expect(screen.queryByText(/pages/)).toBeNull()
 
-    fireEvent.press(screen.getByRole('button', { name: 'Close' }))
+    await fireEvent.press(screen.getByRole('button', { name: 'Close' }))
     await waitFor(() => expect(card()).toBeNull())
   })
 
   it('follows what is logged while it is open, and closes from a tap beside it', async () => {
     await attempt(2, { 1: {}, 2: { completed: false } })
     await show()
-    fireEvent.press(await screen.findByRole('button', { name: /Today · Day 2/ }), { nativeEvent: { pageX: 60, pageY: 300 } })
+    await fireEvent.press(await screen.findByRole('button', { name: /Today · Day 2/ }), { nativeEvent: { pageX: 60, pageY: 300 } })
     expect(await screen.findByText('No notes')).toBeOnTheScreen()
 
     const today = (await dayEntryRepo.getAllForChallenge(1)).find((e) => e.dayNumber === 2)!
     await act(async () => dayEntryRepo.update(today.id, { notes: 'Written meanwhile.' }))
     expect((await screen.findAllByText('Written meanwhile.')).length).toBe(2)
 
-    fireEvent.press(screen.getByTestId('day-card-backdrop'))
+    await fireEvent.press(screen.getByTestId('day-card-backdrop'))
     await waitFor(() => expect(card()).toBeNull())
   })
 
@@ -219,12 +239,12 @@ describe('the day card', () => {
     await attempt(4, { 2: {}, 3: {} }, 'soft', [2])
     await show()
 
-    fireEvent.press(await screen.findByRole('button', { name: /Day 1 · forgiven with a joker/ }), { nativeEvent: { pageX: 60, pageY: 600 } })
+    await fireEvent.press(await screen.findByRole('button', { name: /Day 1 · forgiven with a joker/ }), { nativeEvent: { pageX: 60, pageY: 600 } })
     expect(await screen.findByText('Nothing was logged this day.')).toBeOnTheScreen()
-    fireEvent.press(screen.getByRole('button', { name: 'Close' }))
+    await fireEvent.press(screen.getByRole('button', { name: 'Close' }))
     await waitFor(() => expect(card()).toBeNull())
 
-    fireEvent.press(screen.getByRole('button', { name: /^Day 2/ }), { nativeEvent: { pageX: 60, pageY: 500 } })
+    await fireEvent.press(screen.getByRole('button', { name: /^Day 2/ }), { nativeEvent: { pageX: 60, pageY: 500 } })
     expect(await screen.findByRole('header', { name: /^Day 2 ·/ })).toBeOnTheScreen()
     expect(screen.getAllByText('Not in your backup').length).toBe(2)
     expect(screen.queryByText('Nothing was logged this day.')).toBeNull()
@@ -239,18 +259,25 @@ describe('the day card', () => {
       </>
     )
     const view = await render(ui(false), { wrapper: Providers })
-    fireEvent.press(await screen.findByRole('button', { name: /^Day 1/ }), { nativeEvent: { pageX: 60, pageY: 500 } })
+    await fireEvent.press(await screen.findByRole('button', { name: /^Day 1/ }), { nativeEvent: { pageX: 60, pageY: 500 } })
     expect(await screen.findByRole('header', { name: /^Day 1 ·/ })).toBeOnTheScreen()
     await view.rerender(ui(true))
     await waitFor(() => expect(card()).toBeNull())
   })
 
+  it('closes from a drag down far or fast enough on its top, not from a nudge', () => {
+    expect(dragCloses(100, 0)).toBe(true)
+    expect(dragCloses(20, 0.6)).toBe(true)
+    expect(dragCloses(20, 0.1)).toBe(false)
+    expect(dragCloses(80, 0.5)).toBe(false)
+  })
+
   it('is one card: another day swaps into it', async () => {
     await attempt(3, { 1: {}, 2: {} })
     await show()
-    fireEvent.press(await screen.findByRole('button', { name: /^Day 1/ }), { nativeEvent: { pageX: 60, pageY: 500 } })
+    await fireEvent.press(await screen.findByRole('button', { name: /^Day 1/ }), { nativeEvent: { pageX: 60, pageY: 500 } })
     expect(await screen.findByRole('header', { name: /^Day 1 ·/ })).toBeOnTheScreen()
-    fireEvent.press(screen.getByRole('button', { name: /^Day 2/ }), { nativeEvent: { pageX: 60, pageY: 400 } })
+    await fireEvent.press(screen.getByRole('button', { name: /^Day 2/ }), { nativeEvent: { pageX: 60, pageY: 400 } })
     expect(await screen.findByRole('header', { name: /^Day 2 ·/ })).toBeOnTheScreen()
     expect(screen.queryByRole('header', { name: /^Day 1 ·/ })).toBeNull()
   })
@@ -272,12 +299,22 @@ describe('the rail', () => {
     await attempt(12, done(1, 11))
     await show()
     await waitFor(() => expect(covers()).toHaveLength(3))
-    fireEvent(screen.getByTestId('cover-hell'), 'layout', { nativeEvent: { layout: { x: 0, y: 1400, width: 300, height: 112 } } })
+    await fireEvent(screen.getByTestId('cover-hell'), 'layout', { nativeEvent: { layout: { x: 0, y: 1400, width: 300, height: 112 } } })
 
-    fireEvent.press(screen.getByRole('button', { name: 'Go to Hell' }))
+    await fireEvent.press(screen.getByRole('button', { name: 'Go to Hell' }))
     expect(scrollTo).toHaveBeenLastCalledWith({ y: 1376, animated: true })
 
-    fireEvent.press(screen.getByRole('button', { name: 'Go to Heaven' }))
+    await fireEvent.press(screen.getByRole('button', { name: 'Go to Heaven' }))
     expect(scrollTo).toHaveBeenLastCalledWith({ y: 0, animated: true })
+  })
+
+  it('jumps without animation under Reduce Motion', async () => {
+    jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(true)
+    const scrollTo = jest.spyOn(ScrollView.prototype as unknown as { scrollTo: (o: object) => void }, 'scrollTo').mockImplementation(() => {})
+    await attempt(12, done(1, 11))
+    await show()
+    await act(async () => {})
+    await fireEvent.press(screen.getByRole('button', { name: 'Go to Heaven' }))
+    expect(scrollTo).toHaveBeenLastCalledWith({ y: 0, animated: false })
   })
 })

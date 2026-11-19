@@ -33,7 +33,7 @@ export function WorldCover({ world, badge, detail, locked = false, pageCanvas, o
     <View
       accessible
       accessibilityRole="header"
-      accessibilityLabel={`${world.name}, ${badge}`}
+      accessibilityLabel={`${world.name}, ${badge}, ${detail}`}
       onLayout={onLayout}
       style={[styles.cover, { height: locked ? 80 : 112 }]}
     >
@@ -61,12 +61,15 @@ export function WorldCover({ world, badge, detail, locked = false, pageCanvas, o
 function LockedPicture({ source }: { source: number }) {
   const image = useImage(source)
   const [size, setSize] = useState({ width: 0, height: 0 })
+  // Measured on a view around the canvas: Skia's Canvas takes no onLayout on the new architecture.
   return (
-    <Canvas style={StyleSheet.absoluteFill} onLayout={(event) => setSize(event.nativeEvent.layout)}>
-      <Group layer={<Paint><ColorMatrix matrix={LOCKED} /></Paint>}>
-        {image && <SkiaImage image={image} fit="cover" x={0} y={0} width={size.width} height={size.height} />}
-      </Group>
-    </Canvas>
+    <View testID="locked-picture" style={StyleSheet.absoluteFill} onLayout={(event) => setSize(event.nativeEvent.layout)}>
+      <Canvas style={StyleSheet.absoluteFill}>
+        <Group layer={<Paint><ColorMatrix matrix={LOCKED} /></Paint>}>
+          {image && <SkiaImage image={image} fit="cover" x={0} y={0} width={size.width} height={size.height} />}
+        </Group>
+      </Canvas>
+    </View>
   )
 }
 

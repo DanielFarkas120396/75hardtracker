@@ -83,6 +83,10 @@ async function insertDay(db: Db, challengeId: number, date: string, dayNumber: n
 export async function seedDay(day: number, { variant = 'hard', missed = [], todayButPhoto = false }: SeedOptions = {}, files: SeedFiles = bundledFiles): Promise<void> {
   const startDate = addDaysISO(todayISO(), 1 - day)
   const photoIds: number[] = []
+  // The old pictures go first; each new photo's file is in place before its row is committed, so nothing shows a
+  // photo without its picture.
+  files.store.deleteFolder(picturePath('photos', ''))
+  files.store.deleteFolder(picturePath('covers', ''))
   await transaction(async (db) => {
     for (const table of TABLE_NAMES) await db.execAsync(`DELETE FROM ${table}`)
     const challengeId = (await db.runAsync(INSERT_CHALLENGE, challengeToParams({ startDate, attemptNumber: 1, status: 'active', variant }))).lastInsertRowId
@@ -96,11 +100,8 @@ export async function seedDay(day: number, { variant = 'hard', missed = [], toda
       SETTING_KEYS.profile,
       JSON.stringify({ name: 'Tester', why: 'A seeded attempt', onboardedAt: new Date().toISOString() }),
     ])
+    for (const [i, photoId] of photoIds.entries()) await files.store.copyIn(await files.picture(i), picturePath('photos', `${photoId}.jpg`))
   })
-  // The pictures, once their rows are in: the old ones go, each photo gets one of the bundled three.
-  files.store.deleteFolder(picturePath('photos', ''))
-  files.store.deleteFolder(picturePath('covers', ''))
-  for (const [i, photoId] of photoIds.entries()) await files.store.copyIn(await files.picture(i), picturePath('photos', `${photoId}.jpg`))
 }
 
 /** The endings and a long logbook, each one tap away: what the developer buttons in Settings offer. */
