@@ -9,7 +9,7 @@ import { addChallenge, addPerfectDays, freshDatabase } from '../../db/__tests__/
 import { challengeRepo } from '../../db/repositories/challengeRepo'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import { profileRepo } from '../../db/repositories/profileRepo'
-import { useChallengeGate } from '../../hooks/useChallengeGate'
+import { useGate } from '../../hooks/useChallengeGate'
 import { useClock } from '../../hooks/useClock'
 import { useNowMinutes } from '../../hooks/useNowMinutes'
 import { useTabBarHidden } from '../../hooks/useTabBar'
@@ -389,14 +389,14 @@ describe('an attempt given up earlier', () => {
 describe('the gate', () => {
   it('saves an attempt whose 75 days are done as completed, and no other', async () => {
     const done = await attempt(76, 'hard', 75)
-    const first = await renderHook(() => useChallengeGate())
+    const first = await renderHook(() => useGate(), { wrapper: Providers })
     await waitFor(() => expect(first.result.current?.kind).toBe('completed'))
     await waitFor(async () => expect((await stored(done)).status).toBe('completed'))
     await first.unmount()
 
     await freshDatabase()
     const running = await attempt(12, 'hard', 11)
-    const second = await renderHook(() => useChallengeGate())
+    const second = await renderHook(() => useGate(), { wrapper: Providers })
     await waitFor(() => expect(second.result.current?.kind).toBe('active'))
     expect((await stored(running)).status).toBe('active')
   })

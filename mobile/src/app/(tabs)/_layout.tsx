@@ -1,6 +1,7 @@
 import { router } from 'expo-router'
 import { NativeTabs } from 'expo-router/native-tabs'
 import { useEffect } from 'react'
+import { GateProvider } from '../../hooks/useChallengeGate'
 import { useTabBarHidden } from '../../hooks/useTabBar'
 import { useTheme } from '../../theme/ThemeProvider'
 
@@ -23,14 +24,17 @@ export default function TabsLayout() {
   useEffect(() => {
     if (hidden) router.navigate('/')
   }, [hidden])
+  // One gate for every tab: Today, Journey and Settings read the same answer.
   return (
-    <NativeTabs hidden={hidden} backgroundColor={colors.surface} tintColor={colors.worldInk} iconColor={colors.inkMuted}>
-      {TABS.map((tab) => (
-        <NativeTabs.Trigger key={tab.name} name={tab.name}>
-          <NativeTabs.Trigger.Label>{tab.label}</NativeTabs.Trigger.Label>
-          <NativeTabs.Trigger.Icon sf={tab.sf} />
-        </NativeTabs.Trigger>
-      ))}
-    </NativeTabs>
+    <GateProvider>
+      <NativeTabs hidden={hidden} backgroundColor={colors.surface} tintColor={colors.worldInk} iconColor={colors.inkMuted}>
+        {TABS.map((tab) => (
+          <NativeTabs.Trigger key={tab.name} name={tab.name}>
+            <NativeTabs.Trigger.Label>{tab.label}</NativeTabs.Trigger.Label>
+            <NativeTabs.Trigger.Icon sf={tab.sf} />
+          </NativeTabs.Trigger>
+        ))}
+      </NativeTabs>
+    </GateProvider>
   )
 }

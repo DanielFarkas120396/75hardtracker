@@ -20,7 +20,7 @@ import { Button } from '../components/ui/Button'
 import { Sheet } from '../components/ui/Sheet'
 import type { Challenge, DayEntry, Workout } from '../db/types'
 import { useAnnounceChanges } from '../hooks/useAnnounce'
-import { useChallengeGate } from '../hooks/useChallengeGate'
+import { useGate } from '../hooks/useChallengeGate'
 import { useDayCompleteCelebration } from '../hooks/useDayCompleteCelebration'
 import { useNowMinutes } from '../hooks/useNowMinutes'
 import { useTheme } from '../theme/ThemeProvider'
@@ -50,7 +50,7 @@ import { WeighInCard } from './WeighInCard'
  * attempt shows its Victory, and anything else is the day.
  */
 export function Today() {
-  const gate = useChallengeGate()
+  const gate = useGate()
   // Held here, above the day's screens: finishing a day may swap what Today shows, and the peak must outlive the swap.
   const { celebration, dismiss } = useDayCompleteCelebration(gate ?? undefined)
   // It waits for the board's last chip to land (5 s at most).

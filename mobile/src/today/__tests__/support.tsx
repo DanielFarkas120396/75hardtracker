@@ -5,16 +5,19 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { addChallenge } from '../../db/__tests__/fixtures'
 import { dayEntryRepo } from '../../db/repositories/dayEntryRepo'
 import { profileRepo } from '../../db/repositories/profileRepo'
+import { GateProvider } from '../../hooks/useChallengeGate'
 import { ThemeProvider } from '../../theme/ThemeProvider'
 
 // What the Today tests share. Not a test file itself.
 
 const PHONE = { frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 47, left: 0, right: 0, bottom: 34 } }
 
-/** The theme and a phone's safe areas, as the app's root gives them. */
+/** The theme, a phone's safe areas and the app's one gate, as the app's root and the tabs' layout give them. */
 export const Providers = ({ children }: { children: ReactNode }) => (
   <SafeAreaProvider initialMetrics={PHONE}>
-    <ThemeProvider>{children}</ThemeProvider>
+    <ThemeProvider>
+      <GateProvider>{children}</GateProvider>
+    </ThemeProvider>
   </SafeAreaProvider>
 )
 

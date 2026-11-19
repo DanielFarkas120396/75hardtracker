@@ -10,7 +10,7 @@ import { Button } from '../components/ui/Button'
 import { Sheet } from '../components/ui/Sheet'
 import { challengeRepo } from '../db/repositories/challengeRepo'
 import type { Challenge } from '../db/types'
-import { useChallengeGate } from '../hooks/useChallengeGate'
+import { useGate } from '../hooks/useChallengeGate'
 import { Alert, useFieldStyle } from '../onboarding/parts'
 import { useTheme } from '../theme/ThemeProvider'
 import { YouSaid } from './screens'
@@ -62,7 +62,7 @@ export function GiveUpFlow({ open, onClose, ...rest }: GiveUpFlowProps) {
  */
 export function GiveUpSetting() {
   const { colors, fonts } = useTheme()
-  const gate = useChallengeGate()
+  const gate = useGate()
   const [open, setOpen] = useState(false)
   const allowed = gate ? canGiveUp(gate) : false
   // Given up, failed at midnight or finished meanwhile: the next attempt must not open on this flow.

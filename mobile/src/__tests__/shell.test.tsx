@@ -25,6 +25,7 @@ import { workoutRepo } from '../db/repositories/workoutRepo'
 import { profileRepo } from '../db/repositories/profileRepo'
 import { settingsRepo } from '../db/repositories/settingsRepo'
 import { SEEDS, seedDay } from '../dev/seed'
+import { GateProvider } from '../hooks/useChallengeGate'
 import { ThemeProvider } from '../theme/ThemeProvider'
 
 jest.mock('expo-font', () => ({ ...jest.requireActual('expo-font'), useFonts: jest.fn() }))
@@ -38,7 +39,9 @@ const openAppDatabase = jest.mocked(open.openAppDatabase)
 const PHONE = { frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 47, left: 0, right: 0, bottom: 34 } }
 const Providers = ({ children }: { children: ReactNode }) => (
   <SafeAreaProvider initialMetrics={PHONE}>
-    <ThemeProvider>{children}</ThemeProvider>
+    <ThemeProvider>
+      <GateProvider>{children}</GateProvider>
+    </ThemeProvider>
   </SafeAreaProvider>
 )
 
