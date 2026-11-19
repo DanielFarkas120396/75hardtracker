@@ -48,6 +48,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   return <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>
 }
 
+/**
+ * Everything inside wears `world`'s colours instead of the app's: a Journey chapter in its world (the web's
+ * data-world attribute).
+ */
+export function WorldScope({ world, children }: { world: WorldId; children: ReactNode }) {
+  const theme = useTheme()
+  return <ThemeContext.Provider value={{ ...theme, world, colors: colorsFor(world, theme.mode) }}>{children}</ThemeContext.Provider>
+}
+
 export function useTheme(): Theme {
   const theme = useContext(ThemeContext)
   if (theme === null) throw new Error('useTheme needs a ThemeProvider above it.')

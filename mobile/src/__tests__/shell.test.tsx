@@ -16,7 +16,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import SettingsScreen from '../app/(tabs)/settings'
 import { AppGate } from '../components/AppGate'
 import { nodeStore } from '../files/__tests__/nodeStore'
-import { stagePictures } from '../files/pictures'
+import { picturePath, stagePictures } from '../files/pictures'
+import { expoStore } from '../files/store'
+import { photoRepo } from '../db/repositories/photoRepo'
 import { addChallenge, freshDatabase } from '../db/__tests__/fixtures'
 import * as open from '../db/open'
 import { challengeRepo } from '../db/repositories/challengeRepo'
@@ -29,6 +31,21 @@ import { GateProvider } from '../hooks/useChallengeGate'
 import { ThemeProvider } from '../theme/ThemeProvider'
 
 jest.mock('expo-font', () => ({ ...jest.requireActual('expo-font'), useFonts: jest.fn() }))
+// The seeds' bundled pictures are the files in assets/images/seed; the app's pictures go to a folder on this computer.
+jest.mock('expo-asset', () => {
+  const { pathToFileURL } = jest.requireActual<typeof import('node:url')>('node:url')
+  const path = jest.requireActual<typeof import('node:path')>('node:path')
+  return {
+    Asset: { fromModule: () => ({ downloadAsync: async () => ({ localUri: pathToFileURL(path.join(__dirname, '../../assets/images/seed/seed-1.jpg')).href }) }) },
+  }
+})
+jest.mock('../files/store', () => {
+  const fs = jest.requireActual<typeof import('node:fs')>('node:fs')
+  const os = jest.requireActual<typeof import('node:os')>('node:os')
+  const path = jest.requireActual<typeof import('node:path')>('node:path')
+  const { nodeStore } = jest.requireActual<typeof import('../files/__tests__/nodeStore')>('../files/__tests__/nodeStore')
+  return { expoStore: nodeStore(fs.mkdtempSync(path.join(os.tmpdir(), 'seed-'))) }
+})
 // Settings holds the way to give up, whose screens ring the chime.
 jest.mock('expo-audio', () => ({ useAudioPlayer: () => ({ play: jest.fn(), seekTo: jest.fn(async () => {}) }), setAudioModeAsync: jest.fn(async () => {}) }))
 jest.mock('expo-splash-screen', () => ({ hideAsync: jest.fn(async () => {}), preventAutoHideAsync: jest.fn(async () => {}) }))
@@ -63,6 +80,18 @@ describe('seedDay', () => {
     expect(await settingsRepo.get(SETTING_KEYS.bedtime, 'none')).toBe('none')
     // With a profile, so the app opens on Today and not on the welcome flow.
     expect(await profileRepo.get()).toMatchObject({ name: 'Tester' })
+  })
+
+  it('gives each done day a real picture, a note every other day and workouts that vary', async () => {
+    await seedDay(12)
+    const challenge = (await challengeRepo.getCurrent())!
+    const days = await dayEntryRepo.getAllForChallenge(challenge.id)
+    const photos = await photoRepo.getMany(days.flatMap((d) => (d.photoId == null ? [] : [d.photoId])))
+    expect(photos).toHaveLength(11)
+    for (const photo of photos) expect(expoStore.exists(picturePath('photos', photo.file))).toBe(true)
+    expect(days.filter((d) => d.notes).length).toBe(6)
+    const workouts = await workoutRepo.getForDayEntries(days.map((d) => d.id))
+    expect(new Set(workouts.map((w) => w.type)).size).toBeGreaterThan(3)
   })
 
   it('offers each ending one tap away, at any time of day', async () => {

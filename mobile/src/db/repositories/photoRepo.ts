@@ -16,6 +16,12 @@ export const photoRepo = {
     return getRow(getDb(), 'photos', id)
   },
 
+  /** Many photos in one query (the Journey's rows). */
+  async getMany(ids: number[]): Promise<Photo[]> {
+    if (ids.length === 0) return []
+    return allRows(getDb(), 'photos', `WHERE id IN (${ids.map(() => '?').join(', ')})`, ids)
+  },
+
   /** The most recent photo dated strictly before `date`: the camera's alignment ghost. */
   async getLatestBefore(date: string): Promise<Photo | undefined> {
     return (await allRows(getDb(), 'photos', 'WHERE date < ? ORDER BY date DESC, id DESC LIMIT 1', [date]))[0]

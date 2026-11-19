@@ -20,7 +20,7 @@ import { useWorkoutsForEntry } from './hooks'
 // (src/screens/Today/WorkoutTask.tsx, AddWorkoutSheet.tsx, ActivityPicker.tsx).
 
 /** Each activity's logo (the web's ACTIVITY_ICONS, src/content/activities.ts). */
-const ACTIVITY_ICONS: Record<WorkoutType, IconName> = {
+export const ACTIVITY_ICONS: Record<WorkoutType, IconName> = {
   Running: 'running',
   Walking: 'walking',
   Weights: 'weights',

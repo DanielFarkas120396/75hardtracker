@@ -18,6 +18,7 @@ jest.mock('@shopify/react-native-skia', () => {
     ImageShader: nothing,
     ColorShader: nothing,
     ColorMatrix: nothing,
+    Image: nothing,
     Paint: nothing,
     Skottie: nothing,
     Skia: { RuntimeEffect: { Make: () => null } },
