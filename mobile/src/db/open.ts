@@ -1,5 +1,5 @@
 import * as SQLite from 'expo-sqlite'
-import type { Db } from './driver'
+import type { Db, SqlValue } from './driver'
 import { migrate } from './schema'
 
 let current: Db | null = null
@@ -56,10 +56,21 @@ export function transaction<T>(task: (db: Db) => Promise<T>): Promise<T> {
     clearTimeout(stuck)
     const db = getDb()
     let result!: T
+    let taskError: { error: unknown } | undefined
     try {
       await db.withTransactionAsync(async () => {
-        result = await task(db)
+        try {
+          result = await task(watched(db))
+        } catch (error) {
+          taskError = { error }
+          throw error
+        }
       })
+    } catch (error) {
+      // The database refused (a full phone, a broken file), not the task saying no: the app shows "Couldn't save that".
+      const fromTask = taskError !== undefined && taskError.error === error
+      if (!fromTask || (typeof error === 'object' && error !== null && sqlFailures.has(error))) onSaveFailure?.()
+      throw error
     } finally {
       for (const listener of [...listeners]) {
         try {
@@ -74,6 +85,30 @@ export function transaction<T>(task: (db: Db) => Promise<T>): Promise<T> {
   })
   queue = run.catch(() => undefined)
   return run
+}
+
+const sqlFailures = new WeakSet<object>()
+let onSaveFailure: (() => void) | undefined
+
+/** Called when a write fails in the database itself. Set once, by the toasts. */
+export function setSaveFailureListener(listener: (() => void) | undefined): void {
+  onSaveFailure = listener
+}
+
+/** The database as a task sees it: its failures are marked, so a failed save can be told from a task's own refusal. */
+function watched(db: Db): Db {
+  const mark = <R>(call: Promise<R>): Promise<R> =>
+    call.catch((error: unknown) => {
+      if (typeof error === 'object' && error !== null) sqlFailures.add(error)
+      throw error
+    })
+  return {
+    execAsync: (sql) => mark(db.execAsync(sql)),
+    runAsync: (sql, params) => mark(db.runAsync(sql, params)),
+    getAllAsync: <R>(sql: string, params?: SqlValue[]) => mark(db.getAllAsync<R>(sql, params)),
+    getFirstAsync: <R>(sql: string, params?: SqlValue[]) => mark(db.getFirstAsync<R>(sql, params)),
+    withTransactionAsync: (task) => mark(db.withTransactionAsync(task)),
+  }
 }
 
 /** Calls the listener after every write. Returns the way to stop. */

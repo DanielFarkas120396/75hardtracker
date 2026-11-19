@@ -1,7 +1,8 @@
 import { router } from 'expo-router'
 import { NativeTabs } from 'expo-router/native-tabs'
 import { useEffect } from 'react'
-import { GateProvider } from '../../hooks/useChallengeGate'
+import { useBadgeUnlocks } from '../../badges/useBadgeUnlocks'
+import { GateProvider, useGate } from '../../hooks/useChallengeGate'
 import { useTabBarHidden } from '../../hooks/useTabBar'
 import { useTheme } from '../../theme/ThemeProvider'
 
@@ -27,6 +28,7 @@ export default function TabsLayout() {
   // One gate for every tab: Today, Journey and Settings read the same answer.
   return (
     <GateProvider>
+      <BadgeWatcher paused={hidden} />
       <NativeTabs hidden={hidden} backgroundColor={colors.surface} tintColor={colors.worldInk} iconColor={colors.inkMuted}>
         {TABS.map((tab) => (
           <NativeTabs.Trigger key={tab.name} name={tab.name}>
@@ -37,4 +39,10 @@ export default function TabsLayout() {
       </NativeTabs>
     </GateProvider>
   )
+}
+
+/** Unlocks the badges the current attempt has earned and queues their toasts; they wait while a covering screen is up. */
+function BadgeWatcher({ paused }: { paused: boolean }) {
+  useBadgeUnlocks(useGate(), paused)
+  return null
 }

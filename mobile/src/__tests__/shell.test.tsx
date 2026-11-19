@@ -4,16 +4,15 @@ import { toDayTaskData } from '@logic/mappers'
 import { rulesFor } from '@logic/rulesets'
 import { SETTING_KEYS } from '@logic/settingKeys'
 import { dayNumberForDate, todayISO } from '@logic/dates'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
+import { render, screen, waitFor } from '@testing-library/react-native'
 import * as Font from 'expo-font'
 import * as SplashScreen from 'expo-splash-screen'
 import { mkdtempSync, readdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { ReactNode } from 'react'
-import { Alert, Text } from 'react-native'
+import { Text } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-import SettingsScreen from '../app/(tabs)/settings'
 import { AppGate } from '../components/AppGate'
 import { nodeStore } from '../files/__tests__/nodeStore'
 import { picturePath, stagePictures } from '../files/pictures'
@@ -47,7 +46,6 @@ jest.mock('../files/store', () => {
   const { nodeStore } = jest.requireActual<typeof import('../files/__tests__/nodeStore')>('../files/__tests__/nodeStore')
   return { expoStore: nodeStore(fs.mkdtempSync(path.join(os.tmpdir(), 'seed-'))) }
 })
-// Settings holds the way to give up, whose screens ring the chime.
 jest.mock('expo-audio', () => ({ useAudioPlayer: () => ({ play: jest.fn(), seekTo: jest.fn(async () => {}) }), setAudioModeAsync: jest.fn(async () => {}) }))
 jest.mock('expo-splash-screen', () => ({ hideAsync: jest.fn(async () => {}), preventAutoHideAsync: jest.fn(async () => {}) }))
 const hideSplash = jest.mocked(SplashScreen.hideAsync)
@@ -114,34 +112,6 @@ describe('seedDay', () => {
     const challenge = (await challengeRepo.getCurrent())!
     const last = (await dayEntryRepo.getByChallengeAndDayNumber(challenge.id, 75))!
     expect(missingTasks(toDayTaskData(last, await workoutRepo.getForDayEntry(last.id), undefined), rulesFor(challenge))).toEqual(['photo'])
-  })
-})
-
-describe('Settings', () => {
-  it('has the way to give up while an attempt is running', async () => {
-    await seedDay(3)
-    await render(<SettingsScreen />, { wrapper: Providers })
-    expect(await screen.findByRole('button', { name: 'Give up this challenge' })).toBeOnTheScreen()
-    expect(screen.getByText('Giving up stops this attempt for good; it stays in your history.')).toBeOnTheScreen()
-  })
-
-  it('has a developer button that seeds Day 12, after asking', async () => {
-    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {})
-    await render(<SettingsScreen />, { wrapper: Providers })
-    await fireEvent.press(await screen.findByText('Seed Day 12'))
-    expect(alert).toHaveBeenCalledWith(
-      'Erase everything?',
-      'This replaces all data on this phone with a test attempt.',
-      expect.any(Array),
-    )
-    expect(await challengeRepo.getCurrent()).toBeUndefined()
-    const buttons = alert.mock.calls[0][2]!
-    expect(buttons.map((button) => button.text)).toEqual(['Cancel', 'Erase'])
-    buttons[1].onPress!()
-    await waitFor(async () => {
-      const current = await challengeRepo.getCurrent()
-      expect(current && dayNumberForDate(current.startDate, todayISO())).toBe(12)
-    })
   })
 })
 

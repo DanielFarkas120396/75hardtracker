@@ -5,6 +5,7 @@ import { useReduceMotion } from '../../hooks/useReduceMotion'
 import { useTheme } from '../../theme/ThemeProvider'
 import { Icon } from '../icons/Icon'
 import type { IconName } from '../icons/icons'
+import { useCurtained } from '../../lock/store'
 
 interface SheetProps {
   open: boolean
@@ -58,8 +59,10 @@ export function Sheet({ open, onClose, label, children }: SheetProps) {
 
   const slide = reduceMotion ? 0 : shown.interpolate({ inputRange: [0, 1], outputRange: [height, 0] })
 
+  // Hidden while the app lock is closed: nothing native may sit above the lock screen.
+  const curtained = useCurtained(mounted)
   return (
-    <Modal visible={mounted} transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
+    <Modal visible={curtained} transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.fill}>
         <Animated.View style={[StyleSheet.absoluteFill, styles.dim, { opacity: shown }]}>
           {/* VoiceOver stays inside the sheet, which has its own Close: the dimmed page is for a finger. */}

@@ -34,6 +34,7 @@ import { DayCompleteCelebration } from './DayCompleteCelebration'
 import { useDuck, type DuckAnnouncement } from './DuckHeader'
 import { dayCompletion, useBedtime, useCurrentBook, useDayEntry, useProfile, useWorkoutsForEntry } from './hooks'
 import { LateDayCard, LateDayView } from './LateDay'
+import { LockBypassBanner } from '../lock/LockBypassBanner'
 import { MenaceAtmosphere } from './MenaceAtmosphere'
 import { ActionButton, Centred, Page } from './parts'
 import { PhotoCapture } from './PhotoCapture'
@@ -215,6 +216,7 @@ function TodayDay({ gate, pendingLateDay, celebrating, onOpenLateDay, entry, wor
         />
         {pendingLateDay !== null && <LateDayCard dayNumber={pendingLateDay} onOpen={onOpenLateDay} />}
         <WeighInCard today={today} dayNumber={todayDayNumber} />
+        <LockBypassBanner />
 
         <View style={styles.main}>
           <DayBoard

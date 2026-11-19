@@ -1,3 +1,6 @@
+import { SETTING_KEYS } from '@logic/settingKeys'
+import { picturePath } from '../../files/pictures'
+import type { FileStore } from '../../files/store'
 import { getDb, transaction } from '../open'
 import { allRows, getRow, insertRow, updateRow } from '../table'
 import type { Book } from '../types'
@@ -16,8 +19,7 @@ function settled<T extends Omit<Book, 'id'>>(book: T, now: string): T {
 
 /**
  * The books. Same calls and behaviour as the web app's bookRepo
- * (src/db/repositories/bookRepo.ts). `remove` arrives with the Stats screen:
- * it has a cover file to delete too.
+ * (src/db/repositories/bookRepo.ts).
  */
 export const bookRepo = {
   async getAll(): Promise<Book[]> {
@@ -50,5 +52,25 @@ export const bookRepo = {
       const book = await getRow(db, 'books', id)
       if (book) await updateRow(db, 'books', id, settled({ ...book, currentPage: book.currentPage + deltaPages }, now))
     })
+  },
+
+  /** Deletes a book (no longer the current one if it was), then its cover file. Pages already logged still count. */
+  async remove(id: number, store: FileStore): Promise<void> {
+    const coverFile = await transaction(async (db) => {
+      const book = await getRow(db, 'books', id)
+      await db.runAsync('DELETE FROM books WHERE id = ?', [id])
+      const current = await db.getFirstAsync<{ value: string }>('SELECT value FROM settings WHERE key = ?', [SETTING_KEYS.currentBookId])
+      if (current && JSON.parse(current.value) === id) {
+        await db.runAsync('UPDATE settings SET value = ? WHERE key = ?', ['null', SETTING_KEYS.currentBookId])
+      }
+      return book?.coverFile
+    })
+    if (coverFile) {
+      try {
+        store.deleteFile(picturePath('covers', coverFile))
+      } catch (error) {
+        console.error(error)
+      }
+    }
   },
 }

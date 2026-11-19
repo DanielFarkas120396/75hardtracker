@@ -429,8 +429,11 @@ describe('the gate', () => {
     await gate()
     await screen.findByText('Get started')
     await profileRepo.completeOnboarding({ name: 'Daniel', why: 'A fresh start' }, { startDate: TODAY, variant: 'hard' })
-    expect(await screen.findByText('the app')).toBeOnTheScreen()
+    // Once, right after the flow: the app lock is offered.
+    expect(await screen.findByRole('header', { name: 'Keep it private?' })).toBeOnTheScreen()
     expect(screen.queryByText('Get started')).toBeNull()
+    await press('Not now')
+    expect(await screen.findByText('the app')).toBeOnTheScreen()
   })
 
   it('opens the returning flow when attempts exist without a profile', async () => {
@@ -447,6 +450,7 @@ describe('the gate', () => {
     await gate()
     expect(await screen.findByText('Pick your challenge')).toBeOnTheScreen()
     await profileRepo.completeOnboarding({ name: 'Daniel', why: 'A fresh start' }, { startDate: TODAY, variant: 'hard' })
+    await press('Not now')
     await screen.findByText('the app')
 
     await eraseEverything(nodeStore(mkdtempSync(join(tmpdir(), 'erase-'))))

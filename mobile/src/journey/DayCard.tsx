@@ -7,6 +7,7 @@ import type { DayEntry, Workout } from '../db/types'
 import { useReduceMotion } from '../hooks/useReduceMotion'
 import { useTheme } from '../theme/ThemeProvider'
 import { ACTIVITY_ICONS } from '../today/WorkoutTask'
+import { useCurtained } from '../lock/store'
 
 export interface OpenDay {
   dayNumber: number
@@ -95,8 +96,10 @@ export function DayCard({ day, open, onClose }: DayCardProps) {
         { scale: shown.interpolate({ inputRange: [0, 1], outputRange: [0.05, 1] }) },
       ]
 
+  // Hidden while the app lock is closed: nothing native may sit above the lock screen.
+  const curtained = useCurtained(mounted)
   return (
-    <Modal visible={mounted} transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
+    <Modal visible={curtained} transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
       <Animated.View style={[StyleSheet.absoluteFill, styles.dim, { opacity: shown }]}>
         <Pressable testID="day-card-backdrop" accessible={false} onPress={onClose} style={styles.fill} />
       </Animated.View>

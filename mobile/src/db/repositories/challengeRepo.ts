@@ -3,8 +3,11 @@ import { dayNumberForDate } from '@logic/dates'
 import { isChallengeDay } from '@logic/days'
 import { parseProfile } from '@logic/profile'
 import { buildNextChallenge } from '@logic/restart'
-import { challengeWeek, rulesFor, variantOf, type ChallengeVariant } from '@logic/rulesets'
+import { challengeWeek, cleanSocialDays, RULESETS, rulesFor, variantOf, type ChallengeVariant } from '@logic/rulesets'
 import { SETTING_KEYS } from '@logic/settingKeys'
+import { isStartDateEditable, validateStartDateChange, type StartDateChangeResult } from '@logic/startDate'
+import { picturePath } from '../../files/pictures'
+import type { FileStore } from '../../files/store'
 import { syncDayCompletion } from '../completion'
 import type { Db } from '../driver'
 import { getDb, transaction } from '../open'
@@ -17,11 +20,11 @@ export type SocialDayResult =
   | { ok: false; reason: 'not-allowed' | 'out-of-range' | 'too-late' }
   | { ok: false; reason: 'week-taken'; dayNumber: number }
 export type GiveUpResult = { ok: true } | { ok: false; reason: 'locked' }
+export type VariantChangeResult = { ok: true } | { ok: false; reason: 'locked' }
 
 /**
  * The attempts. Same calls and behaviour as the web app's challengeRepo
- * (src/db/repositories/challengeRepo.ts); the methods the first screens don't
- * need yet (start date, variant) arrive with those screens.
+ * (src/db/repositories/challengeRepo.ts).
  */
 
 async function first(db: Db, where: string): Promise<Challenge | undefined> {
@@ -169,6 +172,61 @@ export const challengeRepo = {
       if (dayNumber === todayDayNumber) {
         const [entry] = await allRows(db, 'dayEntries', 'WHERE challengeId = ? AND dayNumber = ?', [id, dayNumber])
         if (entry) await syncDayCompletion(db, entry.id)
+      }
+      return { ok: true }
+    })
+  },
+
+  /**
+   * Moves an active attempt's start date, while it can still move (before or on Day 1, never into the past).
+   * The attempt's logged days, their workouts and photos and its badges are cleared: they belonged to the old
+   * dates. Social occasions shift with the start. The photos' files go once the rows are gone.
+   */
+  async changeStartDate(id: number, newStartDate: string, today: string, store: FileStore): Promise<StartDateChangeResult> {
+    const { result, files } = await transaction(async (db) => {
+      const challenge = await getRow(db, 'challenges', id)
+      if (!challenge || challenge.status !== 'active') return { result: { ok: false, reason: 'locked' } as const, files: [] }
+      const result = validateStartDateChange({ proposed: newStartDate, today, todayDayNumber: dayNumberForDate(challenge.startDate, today) })
+      if (!result.ok || newStartDate === challenge.startDate) return { result, files: [] }
+
+      const entries = await allRows(db, 'dayEntries', 'WHERE challengeId = ?', [id])
+      const photoIds = entries.flatMap((entry) => (entry.photoId != null ? [entry.photoId] : []))
+      const photos = (await Promise.all(photoIds.map((photoId) => getRow(db, 'photos', photoId)))).filter((photo) => photo !== undefined)
+      for (const entry of entries) await db.runAsync('DELETE FROM workouts WHERE dayEntryId = ?', [entry.id])
+      for (const photoId of photoIds) await db.runAsync('DELETE FROM photos WHERE id = ?', [photoId])
+      await db.runAsync('DELETE FROM dayEntries WHERE challengeId = ?', [id])
+      await db.runAsync('DELETE FROM badges WHERE challengeId = ?', [id])
+
+      const shift = dayNumberForDate(challenge.startDate, newStartDate) - 1
+      const shifted = cleanSocialDays((challenge.socialDays ?? []).map((day) => day - shift))
+      await updateRow(db, 'challenges', id, { startDate: newStartDate, socialDays: shifted.length > 0 ? shifted : undefined })
+      return { result, files: photos.map((photo) => photo.file) }
+    })
+    for (const file of files) {
+      try {
+        store.deleteFile(picturePath('photos', file))
+      } catch (error) {
+        // A leftover file costs room, not data.
+        console.error(error)
+      }
+    }
+    return result
+  },
+
+  /**
+   * Switches an active attempt's challenge while its start date can still move (before or on Day 1). Social
+   * occasions and recovery days the new rules don't allow are cleared, and the attempt's days are re-judged.
+   */
+  async changeVariant(id: number, variant: ChallengeVariant, today: string): Promise<VariantChangeResult> {
+    return transaction(async (db): Promise<VariantChangeResult> => {
+      const challenge = await getRow(db, 'challenges', id)
+      if (!challenge || challenge.status !== 'active') return { ok: false, reason: 'locked' }
+      if (!isStartDateEditable(dayNumberForDate(challenge.startDate, today))) return { ok: false, reason: 'locked' }
+      const rules = RULESETS[variant]
+      await updateRow(db, 'challenges', id, { variant, ...(rules.socialDaysPerWeek === 0 ? { socialDays: undefined } : {}) })
+      for (const entry of await allRows(db, 'dayEntries', 'WHERE challengeId = ?', [id])) {
+        if (rules.restDaysPerWeek === 0 && entry.restDay) await updateRow(db, 'dayEntries', entry.id, { restDay: undefined })
+        await syncDayCompletion(db, entry.id)
       }
       return { ok: true }
     })

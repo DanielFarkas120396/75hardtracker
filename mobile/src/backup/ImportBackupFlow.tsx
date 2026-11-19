@@ -11,6 +11,7 @@ import { useTheme } from '../theme/ThemeProvider'
 import { decryptOnPhone } from './decrypt'
 import { importBackup, PictureSwapError } from './importBackup'
 import { pickBackupFile } from './pickBackupFile'
+import { useCurtained } from '../lock/store'
 
 interface ImportBackupProps {
   /** What the opener says. */
@@ -231,8 +232,10 @@ function GapQuestion(props: {
 
 function Sheet({ open, onClose, children }: { open: boolean; onClose: () => void; children: ReactNode }) {
   const { colors } = useTheme()
+  // Hidden while the app lock is closed: nothing native may sit above the lock screen.
+  const curtained = useCurtained(open)
   return (
-    <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={curtained} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <View style={[styles.card, { backgroundColor: colors.surface }]}>{children}</View>
       </View>

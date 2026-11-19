@@ -1,16 +1,13 @@
-import { canGiveUp } from '@logic/challengeGate'
 import { CHALLENGE_LENGTH } from '@logic/constants'
 import { variantOf } from '@logic/rulesets'
 import { VARIANT_NAMES } from '@logic/variantsCopy'
 import { useEffect, useState, type ReactNode } from 'react'
-import { AccessibilityInfo, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
-import { Icon } from '../components/icons/Icon'
+import { AccessibilityInfo, StyleSheet, Text, TextInput, View } from 'react-native'
 import { Mascot } from '../components/mascot/Mascot'
 import { Button } from '../components/ui/Button'
 import { Sheet } from '../components/ui/Sheet'
 import { challengeRepo } from '../db/repositories/challengeRepo'
 import type { Challenge } from '../db/types'
-import { useGate } from '../hooks/useChallengeGate'
 import { Alert, useFieldStyle } from '../onboarding/parts'
 import { useTheme } from '../theme/ThemeProvider'
 import { YouSaid } from './screens'
@@ -53,35 +50,6 @@ export function GiveUpFlow({ open, onClose, ...rest }: GiveUpFlowProps) {
     <Sheet open={open} onClose={onClose} label="Give up this challenge">
       <GiveUpSteps onClose={onClose} {...rest} />
     </Sheet>
-  )
-}
-
-/**
- * Settings' way in: "Give up this challenge", there only while an attempt is running on one of its 75 days (the web's
- * Danger zone row). Once given up the flow closes by itself, and the "You gave up" screen brings Today to the front.
- */
-export function GiveUpSetting() {
-  const { colors, fonts } = useTheme()
-  const gate = useGate()
-  const [open, setOpen] = useState(false)
-  const allowed = gate ? canGiveUp(gate) : false
-  // Given up, failed at midnight or finished meanwhile: the next attempt must not open on this flow.
-  if (open && !allowed) setOpen(false)
-  if (!gate) return null
-  return (
-    <>
-      {allowed && (
-        <View style={styles.setting}>
-          <Pressable accessibilityRole="button" onPress={() => setOpen(true)} style={[styles.row, { backgroundColor: colors.surface }]}>
-            <Icon name="close" size={20} color={colors.dangerInk} />
-            <Text style={[styles.body, { color: colors.dangerInk, fontFamily: fonts.rounded.bold }]}>Give up this challenge</Text>
-          </Pressable>
-          <Text style={[styles.footer, { color: colors.inkMuted, fontFamily: fonts.rounded.regular }]}>Giving up stops this attempt for good; it stays in your history.</Text>
-        </View>
-      )}
-      {/* It stays here once the row has gone, so the sheet slides away over "You gave up". */}
-      <GiveUpFlow open={open && allowed} onClose={() => setOpen(false)} challenge={gate.challenge} today={gate.today} todayDayNumber={gate.todayDayNumber} streak={gate.streak} />
-    </>
   )
 }
 
@@ -251,7 +219,4 @@ const styles = StyleSheet.create({
   field: { marginTop: 12 },
   buttons: { marginTop: 16, flexDirection: 'row', gap: 8 },
   half: { flex: 1 },
-  setting: { alignSelf: 'stretch', gap: 8 },
-  row: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 16, paddingHorizontal: 16 },
-  footer: { paddingHorizontal: 16, fontSize: 12, lineHeight: 17 },
 })

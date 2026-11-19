@@ -3,6 +3,7 @@ import { Animated, Modal, Pressable, StyleSheet, Text } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Icon } from '../components/icons/Icon'
 import { useTheme } from '../theme/ThemeProvider'
+import { useCurtained } from '../lock/store'
 
 // What the lightbox and Compare share: the one full-screen overlay they open in, and their white-on-black buttons.
 
@@ -25,8 +26,10 @@ export function Overlay({ open, onClose, children }: { open: boolean; onClose: (
     return () => fade.stop()
   }, [open, shown])
 
+  // Hidden while the app lock is closed: nothing native may sit above the lock screen.
+  const curtained = useCurtained(mounted)
   return (
-    <Modal visible={mounted} transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
+    <Modal visible={curtained} transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
       <Animated.View
         accessibilityViewIsModal
         onAccessibilityEscape={onClose}

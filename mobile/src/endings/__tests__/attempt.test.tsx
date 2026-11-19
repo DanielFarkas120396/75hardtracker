@@ -17,7 +17,7 @@ import { useToday } from '../../hooks/useToday'
 import { Providers, TODAY } from '../../today/__tests__/support'
 import { ScreenFocusContext } from '../../today/TaskBoard'
 import { Today } from '../../today/TodayScreen'
-import { GiveUpSetting } from '../GiveUpFlow'
+import { SettingsScreen } from '../../settings/SettingsScreen'
 
 const mockPlay = jest.fn()
 jest.mock('expo-font', () => ({ ...jest.requireActual('expo-font'), useFonts: jest.fn() }))
@@ -223,12 +223,18 @@ describe('a missed day with a joker', () => {
   })
 })
 
+/** The Settings tab in front, as its route shows it. */
+function SettingsTab() {
+  const gate = useGate()
+  return gate ? <SettingsScreen gate={gate} focused /> : null
+}
+
 describe('giving up', () => {
   const settings = () =>
     render(
       <>
         <Today />
-        <GiveUpSetting />
+        <SettingsTab />
         <TabBar />
       </>,
       { wrapper: Providers },
