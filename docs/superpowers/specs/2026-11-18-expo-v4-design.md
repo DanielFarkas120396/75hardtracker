@@ -76,8 +76,8 @@ Each step ends in something that runs on the phone. The plan details them.
    - 4b. The evening and yesterday: "Plan my evening", the menace's atmosphere, the duck's bubble and pokes, social nights, the late-day card, sounds. **Coded** (2026-11-18); the knife's sound is a rendered file nobody has heard yet.
    - 4c. The show: the five fills, the tile shrinking into its chip, the gauge's wave, the day-complete peak. **Coded and reviewed** (2026-11-18), in three plans (4c-1 the fills, 4c-2 the board and the gauge, 4c-3 the peak). The book and the iris are drawn by a shader each: pictures beside the web's in `2026-11-18-v4-fills-preview/`. Nothing of it has been judged on the phone yet.
    - 4d. Failure and restart, the joker screen, give up, Victory. **Coded and reviewed** (2026-11-18). "Give up this challenge" sits on the placeholder Settings tab until part 8; developer buttons there open each ending. The owner's walk-through on the phone is pending.
-5. Journey. **Planned** (2026-11-18): `docs/superpowers/plans/2026-11-18-v4-part-5-journey.md`.
-6. Gallery and Compare.
+5. Journey. **Coded and reviewed** (2026-11-19): the logbook in world chapters, the day card, the altitude rail, one gate for the app; plan `docs/superpowers/plans/2026-11-18-v4-part-5-journey.md`. Nothing of it has been seen on the phone yet.
+6. Gallery and Compare. **Planned** (2026-11-19): `docs/superpowers/plans/2026-11-19-v4-part-6-gallery.md`.
 7. Stats.
 8. Settings, badges, toasts, app lock.
 9. Cloud: sign-in, backup, restore, delete account.
