@@ -78,7 +78,7 @@ Each step ends in something that runs on the phone. The plan details them.
    - 4d. Failure and restart, the joker screen, give up, Victory. **Coded and reviewed** (2026-11-18). "Give up this challenge" sits on the placeholder Settings tab until part 8; developer buttons there open each ending. The owner's walk-through on the phone is pending.
 5. Journey. **Coded and reviewed** (2026-11-19): the logbook in world chapters, the day card, the altitude rail, one gate for the app; plan `docs/superpowers/plans/2026-11-18-v4-part-5-journey.md`. Nothing of it has been seen on the phone yet.
 6. Gallery and Compare. **Coded and reviewed** (2026-11-19): the grid, the lightbox, Compare's slider and time-lapse, "Take today's photo" opening Today's camera; plan `docs/superpowers/plans/2026-11-19-v4-part-6-gallery.md`. Not seen on the phone yet.
-7. Stats.
+7. Stats. **Coded and reviewed** (2026-11-19): weight with its chart and weigh-ins, the training totals, the bottle and the shelf, the workout cards; plan `docs/superpowers/plans/2026-11-19-v4-part-7-stats.md`. Not seen on the phone yet.
 8. Settings, badges, toasts, app lock.
 9. Cloud: sign-in, backup, restore, delete account.
 10. Share card.
