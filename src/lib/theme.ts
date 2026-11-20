@@ -1,8 +1,7 @@
+import { isThemePreference, resolveTheme, type ThemePreference } from '../logic/theme'
 import { isWorldId, WORLD_COLORS } from './worldColors'
 
-export type ThemePreference = 'system' | 'light' | 'dark'
-
-export const THEME_PREFERENCES: readonly ThemePreference[] = ['system', 'light', 'dark']
+export { isThemePreference, resolveTheme, THEME_PREFERENCES, type ThemePreference } from '../logic/theme'
 
 /**
  * localStorage mirror of the Dexie `theme` setting. Dexie stays the source
@@ -12,16 +11,8 @@ export const THEME_PREFERENCES: readonly ThemePreference[] = ['system', 'light',
  */
 export const THEME_STORAGE_KEY = '75hard-theme'
 
-export function isThemePreference(value: unknown): value is ThemePreference {
-  return value === 'system' || value === 'light' || value === 'dark'
-}
-
 export function systemPrefersDark(): boolean {
   return window.matchMedia('(prefers-color-scheme: dark)').matches
-}
-
-export function resolveTheme(preference: ThemePreference, prefersDark: boolean): 'light' | 'dark' {
-  return preference === 'system' ? (prefersDark ? 'dark' : 'light') : preference
 }
 
 /** Applies a theme to <html> (`.dark` class and color-scheme, the preference for syncThemeColor) and to the theme-color meta tags. */

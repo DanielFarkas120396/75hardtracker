@@ -9,13 +9,7 @@
  * address, so it can't run over the Wi-Fi dev link (https://192.168…).
  */
 
-/** Coming back after this long in another app asks for Face ID again. */
-export const RELOCK_AFTER_MS = 60_000
-
-/** Whether the app should lock again: it was hidden for longer than RELOCK_AFTER_MS. */
-export function shouldRelock(hiddenAt: number | null, now: number): boolean {
-  return hiddenAt !== null && now - hiddenAt > RELOCK_AFTER_MS
-}
+export { RELOCK_AFTER_MS, shouldRelock } from '../logic/appLock'
 
 /** Whether this device can lock the app with Face ID, Touch ID or its passcode. */
 export async function isAppLockAvailable(): Promise<boolean> {

@@ -16,21 +16,13 @@ import {
   Vector3,
   type WebGLRenderer,
 } from 'three'
-import { clamp01, cubicOut } from './motion'
+import { coverRepeat, createIrisModel, IRIS } from '../../../logic/fillIris'
 import { mix, type FillPalette } from './palette'
 import type { Painter } from './painter'
 
-/** The chosen settings (docs/prototypes/README.md, Photo). */
-const P = { blades: 8, close: 0.11, open: 0.9, twist: 0.55, flash: 0.7, colour: 0.3 }
-/** Shut for a moment while the photo is set behind the blades; up to WAIT if the photo isn't loaded yet. */
-const HOLD = 0.06
-const WAIT = 1
-const D = 900
+export { coverRepeat } from '../../../logic/fillIris'
 
-/** The share of the photo's texture to show so it covers the tile, cropped in the middle. */
-export function coverRepeat(imageAspect: number, tileAspect: number): [number, number] {
-  return imageAspect > tileAspect ? [tileAspect / imageAspect, 1] : [1, imageAspect / tileAspect]
-}
+const D = 900
 
 const PHOTO_FRAG = /* glsl */ `
   uniform sampler2D uPhoto;
@@ -58,7 +50,7 @@ export function createIris(palette: FillPalette): Painter {
   const pu = {
     uPhoto: { value: null as Texture | null },
     uHasPhoto: { value: 0 },
-    uColour: { value: P.colour },
+    uColour: { value: IRIS.colour },
     uA: { value: 0 },
     uRep: { value: new Vector2(1, 1) },
     uShadow: { value: new Vector3() },
@@ -84,7 +76,7 @@ export function createIris(palette: FillPalette): Painter {
   const edgeMaterial = new MeshBasicMaterial({ transparent: true, opacity: 0.55 })
   const iris = new Group()
   scene.add(iris)
-  const blades = Array.from({ length: P.blades }, (_, i) => {
+  const blades = Array.from({ length: IRIS.blades }, (_, i) => {
     const blade = new Mesh(bladeGeometry, bladeMaterial)
     blade.add(new Mesh(edgeGeometry, edgeMaterial))
     blade.position.z = 2 + i * 0.6
@@ -98,68 +90,19 @@ export function createIris(palette: FillPalette): Painter {
   flash.renderOrder = 9
   scene.add(flash)
 
-  let on = false
-  let t = -1
-  let waited = 0
-  let openFrom = 0
+  const model = createIrisModel()
   let image: ImageBitmap | null = null
   let texture: Texture | null = null
-  let width = 173
-  let height = 120
-  const rmax = () => Math.hypot(width / 2, height / 2) + 12
-
-  function place(r: number) {
-    const open = clamp01(r / rmax())
-    blades.forEach((blade, i) => {
-      const phi = (i / blades.length) * Math.PI * 2 + P.twist * 1.4 * (1 - open)
-      blade.position.x = Math.cos(phi) * r
-      blade.position.y = Math.sin(phi) * r
-      blade.rotation.z = phi - Math.PI / 2
-      blade.visible = r < rmax()
-    })
-  }
 
   const painter: Painter = {
-    setLevel(level, instant) {
-      const want = level >= 1
-      if (want === on) return
-      on = want
-      openFrom = 0
-      if (!on) {
-        t = -1
-        pu.uA.value = 0
-        flashMaterial.opacity = 0
-        return
-      }
-      if (instant) {
-        t = -1
-        pu.uA.value = 1
-      } else {
-        t = 0
-        waited = 0
-      }
-    },
-    // The tap snaps the iris shut (ease in), a flash fires as it closes, the photo is set behind it, then it swirls open (ease out).
-    step(dt) {
-      if (t < 0) return false
-      t += dt
-      if (t >= P.close + HOLD && openFrom === 0 && (image || waited >= WAIT)) openFrom = t
-      if (t >= P.close + HOLD && openFrom === 0) waited += dt
-      if (t >= P.close) pu.uA.value = 1
-      flashMaterial.opacity = t < P.close ? 0 : P.flash * Math.exp(-(t - P.close) / 0.12)
-      if (openFrom > 0 && t > openFrom + P.open + 0.3) {
-        t = -1
-        openFrom = 0
-        flashMaterial.opacity = 0
-        return false
-      }
-      return true
-    },
-    drifts: () => false,
-    shown: () => (on && (t < 0 || t >= P.close) ? 1 : 0),
-    settled: () => !on || t < 0 || (openFrom > 0 && t >= openFrom + P.open * 0.85),
+    setLevel: model.setLevel,
+    step: model.step,
+    drifts: model.drifts,
+    shown: model.shown,
+    settled: model.settled,
     setImage(next) {
       image = next
+      model.setHasImage(next !== null)
       texture?.dispose()
       texture = next ? new Texture(next) : null
       if (texture) texture.needsUpdate = true
@@ -167,21 +110,22 @@ export function createIris(palette: FillPalette): Painter {
       pu.uHasPhoto.value = texture ? 1 : 0
     },
     render(renderer: WebGLRenderer, w, h) {
-      width = w
-      height = h
       camera.fov = (2 * Math.atan(h / 2 / D) * 180) / Math.PI
       camera.aspect = w / h
       camera.updateProjectionMatrix()
       photo.scale.set(w, h, 1)
       flash.scale.set(w, h, 1)
       if (image) pu.uRep.value.set(...coverRepeat(image.width / image.height, w / h))
-      let r = rmax()
-      if (t >= 0) {
-        if (t < P.close) r = rmax() - (rmax() + 6) * (t / P.close) ** 2
-        else if (openFrom === 0) r = -6
-        else r = -6 + (rmax() + 6) * cubicOut((t - openFrom) / P.open)
-      }
-      place(r)
+      const f = model.frame(w, h)
+      pu.uA.value = f.photo
+      flashMaterial.opacity = f.flash
+      blades.forEach((blade, n) => {
+        const phi = (n / blades.length) * Math.PI * 2 + f.twist
+        blade.position.x = Math.cos(phi) * f.r
+        blade.position.y = Math.sin(phi) * f.r
+        blade.rotation.z = phi - Math.PI / 2
+        blade.visible = f.r < f.rmax
+      })
       renderer.render(scene, camera)
     },
     setPalette(p) {

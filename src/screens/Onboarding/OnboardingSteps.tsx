@@ -13,16 +13,10 @@ import type { StartDateChoiceState } from '../../hooks/useStartDateChoice'
 import { dateForDayNumber, formatShortDay } from '../../lib/dates'
 import { CHALLENGE_LENGTH } from '../../logic/constants'
 import { EARLIEST_BEDTIME, isValidBedtime, LATEST_BEDTIME } from '../../logic/menace'
-import type { OnboardingMode } from '../../logic/onboarding'
+import { LONG_REASON_FROM, WHY_COUNTER_FROM, type OnboardingMode } from '../../logic/onboarding'
 import { cleanText, isValidName, isValidWhy, NAME_MAX_LENGTH, WHY_MAX_LENGTH } from '../../logic/profile'
 import { RULESETS, type ChallengeVariant } from '../../logic/rulesets'
 import { GateHeading } from '../RestartFlow/GateHeading'
-
-/** From this length on, the why field shows how much room is left. */
-const WHY_COUNTER_FROM = 100
-
-/** Past this length, the reason on the deal is set a size smaller, so it doesn't fill the card. */
-const LONG_REASON_FROM = 60
 
 const FIELD = 'w-full rounded-xl border border-ink/15 bg-canvas font-rounded text-lg font-bold text-ink'
 

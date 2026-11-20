@@ -1,4 +1,4 @@
-import { addDaysISO, dayNumberForDate, isValidISODate } from '../lib/dates'
+import { addDaysISO, dayNumberForDate, isValidISODate } from './dates'
 
 /** Optional body measurements, in cm, logged alongside the weight. */
 export const BODY_MEASUREMENTS = ['waist', 'chest', 'hips', 'arms'] as const

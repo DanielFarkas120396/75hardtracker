@@ -1,17 +1,8 @@
 import type { WebGLRenderer } from 'three'
-import type { TaskId } from '../../../logic/types'
+import type { PainterKind } from '../../../logic/fillKinds'
 import type { FillPalette } from './palette'
 
-/** The look a task's tile fills with, as chosen in docs/prototypes/. */
-export type PainterKind = 'wave' | 'ink' | 'sprint' | 'iris' | 'book'
-
-export const TASK_PAINTER: Record<TaskId, PainterKind> = {
-  water: 'wave',
-  diet: 'ink',
-  workouts: 'sprint',
-  photo: 'iris',
-  reading: 'book',
-}
+export { TASK_PAINTER, type PainterKind } from '../../../logic/fillKinds'
 
 /** One tile's fill, drawn with the board's shared three.js renderer. */
 export interface Painter {

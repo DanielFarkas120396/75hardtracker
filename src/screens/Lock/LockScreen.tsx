@@ -8,7 +8,7 @@ import { Modal } from '../../components/ui/Modal'
 import type { PinFailures } from '../../db/repositories/appLockRepo'
 import type { PinResult } from '../../hooks/useAppLock'
 import { formatCountdown, useCountdown } from '../../hooks/useCountdown'
-import { FREE_ATTEMPTS } from '../../lib/pin'
+import { wrongPinLine } from '../../logic/appLock'
 
 interface LockScreenProps {
   faceIdEnabled: boolean
@@ -49,8 +49,7 @@ export function LockScreen({ faceIdEnabled, failures, onFaceId, onPin, onConfirm
     const result = await onPin(pin)
     setChecking(false)
     if (result.ok) return
-    const left = FREE_ATTEMPTS - result.failures.count
-    setError(left > 0 ? `Wrong PIN. ${left} ${left === 1 ? 'try' : 'tries'} left before a wait.` : null)
+    setError(wrongPinLine(result.failures.count))
   }
 
   const forgotPin = async () => {

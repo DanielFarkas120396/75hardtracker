@@ -1,16 +1,10 @@
 import { Vector2, Vector3, type WebGLRenderer } from 'three'
-import { clamp01, cubicOut, spring } from './motion'
+import { createWaveModel, WAVE } from '../../../logic/fillWave'
 import type { FillPalette } from './palette'
 import type { Painter } from './painter'
 import { shaderQuad } from './quad'
 
-/** The chosen settings (docs/prototypes/README.md, Water). */
-const P = { rise: 2.4, amp: 8.5, slosh: 0.69, bubbles: 0.82, shimmer: 0.28, back: 0.66 }
-
-/** The surface's height, px from the tile's centre (y up), for a share of the goal: just under the tile when empty, past its top (waves and all) when full. */
-export function waveSurfaceY(level: number, height: number): number {
-  return -height / 2 - P.amp - 3 + level * (height + 3 * P.amp + 19)
-}
+export { waveSurfaceY } from '../../../logic/fillWave'
 
 const FRAG = /* glsl */ `
   varying vec2 vP;
@@ -53,14 +47,14 @@ export function createWave(palette: FillPalette): Painter {
     uSize: { value: new Vector2() },
     uLevel: { value: 0 },
     uTime: { value: 0 },
-    uAmp: { value: P.amp },
+    uAmp: { value: WAVE.amp },
     uSlosh: { value: 0 },
     uRipA: { value: 0 },
     uRipT: { value: 9 },
     uRipX: { value: 0 },
-    uBub: { value: P.bubbles },
+    uBub: { value: WAVE.bubbles },
     uFizz: { value: 0 },
-    uShine: { value: P.shimmer },
+    uShine: { value: WAVE.shimmer },
     uBack: { value: 0 },
     uLight: { value: new Vector3() },
     uTop: { value: new Vector3() },
@@ -68,56 +62,27 @@ export function createWave(palette: FillPalette): Painter {
     uDeep: { value: new Vector3() },
   }
   const quad = shaderQuad(FRAG, u)
-  const slosh = spring(25, 0.12)
-  let from = 0
-  let to = 0
-  let t = 1
-  let time = 0
-  let ripT = 9
-  let fizz = 0
-  let ripRight = 40
-  const shown = () => from + (to - from) * cubicOut(t)
+  const model = createWaveModel()
 
   const painter: Painter = {
-    setLevel(level, instant) {
-      const up = level > to
-      from = instant ? level : shown()
-      to = level
-      t = instant ? 1 : 0
-      if (instant) slosh.set(0, true)
-      else if (up) {
-        slosh.kick(-P.slosh * 60)
-        ripT = 0
-        fizz = 1
-      }
-    },
-    step(dt, drift) {
-      t = Math.min(1, t + dt / P.rise)
-      if (drift) time += dt
-      ripT += dt
-      fizz *= Math.exp(-dt / 1.2)
-      const sloshing = slosh.step(dt)
-      return t < 1 || sloshing || ripT < 3
-    },
-    drifts: () => to > 0,
-    shown,
-    settled: () => Math.abs(to - shown()) < 0.005,
-    setAnchor(right) {
-      ripRight = right
-    },
+    setLevel: model.setLevel,
+    step: model.step,
+    drifts: model.drifts,
+    shown: model.shown,
+    settled: model.settled,
+    setAnchor: model.setAnchor,
     render(renderer: WebGLRenderer, width, height) {
       quad.fit(width, height)
-      const y = waveSurfaceY(shown(), height)
+      const f = model.frame(width, height)
       u.uSize.value.set(width, height)
-      u.uLevel.value = y
-      u.uTime.value = time
-      u.uSlosh.value = slosh.y
-      u.uRipA.value = P.slosh * 5 * Math.exp(-ripT / 0.9)
-      u.uRipT.value = ripT
-      u.uRipX.value = width / 2 - ripRight
-      u.uFizz.value = fizz
-      // The back wave rides higher than the front one: it fades in over the first 12 px of rise so it never peeks out of an empty tile.
-      u.uBack.value = P.back * clamp01((y - waveSurfaceY(0, height)) / 12)
+      u.uLevel.value = f.level
+      u.uTime.value = f.time
+      u.uSlosh.value = f.slosh
+      u.uRipA.value = f.ripA
+      u.uRipT.value = f.ripT
+      u.uRipX.value = f.ripX
+      u.uFizz.value = f.fizz
+      u.uBack.value = f.back
       renderer.render(quad.scene, quad.camera)
     },
     setPalette(p) {

@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
-import { isCheckmark, type Point } from '../../lib/checkmark'
+import { isCheckmark, typedStroke, type Point } from '../../lib/checkmark'
 import { Icon } from '../icons/Icon'
 
 interface DrawCheckPadProps {
@@ -13,13 +13,6 @@ interface DrawCheckPadProps {
 
 /** The pad's size, when the browser gives none (tests): the keyboard's checkmark is drawn into it. */
 const FALLBACK_SIZE = { width: 320, height: 192 }
-
-/** Over the pad's width and height, in fractions: the checkmark drawn for a keyboard or VoiceOver. */
-const TYPED_CHECK: readonly [number, number][] = [
-  [0.32, 0.48],
-  [0.45, 0.72],
-  [0.7, 0.26],
-]
 
 /**
  * A blank pad to sign on: one finger stroke, which counts once it reads as a
@@ -139,17 +132,4 @@ export function DrawCheckPad({ onChange, disabled = false, labelledBy, className
       </p>
     </div>
   )
-}
-
-/** A checkmark that fills the pad, sampled like a finger would draw it. */
-function typedStroke(width: number, height: number): Point[] {
-  const corners = TYPED_CHECK.map(([x, y]) => ({ x: x * width, y: y * height }))
-  const stroke: Point[] = []
-  for (let i = 0; i < corners.length - 1; i++) {
-    const a = corners[i]
-    const b = corners[i + 1]
-    for (let s = 0; s < 12; s++) stroke.push({ x: a.x + ((b.x - a.x) * s) / 12, y: a.y + ((b.y - a.y) * s) / 12 })
-  }
-  stroke.push(corners[corners.length - 1])
-  return stroke
 }
