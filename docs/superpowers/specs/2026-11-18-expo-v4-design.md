@@ -80,8 +80,11 @@ Each step ends in something that runs on the phone. The plan details them.
 6. Gallery and Compare. **Coded and reviewed** (2026-11-19): the grid, the lightbox, Compare's slider and time-lapse, "Take today's photo" opening Today's camera; plan `docs/superpowers/plans/2026-11-19-v4-part-6-gallery.md`. Not seen on the phone yet.
 7. Stats. **Coded and reviewed** (2026-11-19): weight with its chart and weigh-ins, the training totals, the bottle and the shelf, the workout cards; plan `docs/superpowers/plans/2026-11-19-v4-part-7-stats.md`. Not seen on the phone yet.
 8. Settings, badges, toasts, app lock. **Coded and reviewed** (2026-11-19): the grouped Settings list and its pages, badges with one toast stack, the PIN lock with Face ID (expo-local-authentication), offered once after the deal; plan `docs/superpowers/plans/2026-11-19-v4-part-8-settings.md`. Face ID needs the development build (not in Expo Go). Not seen on the phone yet.
-9. Cloud: sign-in, backup, restore, delete account.
-10. Share card.
+9. Share card.
+
+Cloud and the App Store always come last: any step added later goes before them (owner, 2026-11-20).
+
+10. Cloud: sign-in, backup, restore, delete account.
 11. App Store: listing, privacy labels, review.
 
 ## Not in scope
